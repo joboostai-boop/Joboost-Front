@@ -1,0 +1,140 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("POSTGRES_URI")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum Role {
+  CANDIDATE
+  ADVISOR
+  ADMIN
+}
+
+model Organization {
+  id        String   @id @default(uuid())
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  users     User[]
+}
+
+model User {
+  id                String   @id @default(uuid())
+  email             String   @unique
+  password          String?  // Optionnel si on se connecte via OAuth ou magic link
+  name              String
+  title             String?
+  role              Role     @default(CANDIDATE)
+  
+  organizationId    String?
+  organization      Organization? @relation(fields: [organizationId], references: [id])
+  
+  // France Travail Tokens
+  ftAccessToken     String?
+  ftRefreshToken    String?
+  ftTokenExpiresAt  DateTime?
+  summary           String?
+  skills            String[]
+  languages         String[]
+  hobbies           String[]
+  linkedin          String?
+  portfolio         String?
+  github            String?
+  plan              String   @default("Gratuit")
+  applicationsCount Int      @default(0)
+  quota             Int      @default(100)
+  phone             String?
+  city              String?
+  
+  // Utilisation de JSON pour des arrays d'objets complexes (facilite la flexibilité noSQL dans un modèle relationnel)
+  experiences       Json?    @default("[]")
+  education         Json?    @default("[]")
+
+  // Stripe Billing
+  stripeCustomerId    String?   @unique
+  stripeSubscriptionId String?  @unique
+  subscriptionStatus  String?   // 'active' | 'canceled' | 'past_due' | 'trialing'
+  subscriptionEndsAt  DateTime?
+
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  
+  applications      Application[]
+  cvs               CV[]
+  coverLetters      CoverLetter[]
+  savedOpportunities SavedOpportunity[]
+}
+
+enum ApplicationStatus {
+  PENDING
+  SENT
+  INTERVIEW
+  OFFER
+  REJECTED
+}
+
+model Application {
+  id        String            @id @default(uuid())
+  company   String
+  title     String
+  source    String            @default("Candidature spontanée")
+  status    ApplicationStatus @default(PENDING)
+  notes     String?
+  
+  appliedAt DateTime          @default(now())
+  updatedAt DateTime          @updatedAt
+  
+  userId    String
+  user      User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model CV {
+  id        String   @id @default(uuid())
+  title     String   @default("Mon CV") 
+  content   Json     // Contenu figé ou base du CV (JSON)
+  template  String   @default("Moderne")
+  
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model CoverLetter {
+  id        String   @id @default(uuid())
+  title     String   @default("Ma Lettre")
+  company   String?
+  jobTitle  String?
+  content   String   // Texte de la lettre
+  
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model SavedOpportunity {
+  id          String   @id @default(uuid())
+  title       String
+  company     String
+  location    String?
+  salary      String?
+  type        String?
+  matchScore  Int?
+  postedDate  String?
+  source      String   @default("Externe")
+  url         String?
+  tags        String[]
+  aiInsight   String?
+  
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  createdAt   DateTime @default(now())
+}

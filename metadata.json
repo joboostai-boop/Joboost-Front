@@ -1,0 +1,8 @@
+{
+  "name": "Remix: JoBoost.ai",
+  "description": "Plateforme SaaS d\u0027automatisation de candidatures d\u0027emploi avec IA et envoi de candidatures spontanées en masse.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone"
+  ]
+}
