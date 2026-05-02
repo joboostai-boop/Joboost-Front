@@ -18,7 +18,7 @@ export const ftController = {
       res.cookie('ft_oauth_state', state, { 
         httpOnly: true, 
         secure: isProd,
-        sameSite: isProd ? 'none' : 'lax',
+        sameSite: (isProd ? 'none' : 'lax') as 'none' | 'lax',
         maxAge: 1000 * 60 * 15 // 15 min 
       });
 
