@@ -10,9 +10,9 @@ function requireEnv(name: string): string {
 }
 
 export const JWT_SECRET = requireEnv('JWT_SECRET');
-export const STRIPE_SECRET_KEY = requireEnv('STRIPE_SECRET_KEY');
-export const STRIPE_WEBHOOK_SECRET = requireEnv('STRIPE_WEBHOOK_SECRET');
-export const STRIPE_PRICE_ID = requireEnv('STRIPE_PRICE_ID');
+export const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY || '';
+export const STRIPE_WEBHOOK_SECRET = process.env.STRIPE_WEBHOOK_SECRET || '';
+export const STRIPE_PRICE_ID = process.env.STRIPE_PRICE_ID || '';
 export const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:3000';
 
 // Google OAuth (optionnel — le serveur démarre même sans)
