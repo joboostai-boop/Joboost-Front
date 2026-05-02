@@ -14,7 +14,13 @@ export const ftController = {
       const state = crypto.randomBytes(16).toString('hex');
       
       // Enregistrer le state en cookie pour validation lors du retour (sécurité CSRF)
-      res.cookie('ft_oauth_state', state, { httpOnly: true, maxAge: 1000 * 60 * 15 }); // 15 min
+      const isProd = process.env.NODE_ENV === 'production';
+      res.cookie('ft_oauth_state', state, { 
+        httpOnly: true, 
+        secure: isProd,
+        sameSite: isProd ? 'none' : 'lax',
+        maxAge: 1000 * 60 * 15 // 15 min 
+      });
 
       // URL de développement / bac à sable ou prod
       const authorizeUrl = new URL('https://authentification-candidat.pole-emploi.fr/connexion/oauth2/authorize');
