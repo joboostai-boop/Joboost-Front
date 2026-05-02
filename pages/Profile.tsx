@@ -35,7 +35,7 @@ const Profile: React.FC<ProfileProps> = ({ user }) => {
 
   const handleSave = async () => {
     try {
-      const res = await fetch('/api/users/me', {
+      const res = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/users/me`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

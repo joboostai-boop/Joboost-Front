@@ -62,7 +62,7 @@ const Home: React.FC<HomeProps> = ({ onStart }) => {
     if (provider === 'Google') {
       const toastId = toast.loading('Redirection vers Google...');
       try {
-        const res = await fetch('/api/auth/google');
+        const res = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/auth/google`);
         const data = await res.json();
         if (data.success && data.url) {
           toast.dismiss(toastId);

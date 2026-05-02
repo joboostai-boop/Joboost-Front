@@ -41,7 +41,7 @@ const Dashboard: React.FC = () => {
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const res = await fetch('/api/dashboard/stats');
+        const res = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/dashboard/stats`);
         const data = await res.json();
         if (data.success) {
            setStatsData(data.stats);

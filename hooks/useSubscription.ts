@@ -21,7 +21,7 @@ export function useSubscription(): SubscriptionState {
     try {
       setLoading(true);
       setError(null);
-      const res = await fetch('/api/stripe/subscription-status', {
+      const res = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/stripe/subscription-status`, {
         credentials: 'include',
       });
       const data = await res.json();
@@ -44,7 +44,7 @@ export function useSubscription(): SubscriptionState {
   const startCheckout = async () => {
     try {
       setError(null);
-      const res = await fetch('/api/stripe/create-checkout', {
+      const res = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/stripe/create-checkout`, {
         method: 'POST',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },

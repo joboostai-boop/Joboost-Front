@@ -38,7 +38,7 @@ const Spontaneous: React.FC = () => {
 
   const connectFT = async () => {
     try {
-      const res = await fetch('/api/auth/ft/login', { credentials: 'include' });
+      const res = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/auth/ft/login`, { credentials: 'include' });
       const data = await res.json();
       if (data.url) {
         window.location.href = data.url;
@@ -58,7 +58,7 @@ const Spontaneous: React.FC = () => {
     }
     setLoading(true);
     try {
-      const res = await fetch(`/api/lbb/search?jobTitle=${encodeURIComponent(jobTitle)}&location=${encodeURIComponent(location)}`, { credentials: 'include' });
+      const res = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/lbb/search?jobTitle=${encodeURIComponent(jobTitle)}&location=${encodeURIComponent(location)}`, { credentials: 'include' });
       const data = await res.json();
       if (data.success) {
         setCompanies(data.results);
@@ -91,7 +91,7 @@ const Spontaneous: React.FC = () => {
        : toast.loading("Transmission de la candidature à France Travail...");
 
     try {
-      const res = await fetch('/api/lbb/apply', {
+      const res = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/lbb/apply`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

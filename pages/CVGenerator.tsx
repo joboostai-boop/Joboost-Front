@@ -25,10 +25,10 @@ const CVGenerator: React.FC = () => {
   useEffect(() => {
     const init = async () => {
       try {
-        const userRes = await fetch('/api/users/me');
+        const userRes = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/users/me`);
         const userData = await userRes.json();
         
-        const cvRes = await fetch('/api/cvs');
+        const cvRes = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/cvs`);
         const cvData = await cvRes.json();
         
         if (userData.success) {
@@ -73,7 +73,8 @@ const CVGenerator: React.FC = () => {
 
   const handleSaveCV = async () => {
     try {
-      const url = currentCvId ? `/api/cvs/${currentCvId}` : '/api/cvs';
+      const baseUrl = import.meta.env.VITE_API_URL || '';
+      const url = currentCvId ? `${baseUrl}/api/cvs/${currentCvId}` : `${baseUrl}/api/cvs`;
       const method = currentCvId ? 'PUT' : 'POST';
       
       const res = await fetch(url, {
@@ -89,7 +90,7 @@ const CVGenerator: React.FC = () => {
       if(data.success) {
          toast.success("CV sauvegardé !");
          setCurrentCvId(data.cv.id);
-         const cvRes = await fetch('/api/cvs');
+         const cvRes = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/cvs`);
          const cvData = await cvRes.json();
          if(cvData.success) setCvs(cvData.cvs);
       }

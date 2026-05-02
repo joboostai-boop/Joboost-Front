@@ -32,7 +32,7 @@ const SavedOffers: React.FC = () => {
   useEffect(() => {
     const fetchSaved = async () => {
       try {
-        const res = await fetch('/api/opportunities/saved');
+        const res = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/opportunities/saved`);
         const data = await res.json();
         if (data.success) {
           setSavedOffers(data.saved);
@@ -48,7 +48,7 @@ const SavedOffers: React.FC = () => {
 
   const removeOffer = async (offerId: string) => {
     try {
-      const res = await fetch(`/api/opportunities/saved/${offerId}`, { method: 'DELETE' });
+      const res = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/opportunities/saved/${offerId}`, { method: 'DELETE' });
       const data = await res.json();
       if(data.success) {
         setSavedOffers(savedOffers.filter(o => o.id !== offerId));

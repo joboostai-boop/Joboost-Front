@@ -1,5 +1,5 @@
 // Service client connecté à notre backend Antigravity NodeJS
-const API_BASE_URL = '/api/ai';
+const API_BASE_URL = `${import.meta.env.VITE_API_URL || ''}/api/ai`;
 
 const fetchFromAPI = async (endpoint: string, bodyData: any) => {
   try {

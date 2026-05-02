@@ -31,10 +31,10 @@ const LetterGenerator: React.FC = () => {
   useEffect(() => {
     const init = async () => {
       try {
-        const userRes = await fetch('/api/users/me');
+        const userRes = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/users/me`);
         const userData = await userRes.json();
         
-        const lettersRes = await fetch('/api/coverletters');
+        const lettersRes = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/coverletters`);
         const lettersData = await lettersRes.json();
         
         if (userData.success) {
@@ -75,7 +75,8 @@ const LetterGenerator: React.FC = () => {
   const handleSaveLetter = async () => {
      if(!generatedText) return;
      try {
-        const url = currentLetterId ? `/api/coverletters/${currentLetterId}` : '/api/coverletters';
+        const baseUrl = import.meta.env.VITE_API_URL || '';
+        const url = currentLetterId ? `${baseUrl}/api/coverletters/${currentLetterId}` : `${baseUrl}/api/coverletters`;
         const method = currentLetterId ? 'PUT' : 'POST';
         
         const res = await fetch(url, {
@@ -92,7 +93,7 @@ const LetterGenerator: React.FC = () => {
         if(data.success) {
            toast.success("Lettre sauvegardée !");
            setCurrentLetterId(data.letter.id);
-           const lettersRes = await fetch('/api/coverletters');
+           const lettersRes = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/coverletters`);
            const lettersData = await lettersRes.json();
            if(lettersData.success) setLetters(lettersData.letters);
         }

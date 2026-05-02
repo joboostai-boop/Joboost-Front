@@ -27,8 +27,8 @@ const PersonalizedOffers: React.FC = () => {
     const fetchData = async () => {
       try {
         const [recRes, savedRes] = await Promise.all([
-          fetch('/api/opportunities/recommendations'),
-          fetch('/api/opportunities/saved')
+          fetch(`${import.meta.env.VITE_API_URL || ''}/api/opportunities/recommendations`),
+          fetch(`${import.meta.env.VITE_API_URL || ''}/api/opportunities/saved`)
         ]);
         
         const recData = await recRes.json();
@@ -62,7 +62,7 @@ const PersonalizedOffers: React.FC = () => {
     if (savedId) {
       // DELETE
       try {
-        const res = await fetch(`/api/opportunities/saved/${savedId}`, { method: 'DELETE' });
+        const res = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/opportunities/saved/${savedId}`, { method: 'DELETE' });
         const data = await res.json();
         if(data.success) {
           setSavedOffers(savedOffers.filter(s => s.id !== savedId));
@@ -85,7 +85,7 @@ const PersonalizedOffers: React.FC = () => {
           aiInsight: offer.aiInsight
         };
 
-        const res = await fetch('/api/opportunities/saved', {
+        const res = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/opportunities/saved`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload)

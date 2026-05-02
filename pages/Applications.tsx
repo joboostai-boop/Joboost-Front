@@ -30,7 +30,7 @@ const Applications: React.FC = () => {
   const fetchApplications = async () => {
     setLoading(true);
     try {
-      const res = await fetch('/api/applications?limit=100'); // Fetch max for Kanban board MVP
+      const res = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/applications?limit=100`); // Fetch max for Kanban board MVP
       const data = await res.json();
       if (data.success) {
         setApplications(data.data);
@@ -52,7 +52,7 @@ const Applications: React.FC = () => {
     // Optimistic Update
     setApplications(apps => apps.map(app => app.id === id ? { ...app, status: newStatus as any } : app));
     try {
-      const res = await fetch(`/api/applications/${id}`, {
+      const res = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/applications/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: newStatus })
