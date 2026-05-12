@@ -91,6 +91,45 @@ export const authController = {
     }
   },
 
+  businessLogin: async (req: Request, res: Response) => {
+    try {
+      // Find or create the business partner user (no credentials needed)
+      let user = await prisma.user.findFirst({
+        where: { role: 'BUSINESS_PARTNER' },
+      });
+
+      if (!user) {
+        // Auto-create a demo business partner if none exists
+        user = await prisma.user.create({
+          data: {
+            email: 'partenaire@missionlocale.fr',
+            name: 'Mission Locale de Paris',
+            role: 'BUSINESS_PARTNER',
+            plan: 'Pro',
+            city: 'Paris, France',
+            phone: '+33 1 44 55 66 77',
+            skills: [],
+          },
+        });
+      }
+
+      // Generate JWT
+      const token = jwt.sign(
+        { userId: user.id, role: user.role, organizationId: user.organizationId },
+        JWT_SECRET,
+        { expiresIn: '7d' }
+      );
+
+      res.cookie('token', token, COOKIE_OPTIONS);
+
+      const { password: _, ...userWithoutPassword } = user;
+      res.json({ success: true, user: userWithoutPassword });
+    } catch (error: any) {
+      console.error('Business login error:', error);
+      res.status(500).json({ success: false, error: "Erreur lors de la connexion partenaire." });
+    }
+  },
+
   logout: (req: Request, res: Response) => {
     res.clearCookie('token');
     res.json({ success: true, message: "Déconnecté" });

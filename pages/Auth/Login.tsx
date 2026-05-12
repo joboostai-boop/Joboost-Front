@@ -8,6 +8,7 @@ const Login = () => {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isBusinessLoading, setIsBusinessLoading] = useState(false);
   
   const { login } = useAuth();
   const navigate = useNavigate();
@@ -41,6 +42,31 @@ const Login = () => {
       setError('Erreur de connexion au serveur');
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleBusinessLogin = async () => {
+    setIsBusinessLoading(true);
+    setError('');
+
+    try {
+      const res = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/auth/business-login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include'
+      });
+      const data = await res.json();
+
+      if (data.success) {
+        login(data.user);
+        navigate('/business/offers');
+      } else {
+        setError(data.error || 'Erreur de connexion partenaire');
+      }
+    } catch (err) {
+      setError('Erreur de connexion au serveur');
+    } finally {
+      setIsBusinessLoading(false);
     }
   };
 
@@ -114,7 +140,7 @@ const Login = () => {
           </form>
         </div>
 
-        {/* Business Partner CTA */}
+        {/* Business Partner CTA — direct access, no credentials */}
         <div className="card-pro p-5 bg-white border-[#7D5CFF]/10">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-[#7D5CFF] to-[#4F46E5] flex items-center justify-center text-white shrink-0">
@@ -125,9 +151,14 @@ const Login = () => {
               <p className="text-xs text-slate-500">Mission Locale, agence d'insertion, organisme de formation...</p>
             </div>
           </div>
-          <p className="text-xs text-slate-400 mt-3">
-            Connectez-vous avec vos identifiants partenaire pour accéder au portail de gestion de vos adhérents et offres d'emploi.
-          </p>
+          <button
+            onClick={handleBusinessLogin}
+            disabled={isBusinessLoading}
+            className="mt-4 w-full flex items-center justify-center gap-2 py-3 px-4 rounded-lg bg-gradient-to-r from-[#7D5CFF] to-[#4F46E5] text-white font-semibold text-sm hover:opacity-90 transition-opacity disabled:opacity-50"
+          >
+            <Building2 size={16} />
+            {isBusinessLoading ? 'Connexion en cours...' : 'Accéder au portail partenaire'}
+          </button>
         </div>
       </div>
     </div>
