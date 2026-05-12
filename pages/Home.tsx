@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { 
   ArrowRight, 
@@ -16,8 +15,10 @@ import {
   ChevronDown,
   HelpCircle,
   Layers,
-  Send
+  Send,
+  Building2
 } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import Logo from '../components/Logo';
 
@@ -135,6 +136,10 @@ const Home: React.FC<HomeProps> = ({ onStart }) => {
           </div>
           
           <div className="flex items-center gap-4">
+            <Link to="/auth/login" className="hidden sm:flex items-center gap-1.5 text-slate-500 font-bold text-xs px-3 py-2 hover:text-[#7D5CFF] transition-colors rounded-lg hover:bg-[#7D5CFF]/5 border border-transparent hover:border-[#7D5CFF]/10">
+              <Building2 size={14} />
+              Espace Partenaires
+            </Link>
             <button onClick={() => openAuth(false)} className="hidden sm:block text-slate-600 font-bold text-sm px-4 py-2 hover:text-indigo-600 transition-colors">
               Connexion
             </button>

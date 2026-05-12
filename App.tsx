@@ -20,12 +20,17 @@ import Onboarding from './pages/Onboarding';
 import Spontaneous from './pages/Spontaneous';
 import Login from './pages/Auth/Login';
 import Register from './pages/Auth/Register';
+import BusinessLayout from './pages/BusinessLayout';
+import BusinessOffers from './pages/BusinessOffers';
+import BusinessJobseekers from './pages/BusinessJobseekers';
+import BusinessStatsPage from './pages/BusinessStats';
 import { Toaster } from 'react-hot-toast';
 import { Plan, User } from './types';
 
 const App: React.FC = () => {
   const { user, loading: isAppLoading } = useAuth();
   const isAuthenticated = !!user;
+  const isBusinessPartner = user?.role === 'BUSINESS_PARTNER';
   const hasCompletedOnboarding = !!user?.name; // Simple fallback
   
   const [isDarkMode, setIsDarkMode] = useState<boolean>(() => {
@@ -79,7 +84,7 @@ const App: React.FC = () => {
     );
   }
 
-  if (!hasCompletedOnboarding) {
+  if (!isBusinessPartner && !hasCompletedOnboarding) {
     return (
       <div className="min-h-screen bg-slate-50 dark:bg-slate-950 transition-colors duration-300">
         <Toaster position="top-right" />
@@ -125,12 +130,20 @@ const App: React.FC = () => {
                <Route path="applications" element={<Applications />} />
             </Route>
             
+            {/* 4. Espace Business Partner */}
+            <Route path="/business" element={<BusinessLayout />}>
+               <Route index element={<Navigate to="offers" replace />} />
+               <Route path="offers" element={<BusinessOffers />} />
+               <Route path="jobseekers" element={<BusinessJobseekers />} />
+               <Route path="stats" element={<BusinessStatsPage />} />
+            </Route>
+
             {/* Configurations transverses */}
             <Route path="/pricing" element={<Pricing user={user} />} />
             <Route path="/settings" element={<Settings user={user} isDarkMode={isDarkMode} toggleDarkMode={toggleDarkMode} />} />
             
             {/* Redirection Legacy ou par défaut vers la 1ere étape */}
-            <Route path="*" element={<Navigate to="/prepare/profile" replace />} />
+            <Route path="*" element={<Navigate to={isBusinessPartner ? '/business/offers' : '/prepare/profile'} replace />} />
           </Routes>
         </div>
       </main>

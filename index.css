@@ -7,6 +7,7 @@
   body {
     font-family: 'Inter', sans-serif;
     -webkit-font-smoothing: antialiased;
+    font-size: clamp(0.875rem, 2vw, 1rem);
     @apply bg-[#F7F7F9] text-[#111827];
   }
 
@@ -34,11 +35,11 @@
 
   /* ================== BUTTONS ================== */
   .btn {
-    @apply h-9 px-4 inline-flex items-center justify-center gap-2 rounded-md text-sm font-medium transition-all duration-200 outline-none;
+    @apply min-h-[44px] px-4 py-3 inline-flex items-center justify-center gap-2 rounded-md text-sm font-medium transition-all duration-200 outline-none;
   }
   
   .btn-lg {
-    @apply h-11 px-6 text-base;
+    @apply min-h-[52px] px-6 py-4 text-base;
   }
 
   .btn-primary {
@@ -64,12 +65,12 @@
   }
 
   .input-pro {
-    @apply w-full h-10 px-3 bg-white border border-[#D1D5DB] rounded-md text-sm text-[#111827] placeholder:text-[#9CA3AF] transition-colors focus:border-[#7D5CFF] focus:ring-1 focus:ring-[#7D5CFF] outline-none;
+    @apply w-full min-h-[44px] px-4 py-3 bg-white border border-[#D1D5DB] rounded-md text-sm text-[#111827] placeholder:text-[#9CA3AF] transition-colors focus:border-[#7D5CFF] focus:ring-1 focus:ring-[#7D5CFF] outline-none;
   }
   
   /* Textarea */
   .textarea-pro {
-    @apply w-full p-3 bg-white border border-[#D1D5DB] rounded-md text-sm text-[#111827] placeholder:text-[#9CA3AF] transition-colors focus:border-[#7D5CFF] focus:ring-1 focus:ring-[#7D5CFF] outline-none resize-y min-h-[100px];
+    @apply w-full p-4 bg-white border border-[#D1D5DB] rounded-md text-sm text-[#111827] placeholder:text-[#9CA3AF] transition-colors focus:border-[#7D5CFF] focus:ring-1 focus:ring-[#7D5CFF] outline-none resize-y min-h-[100px];
   }
 
   /* Dark mode variants for components */
@@ -94,4 +95,20 @@
 }
 .dark ::-webkit-scrollbar-thumb {
   background: #4B5563;
+}
+
+/* Slide-in animation for drawers */
+@keyframes slide-in-right {
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
+}
+.animate-slide-in-right {
+  animation: slide-in-right 0.3s ease-out;
+}
+
+/* Utilities */
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+  .safe-area-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
 }

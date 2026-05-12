@@ -15,6 +15,7 @@ import opportunityRoutes from './routes/opportunity.routes';
 import dashboardRoutes from './routes/dashboard.routes';
 import lbbRoutes from './routes/lbb.routes';
 import stripeRoutes from './routes/stripe.routes';
+import businessRoutes from './routes/business.routes';
 
 dotenv.config();
 
@@ -54,6 +55,8 @@ app.use('/api/dashboard', requireAuth, dashboardRoutes);
 app.use('/api/lbb', requireAuth, lbbRoutes);
 // Initialize Stripe Billing
 app.use('/api/stripe', stripeRoutes);
+// Initialize Business Session (partenaires professionnels)
+app.use('/api/business', requireAuth, businessRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {

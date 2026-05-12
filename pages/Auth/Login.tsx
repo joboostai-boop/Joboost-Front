@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { Sparkles } from 'lucide-react';
+import { Sparkles, Building2 } from 'lucide-react';
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -28,7 +28,12 @@ const Login = () => {
 
       if (data.success) {
         login(data.user);
-        navigate('/prepare');
+        // Redirect based on role
+        if (data.user.role === 'BUSINESS_PARTNER') {
+          navigate('/business/offers');
+        } else {
+          navigate('/prepare');
+        }
       } else {
         setError(data.error || 'Identifiants invalides');
       }
@@ -41,75 +46,93 @@ const Login = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
-      <div className="max-w-md w-full space-y-8 card-pro p-8 bg-white">
-        
-        <div className="text-center">
-          <div className="flex justify-center items-center gap-2 mb-4">
-            <Sparkles className="w-8 h-8 text-[#7D5CFF]" />
-            <h1 className="text-3xl font-bold bg-gradient-to-r from-[#7D5CFF] to-violet-800 bg-clip-text text-transparent">
-              JobBoost
-            </h1>
+      <div className="max-w-md w-full space-y-6">
+        <div className="card-pro p-8 bg-white">
+          <div className="text-center">
+            <div className="flex justify-center items-center gap-2 mb-4">
+              <Sparkles className="w-8 h-8 text-[#7D5CFF]" />
+              <h1 className="text-3xl font-bold bg-gradient-to-r from-[#7D5CFF] to-violet-800 bg-clip-text text-transparent">
+                JobBoost
+              </h1>
+            </div>
+            <h2 className="mt-2 text-2xl font-bold text-gray-900">
+              Bon retour parmi nous
+            </h2>
+            <p className="mt-2 text-sm text-gray-600">
+              Ou{' '}
+              <Link to="/auth/register" className="font-medium text-[#7D5CFF] hover:text-violet-700">
+                créez votre compte candidat
+              </Link>
+            </p>
           </div>
-          <h2 className="mt-2 text-2xl font-bold text-gray-900">
-            Bon retour parmi nous
-          </h2>
-          <p className="mt-2 text-sm text-gray-600">
-            Ou{' '}
-            <Link to="/auth/register" className="font-medium text-[#7D5CFF] hover:text-violet-700">
-              créez votre compte candidat
-            </Link>
-          </p>
+
+          <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+            {error && (
+              <div className="bg-red-50 text-red-600 p-3 rounded-md text-sm border border-red-100">
+                {error}
+              </div>
+            )}
+            
+            <div className="space-y-4">
+              <div>
+                <label htmlFor="email" className="input-label">Email</label>
+                <input
+                  id="email"
+                  name="email"
+                  type="email"
+                  required
+                  className="input-pro"
+                  placeholder="jean.dupont@email.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                />
+              </div>
+              <div>
+                <label htmlFor="password" className="input-label">Mot de passe</label>
+                <input
+                  id="password"
+                  name="password"
+                  type="password"
+                  required
+                  className="input-pro"
+                  placeholder="••••••••"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                />
+              </div>
+            </div>
+
+            <div>
+              <button
+                type="submit"
+                disabled={isLoading}
+                className="btn-primary w-full flex justify-center py-3"
+              >
+                {isLoading ? 'Connexion...' : 'Se connecter'}
+              </button>
+            </div>
+          </form>
         </div>
 
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-          {error && (
-            <div className="bg-red-50 text-red-600 p-3 rounded-md text-sm border border-red-100">
-              {error}
+        {/* Business Partner CTA */}
+        <div className="card-pro p-5 bg-white border-[#7D5CFF]/10">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-[#7D5CFF] to-[#4F46E5] flex items-center justify-center text-white shrink-0">
+              <Building2 size={18} />
             </div>
-          )}
-          
-          <div className="space-y-4">
-            <div>
-              <label htmlFor="email" className="input-label">Email</label>
-              <input
-                id="email"
-                name="email"
-                type="email"
-                required
-                className="input-pro"
-                placeholder="jean.dupont@email.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-              />
-            </div>
-            <div>
-              <label htmlFor="password" className="input-label">Mot de passe</label>
-              <input
-                id="password"
-                name="password"
-                type="password"
-                required
-                className="input-pro"
-                placeholder="••••••••"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-              />
+            <div className="flex-1">
+              <p className="text-sm font-bold text-slate-900">Vous êtes un organisme partenaire ?</p>
+              <p className="text-xs text-slate-500">Mission Locale, agence d'insertion, organisme de formation...</p>
             </div>
           </div>
-
-          <div>
-            <button
-              type="submit"
-              disabled={isLoading}
-              className="btn-primary w-full flex justify-center py-3"
-            >
-              {isLoading ? 'Connexion...' : 'Se connecter'}
-            </button>
-          </div>
-        </form>
+          <p className="text-xs text-slate-400 mt-3">
+            Connectez-vous avec vos identifiants partenaire pour accéder au portail de gestion de vos adhérents et offres d'emploi.
+          </p>
+        </div>
       </div>
     </div>
   );
 };
 
 export default Login;
+

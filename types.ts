@@ -85,3 +85,77 @@ export interface CVData {
     year: string;
   }[];
 }
+
+// ==================== BUSINESS SESSION ====================
+
+export interface BusinessOffer {
+  id: string;
+  businessId: string;
+  title: string;
+  description: string;
+  contractType?: string;
+  location?: string;
+  salaryRange?: string;
+  requiredSkills: string[];
+  isPublished: boolean;
+  publishedAt?: string;
+  expiresAt?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface BusinessJobseeker {
+  affiliationId: string;
+  affiliationStatus: string;
+  affiliatedAt: string;
+  id: string;
+  name: string;
+  email: string;
+  title?: string;
+  skills: string[];
+  city?: string;
+  phone?: string;
+  updatedAt: string;
+  experiences?: any;
+  education?: any;
+  summary?: string;
+  linkedin?: string;
+}
+
+export interface BusinessJobseekerDetail extends BusinessJobseeker {
+  languages?: string[];
+  portfolio?: string;
+  github?: string;
+  applications?: {
+    id: string;
+    company: string;
+    title: string;
+    status: string;
+    appliedAt: string;
+  }[];
+  cvs?: {
+    id: string;
+    title: string;
+    updatedAt: string;
+  }[];
+}
+
+export interface BusinessStats {
+  totalActive: number;
+  newThisMonth: number;
+  avgProfileCompletion: number;
+  applicationCount: number;
+  statusBreakdown: { status: string; count: number }[];
+  monthlyGrowth: { month: string; total: number }[];
+  topSkills: { skill: string; count: number }[];
+  publishedOffers: number;
+  totalOffers: number;
+}
+
+export interface Pagination {
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+}
+

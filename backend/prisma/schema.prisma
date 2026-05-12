@@ -11,6 +11,7 @@ enum Role {
   CANDIDATE
   ADVISOR
   ADMIN
+  BUSINESS_PARTNER
 }
 
 model Organization {
@@ -67,6 +68,11 @@ model User {
   cvs               CV[]
   coverLetters      CoverLetter[]
   savedOpportunities SavedOpportunity[]
+
+  // Business Partner relations
+  businessOffers          BusinessOffer[]
+  businessAffiliationsOwned BusinessAffiliation[] @relation("BusinessOwner")
+  businessAffiliationsAsJobseeker BusinessAffiliation[] @relation("AffiliatedJobseeker")
 }
 
 enum ApplicationStatus {
@@ -137,4 +143,40 @@ model SavedOpportunity {
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   
   createdAt   DateTime @default(now())
+}
+
+// ==================== BUSINESS SESSION ====================
+
+model BusinessOffer {
+  id             String    @id @default(uuid())
+  businessId     String
+  business       User      @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  
+  title          String
+  description    String
+  contractType   String?   // CDI, CDD, Stage, Alternance, Mission
+  location       String?
+  salaryRange    String?
+  requiredSkills String[]
+  
+  isPublished    Boolean   @default(false)
+  publishedAt    DateTime?
+  expiresAt      DateTime?
+  
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+}
+
+model BusinessAffiliation {
+  id           String   @id @default(uuid())
+  businessId   String
+  business     User     @relation("BusinessOwner", fields: [businessId], references: [id], onDelete: Cascade)
+  
+  jobseekerId  String
+  jobseeker    User     @relation("AffiliatedJobseeker", fields: [jobseekerId], references: [id], onDelete: Cascade)
+  
+  affiliatedAt DateTime @default(now())
+  status       String   @default("active") // active, inactive, suspended
+  
+  @@unique([businessId, jobseekerId])
 }
