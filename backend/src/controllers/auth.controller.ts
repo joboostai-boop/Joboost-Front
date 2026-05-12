@@ -93,15 +93,17 @@ export const authController = {
 
   businessLogin: async (req: Request, res: Response) => {
     try {
-      // Find or create the business partner user (no credentials needed)
+      // Find any existing business partner, or create one
       let user = await prisma.user.findFirst({
         where: { role: 'BUSINESS_PARTNER' },
       });
 
       if (!user) {
-        // Auto-create a demo business partner if none exists
-        user = await prisma.user.create({
-          data: {
+        // Use upsert to handle race conditions and potential email conflicts
+        user = await prisma.user.upsert({
+          where: { email: 'partenaire@missionlocale.fr' },
+          update: { role: 'BUSINESS_PARTNER' },
+          create: {
             email: 'partenaire@missionlocale.fr',
             name: 'Mission Locale de Paris',
             role: 'BUSINESS_PARTNER',
@@ -125,8 +127,8 @@ export const authController = {
       const { password: _, ...userWithoutPassword } = user;
       res.json({ success: true, user: userWithoutPassword });
     } catch (error: any) {
-      console.error('Business login error:', error);
-      res.status(500).json({ success: false, error: "Erreur lors de la connexion partenaire." });
+      console.error('Business login error:', error?.message || error);
+      res.status(500).json({ success: false, error: error?.message || "Erreur lors de la connexion partenaire." });
     }
   },
 
