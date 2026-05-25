@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { List } from 'react-window';
 import { Search, MapPin, Bookmark, Star, ArrowRight, Euro, Clock, Link as LinkIcon, Edit3 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
@@ -119,62 +120,71 @@ const PersonalizedOffers: React.FC = () => {
           <p className="text-sm font-medium text-slate-500">Génération intelligente de vos offres en cours...</p>
         </div>
       ) : (
-        <div className="space-y-4">
-          {offers.map((offer, i) => {
+        <List
+          height={700}
+          itemCount={offers.length}
+          itemSize={320}
+          width="100%"
+          className="scrollbar-thin"
+        >
+          {({ index, style }: { index: number; style: React.CSSProperties }) => {
+            const offer = offers[index];
             const isBookmarked = !!getSavedId(offer);
             return (
-              <div key={i} className="card-pro p-6 hover:border-[#D1D5DB] dark:hover:border-[#4B5563] transition-colors flex flex-col md:flex-row gap-6">
-                <div className="flex-1 space-y-4">
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <h2 className="text-xl font-bold text-[#111827] dark:text-white">{offer.title}</h2>
-                      <p className="text-[#7D5CFF] font-semibold text-sm tracking-wide">{offer.company}</p>
+              <div style={{ ...style, paddingBottom: '16px' }} key={offer.id || index}>
+                <div className="card-pro p-6 hover:border-[#D1D5DB] dark:hover:border-[#4B5563] transition-colors flex flex-col md:flex-row gap-6 mr-2">
+                  <div className="flex-1 space-y-4">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <h2 className="text-xl font-bold text-[#111827] dark:text-white">{offer.title}</h2>
+                        <p className="text-[#7D5CFF] font-semibold text-sm tracking-wide">{offer.company}</p>
+                      </div>
+                      <div className="flex items-center gap-1 bg-[#F3F0FF] dark:bg-[#7D5CFF]/10 text-[#7D5CFF] px-3 py-1.5 rounded-full text-xs font-bold border border-[#7D5CFF]/30">
+                         <Star size={14} fill="currentColor" />
+                         {offer.matchScore}% de pertinence
+                      </div>
                     </div>
-                    <div className="flex items-center gap-1 bg-[#F3F0FF] dark:bg-[#7D5CFF]/10 text-[#7D5CFF] px-3 py-1.5 rounded-full text-xs font-bold border border-[#7D5CFF]/30">
-                       <Star size={14} fill="currentColor" />
-                       {offer.matchScore}% de pertinence
+
+                    <div className="flex flex-wrap gap-4 text-xs font-medium text-[#6B7280] bg-[#F3F4F6] dark:bg-[#111827] p-3 rounded border border-[#E5E7EB] dark:border-[#1F2937]">
+                      <span className="flex items-center gap-1.5"><MapPin size={14} className="text-[#9CA3AF]" /> {offer.location}</span>
+                      <span className="flex items-center gap-1.5"><Euro size={14} className="text-[#9CA3AF]" /> {offer.salary}</span>
+                      <span className="flex items-center gap-1.5"><Clock size={14} className="text-[#9CA3AF]" /> {offer.postedDate}</span>
+                    </div>
+
+                    <div className="space-y-2 text-sm pt-2">
+                       <p className="font-semibold text-[#111827] dark:text-gray-200">Pourquoi cette offre vous matche-t-elle ?</p>
+                       <div className="p-4 bg-[#F3F0FF] dark:bg-[#111827] rounded border-l-4 border-[#7D5CFF]">
+                         <p className="text-sm text-[#4B5563] dark:text-[#D1D5DB] font-medium leading-relaxed">"{offer.aiInsight}"</p>
+                       </div>
+                    </div>
+
+                    <div className="flex gap-2 pt-2">
+                       {offer.tags.map(t => (
+                          <span key={t} className="px-2 py-1 bg-white dark:bg-[#111827] border border-[#E5E7EB] dark:border-[#374151] text-xs text-[#6B7280] dark:text-[#9CA3AF] rounded font-semibold">{t}</span>
+                       ))}
                     </div>
                   </div>
 
-                  <div className="flex flex-wrap gap-4 text-xs font-medium text-[#6B7280] bg-[#F3F4F6] dark:bg-[#111827] p-3 rounded border border-[#E5E7EB] dark:border-[#1F2937]">
-                    <span className="flex items-center gap-1.5"><MapPin size={14} className="text-[#9CA3AF]" /> {offer.location}</span>
-                    <span className="flex items-center gap-1.5"><Euro size={14} className="text-[#9CA3AF]" /> {offer.salary}</span>
-                    <span className="flex items-center gap-1.5"><Clock size={14} className="text-[#9CA3AF]" /> {offer.postedDate}</span>
+                  <div className="md:w-48 flex md:flex-col gap-2 justify-center">
+                    <button onClick={() => navigate('/target/letter', { state: { jobTitle: offer.title, company: offer.company, targetContext: offer.aiInsight } })} className="btn btn-primary w-full shadow-none flex items-center justify-center gap-2">
+                      <Edit3 size={16} />
+                      Créer la lettre
+                    </button>
+                    <button 
+                      onClick={() => toggleSave(offer)}
+                      className={`btn w-full font-semibold transition-colors flex items-center justify-center gap-2 ${
+                        isBookmarked ? 'bg-amber-50 text-amber-600 border border-amber-200 hover:bg-amber-100' : 'btn-secondary bg-white'
+                      }`}
+                    >
+                      <Bookmark size={16} fill={isBookmarked ? "currentColor" : "none"} /> 
+                      {isBookmarked ? 'Sauvegardé' : 'Enregistrer'}
+                    </button>
                   </div>
-
-                  <div className="space-y-2 text-sm pt-2">
-                     <p className="font-semibold text-[#111827] dark:text-gray-200">Pourquoi cette offre vous matche-t-elle ?</p>
-                     <div className="p-4 bg-[#F3F0FF] dark:bg-[#111827] rounded border-l-4 border-[#7D5CFF]">
-                       <p className="text-sm text-[#4B5563] dark:text-[#D1D5DB] font-medium leading-relaxed">"{offer.aiInsight}"</p>
-                     </div>
-                  </div>
-
-                  <div className="flex gap-2 pt-2">
-                     {offer.tags.map(t => (
-                        <span key={t} className="px-2 py-1 bg-white dark:bg-[#111827] border border-[#E5E7EB] dark:border-[#374151] text-xs text-[#6B7280] dark:text-[#9CA3AF] rounded font-semibold">{t}</span>
-                     ))}
-                  </div>
-                </div>
-
-                <div className="md:w-48 flex md:flex-col gap-2 justify-center">
-                  <button onClick={() => navigate('/target/letter', { state: { jobTitle: offer.title, company: offer.company, targetContext: offer.aiInsight } })} className="btn btn-primary w-full shadow-none flex items-center justify-center gap-2">
-                    <Edit3 size={16} />
-                    Créer la lettre
-                  </button>
-                  <button 
-                    onClick={() => toggleSave(offer)}
-                    className={`btn w-full font-semibold transition-colors flex items-center justify-center gap-2 ${
-                      isBookmarked ? 'bg-amber-50 text-amber-600 border border-amber-200 hover:bg-amber-100' : 'btn-secondary bg-white'
-                    }`}
-                  >
-                    <Bookmark size={16} fill={isBookmarked ? "currentColor" : "none"} /> 
-                    {isBookmarked ? 'Sauvegardé' : 'Enregistrer'}
-                  </button>
                 </div>
               </div>
             );
-          })}
-        </div>
+          }}
+        </List>
       )}
     </div>
   );

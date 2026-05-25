@@ -73,11 +73,30 @@ export const opportunityController = {
       const user = await prisma.user.findUnique({ where: { id: req.userId! } });
       if (!user) return res.status(404).json({ success: false, error: "Utilisateur non trouvé" });
 
-      const saved = await (prisma as any).savedOpportunity.findMany({
-        where: { userId: user.id },
-        orderBy: { createdAt: 'desc' }
+      const page = parseInt(req.query.page as string) || 1;
+      const limit = parseInt(req.query.limit as string) || 20;
+      const skip = (page - 1) * limit;
+
+      const [saved, total] = await Promise.all([
+        (prisma as any).savedOpportunity.findMany({
+          where: { userId: user.id },
+          orderBy: { createdAt: 'desc' },
+          skip,
+          take: limit
+        }),
+        (prisma as any).savedOpportunity.count({ where: { userId: user.id } })
+      ]);
+
+      res.json({
+        success: true,
+        saved,
+        meta: {
+          total,
+          page,
+          limit,
+          totalPages: Math.ceil(total / limit)
+        }
       });
-      res.json({ success: true, saved });
     } catch (error: any) {
       console.error(error);
       res.status(500).json({ success: false, error: "Erreur récupération offres sauvegardées" });

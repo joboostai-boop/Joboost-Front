@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { List } from 'react-window';
 import { 
   Bookmark, 
   Trash2, 
@@ -77,43 +78,54 @@ const SavedOffers: React.FC = () => {
           <p className="text-sm text-slate-500">Parcourez les offres personnalisées pour commencer à en enregistrer.</p>
         </div>
       ) : (
-        <div className="space-y-4">
-          {savedOffers.map((offer) => (
-            <div key={offer.id} className="card-modern p-6 flex flex-col md:flex-row gap-6 hover:border-indigo-200 transition-all">
-              <div className="flex-1 space-y-4">
-                <div className="flex justify-between items-start">
-                  <div>
-                    <h2 className="text-xl font-bold text-slate-900 dark:text-white">{offer.title}</h2>
-                    <p className="text-indigo-600 font-bold text-sm">{offer.company}</p>
+        <List
+          height={600}
+          itemCount={savedOffers.length}
+          itemSize={220}
+          width="100%"
+          className="scrollbar-thin"
+        >
+          {({ index, style }: { index: number; style: React.CSSProperties }) => {
+            const offer = savedOffers[index];
+            return (
+              <div style={{ ...style, paddingBottom: '16px' }} key={offer.id}>
+                <div className="card-modern p-6 flex flex-col md:flex-row gap-6 hover:border-indigo-200 transition-all mr-2">
+                  <div className="flex-1 space-y-4">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <h2 className="text-xl font-bold text-slate-900 dark:text-white">{offer.title}</h2>
+                        <p className="text-indigo-600 font-bold text-sm">{offer.company}</p>
+                      </div>
+                      <span className="text-[10px] font-bold text-indigo-600 bg-indigo-50 px-3 py-1 rounded-full uppercase tracking-wider">{offer.matchScore}% Match</span>
+                    </div>
+                    
+                    <div className="flex gap-4 text-xs font-bold text-slate-500 uppercase tracking-tight">
+                      <span className="flex items-center gap-1.5"><MapPin size={14} /> {offer.location}</span>
+                      <span className="text-indigo-600">{offer.salary || 'Non spécifié'}</span>
+                      <span className="flex items-center gap-1"><Clock size={14}/> {offer.postedDate || "Récent"}</span>
+                    </div>
+
+                    <div className="p-3 bg-indigo-50/50 rounded-xl border-l-2 border-indigo-500 text-sm italic text-slate-600">
+                       "{offer.aiInsight}"
+                    </div>
                   </div>
-                  <span className="text-[10px] font-bold text-indigo-600 bg-indigo-50 px-3 py-1 rounded-full uppercase tracking-wider">{offer.matchScore}% Match</span>
-                </div>
-                
-                <div className="flex gap-4 text-xs font-bold text-slate-500 uppercase tracking-tight">
-                  <span className="flex items-center gap-1.5"><MapPin size={14} /> {offer.location}</span>
-                  <span className="text-indigo-600">{offer.salary || 'Non spécifié'}</span>
-                  <span className="flex items-center gap-1"><Clock size={14}/> {offer.postedDate || "Récent"}</span>
-                </div>
 
-                <div className="p-3 bg-indigo-50/50 rounded-xl border-l-2 border-indigo-500 text-sm italic text-slate-600">
-                   "{offer.aiInsight}"
+                  <div className="md:w-48 flex md:flex-col gap-2 justify-center">
+                    <button 
+                       onClick={() => navigate('/target/letter', { state: { jobTitle: offer.title, company: offer.company, targetContext: offer.aiInsight } })}
+                       className="flex-1 py-3 bg-indigo-600 text-white rounded-xl text-xs font-bold shadow-md hover:bg-indigo-700 flex items-center justify-center gap-2"
+                    >
+                      Générer Lettre <ArrowRight size={14} />
+                    </button>
+                    <button onClick={() => removeOffer(offer.id)} className="p-3 bg-slate-50 border border-slate-200 text-red-500 rounded-xl hover:bg-red-50 transition-colors flex justify-center items-center">
+                      <Trash2 size={18} />
+                    </button>
+                  </div>
                 </div>
               </div>
-
-              <div className="md:w-48 flex md:flex-col gap-2 justify-center">
-                <button 
-                   onClick={() => navigate('/target/letter', { state: { jobTitle: offer.title, company: offer.company, targetContext: offer.aiInsight } })}
-                   className="flex-1 py-3 bg-indigo-600 text-white rounded-xl text-xs font-bold shadow-md hover:bg-indigo-700 flex items-center justify-center gap-2"
-                >
-                  Générer Lettre <ArrowRight size={14} />
-                </button>
-                <button onClick={() => removeOffer(offer.id)} className="p-3 bg-slate-50 border border-slate-200 text-red-500 rounded-xl hover:bg-red-50 transition-colors flex justify-center items-center">
-                  <Trash2 size={18} />
-                </button>
-              </div>
-            </div>
-          ))}
-        </div>
+            );
+          }}
+        </List>
       )}
     </div>
   );

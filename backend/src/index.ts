@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import cookieParser from 'cookie-parser';
+import compression from 'compression';
 import { checkDbConnection } from './db';
 import { requireAuth } from './middleware/auth.middleware';
 import authRoutes from './routes/auth.routes';
@@ -29,6 +30,9 @@ app.use(cors({
 
 // ⚠️ Stripe Webhook: doit recevoir le body brut AVANT express.json()
 app.use('/api/stripe/webhook', express.raw({ type: 'application/json' }));
+
+// Compression Gzip pour optimiser les temps de réponse
+app.use(compression());
 
 // Middleware global (après la route webhook)
 app.use(express.json());

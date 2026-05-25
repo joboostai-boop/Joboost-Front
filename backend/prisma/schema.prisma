@@ -74,6 +74,9 @@ model User {
   businessOffers          BusinessOffer[]
   businessAffiliationsOwned BusinessAffiliation[] @relation("BusinessOwner")
   businessAffiliationsAsJobseeker BusinessAffiliation[] @relation("AffiliatedJobseeker")
+
+  @@index([role])
+  @@index([organizationId])
 }
 
 enum ApplicationStatus {
@@ -97,6 +100,11 @@ model Application {
   
   userId    String
   user      User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([status])
+  @@index([userId, status])
+  @@index([appliedAt])
 }
 
 model CV {
@@ -110,6 +118,8 @@ model CV {
   
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@index([userId])
 }
 
 model CoverLetter {
@@ -124,6 +134,8 @@ model CoverLetter {
   
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@index([userId])
 }
 
 model SavedOpportunity {
@@ -144,6 +156,9 @@ model SavedOpportunity {
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   
   createdAt   DateTime @default(now())
+
+  @@index([userId])
+  @@index([createdAt])
 }
 
 // ==================== BUSINESS SESSION ====================
@@ -166,6 +181,11 @@ model BusinessOffer {
   
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
+
+  @@index([businessId])
+  @@index([isPublished])
+  @@index([businessId, isPublished])
+  @@index([createdAt])
 }
 
 model BusinessAffiliation {
@@ -180,4 +200,9 @@ model BusinessAffiliation {
   status       String   @default("active") // active, inactive, suspended
   
   @@unique([businessId, jobseekerId])
+
+  @@index([businessId])
+  @@index([businessId, status])
+  @@index([jobseekerId])
+  @@index([affiliatedAt])
 }

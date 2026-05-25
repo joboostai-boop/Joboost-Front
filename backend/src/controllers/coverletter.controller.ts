@@ -7,11 +7,30 @@ export const coverLetterController = {
       const user = await prisma.user.findUnique({ where: { id: req.userId! } });
       if (!user) return res.status(404).json({ success: false, error: "Utilisateur non trouvé" });
 
-      const letters = await (prisma as any).coverLetter.findMany({
-        where: { userId: user.id },
-        orderBy: { updatedAt: 'desc' }
+      const page = parseInt(req.query.page as string) || 1;
+      const limit = parseInt(req.query.limit as string) || 20;
+      const skip = (page - 1) * limit;
+
+      const [letters, total] = await Promise.all([
+        (prisma as any).coverLetter.findMany({
+          where: { userId: user.id },
+          orderBy: { updatedAt: 'desc' },
+          skip,
+          take: limit
+        }),
+        (prisma as any).coverLetter.count({ where: { userId: user.id } })
+      ]);
+
+      res.json({
+        success: true,
+        letters,
+        meta: {
+          total,
+          page,
+          limit,
+          totalPages: Math.ceil(total / limit)
+        }
       });
-      res.json({ success: true, letters });
     } catch (error: any) {
       console.error(error);
       res.status(500).json({ success: false, error: "Erreur récupération Lettres" });
