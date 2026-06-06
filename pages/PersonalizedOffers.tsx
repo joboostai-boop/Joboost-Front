@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { List } from 'react-window';
 import { Search, MapPin, Bookmark, Star, ArrowRight, Euro, Clock, Link as LinkIcon, Edit3 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
@@ -120,19 +119,12 @@ const PersonalizedOffers: React.FC = () => {
           <p className="text-sm font-medium text-slate-500">Génération intelligente de vos offres en cours...</p>
         </div>
       ) : (
-        <List
-          height={700}
-          itemCount={offers.length}
-          itemSize={320}
-          width="100%"
-          className="scrollbar-thin"
-        >
-          {({ index, style }: { index: number; style: React.CSSProperties }) => {
-            const offer = offers[index];
+        <div className="space-y-4">
+          {offers.map((offer, index) => {
             const isBookmarked = !!getSavedId(offer);
             return (
-              <div style={{ ...style, paddingBottom: '16px' }} key={offer.id || index}>
-                <div className="card-pro p-6 hover:border-[#D1D5DB] dark:hover:border-[#4B5563] transition-colors flex flex-col md:flex-row gap-6 mr-2">
+              <div key={offer.id || index}>
+                <div className="card-pro p-6 hover:border-[#D1D5DB] dark:hover:border-[#4B5563] transition-colors flex flex-col md:flex-row gap-6">
                   <div className="flex-1 space-y-4">
                     <div className="flex justify-between items-start">
                       <div>
@@ -183,8 +175,8 @@ const PersonalizedOffers: React.FC = () => {
                 </div>
               </div>
             );
-          }}
-        </List>
+          })}
+        </div>
       )}
     </div>
   );

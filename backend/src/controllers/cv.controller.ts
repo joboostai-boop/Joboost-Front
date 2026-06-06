@@ -7,16 +7,17 @@ export const cvController = {
       const user = await prisma.user.findUnique({ where: { id: req.userId! } });
       if (!user) return res.status(404).json({ success: false, error: "Utilisateur non trouvé" });
 
-      const page = parseInt(req.query.page as string) || 1;
-      const limit = parseInt(req.query.limit as string) || 20;
+      // Pagination optionnelle : sans paramètre, on renvoie tout (comportement d'origine)
+      const hasPagination = req.query.page !== undefined || req.query.limit !== undefined;
+      const page = Math.max(1, parseInt(req.query.page as string) || 1);
+      const limit = Math.min(100, Math.max(1, parseInt(req.query.limit as string) || 20));
       const skip = (page - 1) * limit;
 
       const [cvs, total] = await Promise.all([
         (prisma as any).cV.findMany({
           where: { userId: user.id },
           orderBy: { updatedAt: 'desc' },
-          skip,
-          take: limit
+          ...(hasPagination ? { skip, take: limit } : {})
         }),
         (prisma as any).cV.count({ where: { userId: user.id } })
       ]);

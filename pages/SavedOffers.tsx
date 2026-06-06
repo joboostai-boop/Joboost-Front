@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { List } from 'react-window';
-import { 
+import {
   Bookmark, 
   Trash2, 
   ArrowRight, 
@@ -78,18 +77,11 @@ const SavedOffers: React.FC = () => {
           <p className="text-sm text-slate-500">Parcourez les offres personnalisées pour commencer à en enregistrer.</p>
         </div>
       ) : (
-        <List
-          height={600}
-          itemCount={savedOffers.length}
-          itemSize={220}
-          width="100%"
-          className="scrollbar-thin"
-        >
-          {({ index, style }: { index: number; style: React.CSSProperties }) => {
-            const offer = savedOffers[index];
+        <div className="space-y-4">
+          {savedOffers.map((offer) => {
             return (
-              <div style={{ ...style, paddingBottom: '16px' }} key={offer.id}>
-                <div className="card-modern p-6 flex flex-col md:flex-row gap-6 hover:border-indigo-200 transition-all mr-2">
+              <div key={offer.id}>
+                <div className="card-modern p-6 flex flex-col md:flex-row gap-6 hover:border-indigo-200 transition-all">
                   <div className="flex-1 space-y-4">
                     <div className="flex justify-between items-start">
                       <div>
@@ -124,8 +116,8 @@ const SavedOffers: React.FC = () => {
                 </div>
               </div>
             );
-          }}
-        </List>
+          })}
+        </div>
       )}
     </div>
   );
