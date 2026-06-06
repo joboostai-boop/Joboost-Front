@@ -92,15 +92,15 @@ const Pricing: React.FC<PricingProps> = ({ user }) => {
       {/* Hero Section : Focus sur le ROI */}
       <header className="text-center space-y-4 md:space-y-6 max-w-3xl mx-auto">
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-100 dark:border-indigo-800/50 text-indigo-600 dark:text-indigo-400 text-[10px] font-black uppercase tracking-[0.2em]">
-          <Sparkles size={12} /> Des milliers de carrières boostées
+          <Sparkles size={12} /> Une recherche d'emploi assistée par l'IA
         </div>
         <h1 className="text-3xl md:text-6xl font-black text-slate-900 dark:text-white tracking-tighter leading-tight md:leading-[1.1]">
           Passez de candidat à <br /> 
           <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-indigo-400">Recruté d'élite.</span>
         </h1>
         <p className="text-slate-500 dark:text-slate-400 text-base md:text-lg font-medium">
-          Choisissez le protocole adapté à vos ambitions. 
-          <span className="block text-indigo-600 dark:text-indigo-400 font-bold">92% de nos membres Pro trouvent un job en moins de 3 mois.</span>
+          Choisissez le protocole adapté à vos ambitions.
+          <span className="block text-indigo-600 dark:text-indigo-400 font-bold">Plus de candidatures ciblées, mieux optimisées, en moins de temps.</span>
         </p>
       </header>
 
@@ -239,9 +239,9 @@ const Pricing: React.FC<PricingProps> = ({ user }) => {
       {/* Trust & Guarantees */}
       <footer className="grid grid-cols-1 md:grid-cols-3 gap-8">
         {[
-          { icon: <Lock className="text-indigo-600" />, title: 'Paiement Sécurisé', desc: 'Protocoles SSL 256-bits via Stripe Engine.' },
-          { icon: <TrendingUp className="text-emerald-500" />, title: 'Impact Immédiat', desc: 'Augmentation moyenne de 300% des réponses.' },
-          { icon: <ShieldCheck className="text-blue-500" />, title: 'RGPD Compliant', desc: 'Vos données sont cryptées et vous appartiennent.' },
+          { icon: <Lock className="text-indigo-600" />, title: 'Paiement Sécurisé', desc: 'Paiements traités de façon sécurisée par Stripe.' },
+          { icon: <TrendingUp className="text-emerald-500" />, title: 'Candidatures optimisées', desc: 'Des CV et lettres conçus pour passer les filtres ATS.' },
+          { icon: <ShieldCheck className="text-blue-500" />, title: 'Respect du RGPD', desc: 'Vos données vous appartiennent et ne sont jamais revendues.' },
         ].map((item, i) => (
           <div key={i} className="card-modern p-6 flex items-start gap-4">
             <div className="shrink-0 p-3 bg-slate-50 dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-700">
@@ -268,7 +268,7 @@ const Pricing: React.FC<PricingProps> = ({ user }) => {
           <div className="space-y-3 md:space-y-4">
             <h3 className="text-2xl md:text-5xl font-black tracking-tighter relative">Toujours un doute ?</h3>
             <p className="text-indigo-100 text-base md:text-lg font-medium max-w-2xl mx-auto leading-relaxed">
-              Rejoignez les <span className="text-white font-black underline decoration-indigo-300 underline-offset-4">45,000+ candidats</span> qui ont déjà activé leur avantage technologique stratégique.
+              Rejoignez les candidats qui boostent leur recherche d'emploi grâce à l'IA et activez votre avantage stratégique.
             </p>
           </div>
           <button className="w-full md:w-auto px-12 py-5 bg-white text-indigo-600 rounded-2xl text-[10px] font-black uppercase tracking-[0.25em] hover:bg-indigo-50 transition-all shadow-xl hover:-translate-y-1 relative group/btn">

@@ -84,7 +84,9 @@ const Home: React.FC<HomeProps> = ({ onStart }) => {
     setShowAuth(true);
   };
 
-  const partners = ["GOOGLE", "LVMH", "THALES", "AIR FRANCE", "APPLE", "TESLA", "L'ORÉAL", "HERMÈS", "AMAZON", "TIKTOK", "SPOTIFY"];
+  // Capacités réelles du produit (remplace l'ancien bandeau de logos de marques tierces,
+  // qui laissait croire à tort à des partenariats / placements chez ces entreprises).
+  const capabilities = ["CV OPTIMISÉ ATS", "LETTRES DE MOTIVATION IA", "MATCHING CV / OFFRE", "CANDIDATURES CIBLÉES", "GÉNÉRATION EN MASSE", "SUIVI DES CANDIDATURES"];
 
   return (
     <div className="min-h-screen bg-white text-slate-900 selection:bg-indigo-100 selection:text-indigo-900">
@@ -156,7 +158,7 @@ const Home: React.FC<HomeProps> = ({ onStart }) => {
           <div className="relative z-10 text-center lg:text-left space-y-8">
             <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-indigo-50 text-indigo-600 text-[10px] font-black uppercase tracking-[0.2em] mb-4 border border-indigo-100">
               <Sparkles size={14} fill="currentColor" />
-              <span>Matching Engine V3.2 Actif</span>
+              <span>Propulsé par l'IA générative</span>
             </div>
             <h1 className="text-3xl sm:text-5xl md:text-7xl font-extrabold text-slate-900 leading-[1.2] md:leading-[1.1] tracking-tight">
               l'IA au service <br />
@@ -171,12 +173,11 @@ const Home: React.FC<HomeProps> = ({ onStart }) => {
                 Lancer mon optimisation <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
               </button>
               <div className="flex flex-col justify-center px-4">
-                <div className="flex -space-x-2">
-                  {[1,2,3,4].map(i => (
-                    <img key={i} className="w-8 h-8 rounded-full border-2 border-white ring-2 ring-indigo-50" src={`https://i.pravatar.cc/100?u=${i+10}`} alt="User" />
-                  ))}
+                <div className="flex items-center gap-2 text-emerald-500">
+                  <CheckCircle2 size={18} />
+                  <span className="text-sm font-black text-slate-700">Essai gratuit</span>
                 </div>
-                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-2">+1,200 candidats recrutés</p>
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-2">Sans carte bancaire</p>
               </div>
             </div>
           </div>
@@ -264,18 +265,18 @@ const Home: React.FC<HomeProps> = ({ onStart }) => {
       {/* Trust Section : Carrousel Défilant avec Fondu */}
       <section className="py-16 border-y border-slate-100 bg-slate-50/50 overflow-hidden">
         <div className="max-w-7xl mx-auto px-6">
-          <p className="text-center text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] mb-12">Nos candidats intègrent les meilleures unités</p>
-          
+          <p className="text-center text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] mb-12">Tout ce que l'IA fait pour votre recherche</p>
+
           <div className="relative mask-fade overflow-hidden">
             <div className="animate-marquee py-4">
-              {/* Premier set de logos */}
-              {partners.map((p, i) => (
+              {/* Premier set de capacités */}
+              {capabilities.map((p, i) => (
                 <span key={`p1-${i}`} className="mx-12 text-2xl font-black tracking-tighter text-slate-900/40 hover:text-indigo-600/60 transition-colors cursor-default whitespace-nowrap">
                   {p}
                 </span>
               ))}
-              {/* Deuxième set de logos pour le bouclage infini */}
-              {partners.map((p, i) => (
+              {/* Deuxième set pour le bouclage infini */}
+              {capabilities.map((p, i) => (
                 <span key={`p2-${i}`} className="mx-12 text-2xl font-black tracking-tighter text-slate-900/40 hover:text-indigo-600/60 transition-colors cursor-default whitespace-nowrap">
                   {p}
                 </span>
@@ -384,7 +385,7 @@ const Home: React.FC<HomeProps> = ({ onStart }) => {
             />
             <FAQItem 
               question="Mes données personnelles sont-elles sécurisées ?" 
-              answer="Nous sommes 100% conformes au RGPD. Vos données ne sont jamais revendues et servent uniquement à l'optimisation de votre recherche d'emploi via nos modèles d'IA sécurisés." 
+              answer="JoBoost est conçu dans le respect du RGPD. Vos données ne sont jamais revendues et servent uniquement à l'optimisation de votre recherche d'emploi. Consultez notre politique de confidentialité pour le détail."
             />
             <FAQItem 
               question="Comment fonctionne le score de matching ?" 
@@ -422,7 +423,7 @@ const Home: React.FC<HomeProps> = ({ onStart }) => {
               <Logo />
             </div>
             <p className="text-slate-500 text-sm leading-relaxed max-w-xs font-medium">
-              L'unité de performance pour candidats ambitieux. Propulsé par Jobix IA, le moteur de matching le plus avancé du marché.
+              L'allié des candidats ambitieux pour une recherche d'emploi assistée par l'IA : CV, lettres, candidatures ciblées et suivi.
             </p>
           </div>
           
@@ -447,13 +448,15 @@ const Home: React.FC<HomeProps> = ({ onStart }) => {
           <div className="space-y-4">
             <p className="text-xs font-black text-slate-900 uppercase tracking-widest">Légal</p>
             <ul className="space-y-3 text-sm font-bold text-slate-500">
-              <li><a href="#" className="hover:text-indigo-600 transition-colors">Confidentialité</a></li>
-              <li><a href="#" className="hover:text-indigo-600 transition-colors">CGU</a></li>
+              <li><Link to="/legal/mentions" className="hover:text-indigo-600 transition-colors">Mentions légales</Link></li>
+              <li><Link to="/legal/confidentialite" className="hover:text-indigo-600 transition-colors">Confidentialité</Link></li>
+              <li><Link to="/legal/cgu" className="hover:text-indigo-600 transition-colors">CGU</Link></li>
+              <li><Link to="/legal/cgv" className="hover:text-indigo-600 transition-colors">CGV</Link></li>
             </ul>
           </div>
         </div>
         <div className="max-w-7xl mx-auto mt-20 pt-8 border-t border-slate-50 flex justify-between items-center text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">
-          <span>© 2025 JoBoost Units International</span>
+          <span>© 2026 JoBoost</span>
           <div className="flex gap-4">
             <Globe size={14} /> <span>France (FR)</span>
           </div>
