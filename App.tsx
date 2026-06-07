@@ -11,6 +11,7 @@ const PrepareLayout = React.lazy(() => import('./pages/PrepareLayout'));
 const TargetLayout = React.lazy(() => import('./pages/TargetLayout'));
 const TrackLayout = React.lazy(() => import('./pages/TrackLayout'));
 const Home = React.lazy(() => import('./pages/Home'));
+const Legal = React.lazy(() => import('./pages/Legal'));
 const Dashboard = React.lazy(() => import('./pages/Dashboard'));
 const CVGenerator = React.lazy(() => import('./pages/CVGenerator'));
 const LetterGenerator = React.lazy(() => import('./pages/LetterGenerator'));
@@ -84,7 +85,10 @@ const App: React.FC = () => {
       <div className="min-h-screen bg-white dark:bg-slate-950 selection:bg-indigo-100 selection:text-indigo-900 transition-colors duration-300">
         <Toaster position="top-right" />
         <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div></div>}>
-          <Home onStart={() => navigate('/auth/register')} />
+          <Routes>
+            <Route path="/legal/:page" element={<Legal />} />
+            <Route path="*" element={<Home onStart={() => navigate('/auth/register')} />} />
+          </Routes>
         </Suspense>
       </div>
     );
@@ -148,6 +152,7 @@ const App: React.FC = () => {
             </Route>
 
             {/* Configurations transverses */}
+            <Route path="/legal/:page" element={<Legal />} />
             <Route path="/pricing" element={<Pricing user={user} />} />
             <Route path="/settings" element={<Settings user={user} isDarkMode={isDarkMode} toggleDarkMode={toggleDarkMode} />} />
             

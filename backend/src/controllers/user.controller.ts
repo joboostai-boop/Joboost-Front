@@ -80,5 +80,65 @@ export const userController = {
       console.error(error);
       res.status(500).json({ success: false, error: "Erreur lors de la mise à jour : " + error.message });
     }
+  },
+
+  // RGPD — Droit d'accès / portabilité (art. 15 & 20) : export complet des données.
+  exportData: async (req: Request, res: Response) => {
+    try {
+      const user = await prisma.user.findUnique({
+        where: { id: req.userId! },
+        include: {
+          applications: true,
+          cvs: true,
+          coverLetters: true,
+          savedOpportunities: true,
+        },
+      });
+
+      if (!user) {
+        return res.status(404).json({ success: false, error: "Utilisateur non trouvé." });
+      }
+
+      // On retire les données sensibles/techniques non personnelles
+      const {
+        password: _pw,
+        ftAccessToken: _at,
+        ftRefreshToken: _rt,
+        ...safeUser
+      } = user as any;
+
+      const exportPayload = {
+        exportedAt: new Date().toISOString(),
+        notice: "Export de vos données personnelles JoBoost (RGPD, art. 15 & 20).",
+        data: safeUser,
+      };
+
+      res.setHeader('Content-Type', 'application/json');
+      res.setHeader('Content-Disposition', `attachment; filename="joboost-mes-donnees.json"`);
+      res.status(200).send(JSON.stringify(exportPayload, null, 2));
+    } catch (error: any) {
+      console.error('exportData error:', error);
+      res.status(500).json({ success: false, error: "Erreur lors de l'export des données." });
+    }
+  },
+
+  // RGPD — Droit à l'effacement (art. 17) : suppression définitive du compte.
+  deleteAccount: async (req: Request, res: Response) => {
+    try {
+      const existing = await prisma.user.findUnique({ where: { id: req.userId! } });
+      if (!existing) {
+        return res.status(404).json({ success: false, error: "Utilisateur non trouvé." });
+      }
+
+      // Les relations (applications, cvs, lettres, opportunités, affiliations, offres)
+      // sont supprimées en cascade (onDelete: Cascade dans le schéma Prisma).
+      await prisma.user.delete({ where: { id: req.userId! } });
+
+      res.clearCookie('token');
+      res.json({ success: true, message: "Votre compte et vos données ont été supprimés définitivement." });
+    } catch (error: any) {
+      console.error('deleteAccount error:', error);
+      res.status(500).json({ success: false, error: "Erreur lors de la suppression du compte." });
+    }
   }
 };

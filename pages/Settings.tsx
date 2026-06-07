@@ -25,6 +25,7 @@ import {
 import { User as UserType } from '../types';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import toast from 'react-hot-toast';
 
 interface SettingsProps { 
   user: UserType;
@@ -38,6 +39,51 @@ const Settings: React.FC<SettingsProps> = ({ user, isDarkMode, toggleDarkMode })
   const handleLogout = async () => {
     await logout();
     navigate('/auth/login');
+  };
+
+  // RGPD — Export des données personnelles (art. 15 & 20)
+  const handleExportData = async () => {
+    const toastId = toast.loading('Préparation de votre export...');
+    try {
+      const res = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/users/me/export`, {
+        credentials: 'include',
+      });
+      if (!res.ok) throw new Error('Export impossible');
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'joboost-mes-donnees.json';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+      toast.success('Vos données ont été exportées.', { id: toastId });
+    } catch (err) {
+      toast.error("Erreur lors de l'export des données.", { id: toastId });
+    }
+  };
+
+  // RGPD — Suppression définitive du compte (art. 17)
+  const handleDeleteAccount = async () => {
+    const confirmed = window.confirm(
+      "Cette action supprime DÉFINITIVEMENT votre compte et toutes vos données (CV, lettres, candidatures). Cette opération est irréversible. Confirmer ?"
+    );
+    if (!confirmed) return;
+    const toastId = toast.loading('Suppression de votre compte...');
+    try {
+      const res = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/users/me`, {
+        method: 'DELETE',
+        credentials: 'include',
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) throw new Error(data.error || 'Suppression impossible');
+      toast.success('Compte supprimé. À bientôt.', { id: toastId });
+      await logout();
+      navigate('/auth/login');
+    } catch (err: any) {
+      toast.error(err.message || 'Erreur lors de la suppression.', { id: toastId });
+    }
   };
 
   return (
@@ -147,20 +193,20 @@ const Settings: React.FC<SettingsProps> = ({ user, isDarkMode, toggleDarkMode })
           <section className="space-y-6">
             <h3 className="text-xs font-black uppercase tracking-widest text-slate-400 dark:text-slate-500 px-2 italic">Sécurité & Données</h3>
             <div className="card-modern p-6 space-y-4">
-              <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 hover:border-indigo-100 transition-all cursor-pointer">
+              <button onClick={handleExportData} className="w-full flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 hover:border-indigo-100 transition-all cursor-pointer text-left">
                 <div className="flex items-center gap-4">
                   <Download size={18} className="text-slate-400" />
-                  <p className="text-sm font-bold">Exporter mes données (JSON/PDF)</p>
+                  <p className="text-sm font-bold">Exporter mes données (JSON)</p>
                 </div>
                 <ChevronRight size={16} className="text-slate-300" />
-              </div>
-              <div className="flex items-center justify-between p-4 bg-red-50/30 dark:bg-red-900/10 rounded-2xl border border-red-100 dark:border-red-900/20 hover:bg-red-50 transition-all cursor-pointer group">
+              </button>
+              <button onClick={handleDeleteAccount} className="w-full flex items-center justify-between p-4 bg-red-50/30 dark:bg-red-900/10 rounded-2xl border border-red-100 dark:border-red-900/20 hover:bg-red-50 transition-all cursor-pointer group text-left">
                 <div className="flex items-center gap-4">
                   <Trash2 size={18} className="text-red-400" />
-                  <p className="text-sm font-bold text-red-600 dark:text-red-400">Supprimer définitivement l'unité</p>
+                  <p className="text-sm font-bold text-red-600 dark:text-red-400">Supprimer définitivement mon compte</p>
                 </div>
                 <AlertCircle size={16} className="text-red-300 group-hover:text-red-500" />
-              </div>
+              </button>
             </div>
           </section>
         </div>
