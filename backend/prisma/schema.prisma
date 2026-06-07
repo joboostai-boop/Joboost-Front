@@ -51,6 +51,10 @@ model User {
   quota             Int      @default(100)
   phone             String?
   city              String?
+
+  // Consentements (RGPD / preuve d'acceptation)
+  acceptedTermsAt   DateTime? // date d'acceptation des CGU + politique de confidentialité
+  marketingOptIn    Boolean   @default(false) // consentement e-mails marketing (opt-in)
   
   // Utilisation de JSON pour des arrays d'objets complexes (facilite la flexibilité noSQL dans un modèle relationnel)
   experiences       Json?    @default("[]")

@@ -16,10 +16,14 @@ const COOKIE_OPTIONS = {
 export const authController = {
   register: async (req: Request, res: Response) => {
     try {
-      const { email, password, name } = req.body;
+      const { email, password, name, acceptedTerms, marketingOptIn } = req.body;
 
       if (!email || !password || !name) {
         return res.status(400).json({ success: false, error: "Email, mot de passe et nom sont requis." });
+      }
+
+      if (!acceptedTerms) {
+        return res.status(400).json({ success: false, error: "Vous devez accepter les CGU et la politique de confidentialité." });
       }
 
       // Vérication existence
@@ -36,6 +40,8 @@ export const authController = {
           email,
           name,
           password: hashedPassword,
+          acceptedTermsAt: new Date(),
+          marketingOptIn: marketingOptIn === true,
         }
       });
 
@@ -93,6 +99,18 @@ export const authController = {
 
   businessLogin: async (req: Request, res: Response) => {
     try {
+      // ⚠️ SÉCURITÉ / RGPD : cet accès "démo" connecte sans identifiant et donne
+      // accès à des données personnelles de candidats (art. 32 RGPD). Il est donc
+      // DÉSACTIVÉ par défaut et n'est utilisable qu'en local/démo via la variable
+      // d'environnement ENABLE_DEMO_BUSINESS_LOGIN=true. En production, les
+      // partenaires doivent se connecter avec leurs identifiants via /api/auth/login.
+      if (process.env.ENABLE_DEMO_BUSINESS_LOGIN !== 'true') {
+        return res.status(403).json({
+          success: false,
+          error: "L'accès partenaire nécessite une connexion avec identifiants.",
+        });
+      }
+
       // Find any existing business partner, or create one
       let user = await prisma.user.findFirst({
         where: { role: 'BUSINESS_PARTNER' },

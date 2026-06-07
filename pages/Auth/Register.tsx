@@ -7,6 +7,8 @@ const Register = () => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
+  const [marketingOptIn, setMarketingOptIn] = useState(false);
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   
@@ -15,14 +17,20 @@ const Register = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
     setError('');
+
+    if (!acceptedTerms) {
+      setError("Vous devez accepter les Conditions générales et la Politique de confidentialité.");
+      return;
+    }
+
+    setIsLoading(true);
 
     try {
       const res = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/auth/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, email, password }),
+        body: JSON.stringify({ name, email, password, acceptedTerms, marketingOptIn }),
         credentials: 'include'
       });
       const data = await res.json();
@@ -48,7 +56,7 @@ const Register = () => {
           <div className="flex justify-center items-center gap-2 mb-4">
             <Sparkles className="w-8 h-8 text-[#7D5CFF]" />
             <h1 className="text-3xl font-bold bg-gradient-to-r from-[#7D5CFF] to-violet-800 bg-clip-text text-transparent">
-              JobBoost
+              JoBoost
             </h1>
           </div>
           <h2 className="mt-2 text-2xl font-bold text-gray-900">
@@ -111,11 +119,37 @@ const Register = () => {
             </div>
           </div>
 
+          <div className="space-y-3">
+            <label className="flex items-start gap-3 text-xs text-gray-600 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={acceptedTerms}
+                onChange={(e) => setAcceptedTerms(e.target.checked)}
+                className="mt-0.5 w-4 h-4 accent-[#4F46E5] shrink-0"
+              />
+              <span>
+                J'ai lu et j'accepte les{' '}
+                <Link to="/legal/cgu" target="_blank" className="font-medium text-[#7D5CFF] hover:underline">conditions générales</Link>
+                {' '}et la{' '}
+                <Link to="/legal/confidentialite" target="_blank" className="font-medium text-[#7D5CFF] hover:underline">politique de confidentialité</Link>.
+              </span>
+            </label>
+            <label className="flex items-start gap-3 text-xs text-gray-500 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={marketingOptIn}
+                onChange={(e) => setMarketingOptIn(e.target.checked)}
+                className="mt-0.5 w-4 h-4 accent-[#4F46E5] shrink-0"
+              />
+              <span>J'accepte de recevoir des conseils et actualités JoBoost par e-mail (facultatif, désinscription à tout moment).</span>
+            </label>
+          </div>
+
           <div>
             <button
               type="submit"
-              disabled={isLoading}
-              className="btn-primary w-full flex justify-center py-3"
+              disabled={isLoading || !acceptedTerms}
+              className="btn-primary w-full flex justify-center py-3 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isLoading ? 'Création...' : 'S\'inscrire'}
             </button>

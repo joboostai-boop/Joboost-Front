@@ -508,6 +508,15 @@ const Home: React.FC<HomeProps> = ({ onStart }) => {
               <button onClick={onStart} className="w-full py-5 bg-indigo-600 text-white rounded-2xl font-black shadow-2xl shadow-indigo-100 hover:bg-indigo-700 transition-all text-sm uppercase tracking-widest mt-6">
                 {isSignUp ? "Lancer mon unité" : "Initialiser Connexion"}
               </button>
+
+              {isSignUp && (
+                <p className="text-[10px] text-slate-400 text-center leading-relaxed mt-4 px-2">
+                  En créant un compte, vous acceptez les{' '}
+                  <Link to="/legal/cgu" className="font-bold text-indigo-500 hover:underline">conditions générales</Link>
+                  {' '}et la{' '}
+                  <Link to="/legal/confidentialite" className="font-bold text-indigo-500 hover:underline">politique de confidentialité</Link>.
+                </p>
+              )}
               
               <button onClick={() => setIsSignUp(!isSignUp)} className="w-full text-[10px] font-black text-indigo-600 hover:underline mt-6 uppercase tracking-widest">
                 {isSignUp ? "Déjà membre ? Se connecter" : "Nouvelle unité ? S'inscrire"}

@@ -14,6 +14,7 @@ import {
   ZapOff,
   Loader2
 } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { User, Plan } from '../types';
 import toast from 'react-hot-toast';
 import { useSubscription } from '../hooks/useSubscription';
@@ -189,6 +190,14 @@ const Pricing: React.FC<PricingProps> = ({ user }) => {
                   <>{plan.buttonText}{!plan.current && !(plan as Record<string, unknown>).disabled && <ArrowRight size={14} strokeWidth={3} />}</>
                 )}
               </button>
+
+              {plan.monthlyPrice > 0 && !(plan as Record<string, unknown>).disabled && (
+                <p className="text-[9px] text-slate-400 leading-relaxed mt-4 text-center px-2">
+                  Abonnement sans engagement, résiliable à tout moment. En activant l'accès immédiat, vous acceptez de
+                  renoncer à votre droit de rétractation de 14&nbsp;jours (art. L221-28 C. conso). Voir les{' '}
+                  <Link to="/legal/cgv" className="font-bold text-indigo-500 hover:underline">CGV</Link>.
+                </p>
+              )}
             </div>
           </div>
         ))}
@@ -217,7 +226,7 @@ const Pricing: React.FC<PricingProps> = ({ user }) => {
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                 {[
-                  ['Candidatures Quotidiennes', '5', '30', 'Illimité'],
+                  ['Volume de candidatures', '5 / jour', '100 / mois', 'Illimité'],
                   ['Moteur IA (Version)', 'JoBoost Lite', 'JoBoost 3.5 Pro', 'Elite Custom'],
                   ['Analyse Sémantique ATS', 'Basique', 'Avancée', 'Chirurgicale'],
                   ['Envoi Groupé (Bulk)', '—', '—', 'Inclus'],
