@@ -296,26 +296,63 @@ export const businessController = {
     try {
       const businessId = req.userId!;
 
-      // Total adhérents actifs
+      // --- 1. Résolution de la fenêtre temporelle (liberté : période + perso) ---
+      const period = (req.query.period as string) || '6m';
+      const now = new Date();
+      let to = req.query.to ? new Date(req.query.to as string) : new Date(now);
+      let from: Date;
+
+      if (req.query.from) {
+        from = new Date(req.query.from as string);
+      } else {
+        from = new Date(now);
+        switch (period) {
+          case '7d': from.setDate(from.getDate() - 7); break;
+          case '30d': from.setDate(from.getDate() - 30); break;
+          case '3m': from.setMonth(from.getMonth() - 3); break;
+          case '12m': from.setMonth(from.getMonth() - 12); break;
+          case '6m':
+          default: from.setMonth(from.getMonth() - 6); break;
+        }
+      }
+      // Sécurité : bornes cohérentes
+      if (from > to) [from, to] = [to, from];
+
+      const spanMs = to.getTime() - from.getTime();
+      const spanDays = spanMs / (1000 * 60 * 60 * 24);
+      const granularity: 'day' | 'month' = spanDays <= 62 ? 'day' : 'month';
+
+      // Fenêtre précédente (même durée, juste avant) pour les comparaisons
+      const prevTo = new Date(from);
+      const prevFrom = new Date(from.getTime() - spanMs);
+
+      // --- 2. Filtres optionnels (liberté : segmenter) ---
+      const statusFilter = (req.query.status as string) || undefined;
+      const skillFilter = (req.query.skill as string) || undefined;
+
+      const jobseekerFilter = skillFilter ? { skills: { hasSome: [skillFilter] } } : undefined;
+      const baseAffiliationWhere: any = { businessId };
+      if (statusFilter) baseAffiliationWhere.status = statusFilter;
+      if (jobseekerFilter) baseAffiliationWhere.jobseeker = jobseekerFilter;
+
+      // --- 3. KPIs ---
+      // Total adhérents actifs (snapshot, respecte le filtre compétence)
       const totalActive = await prisma.businessAffiliation.count({
-        where: { businessId, status: 'active' },
+        where: { businessId, status: 'active', ...(jobseekerFilter ? { jobseeker: jobseekerFilter } : {}) },
       });
 
-      // Nouveaux adhérents ce mois
-      const startOfMonth = new Date();
-      startOfMonth.setDate(1);
-      startOfMonth.setHours(0, 0, 0, 0);
-
-      const newThisMonth = await prisma.businessAffiliation.count({
-        where: {
-          businessId,
-          affiliatedAt: { gte: startOfMonth },
-        },
+      // Nouveaux adhérents dans la fenêtre + fenêtre précédente (delta)
+      const newInPeriod = await prisma.businessAffiliation.count({
+        where: { ...baseAffiliationWhere, affiliatedAt: { gte: from, lte: to } },
       });
+      const newInPrevPeriod = await prisma.businessAffiliation.count({
+        where: { ...baseAffiliationWhere, affiliatedAt: { gte: prevFrom, lt: prevTo } },
+      });
+      const newInPeriodDelta = pctDelta(newInPeriod, newInPrevPeriod);
 
-      // Taux de complétion de profil moyen
+      // Dataset d'adhérents (pour complétion + compétences)
       const affiliatedUsers = await prisma.businessAffiliation.findMany({
-        where: { businessId },
+        where: baseAffiliationWhere,
         include: {
           jobseeker: {
             select: {
@@ -346,25 +383,25 @@ export const businessController = {
         ? Math.round(totalCompletion / affiliatedUsers.length)
         : 0;
 
-      // Candidatures des adhérents (30 derniers jours)
-      const thirtyDaysAgo = new Date();
-      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-
+      // Candidatures des adhérents dans la fenêtre + fenêtre précédente (delta)
       const affiliatedIds = affiliatedUsers.map((a) => a.jobseekerId);
 
       const applicationCount = affiliatedIds.length > 0
         ? await prisma.application.count({
-            where: {
-              userId: { in: affiliatedIds },
-              appliedAt: { gte: thirtyDaysAgo },
-            },
+            where: { userId: { in: affiliatedIds }, appliedAt: { gte: from, lte: to } },
           })
         : 0;
+      const applicationCountPrev = affiliatedIds.length > 0
+        ? await prisma.application.count({
+            where: { userId: { in: affiliatedIds }, appliedAt: { gte: prevFrom, lt: prevTo } },
+          })
+        : 0;
+      const applicationCountDelta = pctDelta(applicationCount, applicationCountPrev);
 
-      // Répartition par statut d'adhérent (donut)
+      // --- 4. Répartition par statut (donut) — non filtrée par statut pour rester lisible ---
       const statusDistribution = await prisma.businessAffiliation.groupBy({
         by: ['status'],
-        where: { businessId },
+        where: { businessId, ...(jobseekerFilter ? { jobseeker: jobseekerFilter } : {}) },
         _count: { _all: true },
       });
 
@@ -373,40 +410,45 @@ export const businessController = {
         count: s._count._all,
       }));
 
-      // Évolution des affiliations sur 6 mois (line chart)
-      const sixMonthsAgo = new Date();
-      sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
-
+      // --- 5. Évolution des affiliations (granularité adaptative) ---
       const recentAffiliations = await prisma.businessAffiliation.findMany({
-        where: {
-          businessId,
-          affiliatedAt: { gte: sixMonthsAgo },
-        },
+        where: { ...baseAffiliationWhere, affiliatedAt: { gte: from, lte: to } },
         select: { affiliatedAt: true },
         orderBy: { affiliatedAt: 'asc' },
       });
 
-      // Group by month
-      const monthlyGrowth: { month: string; total: number }[] = [];
-      const monthMap = new Map<string, number>();
+      const bucketKey = (d: Date) =>
+        granularity === 'day'
+          ? `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+          : `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
 
+      const bucketMap = new Map<string, number>();
       recentAffiliations.forEach((a) => {
-        const key = `${a.affiliatedAt.getFullYear()}-${String(a.affiliatedAt.getMonth() + 1).padStart(2, '0')}`;
-        monthMap.set(key, (monthMap.get(key) || 0) + 1);
+        const key = bucketKey(a.affiliatedAt);
+        bucketMap.set(key, (bucketMap.get(key) || 0) + 1);
       });
 
-      // Fill in missing months
-      for (let i = 5; i >= 0; i--) {
-        const d = new Date();
-        d.setMonth(d.getMonth() - i);
-        const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
-        monthlyGrowth.push({
-          month: key,
-          total: monthMap.get(key) || 0,
-        });
+      // Remplir les buckets manquants (zéros) sur toute la fenêtre
+      const growth: { bucket: string; total: number }[] = [];
+      const cursor = new Date(from);
+      if (granularity === 'day') {
+        cursor.setHours(0, 0, 0, 0);
+        while (cursor <= to) {
+          const key = bucketKey(cursor);
+          growth.push({ bucket: key, total: bucketMap.get(key) || 0 });
+          cursor.setDate(cursor.getDate() + 1);
+        }
+      } else {
+        cursor.setDate(1);
+        cursor.setHours(0, 0, 0, 0);
+        while (cursor <= to) {
+          const key = bucketKey(cursor);
+          growth.push({ bucket: key, total: bucketMap.get(key) || 0 });
+          cursor.setMonth(cursor.getMonth() + 1);
+        }
       }
 
-      // Top compétences parmi les adhérents
+      // --- 6. Top compétences parmi les adhérents ---
       const skillsMap = new Map<string, number>();
       affiliatedUsers.forEach((a) => {
         const skills = a.jobseeker.skills || [];
@@ -420,11 +462,10 @@ export const businessController = {
         .slice(0, 10)
         .map(([skill, count]) => ({ skill, count }));
 
-      // Offres publiées
+      // --- 7. Offres ---
       const publishedOffers = await prisma.businessOffer.count({
         where: { businessId, isPublished: true },
       });
-
       const totalOffers = await prisma.businessOffer.count({
         where: { businessId },
       });
@@ -432,12 +473,22 @@ export const businessController = {
       res.json({
         success: true,
         stats: {
-          totalActive,
-          newThisMonth,
-          avgProfileCompletion,
-          applicationCount,
+          range: {
+            from: from.toISOString(),
+            to: to.toISOString(),
+            period: req.query.from ? 'custom' : period,
+            granularity,
+          },
+          kpis: {
+            totalActive,
+            newInPeriod,
+            newInPeriodDelta,
+            avgProfileCompletion,
+            applicationCount,
+            applicationCountDelta,
+          },
           statusBreakdown,
-          monthlyGrowth,
+          growth,
           topSkills,
           publishedOffers,
           totalOffers,
@@ -449,3 +500,9 @@ export const businessController = {
     }
   },
 };
+
+// Variation en % entre deux valeurs ; null si la base est nulle (delta non calculable honnêtement)
+function pctDelta(current: number, previous: number): number | null {
+  if (previous === 0) return null;
+  return Math.round(((current - previous) / previous) * 100);
+}

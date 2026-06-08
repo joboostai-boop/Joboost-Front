@@ -140,13 +140,33 @@ export interface BusinessJobseekerDetail extends BusinessJobseeker {
   }[];
 }
 
+export type StatsPeriod = '7d' | '30d' | '3m' | '6m' | '12m' | 'custom';
+
+export interface StatsQuery {
+  period?: StatsPeriod;
+  from?: string; // ISO, pour période personnalisée
+  to?: string;   // ISO
+  status?: string;
+  skill?: string;
+}
+
 export interface BusinessStats {
-  totalActive: number;
-  newThisMonth: number;
-  avgProfileCompletion: number;
-  applicationCount: number;
+  range: {
+    from: string;
+    to: string;
+    period: StatsPeriod;
+    granularity: 'day' | 'month';
+  };
+  kpis: {
+    totalActive: number;
+    newInPeriod: number;
+    newInPeriodDelta: number | null;        // % vs période précédente
+    avgProfileCompletion: number;
+    applicationCount: number;
+    applicationCountDelta: number | null;
+  };
   statusBreakdown: { status: string; count: number }[];
-  monthlyGrowth: { month: string; total: number }[];
+  growth: { bucket: string; total: number }[]; // bucket = 'YYYY-MM-DD' ou 'YYYY-MM'
   topSkills: { skill: string; count: number }[];
   publishedOffers: number;
   totalOffers: number;

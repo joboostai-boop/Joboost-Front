@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { prisma } from '../db';
 import { geminiService } from '../services/gemini.service';
+import { usageService } from '../services/usage.service';
 
 // Ce mock intelligent retourne un format compatible avec une API type "La Bonne Boîte"
 export const lbbController = {
@@ -69,19 +70,29 @@ export const lbbController = {
         return res.status(404).json({ success: false, error: "Utilisateur non trouvé." });
       }
 
-      // 2. Génération de la lettre de motivation (si demandée)
+      // 2. Génération de la lettre de motivation (si demandée) = 1 candidature IA.
+      // On débite quota mensuel → crédits, sinon blocage 402, et remboursement si échec.
       let coverLetterText = "";
       if (includeLetter) {
+        const consumption = await usageService.consumeCandidature(req.userId!);
+        if (!consumption.allowed) {
+          return res.status(402).json({
+            success: false,
+            code: 'QUOTA_EXCEEDED',
+            error: "Vous avez atteint votre limite de candidatures ce mois-ci. Passez à l'abonnement Élite ou ajoutez un pack de crédits.",
+          });
+        }
         try {
           // Utilisation du mode texte avec la raison LBB comme contexte de l'offre
           coverLetterText = await geminiService.generateCoverLetter(
-            jobTitle, 
-            company, 
-            "Professionnel et direct", 
-            user, 
+            jobTitle,
+            company,
+            "Professionnel et direct",
+            user,
             `Raison de la candidature (données LBB) : ${reason}`
           );
         } catch (e: any) {
+          if (consumption.source) await usageService.refundCandidature(req.userId!, consumption.source);
           console.error("Erreur IA lors de la génération de lettre pour LBB", e);
           return res.status(503).json({ success: false, error: "Impossible de formuler la lettre via l'IA. Application annulée." });
         }

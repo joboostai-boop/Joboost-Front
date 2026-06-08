@@ -5,20 +5,23 @@ const fetchFromAPI = async (endpoint: string, bodyData: any) => {
   try {
     const res = await fetch(`${API_BASE_URL}${endpoint}`, {
       method: 'POST',
+      credentials: 'include', // envoie le cookie d'auth (nécessaire pour identifier l'utilisateur et son quota)
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(bodyData)
     });
-    
-    if (!res.ok) {
-      throw new Error(`Erreur réseau: ${res.statusText}`);
+
+    const json = await res.json().catch(() => ({}));
+
+    if (!res.ok || json.success === false) {
+      // On fait remonter le vrai message du serveur (ex. quota dépassé) au lieu d'un message générique.
+      const err: any = new Error(json.error || `Erreur réseau: ${res.statusText}`);
+      err.code = json.code;        // ex. 'QUOTA_EXCEEDED'
+      err.status = res.status;     // ex. 402
+      throw err;
     }
-    
-    const json = await res.json();
-    if (!json.success) {
-       throw new Error(json.error || "Erreur lors de la requête IA");
-    }
+
     return json.data;
   } catch (error) {
     console.error(`Fetch API Error (${endpoint}):`, error);

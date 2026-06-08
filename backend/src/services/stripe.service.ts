@@ -75,21 +75,51 @@ export const stripeService = {
     switch (event.type) {
       case 'checkout.session.completed': {
         const session = event.data.object;
-        const userId = session.metadata?.userId;
+        // L'utilisateur vient soit du checkout interne (metadata.userId),
+        // soit d'un Payment Link (client_reference_id passé dans l'URL).
+        const userId = session.metadata?.userId || session.client_reference_id || undefined;
         if (!userId) break;
 
-        const subscriptionId = typeof session.subscription === 'string'
-          ? session.subscription
-          : session.subscription?.id;
+        // Vérifier que l'utilisateur existe (le client_reference_id vient de l'URL, donc non fiable a priori)
+        const user = await prisma.user.findUnique({ where: { id: userId } });
+        if (!user) {
+          console.warn(`Stripe webhook: utilisateur ${userId} introuvable (session ${session.id})`);
+          break;
+        }
 
-        await prisma.user.update({
-          where: { id: userId },
-          data: {
-            stripeSubscriptionId: subscriptionId ?? undefined,
-            subscriptionStatus: 'active',
-            plan: 'Pro',
-          },
-        });
+        const customerId = typeof session.customer === 'string'
+          ? session.customer
+          : session.customer?.id;
+
+        if (session.mode === 'subscription') {
+          // Abonnement (Élite mensuel via checkout OU annuel via Payment Link)
+          const subscriptionId = typeof session.subscription === 'string'
+            ? session.subscription
+            : session.subscription?.id;
+
+          await prisma.user.update({
+            where: { id: userId },
+            data: {
+              // On persiste le customerId (utile pour les Payment Links : le client est nouveau)
+              ...(customerId ? { stripeCustomerId: customerId } : {}),
+              stripeSubscriptionId: subscriptionId ?? undefined,
+              subscriptionStatus: 'active',
+              plan: 'Pro',
+            },
+          });
+        } else if (session.mode === 'payment') {
+          // Achat ponctuel = pack de crédits. Le nombre de crédits est porté
+          // par la metadata "grant_credits" du Payment Link (copiée dans la session).
+          const granted = parseInt(session.metadata?.grant_credits || '', 10);
+          if (!Number.isNaN(granted) && granted > 0) {
+            await prisma.user.update({
+              where: { id: userId },
+              data: { credits: { increment: granted } },
+            });
+          } else {
+            console.warn(`Stripe webhook: paiement sans grant_credits valide (session ${session.id})`);
+          }
+        }
         break;
       }
 

@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { geminiService } from '../services/gemini.service';
+import { usageService } from '../services/usage.service';
 
 const router = Router();
 
@@ -41,12 +42,35 @@ router.post('/generate-cv-summary', async (req, res) => {
     }
 });
 
+// La lettre de motivation = 1 "candidature IA" (action facturée). On débite
+// quota mensuel → crédits, sinon 402. Remboursement si la génération échoue.
 router.post('/generate-cover-letter', async (req, res) => {
+    const userId = req.userId!;
+
+    const consumption = await usageService.consumeCandidature(userId);
+    if (!consumption.allowed) {
+        return res.status(402).json({
+            success: false,
+            code: 'QUOTA_EXCEEDED',
+            error: "Vous avez atteint votre limite de candidatures ce mois-ci. Passez à l'abonnement Élite ou ajoutez un pack de crédits.",
+        });
+    }
+
     try {
         const { jobTitle, company, tone, profileContext, jobDescription } = req.body;
         const result = await geminiService.generateCoverLetter(jobTitle, company, tone, profileContext, jobDescription);
-        res.json({ success: true, data: result });
+        res.json({
+            success: true,
+            data: result,
+            usage: {
+                source: consumption.source,
+                remainingQuota: consumption.remainingQuota,
+                credits: consumption.credits,
+            },
+        });
     } catch (error: any) {
+        // La génération a échoué après débit → on rembourse pour ne pas léser l'utilisateur.
+        if (consumption.source) await usageService.refundCandidature(userId, consumption.source);
         res.status(500).json({ success: false, error: error.message });
     }
 });
