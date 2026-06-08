@@ -36,6 +36,7 @@ const B2B_CONTACT_EMAIL = 'contact@joboost.fr';
 // Le client_reference_id (= ID utilisateur) est ajouté automatiquement à l'URL ci-dessous,
 // le webhook backend l'utilise pour créditer le bon compte.
 const PAYMENT_LINKS = {
+  eliteMonthly: 'https://buy.stripe.com/7sYfZi7xhaXxewu3657ok04',   // abonnement mensuel 14,99 €
   eliteAnnual: 'https://buy.stripe.com/fZueVe4l53v5dsqayx7ok03',    // abonnement annuel 119 €
   packDecouverte: 'https://buy.stripe.com/6oU28sbNx9Tt9ca6ih7ok00', // 10 candidatures (7,99 €)
   packBooster: 'https://buy.stripe.com/aFa6oI18T1mXfAy5ed7ok01',    // 30 candidatures (19,99 €)
@@ -49,7 +50,7 @@ const withRef = (url: string, user: User) =>
 type BillingPeriod = 'monthly' | 'annual';
 
 const Pricing: React.FC<PricingProps> = ({ user }) => {
-  const { isActive, startCheckout, error: subError } = useSubscription();
+  const { isActive, error: subError } = useSubscription();
   const [checkoutLoading, setCheckoutLoading] = useState(false);
   const [billing, setBilling] = useState<BillingPeriod>('monthly');
 
@@ -114,20 +115,16 @@ const Pricing: React.FC<PricingProps> = ({ user }) => {
     { name: 'Marathon', credits: 100, price: 49.99, unit: '0,50 €', icon: <Sparkles size={20} strokeWidth={2.5} />, popular: false, link: PAYMENT_LINKS.packMarathon },
   ];
 
-  const handleSubscribe = async (plan: typeof subscriptionPlans[number]) => {
+  const handleSubscribe = (plan: typeof subscriptionPlans[number]) => {
     if (plan.name !== Plan.PRO || isActive) return;
-    if (billing === 'annual') {
-      // L'annuel passe par un Payment Link Stripe (le mensuel garde le checkout interne).
-      if (PAYMENT_LINKS.eliteAnnual) {
-        window.location.href = withRef(PAYMENT_LINKS.eliteAnnual, user);
-        return;
-      }
-      toast('Le paiement annuel arrive bientôt. Pour l\'instant, activez l\'abonnement au mois.', { icon: '🗓️' });
+    // Mensuel et annuel passent par un Payment Link Stripe (attribution via client_reference_id).
+    const link = billing === 'annual' ? PAYMENT_LINKS.eliteAnnual : PAYMENT_LINKS.eliteMonthly;
+    if (!link) {
+      toast('L\'abonnement arrive très bientôt.', { icon: '🗓️' });
       return;
     }
     setCheckoutLoading(true);
-    await startCheckout();
-    setCheckoutLoading(false);
+    window.location.href = withRef(link, user);
   };
 
   const handleBuyPack = (pack: typeof packs[number]) => {
