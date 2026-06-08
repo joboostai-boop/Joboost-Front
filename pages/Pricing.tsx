@@ -36,10 +36,10 @@ const B2B_CONTACT_EMAIL = 'contact@joboost.fr';
 // Le client_reference_id (= ID utilisateur) est ajouté automatiquement à l'URL ci-dessous,
 // le webhook backend l'utilise pour créditer le bon compte.
 const PAYMENT_LINKS = {
-  eliteAnnual: '',    // abonnement annuel 119 €
-  packDecouverte: '', // 10 candidatures — metadata grant_credits=10
-  packBooster: '',    // 30 candidatures — metadata grant_credits=30
-  packMarathon: '',   // 100 candidatures — metadata grant_credits=100
+  eliteAnnual: 'https://buy.stripe.com/fZueVe4l53v5dsqayx7ok03',    // abonnement annuel 119 €
+  packDecouverte: 'https://buy.stripe.com/6oU28sbNx9Tt9ca6ih7ok00', // 10 candidatures (7,99 €)
+  packBooster: 'https://buy.stripe.com/aFa6oI18T1mXfAy5ed7ok01',    // 30 candidatures (19,99 €)
+  packMarathon: 'https://buy.stripe.com/cNi14o4l53v5bki5ed7ok02',   // 100 candidatures (49,99 €)
 };
 
 // Ajoute l'identité de l'utilisateur connecté au lien de paiement pour l'attribution automatique.

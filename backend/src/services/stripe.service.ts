@@ -10,6 +10,20 @@ interface SubscriptionStatus {
   endsAt: Date | null;
 }
 
+// Correspondance montant HT payé (en centimes) -> candidatures créditées (packs).
+// Sert quand le Payment Link n'a pas de metadata "grant_credits".
+const PACK_CREDITS_BY_AMOUNT: { amount: number; credits: number }[] = [
+  { amount: 799, credits: 10 },   // Pack Découverte 7,99 €
+  { amount: 1999, credits: 30 },  // Pack Booster 19,99 €
+  { amount: 4999, credits: 100 }, // Pack Marathon 49,99 €
+];
+
+function creditsForAmount(amount: number | null | undefined): number {
+  if (amount == null) return 0;
+  const match = PACK_CREDITS_BY_AMOUNT.find((p) => Math.abs(p.amount - amount) <= 2);
+  return match ? match.credits : 0;
+}
+
 export const stripeService = {
   /**
    * Récupère ou crée un Customer Stripe pour un utilisateur donné
@@ -108,16 +122,21 @@ export const stripeService = {
             },
           });
         } else if (session.mode === 'payment') {
-          // Achat ponctuel = pack de crédits. Le nombre de crédits est porté
-          // par la metadata "grant_credits" du Payment Link (copiée dans la session).
-          const granted = parseInt(session.metadata?.grant_credits || '', 10);
-          if (!Number.isNaN(granted) && granted > 0) {
+          // Achat ponctuel = pack de crédits.
+          // 1) Si une metadata "grant_credits" est présente (Payment Link/API), on l'utilise.
+          // 2) Sinon, on déduit le nombre de crédits du MONTANT HT payé (amount_subtotal,
+          //    avant taxes/remises) → robuste sans config metadata côté Stripe.
+          let granted = parseInt(session.metadata?.grant_credits || '', 10);
+          if (Number.isNaN(granted) || granted <= 0) {
+            granted = creditsForAmount(session.amount_subtotal ?? session.amount_total);
+          }
+          if (granted > 0) {
             await prisma.user.update({
               where: { id: userId },
               data: { credits: { increment: granted } },
             });
           } else {
-            console.warn(`Stripe webhook: paiement sans grant_credits valide (session ${session.id})`);
+            console.warn(`Stripe webhook: pack non reconnu (session ${session.id}, subtotal ${session.amount_subtotal})`);
           }
         }
         break;
