@@ -79,9 +79,10 @@ const Pricing: React.FC<PricingProps> = ({ user }) => {
       description: 'Découverte du moteur JoBoost. Testez l\'IA, sans engagement.',
       features: [
         '1 candidature IA / mois',
+        '1 génération de CV / mois',
+        '1 génération de lettre de motivation / mois',
         'Accès au moteur JoBoost',
         'Modèles de lettres standards',
-        'Accès communauté',
       ],
       icon: <Layers size={22} strokeWidth={2.5} />,
       accent: 'slate',
@@ -96,7 +97,9 @@ const Pricing: React.FC<PricingProps> = ({ user }) => {
       description: 'L\'arsenal complet pour une recherche intensive et sans limite.',
       features: [
         '150 candidatures / mois',
-        'IA générative illimitée',
+        '50 générations de CV / mois',
+        '100 générations de lettres de motivation / mois',
+        '50 envois de candidatures spontanées / mois',
         'Envoi groupé (Bulk)',
         'Tracking des ouvertures d\'emails',
         'Support prioritaire 24h',
@@ -363,8 +366,10 @@ const Pricing: React.FC<PricingProps> = ({ user }) => {
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                 {[
                   ['Candidatures IA', '1 / mois', '150 / mois'],
+                  ['Générations de CV', '1 / mois', '50 / mois'],
+                  ['Lettres de motivation', '1 / mois', '100 / mois'],
+                  ['Candidatures spontanées', '—', '50 / mois'],
                   ['Moteur IA', 'JoBoost', 'JoBoost Pro'],
-                  ['Analyse sémantique ATS', 'Basique', 'Avancée'],
                   ['Envoi groupé (Bulk)', '—', 'Inclus'],
                   ['Support prioritaire', '—', '24h'],
                 ].map((row, i) => (
