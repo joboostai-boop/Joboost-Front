@@ -14,6 +14,7 @@ interface CompanyResult {
   matchedJob: string;
   reason: string;
   contactRole: string;
+  offerUrl?: string;
 }
 
 const Spontaneous: React.FC = () => {
@@ -35,20 +36,6 @@ const Spontaneous: React.FC = () => {
       setLoadingInit(false);
     }
   }, [user]);
-
-  const connectFT = async () => {
-    try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/auth/ft/login`, { credentials: 'include' });
-      const data = await res.json();
-      if (data.url) {
-        window.location.href = data.url;
-      } else {
-        toast.error("Erreur d'URL de redirection");
-      }
-    } catch(e) {
-      toast.error("Erreur de connexion serveur");
-    }
-  };
 
   const handleSearch = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
@@ -86,9 +73,9 @@ const Spontaneous: React.FC = () => {
     const includeLetter = includeLetterMap[company.id];
     
     // Notification de chargement long si on utilise l'IA
-    const toastId = includeLetter 
-       ? toast.loading("Génération de la lettre IA et transmission à France Travail...") 
-       : toast.loading("Transmission de la candidature à France Travail...");
+    const toastId = includeLetter
+       ? toast.loading("Génération de la lettre IA et ajout au suivi...")
+       : toast.loading("Ajout de la candidature à votre suivi...");
 
     try {
       const res = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/lbb/apply`, {
@@ -98,19 +85,27 @@ const Spontaneous: React.FC = () => {
           company: company.name,
           jobTitle: jobTitle,
           reason: company.reason,
-          includeLetter: includeLetter
+          includeLetter: includeLetter,
+          applyUrl: company.offerUrl || ''
         }),
         credentials: 'include'
       });
       const data = await res.json();
       if (data.success) {
-         toast.success("Candidature envoyée et trackée avec succès !", { id: toastId });
+         // Honnêteté : on ne soumet pas à la place du candidat (l'API France Travail ne le permet pas).
+         // On a préparé la candidature + on l'ajoute au suivi, et on ouvre l'offre réelle pour postuler.
+         if (data.applyUrl) {
+           toast.success("Candidature préparée ! Finalisez sur la page de l'offre qui s'ouvre.", { id: toastId });
+           window.open(data.applyUrl, '_blank', 'noopener');
+         } else {
+           toast.success("Candidature ajoutée à votre suivi !", { id: toastId });
+         }
          navigate('/track/applications'); // Redirige vers le kanban
       } else {
-         toast.error(data.error || "L'API France Travail a rejeté l'envoi.", { id: toastId });
+         toast.error(data.error || "Impossible d'enregistrer la candidature.", { id: toastId });
       }
     } catch(e) {
-      toast.error("Erreur réseau de transmission.", { id: toastId });
+      toast.error("Erreur réseau.", { id: toastId });
     } finally {
       setApplyingTo(prev => ({ ...prev, [company.id]: false }));
     }
@@ -129,34 +124,19 @@ const Spontaneous: React.FC = () => {
              Marché Caché (La Bonne Boîte)
           </h1>
           <p className="mt-2 text-sm text-[#6B7280] max-w-3xl leading-relaxed">
-            API Connectée: N'attendez pas qu'une offre soit publiée. Détectez les entreprises actives et propulsez instantanément votre candidature (Profil + Lettre IA) via le protocole France Travail.
+            Connecté à France Travail : détectez les entreprises qui recrutent réellement près de chez vous, préparez votre candidature (profil + lettre IA) et postulez en un clic sur l'offre.
           </p>
         </div>
       </header>
       
-      {!user?.ftAccessToken && (
-        <div className="bg-violet-50 border border-violet-200 rounded-lg p-6 flex flex-col md:flex-row items-center justify-between gap-4">
-          <div>
-            <h3 className="font-bold text-violet-900 text-lg">Connectez votre compte France Travail</h3>
-            <p className="text-violet-700 text-sm mt-1">
-              Pour rechercher et transmettre vos candidatures spontanées aux entreprises via La Bonne Boîte, vous devez lier votre compte France Travail.
-            </p>
-          </div>
-          <button 
-            onClick={connectFT}
-            className="btn-primary whitespace-nowrap"
-          >
-            Connecter France Travail
-          </button>
-        </div>
-      )}
+      <div className="bg-violet-50 border border-violet-200 rounded-lg p-4 flex items-start gap-3">
+        <Zap className="text-violet-600 shrink-0 mt-0.5" size={18} />
+        <p className="text-violet-800 text-sm">
+          Les résultats proviennent en temps réel des offres publiées sur <strong>France Travail</strong>. Lancez une recherche pour détecter les entreprises qui recrutent sur votre métier.
+        </p>
+      </div>
 
       <form onSubmit={handleSearch} className="card-pro p-6 md:p-8 bg-[#F3F0FF] dark:bg-[#7D5CFF]/10 border-[#7D5CFF] relative">
-        {!user?.ftAccessToken && (
-          <div className="absolute inset-0 bg-white/50 dark:bg-slate-900/50 backdrop-blur-[2px] z-10 flex items-center justify-center rounded-xl">
-             {/* Un petit overlay si non connecté */}
-          </div>
-        )}
         <h3 className="text-sm font-bold text-[#111827] dark:text-white uppercase tracking-widest mb-6">Critères de ciblage</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
