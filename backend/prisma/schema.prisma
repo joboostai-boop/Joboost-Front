@@ -30,6 +30,7 @@ model User {
   password          String?  // Optionnel si on se connecte via OAuth ou magic link
   name              String
   title             String?
+  photoUrl          String?  // Photo de profil (importée via LinkedIn ou Google OAuth)
   role              Role     @default(CANDIDATE)
   
   organizationId    String?

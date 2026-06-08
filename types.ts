@@ -26,6 +26,7 @@ export interface User {
   email: string;
   name: string;
   title?: string;
+  photoUrl?: string;
   summary?: string;
   skills?: string[];
   experiences?: Experience[];
