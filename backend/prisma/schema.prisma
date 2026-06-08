@@ -49,6 +49,9 @@ model User {
   plan              String   @default("Gratuit")
   applicationsCount Int      @default(0)
   quota             Int      @default(100)
+  credits           Int      @default(0) // solde de candidatures achetées via packs (n'expire pas avec le mois)
+  monthlyUsage      Int      @default(0) // candidatures IA consommées sur le mois en cours
+  usageMonth        String?  // "YYYY-MM" du mois en cours ; sert au reset mensuel du quota
   phone             String?
   city              String?
 

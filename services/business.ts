@@ -1,4 +1,4 @@
-import { BusinessOffer, BusinessJobseeker, BusinessJobseekerDetail, BusinessStats, Pagination } from '../types';
+import { BusinessOffer, BusinessJobseeker, BusinessJobseekerDetail, BusinessStats, StatsQuery, Pagination } from '../types';
 
 const API_URL = import.meta.env.VITE_API_URL || '';
 
@@ -75,8 +75,16 @@ export const businessJobseekerApi = {
 // ==================== STATS ====================
 
 export const businessStatsApi = {
-  getStats: async (): Promise<BusinessStats> => {
-    const data = await fetchApi('/api/business/stats');
+  getStats: async (params: StatsQuery = {}): Promise<BusinessStats> => {
+    const query = new URLSearchParams();
+    if (params.period) query.set('period', params.period);
+    if (params.from) query.set('from', params.from);
+    if (params.to) query.set('to', params.to);
+    if (params.status) query.set('status', params.status);
+    if (params.skill) query.set('skill', params.skill);
+
+    const qs = query.toString();
+    const data = await fetchApi(`/api/business/stats${qs ? `?${qs}` : ''}`);
     return data.stats;
   },
 };
