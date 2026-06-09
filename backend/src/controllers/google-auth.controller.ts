@@ -110,8 +110,12 @@ export const googleAuthController = {
 
       res.cookie('token', jwtToken, COOKIE_OPTIONS);
 
-      // Rediriger vers le frontend avec succès
-      res.redirect(`${FRONTEND_URL}/dashboard?oauth=success`);
+      // Rediriger vers le frontend avec succès.
+      // Le JWT est aussi passé dans le fragment d'URL (#token=...) : sur mobile le
+      // cookie tiers (SameSite=None) est bloqué, le frontend lit donc le token ici
+      // et le stocke en localStorage. Le fragment n'est jamais envoyé au serveur
+      // (pas de fuite dans les logs / le referer), et le frontend nettoie l'URL.
+      res.redirect(`${FRONTEND_URL}/dashboard?oauth=success#token=${jwtToken}`);
     } catch (error: unknown) {
       console.error('Google OAuth callback error:', error);
       const message = error instanceof Error ? error.message : 'Unknown error';
