@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { RefreshCw, Wand2, Zap, Printer, FileDown, Save, Clock, Link as LinkIcon, AlignLeft, Edit3 } from 'lucide-react';
 import { generateCoverLetter } from '../services/gemini';
 import toast from 'react-hot-toast';
-import html2pdf from 'html2pdf.js';
+import { exportLetterPdf, exportLetterDocx } from '../services/atsExport';
 
 import { useNavigate, useLocation } from 'react-router-dom';
 
@@ -27,6 +27,8 @@ const LetterGenerator: React.FC = () => {
   const [userProfile, setUserProfile] = useState<any>(null);
   const [letters, setLetters] = useState<any[]>([]);
   const [currentLetterId, setCurrentLetterId] = useState<string | null>(null);
+  const [letterTemplate, setLetterTemplate] = useState<'Classique' | 'Moderne'>('Moderne');
+  const [exporting, setExporting] = useState(false);
 
   useEffect(() => {
     const init = async () => {
@@ -108,21 +110,37 @@ const LetterGenerator: React.FC = () => {
      toast.success("Lettre rechargée");
   };
 
-  const handleExportPDF = () => {
-    const element = document.getElementById('letter-preview');
-    if (!element) return;
-    
-    const userName = userProfile?.name?.replace(/\s+/g, '_') || 'Lettre';
-    const opt = {
-      margin:       10,
-      filename:     `Motivation_${userName}_${company.replace(/\s+/g, '_')}.pdf`,
-      image:        { type: 'jpeg' as const, quality: 0.98 },
-      html2canvas:  { scale: 2, useCORS: true },
-      jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' as const }
-    };
+  const letterData = () => ({
+    name: userProfile?.name,
+    email: userProfile?.email,
+    phone: userProfile?.phone,
+    city: userProfile?.city,
+    company,
+    jobTitle,
+    body: generatedText,
+    template: letterTemplate,
+  });
 
-    html2pdf().set(opt).from(element).save();
-    toast.success("Téléchargement PDF en cours...");
+  const handleExportPDF = async () => {
+    setExporting(true);
+    try {
+      await exportLetterPdf(letterData());
+      toast.success("Lettre PDF (ATS) téléchargée !");
+    } catch (e) {
+      console.error(e);
+      toast.error("Erreur lors de l'export PDF.");
+    } finally { setExporting(false); }
+  };
+
+  const handleExportDocx = async () => {
+    setExporting(true);
+    try {
+      await exportLetterDocx(letterData());
+      toast.success("Lettre Word (.docx) téléchargée !");
+    } catch (e) {
+      console.error(e);
+      toast.error("Erreur lors de l'export Word.");
+    } finally { setExporting(false); }
   };
 
   const activeModeClass = "border-indigo-600 bg-indigo-50 dark:bg-indigo-900/20 text-indigo-700 dark:text-indigo-300";
@@ -210,13 +228,29 @@ const LetterGenerator: React.FC = () => {
         <div className="lg:col-span-8">
           {generatedText ? (
             <div className="space-y-4">
-              <div className="flex justify-end gap-2">
-                <button onClick={handleExportPDF} className="btn btn-primary">
-                  <FileDown size={14} /> ATS PDF
-                </button>
-                <button onClick={() => window.print()} className="btn btn-secondary">
-                  <Printer size={14} /> Imprimer
-                </button>
+              <div className="flex flex-wrap justify-between items-center gap-2">
+                <div className="flex gap-1.5">
+                  {(['Moderne', 'Classique'] as const).map((tpl) => (
+                    <button
+                      key={tpl}
+                      onClick={() => setLetterTemplate(tpl)}
+                      className={`text-xs font-bold px-3 py-1.5 rounded-md border transition-colors ${letterTemplate === tpl ? 'border-[#7D5CFF] bg-[#F3F0FF] text-[#7D5CFF] dark:bg-[#7D5CFF]/10' : 'border-[#E5E7EB] dark:border-[#1F2937] text-[#6B7280] hover:bg-[#F3F4F6] dark:hover:bg-[#1F2937]'}`}
+                    >
+                      {tpl === 'Moderne' ? 'Style Moderne' : 'Style Sobre'}
+                    </button>
+                  ))}
+                </div>
+                <div className="flex gap-2">
+                  <button onClick={handleExportPDF} disabled={exporting || !generatedText} className="btn btn-primary disabled:opacity-60">
+                    <FileDown size={14} /> PDF ATS
+                  </button>
+                  <button onClick={handleExportDocx} disabled={exporting || !generatedText} className="btn btn-secondary text-[#7D5CFF] disabled:opacity-60">
+                    <FileDown size={14} /> Word
+                  </button>
+                  <button onClick={() => window.print()} className="btn btn-secondary px-3" title="Imprimer">
+                    <Printer size={14} />
+                  </button>
+                </div>
               </div>
 
               <div id="letter-preview" className="card-pro bg-white text-slate-800 shadow-sm min-h-[800px] font-sans text-sm mx-auto max-w-[800px]">
