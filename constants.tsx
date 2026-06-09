@@ -1,18 +1,20 @@
 import React from 'react';
-import { 
-  Home, 
-  Target, 
-  Star, 
-  Contact, 
-  PenLine, 
-  Briefcase, 
-  UserRound, 
-  Crown, 
+import {
+  Home,
+  Target,
+  Star,
+  Contact,
+  PenLine,
+  Briefcase,
+  UserRound,
+  Crown,
   Settings2,
   Navigation,
   Megaphone,
   Users,
-  BarChart3
+  BarChart3,
+  Send,
+  LineChart
 } from 'lucide-react';
 
 // Fix: Added missing junoGradient property used in Home.tsx
@@ -26,14 +28,23 @@ export const COLORS = {
   junoGradient: 'linear-gradient(135deg, #4F46E5 0%, #06B6D4 100%)',
 };
 
-// Navigation candidat (jobseeker)
-export const NAVIGATION = [
-  { name: '1. Préparation', icon: <UserRound size={18} />, path: 'prepare' },
-  { name: '2. Cibler & Candidater', icon: <Target size={18} />, path: 'target' },
-  { name: '3. Suivi & Dashboard', icon: <Home size={18} />, path: 'track' },
+// Navigation candidat (jobseeker) — PARCOURS principal.
+// Libellés courts et humains (verbes), c'est le coeur de la nav (sidebar PC/tablette + bottom-bar mobile).
+export const PRIMARY_NAV = [
+  { name: 'Accueil', icon: <Home size={18} />, path: 'home' },
+  { name: 'Préparer', icon: <UserRound size={18} />, path: 'prepare' },
+  { name: 'Postuler', icon: <Send size={18} />, path: 'target' },
+  { name: 'Suivre', icon: <LineChart size={18} />, path: 'track' },
+];
+
+// Navigation candidat — entrées SYSTÈME (séparées du parcours, en bas de sidebar / dans le compte).
+export const SECONDARY_NAV = [
   { name: 'Abonnement', icon: <Crown size={18} />, path: 'pricing' },
   { name: 'Paramètres', icon: <Settings2 size={18} />, path: 'settings' },
 ];
+
+// Conservé pour compatibilité (anciens imports éventuels).
+export const NAVIGATION = [...PRIMARY_NAV, ...SECONDARY_NAV];
 
 // Navigation business partner
 export const BUSINESS_NAVIGATION = [

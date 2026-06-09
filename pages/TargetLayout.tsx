@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Outlet, NavLink, useLocation } from 'react-router-dom';
-import { Target, Navigation, PenLine } from 'lucide-react';
+import { Target, Navigation, PenLine, Bookmark } from 'lucide-react';
 
 const TargetLayout: React.FC = () => {
   const location = useLocation();
@@ -23,8 +23,8 @@ const TargetLayout: React.FC = () => {
              <span className="font-bold text-sm">2</span>
            </div>
            <div>
-             <h1>Cibler & Générer</h1>
-             <p>Recherchez vos futures entreprises et postulez avec des documents contextualisés.</p>
+             <h1>Postuler</h1>
+             <p>Trouve des offres et candidate en quelques clics.</p>
            </div>
         </div>
         
@@ -39,7 +39,7 @@ const TargetLayout: React.FC = () => {
               }`
             }
           >
-            <Target size={18} /> Offres Recommandées
+            <Target size={18} /> Offres pour moi
           </NavLink>
           <NavLink
             to="/target/lbb"
@@ -51,9 +51,21 @@ const TargetLayout: React.FC = () => {
               }`
             }
           >
-            <Navigation size={18} /> Marché Caché (Spontanées)
+            <Navigation size={18} /> Candidatures spontanées
           </NavLink>
-          
+          <NavLink
+            to="/target/saved"
+            className={({ isActive }) =>
+              `flex items-center gap-2 px-5 py-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap outline-none ${
+                isActive
+                  ? 'border-[#7D5CFF] text-[#7D5CFF]'
+                  : 'border-transparent text-[#6B7280] hover:text-[#111827] dark:hover:text-white hover:border-[#D1D5DB] dark:hover:border-[#374151]'
+              }`
+            }
+          >
+            <Bookmark size={18} /> Offres sauvegardées
+          </NavLink>
+
           {/* L'onglet de rédaction dynamique n'apparait que quand on initie une rédaction contextuelle */}
           {showLetterTab && (
              <NavLink
@@ -66,7 +78,7 @@ const TargetLayout: React.FC = () => {
                }`
              }
            >
-             <PenLine size={18} /> Rédacteur IA Contextuel
+             <PenLine size={18} /> Lettre pour cette offre
            </NavLink>
           )}
         </div>

@@ -72,6 +72,48 @@ export const geminiService = {
     }
   },
 
+  // Extrait un profil structuré à partir du texte brut d'un CV (PDF/DOCX déjà converti en texte).
+  parseCv: async (cvText: string): Promise<any> => {
+    const ai = getAI();
+    const response = await ai.models.generateContent({
+      model: 'gemini-3-flash-preview',
+      contents: `Voici le texte brut d'un CV. Extrais-en les informations du candidat de façon factuelle (n'invente rien ; laisse vide si absent). Texte du CV :\n"""${cvText.slice(0, 12000)}"""`,
+      config: {
+        systemInstruction: "Tu es un extracteur de données de CV précis et factuel. Tu ne déformes pas les informations et tu n'inventes jamais de contenu. Tu réponds uniquement en JSON valide.",
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: Type.OBJECT,
+          properties: {
+            name: { type: Type.STRING },
+            email: { type: Type.STRING },
+            phone: { type: Type.STRING },
+            title: { type: Type.STRING },
+            summary: { type: Type.STRING },
+            skills: { type: Type.ARRAY, items: { type: Type.STRING } },
+            experiences: {
+              type: Type.ARRAY,
+              items: {
+                type: Type.OBJECT,
+                properties: {
+                  company: { type: Type.STRING },
+                  role: { type: Type.STRING },
+                  period: { type: Type.STRING },
+                  desc: { type: Type.STRING }
+                }
+              }
+            }
+          },
+          required: ["name", "title", "skills", "experiences"]
+        }
+      }
+    });
+    try {
+      return JSON.parse(response.text || "{}");
+    } catch {
+      throw new Error("Impossible d'extraire les données du CV.");
+    }
+  },
+
   rewriteSection: async (sectionName: string, currentText: string, context: string): Promise<string> => {
     const ai = getAI();
     const response = await ai.models.generateContent({

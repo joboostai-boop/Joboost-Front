@@ -11,8 +11,8 @@ const TrackLayout: React.FC = () => {
              <span className="font-bold text-sm">3</span>
            </div>
            <div>
-             <h1>Suivi & Analytics</h1>
-             <p>Pilotez votre recherche d'emploi et gardez un oeil sur vos conversions.</p>
+             <h1>Suivre</h1>
+             <p>Suis tes candidatures et tes réponses.</p>
            </div>
         </div>
         
@@ -27,7 +27,7 @@ const TrackLayout: React.FC = () => {
               }`
             }
           >
-            <Briefcase size={18} /> Mon Kanban
+            <Briefcase size={18} /> Mes candidatures
           </NavLink>
           <NavLink
             to="/track/dashboard"
@@ -39,7 +39,7 @@ const TrackLayout: React.FC = () => {
               }`
             }
           >
-            <LayoutDashboard size={18} /> Statistiques Globales
+            <LayoutDashboard size={18} /> Statistiques
           </NavLink>
         </div>
       </div>

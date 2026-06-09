@@ -1,7 +1,7 @@
 import React, { useState, useEffect, Suspense } from 'react';
 import { Routes, Route, useLocation, Navigate, useNavigate } from 'react-router-dom';
 import { useAuth } from './context/AuthContext';
-import { getToken } from './services/authToken';
+import { authHeaders, getToken } from './services/authToken';
 import Sidebar from './components/Sidebar';
 import MobileNav from './components/MobileNav';
 import { Toaster } from 'react-hot-toast';
@@ -12,6 +12,7 @@ const PrepareLayout = React.lazy(() => import('./pages/PrepareLayout'));
 const TargetLayout = React.lazy(() => import('./pages/TargetLayout'));
 const TrackLayout = React.lazy(() => import('./pages/TrackLayout'));
 const Home = React.lazy(() => import('./pages/Home'));
+const Accueil = React.lazy(() => import('./pages/Accueil'));
 const Legal = React.lazy(() => import('./pages/Legal'));
 const Dashboard = React.lazy(() => import('./pages/Dashboard'));
 const CVGenerator = React.lazy(() => import('./pages/CVGenerator'));
@@ -32,10 +33,12 @@ const BusinessJobseekers = React.lazy(() => import('./pages/BusinessJobseekers')
 const BusinessStatsPage = React.lazy(() => import('./pages/BusinessStats'));
 
 const App: React.FC = () => {
-  const { user, loading: isAppLoading } = useAuth();
+  const { user, loading: isAppLoading, checkAuth } = useAuth();
   const isAuthenticated = !!user;
   const isBusinessPartner = user?.role === 'BUSINESS_PARTNER';
-  const hasCompletedOnboarding = !!user?.name; // Simple fallback
+  // Onboarding considéré fait dès que le poste recherché est renseigné.
+  // (Le nom seul ne suffit pas : il est posé automatiquement par l'inscription et par Google.)
+  const hasCompletedOnboarding = !!user?.title;
   
   const [isDarkMode, setIsDarkMode] = useState<boolean>(() => {
     return localStorage.getItem('joboost-theme') === 'dark';
@@ -57,8 +60,20 @@ const App: React.FC = () => {
   const toggleDarkMode = () => setIsDarkMode(!isDarkMode);
 
   const handleOnboardingComplete = async (data: any) => {
-    // ...
-    navigate('/dashboard');
+    // Persiste les infos d'onboarding sur le profil, puis rafraîchit l'utilisateur
+    // pour que le gate (user.title) bascule et qu'on entre dans l'app.
+    try {
+      await fetch(`${import.meta.env.VITE_API_URL || ''}/api/users/me`, {
+        method: 'PUT',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json', ...authHeaders() },
+        body: JSON.stringify(data),
+      });
+      await checkAuth();
+    } catch {
+      /* en cas d'échec réseau, on laisse l'utilisateur réessayer */
+    }
+    navigate('/home');
   };
 
   // On ne bloque l'app derrière le spinner d'auth QUE si une session existe à
@@ -123,8 +138,11 @@ const App: React.FC = () => {
         <div className="min-h-full">
           <Suspense fallback={<div className="flex-1 flex items-center justify-center min-h-[50vh]"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div></div>}>
           <Routes>
+            {/* Accueil (hub) */}
+            <Route path="/home" element={<Accueil user={user} />} />
+
             {/* NOUVEAUX CHEMINS (Phase 10 UX) */}
-            
+
             {/* 1. Préparation */}
             <Route path="/prepare" element={<PrepareLayout />}>
                <Route index element={<Navigate to="profile" replace />} />
@@ -162,8 +180,8 @@ const App: React.FC = () => {
             <Route path="/pricing" element={<Pricing user={user} />} />
             <Route path="/settings" element={<Settings user={user} isDarkMode={isDarkMode} toggleDarkMode={toggleDarkMode} />} />
             
-            {/* Redirection Legacy ou par défaut vers la 1ere étape */}
-            <Route path="*" element={<Navigate to={isBusinessPartner ? '/business/offers' : '/prepare/profile'} replace />} />
+            {/* Redirection Legacy ou par défaut vers l'accueil */}
+            <Route path="*" element={<Navigate to={isBusinessPartner ? '/business/offers' : '/home'} replace />} />
           </Routes>
           </Suspense>
         </div>

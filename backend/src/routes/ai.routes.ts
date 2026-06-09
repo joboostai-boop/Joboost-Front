@@ -1,8 +1,59 @@
 import { Router } from 'express';
+import multer from 'multer';
+import mammoth from 'mammoth';
 import { geminiService } from '../services/gemini.service';
 import { usageService } from '../services/usage.service';
 
+// pdf-parse n'a pas de types officiels → require pour éviter l'erreur de déclaration.
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const pdfParse = require('pdf-parse');
+
 const router = Router();
+
+// Upload en mémoire, 5 Mo max (cohérent avec la limite côté frontend).
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 5 * 1024 * 1024 },
+});
+
+// Extrait le texte brut d'un CV uploadé (PDF ou DOCX).
+const extractCvText = async (file: Express.Multer.File): Promise<string> => {
+  const name = (file.originalname || '').toLowerCase();
+  const isPdf = file.mimetype === 'application/pdf' || name.endsWith('.pdf');
+  const isDocx =
+    file.mimetype === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' ||
+    name.endsWith('.docx');
+
+  if (isPdf) {
+    const data = await pdfParse(file.buffer);
+    return data.text || '';
+  }
+  if (isDocx) {
+    const result = await mammoth.extractRawText({ buffer: file.buffer });
+    return result.value || '';
+  }
+  throw new Error('Format non supporté. Utilise un PDF ou un DOCX.');
+};
+
+// Analyse un CV uploadé et renvoie un profil structuré (réel, via extraction texte + IA).
+router.post('/parse-cv', upload.single('file'), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ success: false, error: 'Aucun fichier reçu.' });
+    }
+    const text = await extractCvText(req.file);
+    if (!text || text.trim().length < 30) {
+      return res.status(422).json({
+        success: false,
+        error: "On n'a pas réussi à lire ce CV. Réessaie avec un autre fichier ou saisis tes infos à la main.",
+      });
+    }
+    const data = await geminiService.parseCv(text);
+    res.json({ success: true, data });
+  } catch (error: any) {
+    res.status(500).json({ success: false, error: error.message || "Erreur lors de l'analyse du CV." });
+  }
+});
 
 router.post('/optimize-profile', async (req, res) => {
     try {

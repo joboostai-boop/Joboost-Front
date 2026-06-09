@@ -63,7 +63,7 @@ const Pricing: React.FC<PricingProps> = ({ user }) => {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     if (params.get('payment') === 'success') {
-      toast.success('Abonnement activé avec succès ! Bienvenue dans le protocole Élite.');
+      toast.success('Abonnement activé. Bienvenue dans JoBoost Élite !');
     } else if (params.get('payment') === 'canceled') {
       toast('Paiement annulé. Vous pouvez réessayer à tout moment.', { icon: '↩️' });
     }
@@ -258,7 +258,7 @@ const Pricing: React.FC<PricingProps> = ({ user }) => {
                   ) : plan.monthlyPrice === 0 ? (
                     'Plan Actuel'
                   ) : (
-                    <>Activer la Puissance Élite <ArrowRight size={14} strokeWidth={3} /></>
+                    <>Passer à Élite <ArrowRight size={14} strokeWidth={3} /></>
                   )}
                 </button>
 

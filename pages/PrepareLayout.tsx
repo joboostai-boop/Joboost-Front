@@ -4,9 +4,9 @@ import { UserRound, Contact, PenLine } from 'lucide-react';
 
 const PrepareLayout: React.FC = () => {
   const tabs = [
-    { name: 'Compléter mon profil', path: '/prepare/profile', icon: <UserRound size={18} /> },
-    { name: 'Générer mon CV', path: '/prepare/cv', icon: <Contact size={18} /> },
-    { name: 'Lettre de base', path: '/prepare/letter', icon: <PenLine size={18} /> }
+    { name: 'Mon profil', path: '/prepare/profile', icon: <UserRound size={18} /> },
+    { name: 'Mon CV', path: '/prepare/cv', icon: <Contact size={18} /> },
+    { name: 'Ma lettre type', path: '/prepare/letter', icon: <PenLine size={18} /> }
   ];
 
   return (
@@ -17,8 +17,8 @@ const PrepareLayout: React.FC = () => {
              <span className="font-bold text-sm">1</span>
            </div>
            <div>
-             <h1>Préparer mon profil</h1>
-             <p>L'étape clé pour que l'IA puisse générer vos documents sur-mesure.</p>
+             <h1>Préparer</h1>
+             <p>Ton profil et tes documents, prêts à postuler.</p>
            </div>
         </div>
         
