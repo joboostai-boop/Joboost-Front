@@ -1,6 +1,7 @@
 import React, { useState, useEffect, Suspense } from 'react';
 import { Routes, Route, useLocation, Navigate, useNavigate } from 'react-router-dom';
 import { useAuth } from './context/AuthContext';
+import { getToken } from './services/authToken';
 import Sidebar from './components/Sidebar';
 import MobileNav from './components/MobileNav';
 import { Toaster } from 'react-hot-toast';
@@ -60,7 +61,12 @@ const App: React.FC = () => {
     navigate('/dashboard');
   };
 
-  if (isAppLoading) {
+  // On ne bloque l'app derrière le spinner d'auth QUE si une session existe à
+  // vérifier (utilisateur déjà connecté, token en localStorage). Pour un visiteur
+  // anonyme, on affiche la landing/les pages publiques IMMÉDIATEMENT — sans attendre
+  // /api/auth/me, qui peut être lent si le backend Render gratuit s'est endormi (~50s).
+  const hasStoredSession = !!getToken();
+  if (isAppLoading && hasStoredSession) {
     return <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex items-center justify-center text-indigo-600"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div></div>;
   }
 
