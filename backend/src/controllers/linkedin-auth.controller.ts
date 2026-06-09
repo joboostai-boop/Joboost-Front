@@ -36,14 +36,12 @@ export const linkedinAuthController = {
       });
     }
 
-    // State anti-CSRF stocké en cookie httpOnly, vérifié au retour.
+    // NB: pas de cookie "state" pour le CSRF — en prod le front (netlify) et le back
+    // (onrender) sont sur des domaines différents, le cookie tiers est bloqué par les
+    // navigateurs et ne reviendrait pas au callback (même souci que la session).
+    // On envoie quand même un state (bonne pratique OAuth) mais on ne le valide pas
+    // via cookie, comme le fait déjà la connexion Google de l'app.
     const state = crypto.randomBytes(16).toString('hex');
-    res.cookie('linkedin_oauth_state', state, {
-      httpOnly: true,
-      secure: isProd,
-      sameSite: (isProd ? 'none' : 'lax') as 'none' | 'lax',
-      maxAge: 10 * 60 * 1000, // 10 min
-    });
 
     const params = new URLSearchParams({
       response_type: 'code',
@@ -62,15 +60,10 @@ export const linkedinAuthController = {
    */
   callback: async (req: Request, res: Response) => {
     try {
-      const { code, state } = req.query;
-      const savedState = req.cookies?.linkedin_oauth_state;
-      res.clearCookie('linkedin_oauth_state');
+      const { code } = req.query;
 
       if (!code || typeof code !== 'string') {
         return res.redirect(`${FRONTEND_URL}/auth/login?error=linkedin_missing_code`);
-      }
-      if (!state || !savedState || state !== savedState) {
-        return res.redirect(`${FRONTEND_URL}/auth/login?error=linkedin_state_mismatch`);
       }
 
       // 1. Échange du code contre un access_token
