@@ -10,7 +10,9 @@
     "lint": "tsc --noEmit"
   },
   "dependencies": {
+    "@react-pdf/renderer": "^4.5.1",
     "@types/html2pdf.js": "^0.10.0",
+    "docx": "^9.7.1",
     "html2pdf.js": "^0.14.0",
     "lucide-react": "^0.563.0",
     "react": "^19.2.3",

@@ -3,9 +3,33 @@ import React, { useState, useEffect } from 'react';
 import { Printer, FileDown, Wand2, RefreshCw, Layout, Check, ShieldCheck, Save, Clock } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { generateCVSummary } from '../services/gemini';
-import html2pdf from 'html2pdf.js';
+import { exportCvPdf, exportCvDocx } from '../services/atsExport';
 
 type CVTemplate = 'Classique' | 'Moderne' | 'Minimaliste';
+
+// Aperçu miniature réel du rendu de chaque template (texte simulé en barres).
+const MiniCvPreview: React.FC<{ template: CVTemplate }> = ({ template }) => {
+  const accent = template === 'Moderne' ? '#4F46E5' : template === 'Classique' ? '#1F2937' : '#111827';
+  const serif = template === 'Classique';
+  return (
+    <div className={`bg-white rounded-md border border-slate-200 p-3 h-32 overflow-hidden shadow-inner ${serif ? 'font-serif' : 'font-sans'}`}>
+      <div className="h-2.5 w-2/3 rounded-sm" style={{ background: accent }} />
+      <div className="h-1.5 w-1/3 bg-slate-300 rounded-sm mt-1" />
+      <div className="h-px w-full bg-slate-200 my-2" />
+      <div className="h-1 w-1/5 rounded-sm mb-1" style={{ background: accent, opacity: 0.65 }} />
+      <div className="space-y-1">
+        <div className="h-1 w-full bg-slate-200 rounded-sm" />
+        <div className="h-1 w-5/6 bg-slate-200 rounded-sm" />
+      </div>
+      <div className="h-1 w-1/5 rounded-sm mt-2 mb-1" style={{ background: accent, opacity: 0.65 }} />
+      <div className="flex gap-1">
+        <div className="h-1.5 w-6 bg-slate-200 rounded-sm" />
+        <div className="h-1.5 w-8 bg-slate-200 rounded-sm" />
+        <div className="h-1.5 w-5 bg-slate-200 rounded-sm" />
+      </div>
+    </div>
+  );
+};
 
 const CVGenerator: React.FC = () => {
   const [loadingSummary, setLoadingSummary] = useState(false);
@@ -16,10 +40,14 @@ const CVGenerator: React.FC = () => {
   const [formData, setFormData] = useState({
     name: '',
     title: '',
+    email: '',
+    phone: '',
+    city: '',
     summary: '',
     template: 'Moderne' as CVTemplate,
     skills: [] as string[],
-    experiences: [] as any[]
+    experiences: [] as any[],
+    education: [] as any[]
   });
 
   useEffect(() => {
@@ -37,9 +65,13 @@ const CVGenerator: React.FC = () => {
              ...prev,
              name: u.name || 'Candidat',
              title: u.title || 'Développeur',
+             email: u.email || '',
+             phone: u.phone || '',
+             city: u.city || '',
              summary: u.summary || '',
              skills: Array.isArray(u.skills) ? u.skills.map((s:any) => typeof s === 'string' ? s : s.name) : [],
-             experiences: Array.isArray(u.experiences) ? u.experiences : []
+             experiences: Array.isArray(u.experiences) ? u.experiences : [],
+             education: Array.isArray(u.education) ? u.education : []
            }));
         }
         
@@ -103,20 +135,28 @@ const CVGenerator: React.FC = () => {
     toast.success("CV rechargé");
   };
 
-  const handleExportPDF = () => {
-    const element = document.getElementById('cv-preview');
-    if (!element) return;
-    
-    const opt = {
-      margin:       0,
-      filename:     `CV_${formData.name.replace(/\s+/g, '_')}.pdf`,
-      image:        { type: 'jpeg' as const, quality: 0.98 },
-      html2canvas:  { scale: 2, useCORS: true },
-      jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' as const }
-    };
+  const [exporting, setExporting] = useState(false);
 
-    html2pdf().set(opt).from(element).save();
-    toast.success("Téléchargement PDF en cours...");
+  const handleExportPDF = async () => {
+    setExporting(true);
+    try {
+      await exportCvPdf(formData);
+      toast.success("CV PDF (ATS) téléchargé !");
+    } catch (e) {
+      console.error(e);
+      toast.error("Erreur lors de l'export PDF.");
+    } finally { setExporting(false); }
+  };
+
+  const handleExportDocx = async () => {
+    setExporting(true);
+    try {
+      await exportCvDocx(formData);
+      toast.success("CV Word (.docx) téléchargé !");
+    } catch (e) {
+      console.error(e);
+      toast.error("Erreur lors de l'export Word.");
+    } finally { setExporting(false); }
   };
 
   // Helper pour obtenir les styles dynamiques de la prévisualisation
@@ -187,27 +227,30 @@ const CVGenerator: React.FC = () => {
                <span className="text-[10px] font-bold uppercase tracking-widest">ATS Ready</span>
             </div>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             {templates.map((t) => (
               <button
                 key={t.name}
                 onClick={() => setFormData({ ...formData, template: t.name })}
-                className={`relative flex flex-col p-4 rounded-md border transition-colors text-left group outline-none ${
+                className={`relative flex flex-col p-3 rounded-xl border-2 transition-all text-left group outline-none ${
                   formData.template === t.name
-                    ? 'border-[#7D5CFF] bg-[#F3F0FF] dark:bg-[#7D5CFF]/10'
+                    ? 'border-[#7D5CFF] bg-[#F3F0FF] dark:bg-[#7D5CFF]/10 shadow-md'
                     : 'border-[#E5E7EB] dark:border-[#1F2937] bg-white dark:bg-[#111827] hover:border-[#D1D5DB]'
                 }`}
               >
-                <div className="flex justify-between items-start mb-3">
-                  <div className={`w-8 h-8 rounded-md ${t.color} flex items-center justify-center text-white shadow-sm`}>
-                    {formData.template === t.name && <Check size={16} />}
+                {formData.template === t.name && (
+                  <div className="absolute top-2 right-2 z-10 w-5 h-5 rounded-full bg-[#7D5CFF] text-white flex items-center justify-center shadow">
+                    <Check size={12} />
                   </div>
-                  <span className={`text-[10px] font-bold uppercase tracking-widest ${formData.template === t.name ? 'text-[#7D5CFF]' : 'text-[#9CA3AF]'}`}>
-                    {formData.template === t.name ? 'Actif' : 'Choisir'}
-                  </span>
+                )}
+                <MiniCvPreview template={t.name} />
+                <div className="mt-2.5">
+                  <div className="flex items-center gap-1.5">
+                    <p className="text-sm font-bold text-[#111827] dark:text-white">{t.name}</p>
+                    <span className="text-[8px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200">ATS</span>
+                  </div>
+                  <p className="text-[11px] text-[#6B7280] leading-tight mt-0.5">{t.desc}</p>
                 </div>
-                <p className="text-sm font-semibold text-[#111827] dark:text-white mb-1">{t.name}</p>
-                <p className="text-xs text-[#6B7280] leading-tight">{t.desc}</p>
               </button>
             ))}
           </div>
@@ -248,10 +291,13 @@ const CVGenerator: React.FC = () => {
 
       <div className="w-full lg:w-[450px] space-y-4">
         <div className="flex gap-2">
-          <button onClick={handleExportPDF} className="btn btn-primary flex-1">
-            <FileDown size={16} /> Exporter ATS PDF
+          <button onClick={handleExportPDF} disabled={exporting} className="btn btn-primary flex-1 disabled:opacity-60">
+            <FileDown size={16} /> PDF ATS
           </button>
-          <button onClick={() => window.print()} className="btn btn-secondary px-3">
+          <button onClick={handleExportDocx} disabled={exporting} className="btn btn-secondary flex-1 text-[#7D5CFF] disabled:opacity-60">
+            <FileDown size={16} /> Word .docx
+          </button>
+          <button onClick={() => window.print()} className="btn btn-secondary px-3" title="Imprimer">
             <Printer size={18} />
           </button>
         </div>
@@ -264,6 +310,9 @@ const CVGenerator: React.FC = () => {
              <div className={`pb-4 border-b ${styles.headerBg}`}>
                 <h2 className="text-xl font-black uppercase tracking-tight">{formData.name}</h2>
                 <p className={`font-bold ${styles.accentColor}`}>{formData.title}</p>
+                {[formData.email, formData.phone, formData.city].filter(Boolean).length > 0 && (
+                  <p className="text-xs text-slate-500 mt-1">{[formData.email, formData.phone, formData.city].filter(Boolean).join('  •  ')}</p>
+                )}
              </div>
              
              <div className="space-y-2">
