@@ -91,7 +91,13 @@ export const googleAuthController = {
             email,
             name: name || email.split('@')[0],
             password: null, // Login OAuth uniquement
+            photoUrl: picture || null,
           },
+        });
+      } else if (picture && user.photoUrl !== picture) {
+        user = await prisma.user.update({
+          where: { id: user.id },
+          data: { photoUrl: picture },
         });
       }
 

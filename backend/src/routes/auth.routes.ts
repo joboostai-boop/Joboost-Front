@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { authController } from '../controllers/auth.controller';
 import { googleAuthController } from '../controllers/google-auth.controller';
+import { linkedinAuthController } from '../controllers/linkedin-auth.controller';
 import { requireAuth } from '../middleware/auth.middleware';
 
 const router = Router();
@@ -14,5 +15,9 @@ router.get('/me', requireAuth, authController.me);
 // Google OAuth
 router.get('/google', googleAuthController.login);
 router.get('/google/callback', googleAuthController.callback);
+
+// LinkedIn OAuth (Sign In with LinkedIn — OpenID Connect)
+router.get('/linkedin', linkedinAuthController.login);
+router.get('/linkedin/callback', linkedinAuthController.callback);
 
 export default router;

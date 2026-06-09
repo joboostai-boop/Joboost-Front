@@ -19,3 +19,8 @@ export const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:3000';
 export const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || '';
 export const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET || '';
 export const GOOGLE_REDIRECT_URI = process.env.GOOGLE_REDIRECT_URI || 'http://localhost:4000/api/auth/google/callback';
+
+// LinkedIn « Sign In with LinkedIn using OpenID Connect » (optionnel — le serveur démarre sans)
+export const LINKEDIN_CLIENT_ID = process.env.LINKEDIN_CLIENT_ID || '';
+export const LINKEDIN_CLIENT_SECRET = process.env.LINKEDIN_CLIENT_SECRET || '';
+export const LINKEDIN_REDIRECT_URI = process.env.LINKEDIN_REDIRECT_URI || 'http://localhost:4000/api/auth/linkedin/callback';

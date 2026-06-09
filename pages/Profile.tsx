@@ -147,8 +147,12 @@ const Profile: React.FC<ProfileProps> = ({ user }) => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="space-y-6">
           <div className="card-pro text-center">
-            <div className="w-24 h-24 bg-[#F3F4F6] rounded-full mx-auto mb-6 flex items-center justify-center text-[#9CA3AF] overflow-hidden border-4 border-white shadow-sm">
-               <img src="https://i.pravatar.cc/300?u=42" alt="Avatar" className="w-full h-full object-cover" />
+            <div className="w-24 h-24 bg-[#F3F4F6] dark:bg-[#1F2937] rounded-full mx-auto mb-6 flex items-center justify-center text-2xl font-bold text-[#7D5CFF] overflow-hidden border-4 border-white shadow-sm">
+               {user.photoUrl ? (
+                 <img src={user.photoUrl} alt={user.name} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+               ) : (
+                 <span>{(user.name || '?').charAt(0).toUpperCase()}</span>
+               )}
             </div>
             <h2>{user.name}</h2>
             <input 
