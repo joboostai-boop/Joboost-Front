@@ -53,9 +53,11 @@ export const authController = {
       );
 
       res.cookie('token', token, COOKIE_OPTIONS);
-      
+
       const { password: _, ...userWithoutPassword } = user;
-      res.status(201).json({ success: true, user: userWithoutPassword });
+      // token renvoyé aussi dans le body : fallback header Bearer pour les mobiles
+      // où le cookie tiers (SameSite=None) est bloqué.
+      res.status(201).json({ success: true, user: userWithoutPassword, token });
     } catch (error: any) {
       console.error(error);
       res.status(500).json({ success: false, error: "Erreur lors de l'inscription." });
@@ -90,7 +92,9 @@ export const authController = {
       res.cookie('token', token, COOKIE_OPTIONS);
 
       const { password: _, ...userWithoutPassword } = user;
-      res.json({ success: true, user: userWithoutPassword });
+      // token renvoyé aussi dans le body : fallback header Bearer pour les mobiles
+      // où le cookie tiers (SameSite=None) est bloqué.
+      res.json({ success: true, user: userWithoutPassword, token });
     } catch (error: any) {
       console.error(error);
       res.status(500).json({ success: false, error: "Erreur lors de la connexion." });
@@ -144,7 +148,9 @@ export const authController = {
       res.cookie('token', token, COOKIE_OPTIONS);
 
       const { password: _, ...userWithoutPassword } = user;
-      res.json({ success: true, user: userWithoutPassword });
+      // token renvoyé aussi dans le body : fallback header Bearer pour les mobiles
+      // où le cookie tiers (SameSite=None) est bloqué.
+      res.json({ success: true, user: userWithoutPassword, token });
     } catch (error: any) {
       console.error('Business login error:', error?.message || error);
       res.status(500).json({ success: false, error: error?.message || "Erreur lors de la connexion partenaire." });

@@ -28,7 +28,7 @@ const Login = () => {
       const data = await res.json();
 
       if (data.success) {
-        login(data.user);
+        login(data.user, data.token);
         // Redirect based on role
         if (data.user.role === 'BUSINESS_PARTNER') {
           navigate('/business/offers');
@@ -58,7 +58,7 @@ const Login = () => {
       const data = await res.json();
 
       if (data.success) {
-        login(data.user);
+        login(data.user, data.token);
         navigate('/business/offers');
       } else {
         setError(data.error || 'Erreur de connexion partenaire');

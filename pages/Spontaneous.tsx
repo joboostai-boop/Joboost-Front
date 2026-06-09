@@ -3,6 +3,7 @@ import { Search, Building2, MapPin, Zap, ArrowRight, BookOpen, Navigation, Targe
 import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { authHeaders } from '../services/authToken';
 
 interface CompanyResult {
   id: string;
@@ -45,7 +46,7 @@ const Spontaneous: React.FC = () => {
     }
     setLoading(true);
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/lbb/search?jobTitle=${encodeURIComponent(jobTitle)}&location=${encodeURIComponent(location)}`, { credentials: 'include' });
+      const res = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/lbb/search?jobTitle=${encodeURIComponent(jobTitle)}&location=${encodeURIComponent(location)}`, { credentials: 'include', headers: { ...authHeaders() } });
       const data = await res.json();
       if (data.success) {
         setCompanies(data.results);
@@ -80,7 +81,7 @@ const Spontaneous: React.FC = () => {
     try {
       const res = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/lbb/apply`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...authHeaders() },
         body: JSON.stringify({
           company: company.name,
           jobTitle: jobTitle,

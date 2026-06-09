@@ -1,10 +1,11 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { User } from '../types'; // I will expand types.ts to include User fields
+import { authHeaders, setToken, clearToken } from '../services/authToken';
 
 interface AuthContextType {
   user: User | null;
   loading: boolean;
-  login: (userData: User) => void;
+  login: (userData: User, token?: string) => void;
   logout: () => void;
   checkAuth: () => Promise<void>;
 }
@@ -25,6 +26,7 @@ export const AuthProvider: React.FC<{children: React.ReactNode}> = ({ children }
     try {
       const res = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/auth/me`, {
         credentials: 'include',
+        headers: { ...authHeaders() }, // fallback mobile : cookie tiers souvent bloqué
       });
       if (res.ok) {
         const data = await res.json();
@@ -48,14 +50,20 @@ export const AuthProvider: React.FC<{children: React.ReactNode}> = ({ children }
     checkAuth();
   }, []);
 
-  const login = (userData: User) => {
+  const login = (userData: User, token?: string) => {
+    setToken(token); // persiste le JWT pour le header Bearer (mobile)
     setUser(userData);
   };
 
   const logout = async () => {
     try {
-      await fetch(`${import.meta.env.VITE_API_URL || ''}/api/auth/logout`, { method: 'POST', credentials: 'include' });
+      await fetch(`${import.meta.env.VITE_API_URL || ''}/api/auth/logout`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: { ...authHeaders() },
+      });
     } catch(e) {}
+    clearToken();
     setUser(null);
   };
 

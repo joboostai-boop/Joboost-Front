@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { authHeaders } from '../services/authToken';
 
 interface SubscriptionState {
   isActive: boolean;
@@ -23,6 +24,7 @@ export function useSubscription(): SubscriptionState {
       setError(null);
       const res = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/stripe/subscription-status`, {
         credentials: 'include',
+        headers: { ...authHeaders() },
       });
       const data = await res.json();
       if (data.success) {
@@ -47,7 +49,7 @@ export function useSubscription(): SubscriptionState {
       const res = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/stripe/create-checkout`, {
         method: 'POST',
         credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...authHeaders() },
       });
       const data = await res.json();
 

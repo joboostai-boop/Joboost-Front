@@ -1,4 +1,6 @@
 // Service client connecté à notre backend Antigravity NodeJS
+import { authHeaders } from './authToken';
+
 const API_BASE_URL = `${import.meta.env.VITE_API_URL || ''}/api/ai`;
 
 const fetchFromAPI = async (endpoint: string, bodyData: any) => {
@@ -8,6 +10,7 @@ const fetchFromAPI = async (endpoint: string, bodyData: any) => {
       credentials: 'include', // envoie le cookie d'auth (nécessaire pour identifier l'utilisateur et son quota)
       headers: {
         'Content-Type': 'application/json',
+        ...authHeaders(), // fallback mobile : header Bearer si le cookie tiers est bloqué
       },
       body: JSON.stringify(bodyData)
     });

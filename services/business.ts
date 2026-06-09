@@ -1,11 +1,12 @@
 import { BusinessOffer, BusinessJobseeker, BusinessJobseekerDetail, BusinessStats, StatsQuery, Pagination } from '../types';
+import { authHeaders } from './authToken';
 
 const API_URL = import.meta.env.VITE_API_URL || '';
 
 const fetchApi = async (path: string, options: RequestInit = {}) => {
   const res = await fetch(`${API_URL}${path}`, {
     credentials: 'include',
-    headers: { 'Content-Type': 'application/json', ...options.headers as any },
+    headers: { 'Content-Type': 'application/json', ...authHeaders(), ...options.headers as any },
     ...options,
   });
   const data = await res.json();

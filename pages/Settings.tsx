@@ -25,6 +25,7 @@ import {
 import { User as UserType } from '../types';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { authHeaders } from '../services/authToken';
 import toast from 'react-hot-toast';
 
 interface SettingsProps { 
@@ -47,6 +48,7 @@ const Settings: React.FC<SettingsProps> = ({ user, isDarkMode, toggleDarkMode })
     try {
       const res = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/users/me/export`, {
         credentials: 'include',
+        headers: { ...authHeaders() },
       });
       if (!res.ok) throw new Error('Export impossible');
       const blob = await res.blob();
@@ -75,6 +77,7 @@ const Settings: React.FC<SettingsProps> = ({ user, isDarkMode, toggleDarkMode })
       const res = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/users/me`, {
         method: 'DELETE',
         credentials: 'include',
+        headers: { ...authHeaders() },
       });
       const data = await res.json();
       if (!res.ok || !data.success) throw new Error(data.error || 'Suppression impossible');

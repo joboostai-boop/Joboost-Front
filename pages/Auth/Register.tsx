@@ -36,7 +36,7 @@ const Register = () => {
       const data = await res.json();
 
       if (data.success) {
-        login(data.user);
+        login(data.user, data.token);
         navigate('/prepare');
       } else {
         setError(data.error || 'Erreur lors de la création');
