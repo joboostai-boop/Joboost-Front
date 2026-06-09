@@ -139,7 +139,10 @@ export const linkedinAuthController = {
       );
       res.cookie('token', jwtToken, COOKIE_OPTIONS);
 
-      res.redirect(`${FRONTEND_URL}/dashboard?oauth=linkedin`);
+      // Le JWT est aussi passé dans le fragment d'URL (#token=...) : sur mobile le
+      // cookie tiers (SameSite=None) est bloqué, le frontend lit donc le token ici
+      // et le stocke en localStorage. Le fragment n'est jamais envoyé au serveur.
+      res.redirect(`${FRONTEND_URL}/dashboard?oauth=linkedin#token=${jwtToken}`);
     } catch (error: unknown) {
       console.error('LinkedIn OAuth callback error:', error);
       res.redirect(`${FRONTEND_URL}/auth/login?error=linkedin_oauth_failed`);

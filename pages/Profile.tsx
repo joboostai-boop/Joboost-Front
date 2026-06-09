@@ -116,6 +116,23 @@ const Profile: React.FC<ProfileProps> = ({ user }) => {
     }
   };
 
+  // Vraie connexion LinkedIn (OpenID Connect) : importe la photo + l'identité en 1 clic.
+  const connectLinkedIn = async () => {
+    const toastId = toast.loading('Redirection vers LinkedIn...');
+    try {
+      const res = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/auth/linkedin`);
+      const data = await res.json();
+      if (data.success && data.url) {
+        toast.dismiss(toastId);
+        window.location.href = data.url;
+      } else {
+        toast.error(data.error || 'Connexion LinkedIn non configurée.', { id: toastId });
+      }
+    } catch (e) {
+      toast.error('Erreur de connexion au serveur.', { id: toastId });
+    }
+  };
+
   const dismissSuggestion = (index: number) => {
     setGlobalSuggestions(prev => prev.filter((_, i) => i !== index));
     if (globalSuggestions.length <= 1) {
@@ -130,13 +147,20 @@ const Profile: React.FC<ProfileProps> = ({ user }) => {
           <h1>Mon Profil</h1>
           <p>Gérez vos informations pour de meilleures recommandations.</p>
         </div>
-        <div className="flex items-center gap-4">
-          <button 
-            onClick={() => setShowImportModal(true)}
+        <div className="flex items-center gap-3">
+          <button
+            onClick={connectLinkedIn}
             className="btn btn-secondary border-[#0A66C2] text-[#0A66C2] hover:bg-[#0A66C2]/5"
           >
             <Linkedin size={16} />
-            Import LinkedIn
+            Connecter LinkedIn
+          </button>
+          <button
+            onClick={() => setShowImportModal(true)}
+            className="btn btn-secondary text-xs"
+            title="Importer vos expériences en collant le texte de votre profil LinkedIn"
+          >
+            Importer (texte)
           </button>
           <button onClick={handleSave} className="btn btn-primary">
             Enregistrer les modifications
