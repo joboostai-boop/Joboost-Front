@@ -37,7 +37,7 @@ const Register = () => {
 
       if (data.success) {
         login(data.user, data.token);
-        navigate('/prepare');
+        navigate('/home');
       } else {
         setError(data.error || 'Erreur lors de la création');
       }

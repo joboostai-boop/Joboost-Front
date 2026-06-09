@@ -33,7 +33,7 @@ const Login = () => {
         if (data.user.role === 'BUSINESS_PARTNER') {
           navigate('/business/offers');
         } else {
-          navigate('/prepare');
+          navigate('/home');
         }
       } else {
         setError(data.error || 'Identifiants invalides');
