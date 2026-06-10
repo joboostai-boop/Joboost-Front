@@ -57,7 +57,36 @@ export const userController = {
       if (req.body.education !== undefined) {
         mappedData.education = req.body.education;
       }
-      
+
+      // ─── Profil étendu (CV complet) ───
+      if (req.body.firstName !== undefined) mappedData.firstName = req.body.firstName;
+      if (req.body.lastName !== undefined) mappedData.lastName = req.body.lastName;
+      // Si prénom/nom fournis, on (re)compose le champ name (requis, non-null).
+      if (req.body.firstName !== undefined || req.body.lastName !== undefined) {
+        const composed = `${req.body.firstName || ''} ${req.body.lastName || ''}`.trim();
+        if (composed) mappedData.name = composed;
+      }
+      if (req.body.postalCode !== undefined) mappedData.postalCode = req.body.postalCode;
+      if (req.body.workTime !== undefined) mappedData.workTime = req.body.workTime;
+      if (req.body.availability !== undefined) mappedData.availability = req.body.availability;
+      if (req.body.salaryMin !== undefined) mappedData.salaryMin = req.body.salaryMin === null ? null : Number(req.body.salaryMin);
+      if (req.body.salaryMax !== undefined) mappedData.salaryMax = req.body.salaryMax === null ? null : Number(req.body.salaryMax);
+      if (req.body.ownVehicle !== undefined) mappedData.ownVehicle = req.body.ownVehicle;
+
+      // Tableaux de chaînes (sélecteurs / cases à cocher)
+      const arrayFields = ['targetSectors', 'targetLocations', 'contractTypes', 'softSkills', 'mobility', 'drivingLicenses', 'workSchedules'];
+      for (const f of arrayFields) {
+        if (req.body[f] !== undefined) {
+          mappedData[f] = Array.isArray(req.body[f])
+            ? req.body[f]
+            : String(req.body[f]).split(',').map((x: string) => x.trim()).filter(Boolean);
+        }
+      }
+
+      // Champs JSON structurés
+      if (req.body.languagesDetailed !== undefined) mappedData.languagesDetailed = req.body.languagesDetailed;
+      if (req.body.projects !== undefined) mappedData.projects = req.body.projects;
+
       if (!user) {
          // Create the user if it doesn't exist
          user = await prisma.user.create({

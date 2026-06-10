@@ -10,7 +10,9 @@ export const dashboardController = {
       // Cacul Complétion du profil
       const fieldsToCheck = [
         user.name, user.email, user.title, user.summary, user.city, user.phone,
-        user.skills, user.experiences, user.languages, user.portfolio, user.github
+        user.skills, user.experiences, user.education, user.languages, user.languagesDetailed,
+        user.softSkills, user.targetSectors, user.contractTypes, user.mobility,
+        user.drivingLicenses, user.portfolio, user.github
       ];
       const filledFields = fieldsToCheck.filter(f => {
          if (Array.isArray(f)) return f.length > 0;

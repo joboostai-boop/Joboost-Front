@@ -55,6 +55,25 @@ model User {
   usageMonth        String?  // "YYYY-MM" du mois en cours ; sert au reset mensuel du quota
   phone             String?
   city              String?
+  postalCode        String?
+
+  // Profil étendu (CV complet)
+  firstName         String?
+  lastName          String?
+  targetSectors     String[]  @default([])
+  targetLocations   String[]  @default([])
+  contractTypes     String[]  @default([])
+  workTime          String?
+  availability      String?
+  salaryMin         Int?
+  salaryMax         Int?
+  softSkills        String[]  @default([])
+  languagesDetailed Json?     @default("[]")
+  mobility          String[]  @default([])
+  drivingLicenses   String[]  @default([])
+  ownVehicle        Boolean?
+  workSchedules     String[]  @default([])
+  projects          Json?     @default("[]")
 
   // Consentements (RGPD / preuve d'acceptation)
   acceptedTermsAt   DateTime? // date d'acceptation des CGU + politique de confidentialité

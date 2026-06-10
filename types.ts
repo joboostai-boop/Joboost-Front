@@ -41,7 +41,26 @@ export interface User {
   quota: number;
   phone?: string;
   city?: string;
-  
+
+  // Profil étendu (CV complet)
+  firstName?: string;
+  lastName?: string;
+  postalCode?: string;
+  targetSectors?: string[];
+  targetLocations?: string[];
+  contractTypes?: string[];
+  workTime?: string;
+  availability?: string;
+  salaryMin?: number;
+  salaryMax?: number;
+  softSkills?: string[];
+  languagesDetailed?: { language: string; level: string; certification?: string }[];
+  mobility?: string[];
+  drivingLicenses?: string[];
+  ownVehicle?: boolean;
+  workSchedules?: string[];
+  projects?: { title: string; link?: string; description?: string; role?: string }[];
+
   // Auth & Roles
   role?: string;
   organizationId?: string;
