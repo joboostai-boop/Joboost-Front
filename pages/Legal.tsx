@@ -16,7 +16,7 @@ import Logo from '../components/Logo';
  * Ils ne remplacent pas la validation par un professionnel du droit.
  */
 
-const LAST_UPDATE = '6 juin 2026';
+const LAST_UPDATE = '10 juin 2026';
 const CONTACT_EMAIL = '[À COMPLÉTER : email de contact, ex. contact@joboost.fr]';
 
 type Section = { heading: string; body: React.ReactNode };
@@ -34,14 +34,13 @@ const mentionsLegales: Section[] = [
       <>
         <p>Le site JoBoost est édité par :</p>
         <ul className="list-disc pl-6 space-y-1 mt-2">
-          <li>Dénomination / nom de l'éditeur : <TODO>[À COMPLÉTER : raison sociale ou nom de l'entrepreneur individuel]</TODO></li>
-          <li>Forme juridique : <TODO>[À COMPLÉTER : ex. SAS, SASU, micro-entreprise]</TODO></li>
-          <li>Capital social (le cas échéant) : <TODO>[À COMPLÉTER]</TODO></li>
-          <li>Siège social / adresse : <TODO>[À COMPLÉTER : adresse postale complète]</TODO></li>
-          <li>SIREN / SIRET : <TODO>[À COMPLÉTER]</TODO></li>
-          <li>N° TVA intracommunautaire (le cas échéant) : <TODO>[À COMPLÉTER]</TODO></li>
+          <li>Dénomination / nom de l'éditeur : <strong>Sana Anger</strong>, exerçant sous le nom commercial <strong>BOOST</strong></li>
+          <li>Forme juridique : Entrepreneur individuel</li>
+          <li>Siège social / adresse : 4 allée de Vendée, 78200 Magnanville, France</li>
+          <li>SIREN : 105 996 334 — SIRET : 105 996 334 00014</li>
+          <li>TVA : TVA non applicable, article 293 B du CGI (franchise en base)</li>
           <li>Adresse e-mail : <TODO>{CONTACT_EMAIL}</TODO></li>
-          <li>Directeur de la publication : <TODO>[À COMPLÉTER : nom du responsable]</TODO></li>
+          <li>Directeur de la publication : Sana Anger</li>
         </ul>
       </>
     ),
@@ -82,8 +81,8 @@ const confidentialite: Section[] = [
     body: (
       <p>
         Le responsable du traitement des données est l'éditeur du site (voir Mentions légales) :{' '}
-        <TODO>[À COMPLÉTER : identité du responsable]</TODO>. Pour toute question relative à vos données, vous
-        pouvez écrire à <TODO>{CONTACT_EMAIL}</TODO>.
+        <strong>Sana Anger (BOOST)</strong>, entrepreneur individuel. Pour toute question relative à vos données,
+        vous pouvez écrire à <TODO>{CONTACT_EMAIL}</TODO>.
       </p>
     ),
   },
@@ -117,7 +116,8 @@ const confidentialite: Section[] = [
         <ul className="list-disc pl-6 space-y-1 mt-2">
           <li>Hébergement : Netlify, Render, Supabase.</li>
           <li>Paiement : <strong>Stripe</strong> (les données de carte sont traitées directement par Stripe, jamais stockées par JoBoost).</li>
-          <li>Fonctionnalités d'IA : <TODO>[À COMPLÉTER : fournisseur(s) de modèles IA utilisés, ex. Google Gemini]</TODO>.</li>
+          <li>Fonctionnalités d'IA : <strong>Google</strong> (modèles Gemini, via l'API Google AI) — seules les
+          données de votre profil nécessaires à la génération demandée lui sont transmises.</li>
         </ul>
         <p className="mt-2">Vos données ne sont jamais vendues à des tiers.</p>
       </>
@@ -154,9 +154,9 @@ const confidentialite: Section[] = [
     heading: '7. Cookies',
     body: (
       <p>
-        Le site utilise des cookies strictement nécessaires à son fonctionnement (session, authentification).{' '}
-        <TODO>[À COMPLÉTER si des cookies de mesure d'audience ou publicitaires sont ajoutés : un bandeau de
-        consentement conforme sera alors requis avant tout dépôt.]</TODO>
+        Le site utilise uniquement des cookies et stockages strictement nécessaires à son fonctionnement (session,
+        authentification). Aucun cookie publicitaire ni de mesure d'audience n'est déposé. Si de tels cookies
+        venaient à être ajoutés, un bandeau de consentement conforme serait mis en place avant tout dépôt.
       </p>
     ),
   },
@@ -227,11 +227,11 @@ const cgv: Section[] = [
     heading: '1. Offres et prix',
     body: (
       <>
-        <p>JoBoost propose les formules suivantes (prix TTC) :</p>
+        <p>JoBoost propose les formules suivantes (prix TTC, TVA non applicable — art. 293 B du CGI) :</p>
         <ul className="list-disc pl-6 space-y-1 mt-2">
-          <li><strong>Gratuit</strong> — 0 € : accès découverte avec fonctionnalités limitées.</li>
-          <li><strong>Pro</strong> — 15 € / mois : fonctionnalités étendues, sans engagement, résiliable à tout moment.</li>
-          <li><strong>Elite</strong> — <TODO>[À COMPLÉTER : prix et disponibilité — actuellement annoncé « bientôt disponible »]</TODO>.</li>
+          <li><strong>Gratuit</strong> — 0 € : 1 candidature IA par mois et fonctionnalités de découverte.</li>
+          <li><strong>Élite</strong> — 14,99 € / mois ou 119 € / an : 150 candidatures IA par mois, sans engagement, résiliable à tout moment.</li>
+          <li><strong>Packs de candidatures</strong> (achat unique, crédits sans date d'expiration) : Découverte — 10 candidatures pour 7,99 € ; Booster — 30 candidatures pour 19,99 € ; Marathon — 100 candidatures pour 49,99 €.</li>
         </ul>
         <p className="mt-2">Les prix en vigueur sont ceux affichés sur la page Tarifs au moment de la commande.</p>
       </>
@@ -250,11 +250,12 @@ const cgv: Section[] = [
     heading: '3. Droit de rétractation',
     body: (
       <p>
-        Conformément à l'article L221-18 du Code de la consommation, vous disposez d'un délai de 14 jours pour
-        vous rétracter. Toutefois, pour un contenu / service numérique fourni immédiatement, vous pouvez demander
-        l'exécution avant la fin de ce délai ; dans ce cas, conformément à l'article L221-28, vous renoncez
-        expressément à votre droit de rétractation pour la partie déjà exécutée. <TODO>[À COMPLÉTER : prévoir une
-        case à cocher de renonciation explicite au moment du paiement.]</TODO>
+        Conformément à l'article L221-18 du Code de la consommation, vous disposez d'un délai de 14 jours à
+        compter de la souscription pour vous rétracter, par simple e-mail à l'adresse de contact. L'accès au
+        service étant fourni immédiatement après le paiement, l'exécution commence avant la fin de ce délai à
+        votre demande ; en cas de rétractation, le remboursement est alors effectué déduction faite de la valeur
+        du service déjà consommé (candidatures IA générées), conformément à l'article L221-25 du Code de la
+        consommation.
       </p>
     ),
   },
@@ -262,8 +263,10 @@ const cgv: Section[] = [
     heading: '4. Résiliation et remboursement',
     body: (
       <p>
-        L'abonnement Pro est sans engagement et peut être résilié à tout moment ; il reste actif jusqu'à la fin de
-        la période en cours. <TODO>[À COMPLÉTER : politique de remboursement éventuelle.]</TODO>
+        L'abonnement Élite est sans engagement et peut être résilié à tout moment ; il reste actif jusqu'à la fin
+        de la période en cours (mois ou année), qui n'est pas remboursée en dehors du droit de rétractation
+        ci-dessus. Les crédits de packs non consommés peuvent être remboursés sur demande dans les 14 jours
+        suivant l'achat, au prorata des candidatures non utilisées.
       </p>
     ),
   },
@@ -273,7 +276,8 @@ const cgv: Section[] = [
       <p>
         Toute réclamation peut être adressée à <TODO>{CONTACT_EMAIL}</TODO>. Conformément à l'article L612-1 du
         Code de la consommation, le consommateur peut recourir gratuitement à un médiateur de la consommation :{' '}
-        <TODO>[À COMPLÉTER : nom et coordonnées du médiateur auquel l'éditeur adhère.]</TODO>
+        <TODO>[Adhésion en cours auprès de CM2C (cm2c.net) — les coordonnées complètes du médiateur seront
+        publiées ici dès validation de l'adhésion.]</TODO>
       </p>
     ),
   },
