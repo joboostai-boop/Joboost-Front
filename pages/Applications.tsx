@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Briefcase, Building2, Calendar, MapPin, Search, PlusCircle, AlertCircle, RefreshCw } from 'lucide-react';
+import { Briefcase, Building2, Calendar, Search, RefreshCw, Inbox, ArrowRight, GripVertical } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
+import { authHeaders } from '../services/authToken';
 
 interface Application {
   id: string;
@@ -13,164 +14,213 @@ interface Application {
   notes: string | null;
 }
 
-const KANBAN_COLUMNS = [
-  { id: 'PENDING', label: 'À préparer', color: 'border-slate-200 dark:border-slate-800', bg: 'bg-slate-50 dark:bg-slate-900/40', text: 'text-slate-600 dark:text-slate-400' },
-  { id: 'SENT', label: 'Envoyées', color: 'border-blue-200 dark:border-blue-900/50', bg: 'bg-blue-50 dark:bg-blue-900/10', text: 'text-blue-600 dark:text-blue-400' },
-  { id: 'INTERVIEW', label: 'Entretiens', color: 'border-amber-200 dark:border-amber-900/50', bg: 'bg-amber-50 dark:bg-amber-900/10', text: 'text-amber-600 dark:text-amber-400' },
-  { id: 'OFFER', label: 'Offres', color: 'border-emerald-200 dark:border-emerald-900/50', bg: 'bg-emerald-50 dark:bg-emerald-900/10', text: 'text-emerald-600 dark:text-emerald-400' },
-  { id: 'REJECTED', label: 'Refus', color: 'border-red-200 dark:border-red-900/50', bg: 'bg-red-50 dark:bg-red-900/10', text: 'text-red-500 dark:text-red-400' }
+type StatusId = Application['status'];
+
+const COLUMNS: { id: StatusId; label: string; dot: string; ring: string; soft: string; text: string }[] = [
+  { id: 'PENDING', label: 'À préparer', dot: 'bg-slate-400', ring: 'ring-slate-200 dark:ring-slate-700', soft: 'bg-slate-50 dark:bg-slate-900/40', text: 'text-slate-600 dark:text-slate-300' },
+  { id: 'SENT', label: 'Envoyées', dot: 'bg-blue-500', ring: 'ring-blue-200 dark:ring-blue-900/50', soft: 'bg-blue-50/60 dark:bg-blue-900/10', text: 'text-blue-600 dark:text-blue-400' },
+  { id: 'INTERVIEW', label: 'Entretiens', dot: 'bg-amber-500', ring: 'ring-amber-200 dark:ring-amber-900/50', soft: 'bg-amber-50/60 dark:bg-amber-900/10', text: 'text-amber-600 dark:text-amber-400' },
+  { id: 'OFFER', label: 'Offres', dot: 'bg-emerald-500', ring: 'ring-emerald-200 dark:ring-emerald-900/50', soft: 'bg-emerald-50/60 dark:bg-emerald-900/10', text: 'text-emerald-600 dark:text-emerald-400' },
+  { id: 'REJECTED', label: 'Refusées', dot: 'bg-red-400', ring: 'ring-red-200 dark:ring-red-900/50', soft: 'bg-red-50/60 dark:bg-red-900/10', text: 'text-red-500 dark:text-red-400' },
 ];
+
+const API = import.meta.env.VITE_API_URL || '';
 
 const Applications: React.FC = () => {
   const [applications, setApplications] = useState<Application[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
+  const [mobileTab, setMobileTab] = useState<StatusId>('SENT');
+  const [dragId, setDragId] = useState<string | null>(null);
+  const [dragOver, setDragOver] = useState<StatusId | null>(null);
   const navigate = useNavigate();
 
   const fetchApplications = async () => {
     setLoading(true);
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/applications?limit=100`); // Fetch max for Kanban board MVP
+      const res = await fetch(`${API}/api/applications?limit=100`, { credentials: 'include', headers: { ...authHeaders() } });
       const data = await res.json();
-      if (data.success) {
-        setApplications(data.data);
-      } else {
-        toast.error("Impossible de charger les candidatures.");
-      }
-    } catch (error) {
-      toast.error("Erreur serveur de synchronisation.");
+      if (data.success) setApplications(data.data);
+      else toast.error('Impossible de charger les candidatures.');
+    } catch {
+      toast.error('Erreur de connexion.');
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => {
-    fetchApplications();
-  }, []);
+  useEffect(() => { fetchApplications(); }, []);
 
-  const handleUpdateStatus = async (id: string, newStatus: string) => {
-    // Optimistic Update
-    setApplications(apps => apps.map(app => app.id === id ? { ...app, status: newStatus as any } : app));
+  const moveTo = async (id: string, newStatus: StatusId) => {
+    const current = applications.find((a) => a.id === id);
+    if (!current || current.status === newStatus) return;
+    setApplications((apps) => apps.map((a) => (a.id === id ? { ...a, status: newStatus } : a)));
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/applications/${id}`, {
+      const res = await fetch(`${API}/api/applications/${id}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status: newStatus })
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json', ...authHeaders() },
+        body: JSON.stringify({ status: newStatus }),
       });
       const data = await res.json();
-      if (!data.success) {
-         toast.error("Erreur lors du changement de statut");
-         fetchApplications(); // Revert
-      } else {
-         toast.success("Statut mis à jour !");
-      }
+      if (!data.success) { toast.error('Échec de la mise à jour.'); fetchApplications(); }
     } catch {
-      toast.error("Hors ligne.");
-      fetchApplications();
+      toast.error('Hors ligne.'); fetchApplications();
     }
   };
 
-  const filteredApps = applications.filter(app => 
-    app.company.toLowerCase().includes(search.toLowerCase()) || 
-    app.title.toLowerCase().includes(search.toLowerCase())
+  const filtered = applications.filter((a) =>
+    a.company.toLowerCase().includes(search.toLowerCase()) ||
+    a.title.toLowerCase().includes(search.toLowerCase())
+  );
+  const byStatus = (s: StatusId) => filtered.filter((a) => a.status === s);
+  const total = applications.length;
+
+  const Card: React.FC<{ app: Application; col: typeof COLUMNS[number] }> = ({ app, col }) => (
+    <div
+      draggable
+      onDragStart={() => setDragId(app.id)}
+      onDragEnd={() => { setDragId(null); setDragOver(null); }}
+      className={`group bg-white dark:bg-[#0b1220] border border-slate-200 dark:border-slate-800 rounded-xl p-3.5 shadow-sm hover:shadow-md transition-all cursor-grab active:cursor-grabbing ${dragId === app.id ? 'opacity-40' : ''}`}
+    >
+      <div className="flex items-start gap-2">
+        <GripVertical size={15} className="text-slate-300 dark:text-slate-600 mt-0.5 shrink-0 hidden lg:block" />
+        <div className="min-w-0 flex-1">
+          <p className="font-semibold text-sm text-[#111827] dark:text-white leading-tight truncate">{app.title}</p>
+          <p className="flex items-center gap-1.5 text-xs text-[#6B7280] mt-1">
+            <Building2 size={13} className="shrink-0" /> <span className="truncate">{app.company}</span>
+          </p>
+        </div>
+      </div>
+
+      {app.notes && (
+        <p className="mt-2.5 text-xs text-[#6B7280] dark:text-slate-400 italic line-clamp-2 bg-slate-50 dark:bg-slate-800/50 rounded-lg p-2">{app.notes}</p>
+      )}
+
+      <div className="flex items-center justify-between mt-3 pt-2.5 border-t border-slate-100 dark:border-slate-800">
+        <span className="flex items-center gap-1 text-[10px] font-medium text-slate-400 uppercase tracking-wide">
+          <Calendar size={11} /> {new Date(app.appliedAt).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' })}
+        </span>
+        <select
+          value={app.status}
+          onChange={(e) => moveTo(app.id, e.target.value as StatusId)}
+          className={`text-[11px] font-semibold bg-transparent border-0 outline-none cursor-pointer ${col.text} text-right`}
+          aria-label="Déplacer la candidature"
+        >
+          {COLUMNS.map((o) => (
+            <option key={o.id} value={o.id} className="text-[#111827] dark:text-gray-200 bg-white dark:bg-[#111827]">{o.label}</option>
+          ))}
+        </select>
+      </div>
+    </div>
+  );
+
+  const EmptyCol: React.FC = () => (
+    <div className="flex flex-col items-center justify-center text-center gap-1.5 py-8 text-slate-300 dark:text-slate-600">
+      <Inbox size={22} />
+      <span className="text-xs font-medium text-slate-400 dark:text-slate-500">Aucune candidature ici</span>
+    </div>
   );
 
   return (
-    <div className="p-6 md:p-10 max-w-[1400px] mx-auto h-[calc(100vh-80px)] flex flex-col">
-      <header className="flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-[#E5E7EB] dark:border-[#1F2937] pb-6 shrink-0">
-        <div>
-          <h1 className="flex items-center gap-3">
-            <Briefcase className="text-[#7D5CFF]" />
-            Suivi des Candidatures
-          </h1>
-          <p>Gérez votre pipeline de recrutement en temps réel.</p>
-        </div>
-        <div className="flex items-center gap-3 w-full md:w-auto">
-          <div className="flex-1 md:w-64 relative">
-             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-[#9CA3AF]" size={16} />
-             <input 
-               type="text" 
-               placeholder="Filtrer entreprise, poste..." 
-               value={search}
-               onChange={(e) => setSearch(e.target.value)}
-               className="input-pro pl-9 w-full"
-             />
+    <div className="p-5 md:p-8 max-w-[1500px] mx-auto space-y-6">
+      {/* En-tête */}
+      <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <span className="w-11 h-11 rounded-2xl bg-[#F3F0FF] text-[#7D5CFF] dark:bg-[#7D5CFF]/10 flex items-center justify-center shrink-0">
+            <Briefcase size={22} />
+          </span>
+          <div>
+            <h1>Mes candidatures</h1>
+            <p className="text-sm text-[#6B7280]">{total} candidature{total > 1 ? 's' : ''} · suis l'avancement de chacune.</p>
           </div>
-          <button 
-             onClick={fetchApplications}
-             className="btn btn-secondary px-3"
-             title="Synchroniser"
-          >
-             <RefreshCw size={18} className={loading ? "animate-spin text-[#7D5CFF]" : ""} />
+        </div>
+        <div className="flex items-center gap-2 w-full md:w-auto">
+          <div className="flex-1 md:w-64 relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-[#9CA3AF]" size={16} />
+            <input type="text" placeholder="Filtrer entreprise, poste…" value={search} onChange={(e) => setSearch(e.target.value)} className="input-pro pl-9 w-full" />
+          </div>
+          <button onClick={fetchApplications} className="btn btn-secondary px-3 shrink-0" title="Actualiser">
+            <RefreshCw size={18} className={loading ? 'animate-spin text-[#7D5CFF]' : ''} />
           </button>
         </div>
       </header>
 
-      {/* Vue Kanban / Boards */}
-      <div className="flex-1 overflow-x-auto overflow-y-hidden pt-8 pb-4">
-         <div className="flex gap-6 h-full items-start min-w-max pb-8 snap-x">
-            {KANBAN_COLUMNS.map(column => {
-              const columnApps = filteredApps.filter(app => app.status === column.id);
-              
+      {/* État vide global */}
+      {!loading && total === 0 ? (
+        <div className="card-pro flex flex-col items-center text-center gap-4 py-16">
+          <span className="w-16 h-16 rounded-2xl bg-[#F3F0FF] text-[#7D5CFF] dark:bg-[#7D5CFF]/10 flex items-center justify-center"><Inbox size={30} /></span>
+          <div>
+            <h3 className="text-lg font-bold text-[#111827] dark:text-white">Aucune candidature pour l'instant</h3>
+            <p className="text-sm text-[#6B7280] mt-1">Dès que tu postules, tes candidatures apparaissent ici et tu suis leur avancement.</p>
+          </div>
+          <button onClick={() => navigate('/target/offers')} className="btn btn-primary">
+            Trouver des offres <ArrowRight size={16} />
+          </button>
+        </div>
+      ) : (
+        <>
+          {/* ───── PC : board 5 colonnes (drag & drop) ───── */}
+          <div className="hidden lg:grid grid-cols-5 gap-4 items-start">
+            {COLUMNS.map((col) => {
+              const apps = byStatus(col.id);
               return (
-                <div key={column.id} className="w-80 flex flex-col max-h-full snap-start">
-                   {/* Column Header */}
-                   <div className={`mb-4 px-4 py-3 rounded-xl border ${column.color} ${column.bg} flex items-center justify-between`}>
-                     <h3 className={`font-bold text-sm tracking-wide ${column.text}`}>{column.label}</h3>
-                     <span className={`text-xs font-black px-2 py-0.5 rounded-full bg-white/50 dark:bg-black/20 ${column.text}`}>
-                       {columnApps.length}
-                     </span>
-                   </div>
-
-                   {/* Cards Container */}
-                   <div className="flex-1 overflow-y-auto space-y-3 pr-1 scrollbar-thin">
-                      {columnApps.map(app => (
-                        <div key={app.id} className="card-pro p-4 cursor-default group relative overflow-visible">
-                           <div className="flex justify-between items-start mb-3">
-                              <h4 className="font-semibold text-[#111827] dark:text-white text-sm leading-tight pr-4">{app.title}</h4>
-                           </div>
-                           <div className="flex items-center gap-2 text-xs font-medium text-[#6B7280] mb-4">
-                              <Building2 size={14} />
-                              <span className="truncate">{app.company}</span>
-                           </div>
-
-                           {app.notes && (
-                              <div className="mb-4 p-2 bg-[#F3F4F6] dark:bg-[#1F2937] rounded-md text-xs text-[#6B7280] dark:text-[#9CA3AF] border border-[#E5E7EB] dark:border-[#374151]">
-                                <p className="line-clamp-2 italic">{app.notes}</p>
-                              </div>
-                           )}
-
-                           <div className="flex flex-col gap-3 pt-3 border-t border-[#E5E7EB] dark:border-[#1F2937] mt-auto">
-                              <div className="flex items-center justify-between text-[10px] text-[#9CA3AF] font-semibold uppercase tracking-widest">
-                                <span className="flex items-center gap-1"><Calendar size={12} /> {new Date(app.appliedAt).toLocaleDateString()}</span>
-                                <span className="truncate max-w-[90px]">{app.source}</span>
-                              </div>
-
-                              <select 
-                                value={app.status}
-                                onChange={(e) => handleUpdateStatus(app.id, e.target.value)}
-                                className={`w-full text-xs font-semibold p-2 bg-[#F3F4F6] dark:bg-[#1F2937] border border-[#E5E7EB] dark:border-[#374151] rounded outline-none cursor-pointer focus:ring-1 focus:ring-[#7D5CFF] transition-colors ${column.text}`}
-                              >
-                                {KANBAN_COLUMNS.map(opt => (
-                                  <option key={opt.id} value={opt.id} className="text-[#111827] dark:text-gray-200 bg-white dark:bg-[#111827]">{opt.label}</option>
-                                ))}
-                              </select>
-                           </div>
-                        </div>
-                      ))}
-
-                      {columnApps.length === 0 && !loading && (
-                        <div className="h-32 border-2 border-dashed border-[#E5E7EB] dark:border-[#1F2937] rounded-md flex flex-col items-center justify-center text-[#9CA3AF] gap-2 p-2">
-                           <AlertCircle size={20} />
-                           <span className="text-xs font-medium">Vide</span>
-                        </div>
-                      )}
-                   </div>
+                <div
+                  key={col.id}
+                  onDragOver={(e) => { e.preventDefault(); setDragOver(col.id); }}
+                  onDragLeave={() => setDragOver((c) => (c === col.id ? null : c))}
+                  onDrop={() => { if (dragId) moveTo(dragId, col.id); setDragId(null); setDragOver(null); }}
+                  className={`rounded-2xl p-2.5 transition-colors ${col.soft} ${dragOver === col.id ? `ring-2 ${col.ring}` : 'ring-1 ring-transparent'}`}
+                >
+                  <div className="flex items-center justify-between px-2 py-1.5 mb-2">
+                    <div className="flex items-center gap-2">
+                      <span className={`w-2 h-2 rounded-full ${col.dot}`} />
+                      <h3 className={`text-sm font-bold ${col.text}`}>{col.label}</h3>
+                    </div>
+                    <span className="text-xs font-bold text-slate-400">{apps.length}</span>
+                  </div>
+                  <div className="space-y-2.5 min-h-[120px]">
+                    {apps.map((app) => <Card key={app.id} app={app} col={col} />)}
+                    {apps.length === 0 && <EmptyCol />}
+                  </div>
                 </div>
               );
             })}
-         </div>
-      </div>
+          </div>
+
+          {/* ───── Mobile / tablette : onglets de statut ───── */}
+          <div className="lg:hidden space-y-4">
+            <div className="flex gap-2 overflow-x-auto scrollbar-none -mx-1 px-1 pb-1">
+              {COLUMNS.map((col) => {
+                const count = byStatus(col.id).length;
+                const active = mobileTab === col.id;
+                return (
+                  <button
+                    key={col.id}
+                    onClick={() => setMobileTab(col.id)}
+                    className={`shrink-0 flex items-center gap-2 px-3.5 py-2 rounded-full text-sm font-semibold border transition-colors ${
+                      active ? 'bg-[#7D5CFF] text-white border-[#7D5CFF]' : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300'
+                    }`}
+                  >
+                    <span className={`w-2 h-2 rounded-full ${active ? 'bg-white/80' : col.dot}`} />
+                    {col.label}
+                    <span className={`text-xs ${active ? 'text-white/80' : 'text-slate-400'}`}>{count}</span>
+                  </button>
+                );
+              })}
+            </div>
+            <div className="space-y-2.5">
+              {byStatus(mobileTab).map((app) => {
+                const col = COLUMNS.find((c) => c.id === mobileTab)!;
+                return <Card key={app.id} app={app} col={col} />;
+              })}
+              {byStatus(mobileTab).length === 0 && !loading && (
+                <div className="card-pro"><EmptyCol /></div>
+              )}
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 };
