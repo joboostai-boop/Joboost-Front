@@ -282,7 +282,7 @@ const Profile: React.FC<ProfileProps> = ({ user }) => {
   };
 
   return (
-    <div className="p-5 md:p-10 max-w-3xl mx-auto pb-10 space-y-5">
+    <div className="p-5 md:p-10 max-w-5xl mx-auto pb-10 space-y-5">
       {/* En-tête + progression */}
       <header className="space-y-4">
         <div className="flex items-center justify-between gap-4">
@@ -310,6 +310,8 @@ const Profile: React.FC<ProfileProps> = ({ user }) => {
         </div>
       </header>
 
+      {/* Sections du profil — masonry 2 colonnes sur PC pour exploiter la largeur */}
+      <div className="lg:columns-2 lg:gap-5 [&>*]:mb-5 [&>*]:break-inside-avoid">
       {/* 1. Identité & contact */}
       <Section id="identity" title="Identité & contact" icon={<UserIcon size={18} />} badge="Essentiel"
         open={open === 'identity'} onToggle={() => toggle('identity')}
@@ -482,6 +484,8 @@ const Profile: React.FC<ProfileProps> = ({ user }) => {
         open={open === 'hobbies'} onToggle={() => toggle('hobbies')} done={f.hobbies.length > 0}>
         <Chips value={f.hobbies} onChange={(v) => set({ hobbies: v })} suggestions={HOBBY_SUGGESTIONS} placeholder="Ajoute un loisir" />
       </Section>
+
+      </div>
 
       {/* Bouton de sauvegarde en bas de page (dans le flux) */}
       <div className="pt-4">
