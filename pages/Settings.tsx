@@ -1,26 +1,7 @@
-
-import React from 'react';
-import { 
-  Settings as SettingsIcon, 
-  Shield, 
-  Bell, 
-  LogOut, 
-  ChevronRight, 
-  Mail, 
-  Phone, 
-  Globe, 
-  CheckCircle2,
-  Lock,
-  CreditCard,
-  Moon,
-  Sun,
-  Palette,
-  Target,
-  Database,
-  Link,
-  Trash2,
-  Download,
-  AlertCircle
+import React, { useState } from 'react';
+import {
+  Settings as SettingsIcon, Bell, LogOut, ChevronRight, UserRound, Moon, Sun,
+  Crown, Download, Trash2, Linkedin, Calendar, ShieldAlert, X, Check
 } from 'lucide-react';
 import { User as UserType } from '../types';
 import { useNavigate } from 'react-router-dom';
@@ -28,23 +9,54 @@ import { useAuth } from '../context/AuthContext';
 import { authHeaders } from '../services/authToken';
 import toast from 'react-hot-toast';
 
-interface SettingsProps { 
+interface SettingsProps {
   user: UserType;
   isDarkMode: boolean;
   toggleDarkMode: () => void;
 }
 
+/* Carte de section réutilisable */
+const Card: React.FC<{ title: string; icon: React.ReactNode; children: React.ReactNode; desc?: string }> = ({ title, icon, children, desc }) => (
+  <section className="card-pro !p-0 overflow-hidden">
+    <div className="px-5 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center gap-3">
+      <span className="w-8 h-8 rounded-lg bg-[#F3F0FF] text-[#7D5CFF] dark:bg-[#7D5CFF]/10 flex items-center justify-center">{icon}</span>
+      <div>
+        <h3 className="text-sm font-bold text-[#111827] dark:text-white">{title}</h3>
+        {desc && <p className="text-xs text-slate-400">{desc}</p>}
+      </div>
+    </div>
+    <div className="divide-y divide-slate-100 dark:divide-slate-800">{children}</div>
+  </section>
+);
+
+const Row: React.FC<{ children: React.ReactNode; onClick?: () => void }> = ({ children, onClick }) => (
+  <div onClick={onClick} className={`flex items-center justify-between gap-4 px-5 py-4 ${onClick ? 'cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors' : ''}`}>
+    {children}
+  </div>
+);
+
+const Toggle: React.FC<{ on: boolean; onChange: () => void }> = ({ on, onChange }) => (
+  <button onClick={onChange} className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors shrink-0 ${on ? 'bg-[#7D5CFF]' : 'bg-slate-200 dark:bg-slate-700'}`}>
+    <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${on ? 'translate-x-6' : 'translate-x-1'}`} />
+  </button>
+);
+
 const Settings: React.FC<SettingsProps> = ({ user, isDarkMode, toggleDarkMode }) => {
   const { logout } = useAuth();
   const navigate = useNavigate();
+
+  const [notifs, setNotifs] = useState({ offers: true, replies: true, weekly: false });
+  const [showDelete, setShowDelete] = useState(false);
+  const [confirmText, setConfirmText] = useState('');
+  const [deleting, setDeleting] = useState(false);
+
   const handleLogout = async () => {
     await logout();
-    navigate('/'); // retour à la landing page publique
+    navigate('/');
   };
 
-  // RGPD — Export des données personnelles (art. 15 & 20)
   const handleExportData = async () => {
-    const toastId = toast.loading('Préparation de votre export...');
+    const toastId = toast.loading('Préparation de ton export...');
     try {
       const res = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/users/me/export`, {
         credentials: 'include',
@@ -54,25 +66,18 @@ const Settings: React.FC<SettingsProps> = ({ user, isDarkMode, toggleDarkMode })
       const blob = await res.blob();
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
-      a.href = url;
-      a.download = 'joboost-mes-donnees.json';
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
+      a.href = url; a.download = 'joboost-mes-donnees.json';
+      document.body.appendChild(a); a.click(); a.remove();
       window.URL.revokeObjectURL(url);
-      toast.success('Vos données ont été exportées.', { id: toastId });
-    } catch (err) {
-      toast.error("Erreur lors de l'export des données.", { id: toastId });
+      toast.success('Tes données ont été exportées.', { id: toastId });
+    } catch {
+      toast.error("Erreur lors de l'export.", { id: toastId });
     }
   };
 
-  // RGPD — Suppression définitive du compte (art. 17)
   const handleDeleteAccount = async () => {
-    const confirmed = window.confirm(
-      "Cette action supprime DÉFINITIVEMENT votre compte et toutes vos données (CV, lettres, candidatures). Cette opération est irréversible. Confirmer ?"
-    );
-    if (!confirmed) return;
-    const toastId = toast.loading('Suppression de votre compte...');
+    setDeleting(true);
+    const toastId = toast.loading('Suppression de ton compte...');
     try {
       const res = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/users/me`, {
         method: 'DELETE',
@@ -83,185 +88,175 @@ const Settings: React.FC<SettingsProps> = ({ user, isDarkMode, toggleDarkMode })
       if (!res.ok || !data.success) throw new Error(data.error || 'Suppression impossible');
       toast.success('Compte supprimé. À bientôt.', { id: toastId });
       await logout();
-      navigate('/'); // retour à la landing page publique
+      navigate('/');
     } catch (err: any) {
       toast.error(err.message || 'Erreur lors de la suppression.', { id: toastId });
+      setDeleting(false);
     }
   };
 
+  const planLabel = user.plan && user.plan !== 'Gratuit' ? `JoBoost ${user.plan}` : 'Forfait Gratuit';
+
   return (
-    <div className="p-4 md:p-10 max-w-6xl mx-auto space-y-12 pb-24">
-      <header className="mb-12">
-        <div className="flex items-center gap-4 mb-2">
-          <div className="p-3 bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 rounded-2xl">
-            <SettingsIcon size={28} />
-          </div>
-          <h1 className="text-4xl font-black text-slate-900 dark:text-white tracking-tight">Paramètres</h1>
+    <div className="p-5 md:p-10 max-w-2xl mx-auto space-y-6 pb-16">
+      {/* En-tête */}
+      <header className="flex items-center gap-4">
+        <span className="w-12 h-12 rounded-2xl bg-[#F3F0FF] text-[#7D5CFF] dark:bg-[#7D5CFF]/10 flex items-center justify-center">
+          <SettingsIcon size={24} />
+        </span>
+        <div>
+          <h1>Paramètres</h1>
+          <p className="text-sm text-[#6B7280]">Gère ton compte, tes préférences et tes notifications.</p>
         </div>
-        <p className="text-slate-500 dark:text-slate-400 font-medium italic">Gérez les protocoles et les préférences de votre unité JoBoost.</p>
       </header>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
-        <div className="lg:col-span-8 space-y-10 animate-in slide-in-from-left duration-500">
-          
-          {/* Section Interface */}
-          <section className="space-y-6">
-            <h3 className="text-xs font-black uppercase tracking-widest text-slate-400 dark:text-slate-500 px-2 italic">Interface & Expérience</h3>
-            <div className="card-modern overflow-hidden">
-              <div className="flex items-center justify-between p-6 group">
-                <div className="flex items-center gap-5">
-                  <div className="text-slate-400 group-hover:text-indigo-600 transition-colors bg-slate-50 dark:bg-slate-800 p-3 rounded-xl border border-slate-100 dark:border-slate-700">
-                    {isDarkMode ? <Moon size={20} /> : <Sun size={20} />}
-                  </div>
-                  <div>
-                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-0.5">Vecteur Visuel</p>
-                    <p className="text-sm font-bold text-slate-900 dark:text-white">Mode Sombre</p>
-                  </div>
-                </div>
-                <button 
-                  onClick={toggleDarkMode}
-                  className={`relative inline-flex h-7 w-12 items-center rounded-full transition-colors duration-300 focus:outline-none ${
-                    isDarkMode ? 'bg-indigo-600' : 'bg-slate-200 dark:bg-slate-700'
-                  }`}
-                >
-                  <span className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform duration-300 ${isDarkMode ? 'translate-x-6' : 'translate-x-1'}`} />
-                </button>
-              </div>
+      {/* Compte */}
+      <Card title="Compte" icon={<UserRound size={16} />}>
+        <Row>
+          <div className="min-w-0">
+            <p className="text-sm font-semibold text-[#111827] dark:text-white truncate">{user.name}</p>
+            <p className="text-xs text-slate-400 truncate">{user.email}</p>
+          </div>
+          <button onClick={() => navigate('/prepare/profile')} className="text-sm font-semibold text-[#7D5CFF] hover:underline shrink-0">
+            Modifier mon profil
+          </button>
+        </Row>
+        <Row onClick={() => navigate('/prepare/profile')}>
+          <span className="text-sm text-slate-600 dark:text-slate-300">Préférences de recherche (poste, lieux, salaire, mobilité)</span>
+          <ChevronRight size={18} className="text-slate-300 shrink-0" />
+        </Row>
+      </Card>
+
+      {/* Apparence */}
+      <Card title="Apparence" icon={isDarkMode ? <Moon size={16} /> : <Sun size={16} />}>
+        <Row>
+          <div>
+            <p className="text-sm font-semibold text-[#111827] dark:text-white">Mode sombre</p>
+            <p className="text-xs text-slate-400">Confort visuel en faible luminosité</p>
+          </div>
+          <Toggle on={isDarkMode} onChange={toggleDarkMode} />
+        </Row>
+      </Card>
+
+      {/* Notifications */}
+      <Card title="Notifications" icon={<Bell size={16} />}>
+        {[
+          { key: 'offers' as const, label: 'Nouvelles offres pour moi', desc: 'Quand des offres correspondent à ton profil' },
+          { key: 'replies' as const, label: 'Réponses des recruteurs', desc: 'Quand une candidature reçoit une réponse' },
+          { key: 'weekly' as const, label: 'Récap hebdomadaire', desc: 'Un résumé de ta semaine de recherche' },
+        ].map((n) => (
+          <Row key={n.key}>
+            <div>
+              <p className="text-sm font-semibold text-[#111827] dark:text-white">{n.label}</p>
+              <p className="text-xs text-slate-400">{n.desc}</p>
             </div>
-          </section>
+            <Toggle on={notifs[n.key]} onChange={() => setNotifs((p) => ({ ...p, [n.key]: !p[n.key] }))} />
+          </Row>
+        ))}
+      </Card>
 
-          {/* Section Préférences de Recherche */}
-          <section className="space-y-6">
-            <h3 className="text-xs font-black uppercase tracking-widest text-slate-400 dark:text-slate-500 px-2 italic">Préférences de Recherche</h3>
-            <div className="card-modern p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-2">
-                <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Périmètre Géographique</label>
-                <div className="flex items-center gap-2 p-3 bg-slate-50 dark:bg-slate-900 rounded-xl border border-slate-100 dark:border-slate-800">
-                  <Globe size={16} className="text-indigo-600" />
-                  <span className="text-sm font-bold">Paris, Lyon + Full Remote</span>
-                </div>
-              </div>
-              <div className="space-y-2">
-                <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Prétention Salariale (Min)</label>
-                <div className="flex items-center gap-2 p-3 bg-slate-50 dark:bg-slate-900 rounded-xl border border-slate-100 dark:border-slate-800">
-                  <Target size={16} className="text-indigo-600" />
-                  <span className="text-sm font-bold">55,000 € / an</span>
-                </div>
-              </div>
-              <div className="md:col-span-2 space-y-2">
-                <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Statut de Visibilité</label>
-                <div className="flex items-center justify-between p-3 bg-indigo-50 dark:bg-indigo-900/10 rounded-xl border border-indigo-100 dark:border-indigo-900/20">
-                  <div className="flex items-center gap-2">
-                    <CheckCircle2 size={16} className="text-emerald-500" />
-                    <span className="text-sm font-bold text-indigo-900 dark:text-indigo-400">Ouvert aux opportunités IA</span>
-                  </div>
-                  <button className="text-[10px] font-black uppercase text-indigo-600 hover:underline">Modifier</button>
-                </div>
-              </div>
+      {/* Intégrations */}
+      <Card title="Intégrations" icon={<Linkedin size={16} />}>
+        <Row>
+          <div className="flex items-center gap-3">
+            <span className="w-9 h-9 rounded-lg bg-[#0A66C2] text-white flex items-center justify-center"><Linkedin size={18} /></span>
+            <div>
+              <p className="text-sm font-semibold text-[#111827] dark:text-white">LinkedIn</p>
+              <p className="text-xs text-slate-400">Importer ton profil et tes expériences</p>
             </div>
-          </section>
-
-          {/* Section Intégrations */}
-          <section className="space-y-6">
-            <h3 className="text-xs font-black uppercase tracking-widest text-slate-400 dark:text-slate-500 px-2 italic">Réseaux & Intégrations</h3>
-            <div className="card-modern divide-y divide-slate-100 dark:divide-slate-800">
-              <div className="flex items-center justify-between p-6">
-                <div className="flex items-center gap-4">
-                  <div className="w-10 h-10 bg-[#0A66C2] rounded-lg flex items-center justify-center text-white">
-                    <Link size={20} />
-                  </div>
-                  <div>
-                    <p className="text-sm font-bold">LinkedIn Connect</p>
-                    <p className="text-xs text-slate-500">Synchronisation des expériences active</p>
-                  </div>
-                </div>
-                <span className="px-2 py-1 bg-emerald-50 text-emerald-600 text-[10px] font-black rounded uppercase">Connecté</span>
-              </div>
-              <div className="flex items-center justify-between p-6 opacity-60 grayscale">
-                <div className="flex items-center gap-4">
-                  <div className="w-10 h-10 bg-slate-200 dark:bg-slate-800 rounded-lg flex items-center justify-center text-slate-500">
-                    <Mail size={20} />
-                  </div>
-                  <div>
-                    <p className="text-sm font-bold">Google Calendar</p>
-                    <p className="text-xs text-slate-500">Planification des entretiens</p>
-                  </div>
-                </div>
-                <button className="text-[10px] font-black uppercase text-indigo-600">Lier</button>
-              </div>
+          </div>
+          <span className="px-2.5 py-1 bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 text-[11px] font-bold rounded-full shrink-0">Connecté</span>
+        </Row>
+        <Row>
+          <div className="flex items-center gap-3">
+            <span className="w-9 h-9 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-500 flex items-center justify-center"><Calendar size={18} /></span>
+            <div>
+              <p className="text-sm font-semibold text-[#111827] dark:text-white">Google Calendar</p>
+              <p className="text-xs text-slate-400">Planifier tes entretiens</p>
             </div>
-          </section>
+          </div>
+          <span className="text-xs font-semibold text-slate-400 shrink-0">Bientôt</span>
+        </Row>
+      </Card>
 
-          {/* Section Données & RGPD */}
-          <section className="space-y-6">
-            <h3 className="text-xs font-black uppercase tracking-widest text-slate-400 dark:text-slate-500 px-2 italic">Sécurité & Données</h3>
-            <div className="card-modern p-6 space-y-4">
-              <button onClick={handleExportData} className="w-full flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 hover:border-indigo-100 transition-all cursor-pointer text-left">
-                <div className="flex items-center gap-4">
-                  <Download size={18} className="text-slate-400" />
-                  <p className="text-sm font-bold">Exporter mes données (JSON)</p>
-                </div>
-                <ChevronRight size={16} className="text-slate-300" />
-              </button>
-              <button onClick={handleDeleteAccount} className="w-full flex items-center justify-between p-4 bg-red-50/30 dark:bg-red-900/10 rounded-2xl border border-red-100 dark:border-red-900/20 hover:bg-red-50 transition-all cursor-pointer group text-left">
-                <div className="flex items-center gap-4">
-                  <Trash2 size={18} className="text-red-400" />
-                  <p className="text-sm font-bold text-red-600 dark:text-red-400">Supprimer définitivement mon compte</p>
-                </div>
-                <AlertCircle size={16} className="text-red-300 group-hover:text-red-500" />
-              </button>
-            </div>
-          </section>
-        </div>
+      {/* Abonnement */}
+      <Card title="Abonnement" icon={<Crown size={16} />}>
+        <Row onClick={() => navigate('/pricing')}>
+          <div>
+            <p className="text-sm font-semibold text-[#111827] dark:text-white">{planLabel}</p>
+            <p className="text-xs text-slate-400">Voir les forfaits et gérer mon abonnement</p>
+          </div>
+          <ChevronRight size={18} className="text-slate-300 shrink-0" />
+        </Row>
+      </Card>
 
-        {/* Barre Latérale */}
-        <div className="lg:col-span-4 space-y-10">
-          <section className="bg-indigo-600 p-8 rounded-[2.5rem] border border-white/20 shadow-2xl relative overflow-hidden group">
-            <div className="absolute -top-10 -right-10 w-32 h-32 bg-white/10 rounded-full blur-2xl group-hover:scale-150 transition-transform duration-700"></div>
-            <div className="relative z-10 space-y-6">
-              <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center text-white backdrop-blur-md">
-                <CreditCard size={24} />
-              </div>
-              <h4 className="text-2xl font-black text-white leading-tight">Protocole {user.plan}</h4>
-              <p className="text-indigo-100 text-xs font-medium italic">Votre unité est optimisée pour des performances maximales.</p>
-              <div className="pt-4 border-t border-white/10 flex justify-between items-center text-[10px] font-black uppercase text-indigo-200">
-                <span>Prochain cycle</span>
-                <span>12/10/2025</span>
-              </div>
-              <button className="w-full py-4 bg-white text-indigo-600 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-indigo-50 transition-all">
-                Gérer la facturation
-              </button>
-            </div>
-          </section>
+      {/* Données */}
+      <Card title="Confidentialité & données" icon={<Download size={16} />}>
+        <Row onClick={handleExportData}>
+          <div>
+            <p className="text-sm font-semibold text-[#111827] dark:text-white">Exporter mes données</p>
+            <p className="text-xs text-slate-400">Télécharge tout ton compte au format JSON (RGPD)</p>
+          </div>
+          <ChevronRight size={18} className="text-slate-300 shrink-0" />
+        </Row>
+      </Card>
 
-          <section className="card-modern p-6 space-y-6">
-             <div className="flex items-center gap-3 px-1">
-                <Bell size={18} className="text-indigo-600" />
-                <h4 className="text-xs font-black uppercase tracking-widest text-slate-400">Notifications</h4>
-             </div>
-             <div className="space-y-4">
-                {[
-                  { label: 'Alertes de match > 90%', default: true },
-                  { label: 'Réponses des recruteurs', default: true },
-                  { label: 'Rapports IA hebdomadaires', default: false },
-                ].map((notif, i) => (
-                  <div key={i} className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-slate-700 dark:text-slate-300">{notif.label}</span>
-                    <input type="checkbox" defaultChecked={notif.default} className="w-4 h-4 accent-indigo-600" />
-                  </div>
-                ))}
-             </div>
-          </section>
+      {/* Déconnexion */}
+      <button onClick={handleLogout} className="btn btn-secondary w-full">
+        <LogOut size={16} /> Se déconnecter
+      </button>
 
-          <button 
-            onClick={handleLogout}
-            className="w-full flex items-center justify-center gap-3 py-5 bg-white dark:bg-slate-900 border border-red-100 dark:border-red-900/30 text-red-600 dark:text-red-400 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-red-50 dark:hover:bg-red-900/10 transition-all"
-          >
-            <LogOut size={18} />
-            Se déconnecter
+      {/* Zone de danger (discrète, en bas) */}
+      <details className="group">
+        <summary className="cursor-pointer list-none flex items-center justify-center gap-2 text-xs font-semibold text-slate-400 hover:text-red-500 transition-colors py-2">
+          <ShieldAlert size={14} /> Options avancées
+        </summary>
+        <div className="mt-3 rounded-2xl border border-red-200 dark:border-red-900/40 p-5 space-y-3">
+          <div>
+            <p className="text-sm font-bold text-red-600 dark:text-red-400">Supprimer mon compte</p>
+            <p className="text-xs text-slate-500 mt-1">Supprime définitivement ton compte et toutes tes données (CV, lettres, candidatures). Cette action est irréversible.</p>
+          </div>
+          <button onClick={() => { setShowDelete(true); setConfirmText(''); }} className="btn btn-secondary !border-red-200 !text-red-600 hover:!bg-red-50 dark:hover:!bg-red-900/10 text-sm">
+            <Trash2 size={16} /> Supprimer mon compte
           </button>
         </div>
-      </div>
+      </details>
+
+      {/* Modal de confirmation de suppression */}
+      {showDelete && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4">
+          <div className="bg-white dark:bg-[#111827] w-full max-w-md p-6 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 space-y-5">
+            <div className="flex items-start justify-between">
+              <div className="flex items-center gap-3">
+                <span className="w-10 h-10 rounded-xl bg-red-50 dark:bg-red-900/20 text-red-600 flex items-center justify-center"><ShieldAlert size={20} /></span>
+                <h2 className="text-lg font-bold text-[#111827] dark:text-white">Supprimer ton compte ?</h2>
+              </div>
+              <button onClick={() => setShowDelete(false)} className="text-slate-400 hover:text-slate-600"><X size={20} /></button>
+            </div>
+            <p className="text-sm text-slate-500 leading-relaxed">
+              Cette action est <strong className="text-red-600">irréversible</strong>. Toutes tes données seront définitivement supprimées.
+              Pour confirmer, écris <strong>SUPPRIMER</strong> ci-dessous.
+            </p>
+            <input
+              className="input-pro"
+              value={confirmText}
+              onChange={(e) => setConfirmText(e.target.value)}
+              placeholder="SUPPRIMER"
+              autoFocus
+            />
+            <div className="flex gap-3 justify-end">
+              <button onClick={() => setShowDelete(false)} className="btn btn-secondary">Annuler</button>
+              <button
+                onClick={handleDeleteAccount}
+                disabled={confirmText !== 'SUPPRIMER' || deleting}
+                className="btn bg-red-600 text-white hover:bg-red-700 disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                {deleting ? 'Suppression…' : 'Supprimer définitivement'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
