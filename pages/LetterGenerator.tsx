@@ -3,6 +3,7 @@ import { RefreshCw, Wand2, Zap, Printer, FileDown, Save, Clock, Link as LinkIcon
 import { generateCoverLetter } from '../services/gemini';
 import toast from 'react-hot-toast';
 import { exportLetterPdf, exportLetterDocx } from '../services/atsExport';
+import { authHeaders } from '../services/authToken';
 
 import { useNavigate, useLocation } from 'react-router-dom';
 
@@ -33,10 +34,10 @@ const LetterGenerator: React.FC = () => {
   useEffect(() => {
     const init = async () => {
       try {
-        const userRes = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/users/me`);
+        const userRes = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/users/me`, { credentials: 'include', headers: { ...authHeaders() } });
         const userData = await userRes.json();
-        
-        const lettersRes = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/coverletters`);
+
+        const lettersRes = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/coverletters`, { credentials: 'include', headers: { ...authHeaders() } });
         const lettersData = await lettersRes.json();
         
         if (userData.success) {
@@ -83,7 +84,8 @@ const LetterGenerator: React.FC = () => {
         
         const res = await fetch(url, {
           method,
-          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json', ...authHeaders() },
           body: JSON.stringify({
             title: `Lettre pour ${company} - ${jobTitle}`,
             company,
@@ -95,7 +97,7 @@ const LetterGenerator: React.FC = () => {
         if(data.success) {
            toast.success("Lettre sauvegardée !");
            setCurrentLetterId(data.letter.id);
-           const lettersRes = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/coverletters`);
+           const lettersRes = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/coverletters`, { credentials: 'include', headers: { ...authHeaders() } });
            const lettersData = await lettersRes.json();
            if(lettersData.success) setLetters(lettersData.letters);
         }

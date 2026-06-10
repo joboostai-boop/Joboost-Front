@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
+import { authHeaders } from '../services/authToken';
 
 const CustomTooltip = ({ active, payload, label }: any) => {
   if (active && payload && payload.length) {
@@ -41,7 +42,7 @@ const Dashboard: React.FC = () => {
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const res = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/dashboard/stats`);
+        const res = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/dashboard/stats`, { credentials: 'include', headers: { ...authHeaders() } });
         const data = await res.json();
         if (data.success) {
            setStatsData(data.stats);

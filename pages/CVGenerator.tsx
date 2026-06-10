@@ -4,6 +4,7 @@ import { Printer, FileDown, Wand2, RefreshCw, Layout, Check, ShieldCheck, Save, 
 import toast from 'react-hot-toast';
 import { generateCVSummary } from '../services/gemini';
 import { exportCvPdf, exportCvDocx } from '../services/atsExport';
+import { authHeaders } from '../services/authToken';
 
 type CVTemplate = 'Classique' | 'Moderne' | 'Minimaliste';
 
@@ -53,10 +54,10 @@ const CVGenerator: React.FC = () => {
   useEffect(() => {
     const init = async () => {
       try {
-        const userRes = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/users/me`);
+        const userRes = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/users/me`, { credentials: 'include', headers: { ...authHeaders() } });
         const userData = await userRes.json();
-        
-        const cvRes = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/cvs`);
+
+        const cvRes = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/cvs`, { credentials: 'include', headers: { ...authHeaders() } });
         const cvData = await cvRes.json();
         
         if (userData.success) {
@@ -111,7 +112,8 @@ const CVGenerator: React.FC = () => {
       
       const res = await fetch(url, {
         method,
-        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json', ...authHeaders() },
         body: JSON.stringify({
           title: `CV ${formData.title} - ${formData.template}`,
           template: formData.template,
@@ -122,7 +124,7 @@ const CVGenerator: React.FC = () => {
       if(data.success) {
          toast.success("CV sauvegardé !");
          setCurrentCvId(data.cv.id);
-         const cvRes = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/cvs`);
+         const cvRes = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/cvs`, { credentials: 'include', headers: { ...authHeaders() } });
          const cvData = await cvRes.json();
          if(cvData.success) setCvs(cvData.cvs);
       }

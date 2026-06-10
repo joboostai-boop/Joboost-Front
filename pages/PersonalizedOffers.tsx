@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Search, MapPin, Bookmark, Star, ArrowRight, Euro, Clock, Link as LinkIcon, Edit3 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
+import { authHeaders } from '../services/authToken';
 
 export interface JobOffer {
   id?: string;
@@ -27,8 +28,8 @@ const PersonalizedOffers: React.FC = () => {
     const fetchData = async () => {
       try {
         const [recRes, savedRes] = await Promise.all([
-          fetch(`${import.meta.env.VITE_API_URL || ''}/api/opportunities/recommendations`),
-          fetch(`${import.meta.env.VITE_API_URL || ''}/api/opportunities/saved`)
+          fetch(`${import.meta.env.VITE_API_URL || ''}/api/opportunities/recommendations`, { credentials: 'include', headers: { ...authHeaders() } }),
+          fetch(`${import.meta.env.VITE_API_URL || ''}/api/opportunities/saved`, { credentials: 'include', headers: { ...authHeaders() } })
         ]);
         
         const recData = await recRes.json();
@@ -62,7 +63,7 @@ const PersonalizedOffers: React.FC = () => {
     if (savedId) {
       // DELETE
       try {
-        const res = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/opportunities/saved/${savedId}`, { method: 'DELETE' });
+        const res = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/opportunities/saved/${savedId}`, { method: 'DELETE', credentials: 'include', headers: { ...authHeaders() } });
         const data = await res.json();
         if(data.success) {
           setSavedOffers(savedOffers.filter(s => s.id !== savedId));
@@ -87,7 +88,8 @@ const PersonalizedOffers: React.FC = () => {
 
         const res = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/opportunities/saved`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json', ...authHeaders() },
           body: JSON.stringify(payload)
         });
         const data = await res.json();

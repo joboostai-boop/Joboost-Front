@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
+import { authHeaders } from '../services/authToken';
 
 interface SavedOffer {
   id: string;
@@ -32,7 +33,7 @@ const SavedOffers: React.FC = () => {
   useEffect(() => {
     const fetchSaved = async () => {
       try {
-        const res = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/opportunities/saved`);
+        const res = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/opportunities/saved`, { credentials: 'include', headers: { ...authHeaders() } });
         const data = await res.json();
         if (data.success) {
           setSavedOffers(data.saved);
@@ -48,7 +49,7 @@ const SavedOffers: React.FC = () => {
 
   const removeOffer = async (offerId: string) => {
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/opportunities/saved/${offerId}`, { method: 'DELETE' });
+      const res = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/opportunities/saved/${offerId}`, { method: 'DELETE', credentials: 'include', headers: { ...authHeaders() } });
       const data = await res.json();
       if(data.success) {
         setSavedOffers(savedOffers.filter(o => o.id !== offerId));
