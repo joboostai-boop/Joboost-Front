@@ -197,7 +197,7 @@ export const geminiService = {
     }
 
     const response = await genWithRetry(ai, {
-      model: 'gemini-3-pro-preview',
+      model: 'gemini-3-flash-preview',
       contents: prompt,
       config: { systemInstruction: SYSTEM_PROMPT }
     });
@@ -209,7 +209,7 @@ export const geminiService = {
     const prompt = `Génère un message de connexion stratégique de la part de ${candidateName} (${candidateTitle}) pour ${companyName} (${companySector}). Focus sur la valeur ajoutée immédiate.`;
     
     const response = await genWithRetry(ai, {
-      model: 'gemini-3-pro-preview',
+      model: 'gemini-3-flash-preview',
       contents: prompt,
       config: { systemInstruction: SYSTEM_PROMPT }
     });
