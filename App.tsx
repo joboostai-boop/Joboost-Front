@@ -54,14 +54,15 @@ const App: React.FC = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (isDarkMode) {
-      document.documentElement.classList.add('dark');
-      localStorage.setItem('joboost-theme', 'dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-      localStorage.setItem('joboost-theme', 'light');
-    }
-  }, [isDarkMode]);
+    // La préférence de thème est persistée indépendamment de l'écran courant.
+    localStorage.setItem('joboost-theme', isDarkMode ? 'dark' : 'light');
+    // La landing et les pages publiques (login, inscription) sont conçues pour le
+    // mode clair : on force le clair tant que l'utilisateur n'est pas connecté,
+    // pour éviter un affichage cassé (texte clair sur fond clair). Le mode sombre
+    // reste actif dans l'app une fois connecté.
+    const applyDark = isDarkMode && isAuthenticated;
+    document.documentElement.classList.toggle('dark', applyDark);
+  }, [isDarkMode, isAuthenticated]);
 
   const toggleDarkMode = () => setIsDarkMode(!isDarkMode);
 
