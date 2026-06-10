@@ -16,10 +16,33 @@ const SYSTEM_PROMPT = "Tu es Jobix, l'intelligence artificielle haute performanc
 // (volontairement distincte du SYSTEM_PROMPT « Jobix » qui produirait des phrases creuses)
 const CV_WRITER_PROMPT = "Tu es un expert en rédaction de CV professionnels en français. Tu écris des descriptions d'expériences claires, concises et orientées action. Tu structures la réponse en puces courtes. Règles strictes : n'invente JAMAIS de chiffres, de pourcentages, de noms de clients ou de résultats qui ne sont pas fournis par le candidat ; pas de superlatifs creux ni de jargon ('synergie', 'disruptif', 'haute performance', 'leader')... ; reste crédible et vérifiable par un recruteur. Réponds UNIQUEMENT avec les puces (une par ligne, commençant par '- '), sans introduction ni conclusion.";
 
+// Erreurs Gemini transitoires : surcharge serveur, indisponibilité, rate-limit.
+// (NB : avec la facturation activée, le 429 vient d'une limite/minute, pas d'un quota épuisé → réessayer aide.)
+const TRANSIENT_ERROR = /\b(503|429)\b|UNAVAILABLE|RESOURCE_EXHAUSTED|overloaded|high demand|try again/i;
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+// Appelle l'API Gemini avec réessais automatiques (backoff) sur erreur transitoire.
+// Les autres erreurs (clé invalide, requête malformée…) sont relancées immédiatement.
+const genWithRetry = async (ai: any, params: any, attempts = 3): Promise<any> => {
+  let lastErr: any;
+  for (let i = 0; i < attempts; i++) {
+    try {
+      return await ai.models.generateContent(params);
+    } catch (e: any) {
+      lastErr = e;
+      const msg = `${e?.message || e}`;
+      if (i === attempts - 1 || !TRANSIENT_ERROR.test(msg)) throw e;
+      console.warn(`Gemini surchargé (tentative ${i + 1}/${attempts}), nouvel essai…`);
+      await sleep(700 * Math.pow(2, i)); // 700 ms puis 1400 ms
+    }
+  }
+  throw lastErr;
+};
+
 export const geminiService = {
   getProfileOptimizations: async (profileData: any): Promise<string[]> => {
     const ai = getAI();
-    const response = await ai.models.generateContent({
+    const response = await genWithRetry(ai, {
       model: 'gemini-3-flash-preview',
       contents: `Analyse neuronale de ce profil pour optimisation de convergence : ${JSON.stringify(profileData)}. Retourne 3 vecteurs d'amélioration sous forme de liste JSON de chaînes.`,
       config: {
@@ -40,7 +63,7 @@ export const geminiService = {
 
   parseLinkedInProfile: async (profileText: string): Promise<any> => {
     const ai = getAI();
-    const response = await ai.models.generateContent({
+    const response = await genWithRetry(ai, {
       model: 'gemini-3-flash-preview',
       contents: `Extrais les informations professionnelles clés de ce texte de profil LinkedIn : "${profileText}". Retourne un objet JSON avec les propriétés : title (string), summary (string), skills (array de strings), experiences (array d'objets avec company, role, period, desc).`,
       config: {
@@ -79,7 +102,7 @@ export const geminiService = {
   // Extrait un profil structuré à partir du texte brut d'un CV (PDF/DOCX déjà converti en texte).
   parseCv: async (cvText: string): Promise<any> => {
     const ai = getAI();
-    const response = await ai.models.generateContent({
+    const response = await genWithRetry(ai, {
       model: 'gemini-3-flash-preview',
       contents: `Voici le texte brut d'un CV. Extrais-en les informations du candidat de façon factuelle (n'invente rien ; laisse vide si absent). Texte du CV :\n"""${cvText.slice(0, 12000)}"""`,
       config: {
@@ -120,7 +143,7 @@ export const geminiService = {
 
   rewriteSection: async (sectionName: string, currentText: string, context: string): Promise<string> => {
     const ai = getAI();
-    const response = await ai.models.generateContent({
+    const response = await genWithRetry(ai, {
       model: 'gemini-3-flash-preview',
       contents: `Optimisation de la section "${sectionName}". Texte source : ${currentText}. Contexte de matching : ${context}`,
       config: { systemInstruction: SYSTEM_PROMPT }
@@ -134,7 +157,7 @@ export const geminiService = {
   }): Promise<string> => {
     const ai = getAI();
     const { role, company, contractType, period, targetTitle, notes } = input || {};
-    const response = await ai.models.generateContent({
+    const response = await genWithRetry(ai, {
       model: 'gemini-3-flash-preview',
       contents:
         `Rédige la description d'une expérience professionnelle pour un CV, sous forme de 3 à 5 puces.\n` +
@@ -153,7 +176,7 @@ export const geminiService = {
 
   generateCVSummary: async (title: string, skills: string[], experiences: any[]): Promise<string> => {
     const ai = getAI();
-    const response = await ai.models.generateContent({
+    const response = await genWithRetry(ai, {
       model: 'gemini-3-flash-preview',
       contents: `Génère un résumé de profil haute-performance pour un ${title}. Compétences : ${skills.join(', ')}. Historique : ${JSON.stringify(experiences)}`,
       config: { systemInstruction: SYSTEM_PROMPT }
@@ -173,7 +196,7 @@ export const geminiService = {
        prompt += `\n\nVoici le contenu/texte associé à l'offre pour t'aider à cibler les mots clés :\n"${jobDescription}"`;
     }
 
-    const response = await ai.models.generateContent({
+    const response = await genWithRetry(ai, {
       model: 'gemini-3-pro-preview',
       contents: prompt,
       config: { systemInstruction: SYSTEM_PROMPT }
@@ -185,7 +208,7 @@ export const geminiService = {
     const ai = getAI();
     const prompt = `Génère un message de connexion stratégique de la part de ${candidateName} (${candidateTitle}) pour ${companyName} (${companySector}). Focus sur la valeur ajoutée immédiate.`;
     
-    const response = await ai.models.generateContent({
+    const response = await genWithRetry(ai, {
       model: 'gemini-3-pro-preview',
       contents: prompt,
       config: { systemInstruction: SYSTEM_PROMPT }
