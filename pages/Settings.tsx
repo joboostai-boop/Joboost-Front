@@ -39,7 +39,7 @@ const Settings: React.FC<SettingsProps> = ({ user, isDarkMode, toggleDarkMode })
   const navigate = useNavigate();
   const handleLogout = async () => {
     await logout();
-    navigate('/auth/login');
+    navigate('/'); // retour à la landing page publique
   };
 
   // RGPD — Export des données personnelles (art. 15 & 20)
@@ -83,7 +83,7 @@ const Settings: React.FC<SettingsProps> = ({ user, isDarkMode, toggleDarkMode })
       if (!res.ok || !data.success) throw new Error(data.error || 'Suppression impossible');
       toast.success('Compte supprimé. À bientôt.', { id: toastId });
       await logout();
-      navigate('/auth/login');
+      navigate('/'); // retour à la landing page publique
     } catch (err: any) {
       toast.error(err.message || 'Erreur lors de la suppression.', { id: toastId });
     }
@@ -258,7 +258,7 @@ const Settings: React.FC<SettingsProps> = ({ user, isDarkMode, toggleDarkMode })
             className="w-full flex items-center justify-center gap-3 py-5 bg-white dark:bg-slate-900 border border-red-100 dark:border-red-900/30 text-red-600 dark:text-red-400 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-red-50 dark:hover:bg-red-900/10 transition-all"
           >
             <LogOut size={18} />
-            Déconnexion de l'unité
+            Se déconnecter
           </button>
         </div>
       </div>
