@@ -4,6 +4,8 @@ import { generateCoverLetter } from '../services/gemini';
 import toast from 'react-hot-toast';
 import { exportLetterPdf, exportLetterDocx } from '../services/atsExport';
 import { authHeaders } from '../services/authToken';
+import TemplateGallery from '../components/TemplateGallery';
+import { LETTER_TEMPLATES, getLetterTemplate } from '../services/letterTemplates';
 
 import { useNavigate, useLocation } from 'react-router-dom';
 
@@ -28,7 +30,7 @@ const LetterGenerator: React.FC = () => {
   const [userProfile, setUserProfile] = useState<any>(null);
   const [letters, setLetters] = useState<any[]>([]);
   const [currentLetterId, setCurrentLetterId] = useState<string | null>(null);
-  const [letterTemplate, setLetterTemplate] = useState<'Classique' | 'Moderne'>('Moderne');
+  const [letterTemplate, setLetterTemplate] = useState<string>('moderne');
   const [exporting, setExporting] = useState(false);
 
   useEffect(() => {
@@ -122,6 +124,12 @@ const LetterGenerator: React.FC = () => {
     body: generatedText,
     template: letterTemplate,
   });
+
+  const previewData = {
+    name: userProfile?.name, email: userProfile?.email, phone: userProfile?.phone,
+    city: userProfile?.city, company, jobTitle, body: generatedText,
+  };
+  const SelectedLetterPreview = getLetterTemplate(letterTemplate).Preview;
 
   const handleExportPDF = async () => {
     setExporting(true);
@@ -229,54 +237,40 @@ const LetterGenerator: React.FC = () => {
 
         <div className="lg:col-span-8">
           {generatedText ? (
-            <div className="space-y-4">
-              <div className="flex flex-wrap justify-between items-center gap-2">
-                <div className="flex gap-1.5">
-                  {(['Moderne', 'Classique'] as const).map((tpl) => (
-                    <button
-                      key={tpl}
-                      onClick={() => setLetterTemplate(tpl)}
-                      className={`text-xs font-bold px-3 py-1.5 rounded-md border transition-colors ${letterTemplate === tpl ? 'border-[#7D5CFF] bg-[#F3F0FF] text-[#7D5CFF] dark:bg-[#7D5CFF]/10' : 'border-[#E5E7EB] dark:border-[#1F2937] text-[#6B7280] hover:bg-[#F3F4F6] dark:hover:bg-[#1F2937]'}`}
-                    >
-                      {tpl === 'Moderne' ? 'Style Moderne' : 'Style Sobre'}
-                    </button>
-                  ))}
-                </div>
-                <div className="flex gap-2">
-                  <button onClick={handleExportPDF} disabled={exporting || !generatedText} className="btn btn-primary disabled:opacity-60">
-                    <FileDown size={14} /> PDF ATS
-                  </button>
-                  <button onClick={handleExportDocx} disabled={exporting || !generatedText} className="btn btn-secondary text-[#7D5CFF] disabled:opacity-60">
-                    <FileDown size={14} /> Word
-                  </button>
-                  <button onClick={() => window.print()} className="btn btn-secondary px-3" title="Imprimer">
-                    <Printer size={14} />
-                  </button>
-                </div>
+            <div className="space-y-5">
+              {/* Actions */}
+              <div className="flex flex-wrap justify-end gap-2">
+                <button onClick={handleExportPDF} disabled={exporting || !generatedText} className="btn btn-primary disabled:opacity-60">
+                  <FileDown size={14} /> PDF
+                </button>
+                <button onClick={handleExportDocx} disabled={exporting || !generatedText} className="btn btn-secondary text-[#7D5CFF] disabled:opacity-60">
+                  <FileDown size={14} /> Word
+                </button>
+                <button onClick={() => window.print()} className="btn btn-secondary px-3" title="Imprimer">
+                  <Printer size={14} />
+                </button>
               </div>
 
-              <div id="letter-preview" className="card-pro bg-white text-slate-800 shadow-sm min-h-[800px] font-sans text-sm mx-auto max-w-[800px]">
-                <div className="mb-10">
-                  <p className="font-bold text-base">{userProfile?.name || "Votre Nom"}</p>
-                  <p className="text-[#6B7280]">{userProfile?.email || "votre.email@example.com"} {userProfile?.phone ? `| ${userProfile.phone}` : ''}</p>
-                  <p className="text-[#6B7280]">{userProfile?.city || "Votre Ville"}</p>
-                  <br />
-                  <p className="font-bold text-base mt-4">{company || "L'entreprise"}</p>
-                  <p className="text-[#6B7280]">À l'attention du Responsable Recrutement</p>
-                </div>
-                
-                <p className="font-bold mb-8 text-base">Objet : Candidature au poste de {jobTitle}</p>
+              {/* Choix du modèle (carrousel un par un) */}
+              <TemplateGallery
+                items={LETTER_TEMPLATES.map((t) => ({ id: t.id, name: t.name, ats: t.ats, node: <t.Preview data={previewData} /> }))}
+                selectedId={letterTemplate}
+                onSelect={setLetterTemplate}
+              />
 
+              {/* Édition du texte */}
+              <div>
+                <label className="input-label">Modifier le texte de la lettre</label>
                 <textarea
-                   className="w-full h-[400px] text-sm leading-relaxed whitespace-pre-wrap outline-none resize-none bg-transparent"
-                   value={generatedText}
-                   onChange={(e) => setGeneratedText(e.target.value)}
+                  className="textarea-pro !min-h-[180px]"
+                  value={generatedText}
+                  onChange={(e) => setGeneratedText(e.target.value)}
                 />
+              </div>
 
-                <div className="mt-12 pt-8 border-t border-[#E5E7EB]">
-                  <p>Cordialement,</p>
-                  <p className="mt-2 font-bold text-base">{userProfile?.name || "Votre Nom"}</p>
-                </div>
+              {/* Aperçu grand format du modèle sélectionné */}
+              <div id="letter-preview" className="rounded-xl overflow-hidden shadow-2xl ring-1 ring-slate-200 dark:ring-slate-700 max-w-[800px] mx-auto">
+                <SelectedLetterPreview data={previewData} />
               </div>
             </div>
           ) : (
