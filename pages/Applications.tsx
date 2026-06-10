@@ -146,20 +146,8 @@ const Applications: React.FC = () => {
         </div>
       </header>
 
-      {/* État vide global */}
-      {!loading && total === 0 ? (
-        <div className="card-pro flex flex-col items-center text-center gap-4 py-16">
-          <span className="w-16 h-16 rounded-2xl bg-[#F3F0FF] text-[#7D5CFF] dark:bg-[#7D5CFF]/10 flex items-center justify-center"><Inbox size={30} /></span>
-          <div>
-            <h3 className="text-lg font-bold text-[#111827] dark:text-white">Aucune candidature pour l'instant</h3>
-            <p className="text-sm text-[#6B7280] mt-1">Dès que tu postules, tes candidatures apparaissent ici et tu suis leur avancement.</p>
-          </div>
-          <button onClick={() => navigate('/target/offers')} className="btn btn-primary">
-            Trouver des offres <ArrowRight size={16} />
-          </button>
-        </div>
-      ) : (
-        <>
+      {/* Aperçu Kanban (toujours visible) */}
+      <>
           {/* ───── PC : board 5 colonnes (drag & drop) ───── */}
           <div className="hidden lg:grid grid-cols-5 gap-4 items-start">
             {COLUMNS.map((col) => {
@@ -219,7 +207,20 @@ const Applications: React.FC = () => {
               )}
             </div>
           </div>
-        </>
+      </>
+
+      {/* CTA sous le board quand aucune candidature */}
+      {!loading && total === 0 && (
+        <div className="card-pro flex flex-col items-center text-center gap-4 py-10">
+          <span className="w-14 h-14 rounded-2xl bg-[#F3F0FF] text-[#7D5CFF] dark:bg-[#7D5CFF]/10 flex items-center justify-center"><Inbox size={26} /></span>
+          <div>
+            <h3 className="text-base font-bold text-[#111827] dark:text-white">Aucune candidature pour l'instant</h3>
+            <p className="text-sm text-[#6B7280] mt-1">Dès que tu postules, tes candidatures apparaissent dans le tableau ci-dessus.</p>
+          </div>
+          <button onClick={() => navigate('/target/offers')} className="btn btn-primary">
+            Trouver des offres <ArrowRight size={16} />
+          </button>
+        </div>
       )}
     </div>
   );
