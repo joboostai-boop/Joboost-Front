@@ -40,14 +40,45 @@ export interface LetterData {
   template?: string;
 }
 
-// Styles par template — polices STANDARD (intégrées à react-pdf, sûres pour l'ATS).
-const TEMPLATE_STYLE: Record<string, { font: string; fontBold: string; accent: string }> = {
-  Minimaliste: { font: 'Helvetica', fontBold: 'Helvetica-Bold', accent: '#111111' },
-  Moderne: { font: 'Helvetica', fontBold: 'Helvetica-Bold', accent: '#4F46E5' },
-  Classique: { font: 'Times-Roman', fontBold: 'Times-Bold', accent: '#1F2937' },
+// Thème (couleur d'accent + police) de chaque modèle, aligné sur les galeries
+// CV (cvTemplates.tsx) et Lettre (letterTemplates.tsx). L'export reste TOUJOURS
+// en une seule colonne (100% ATS, texte réel sélectionnable) ; seuls la couleur
+// d'accent et le choix serif / sans-serif varient selon le modèle sélectionné.
+const TEMPLATE_THEME: Record<string, { accent: string; serif?: boolean }> = {
+  // Modèles de CV
+  lustre: { accent: '#334155', serif: true },
+  quill: { accent: '#4F46E5', serif: true },
+  vertex: { accent: '#4F46E5' },
+  cobalt: { accent: '#2563EB' },
+  bare: { accent: '#111827' },
+  aero: { accent: '#059669' },
+  nimbus: { accent: '#4F46E5' },
+  onyx: { accent: '#0F172A' },
+  crest: { accent: '#7C3AED' },
+  mosaic: { accent: '#E11D48' },
+  // Modèles de lettres
+  sobre: { accent: '#334155', serif: true },
+  classique: { accent: '#4F46E5', serif: true },
+  moderne: { accent: '#4F46E5' },
+  azur: { accent: '#2563EB' },
+  epuree: { accent: '#111827' },
+  net: { accent: '#059669' },
+  bandeau: { accent: '#7C3AED' },
+  ardoise: { accent: '#0F172A' },
+  colonne: { accent: '#4F46E5' },
+  corail: { accent: '#E11D48' },
 };
 
-const styleFor = (template?: string) => TEMPLATE_STYLE[template || 'Moderne'] || TEMPLATE_STYLE.Moderne;
+// Polices STANDARD intégrées à react-pdf (sûres pour l'ATS, aucune police custom).
+const styleFor = (template?: string) => {
+  const th = TEMPLATE_THEME[template || ''] || { accent: '#4F46E5' };
+  return th.serif
+    ? { font: 'Times-Roman', fontBold: 'Times-Bold', accent: th.accent }
+    : { font: 'Helvetica', fontBold: 'Helvetica-Bold', accent: th.accent };
+};
+
+// Couleur d'accent au format docx (hex sans '#').
+const docxAccent = (template?: string) => styleFor(template).accent.replace('#', '');
 
 const contactLine = (d: { email?: string; phone?: string; city?: string }) =>
   [d.email, d.phone, d.city].filter(Boolean).join('  •  ');
@@ -72,8 +103,8 @@ const CvPdfDoc: React.FC<{ data: CvData }> = ({ data }) => {
   const t = styleFor(data.template);
   const s = StyleSheet.create({
     page: { paddingVertical: 40, paddingHorizontal: 48, fontFamily: t.font, fontSize: 10, color: '#1A1A1A', lineHeight: 1.4 },
-    name: { fontFamily: t.fontBold, fontSize: 20, color: t.accent, textTransform: 'uppercase', letterSpacing: 1 },
-    title: { fontFamily: t.fontBold, fontSize: 12, color: '#333333', marginTop: 2 },
+    name: { fontFamily: t.fontBold, fontSize: 20, color: t.accent, textTransform: 'uppercase', letterSpacing: 1, lineHeight: 1.2 },
+    title: { fontFamily: t.fontBold, fontSize: 12, color: '#333333', marginTop: 5 },
     contact: { fontSize: 9, color: '#555555', marginTop: 4 },
     sectionTitle: { fontFamily: t.fontBold, fontSize: 11, color: t.accent, textTransform: 'uppercase', letterSpacing: 1, marginTop: 16, marginBottom: 4, borderBottomWidth: 1, borderBottomColor: '#DDDDDD', paddingBottom: 2 },
     paragraph: { fontSize: 10, color: '#222222', marginBottom: 2 },
@@ -150,33 +181,34 @@ export const exportCvPdf = async (data: CvData) => {
 };
 
 // ==================== CV — DOCX (Word, idéal ATS) ====================
-const docHeading = (text: string) =>
+const docHeading = (text: string, accent = '333333') =>
   new Paragraph({
     spacing: { before: 240, after: 80 },
     border: { bottom: { color: 'CCCCCC', size: 6, style: 'single', space: 1 } },
-    children: [new TextRun({ text: text.toUpperCase(), bold: true, size: 22, color: '333333' })],
+    children: [new TextRun({ text: text.toUpperCase(), bold: true, size: 22, color: accent })],
   });
 
 export const exportCvDocx = async (data: CvData) => {
   const children: Paragraph[] = [];
+  const accent = docxAccent(data.template);
 
-  children.push(new Paragraph({ children: [new TextRun({ text: safe(data.name) || 'Nom Prénom', bold: true, size: 36 })] }));
+  children.push(new Paragraph({ children: [new TextRun({ text: safe(data.name) || 'Nom Prénom', bold: true, size: 36, color: accent })] }));
   if (safe(data.title)) children.push(new Paragraph({ children: [new TextRun({ text: data.title, bold: true, size: 24, color: '444444' })] }));
   if (contactLine(data)) children.push(new Paragraph({ children: [new TextRun({ text: contactLine(data), size: 18, color: '555555' })] }));
 
   if (safe(data.summary)) {
-    children.push(docHeading('Profil'));
+    children.push(docHeading('Profil', accent));
     children.push(new Paragraph({ children: [new TextRun({ text: data.summary!, size: 20 })] }));
   }
 
   if ((data.skills || []).length > 0) {
-    children.push(docHeading('Compétences'));
+    children.push(docHeading('Compétences', accent));
     children.push(new Paragraph({ children: [new TextRun({ text: (data.skills || []).join('  •  '), size: 20 })] }));
   }
 
   const exps = (data.experiences || []).filter((e) => e && (e.role || e.company || e.desc));
   if (exps.length > 0) {
-    children.push(docHeading('Expérience professionnelle'));
+    children.push(docHeading('Expérience professionnelle', accent));
     exps.forEach((e) => {
       children.push(new Paragraph({
         spacing: { before: 120 },
@@ -192,7 +224,7 @@ export const exportCvDocx = async (data: CvData) => {
 
   const edu = (data.education || []).filter((e) => e && (e.school || e.degree));
   if (edu.length > 0) {
-    children.push(docHeading('Formation'));
+    children.push(docHeading('Formation', accent));
     edu.forEach((e) => {
       children.push(new Paragraph({
         spacing: { before: 120 },
@@ -255,7 +287,8 @@ export const exportLetterPdf = async (data: LetterData) => {
 // ==================== Lettre — DOCX ====================
 export const exportLetterDocx = async (data: LetterData) => {
   const children: Paragraph[] = [];
-  children.push(new Paragraph({ children: [new TextRun({ text: safe(data.name) || 'Votre Nom', bold: true, size: 24 })] }));
+  const accent = docxAccent(data.template);
+  children.push(new Paragraph({ children: [new TextRun({ text: safe(data.name) || 'Votre Nom', bold: true, size: 24, color: accent })] }));
   if (contactLine(data)) children.push(new Paragraph({ children: [new TextRun({ text: contactLine(data), size: 18, color: '555555' })] }));
   children.push(new Paragraph({ spacing: { before: 240 }, children: [new TextRun({ text: safe(data.company) || "L'entreprise", bold: true, size: 22 })] }));
   children.push(new Paragraph({ children: [new TextRun({ text: "À l'attention du Responsable Recrutement", size: 18, color: '555555' })] }));
