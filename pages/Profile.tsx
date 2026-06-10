@@ -282,7 +282,7 @@ const Profile: React.FC<ProfileProps> = ({ user }) => {
   };
 
   return (
-    <div className="p-5 md:p-10 max-w-3xl mx-auto pb-32 space-y-5">
+    <div className="p-5 md:p-10 max-w-3xl mx-auto pb-10 space-y-5">
       {/* En-tête + progression */}
       <header className="space-y-4">
         <div className="flex items-center justify-between gap-4">
@@ -483,14 +483,11 @@ const Profile: React.FC<ProfileProps> = ({ user }) => {
         <Chips value={f.hobbies} onChange={(v) => set({ hobbies: v })} suggestions={HOBBY_SUGGESTIONS} placeholder="Ajoute un loisir" />
       </Section>
 
-      {/* Barre de sauvegarde fixe */}
-      <div className="fixed bottom-0 left-0 right-0 md:left-20 lg:left-64 z-40 bg-white/95 dark:bg-[#030712]/95 backdrop-blur-lg border-t border-slate-200 dark:border-slate-800 p-4 pb-[max(1rem,env(safe-area-inset-bottom))] mb-16 md:mb-0">
-        <div className="max-w-3xl mx-auto flex items-center justify-between gap-4">
-          <span className="text-sm font-semibold text-[#6B7280] hidden sm:inline">Profil complété à {completion}%</span>
-          <button onClick={handleSave} disabled={saving} className="btn btn-primary flex-1 sm:flex-none sm:px-10">
-            {saving ? <RefreshCw className="animate-spin" size={16} /> : <Save size={16} />} Enregistrer mon profil
-          </button>
-        </div>
+      {/* Bouton de sauvegarde en bas de page (dans le flux) */}
+      <div className="pt-4">
+        <button onClick={handleSave} disabled={saving} className="btn btn-primary btn-lg w-full">
+          {saving ? <RefreshCw className="animate-spin" size={18} /> : <Save size={18} />} Enregistrer mon profil
+        </button>
       </div>
     </div>
   );
