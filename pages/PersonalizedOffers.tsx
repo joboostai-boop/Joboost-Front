@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search, MapPin, Bookmark, Star, ArrowRight, Euro, Clock, Link as LinkIcon, Edit3 } from 'lucide-react';
+import { Search, MapPin, Bookmark, Star, Euro, Clock, Edit3, ExternalLink } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
 import { authHeaders } from '../services/authToken';
@@ -14,6 +14,7 @@ export interface JobOffer {
   matchScore: number;
   postedDate: string;
   source?: string;
+  url?: string;
   tags: string[];
   aiInsight: string;
 }
@@ -23,6 +24,7 @@ const PersonalizedOffers: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [offers, setOffers] = useState<JobOffer[]>([]);
   const [savedOffers, setSavedOffers] = useState<any[]>([]);
+  const [source, setSource] = useState<'francetravail' | 'demo' | null>(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -37,6 +39,7 @@ const PersonalizedOffers: React.FC = () => {
 
         if (recData.success) {
            setOffers(recData.recommendations);
+           setSource(recData.source || 'demo');
         }
         
         if (savedData.success) {
@@ -82,6 +85,7 @@ const PersonalizedOffers: React.FC = () => {
           matchScore: offer.matchScore,
           postedDate: offer.postedDate,
           source: offer.source || 'Recommandation AI',
+          url: offer.url || '',
           tags: offer.tags,
           aiInsight: offer.aiInsight
         };
@@ -106,7 +110,11 @@ const PersonalizedOffers: React.FC = () => {
       <header className="flex flex-col md:flex-row md:items-center justify-between gap-6 border-b border-[#E5E7EB] dark:border-[#1F2937] pb-8">
         <div>
           <h1>Offres recommandées</h1>
-          <p className="mt-1">Simulé coté Backend: l'I.A. a sourcé ces offres selon votre profil réel.</p>
+          <p className="mt-1">
+            {source === 'demo'
+              ? "Exemples illustratifs (France Travail momentanément indisponible)."
+              : "Offres réelles France Travail, sourcées selon votre profil."}
+          </p>
         </div>
         
         <div className="relative w-full md:w-auto">
@@ -164,13 +172,18 @@ const PersonalizedOffers: React.FC = () => {
                       <Edit3 size={16} />
                       Créer la lettre
                     </button>
-                    <button 
+                    {offer.url && (
+                      <a href={offer.url} target="_blank" rel="noopener noreferrer" className="btn btn-secondary bg-white w-full font-semibold flex items-center justify-center gap-2">
+                        <ExternalLink size={16} /> Voir l'offre
+                      </a>
+                    )}
+                    <button
                       onClick={() => toggleSave(offer)}
                       className={`btn w-full font-semibold transition-colors flex items-center justify-center gap-2 ${
                         isBookmarked ? 'bg-amber-50 text-amber-600 border border-amber-200 hover:bg-amber-100' : 'btn-secondary bg-white'
                       }`}
                     >
-                      <Bookmark size={16} fill={isBookmarked ? "currentColor" : "none"} /> 
+                      <Bookmark size={16} fill={isBookmarked ? "currentColor" : "none"} />
                       {isBookmarked ? 'Sauvegardé' : 'Enregistrer'}
                     </button>
                   </div>

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Briefcase, Building2, Calendar, Search, RefreshCw, Inbox, ArrowRight, GripVertical } from 'lucide-react';
+import { Briefcase, Building2, Calendar, Search, RefreshCw, Inbox, ArrowRight, GripVertical, Navigation } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
 import { authHeaders } from '../services/authToken';
@@ -12,6 +12,7 @@ interface Application {
   status: 'PENDING' | 'SENT' | 'INTERVIEW' | 'OFFER' | 'REJECTED';
   appliedAt: string;
   notes: string | null;
+  isSpontaneous?: boolean;
 }
 
 type StatusId = Application['status'];
@@ -86,7 +87,14 @@ const Applications: React.FC = () => {
       <div className="flex items-start gap-2">
         <GripVertical size={15} className="text-slate-300 dark:text-slate-600 mt-0.5 shrink-0 hidden lg:block" />
         <div className="min-w-0 flex-1">
-          <p className="font-semibold text-sm text-[#111827] dark:text-white leading-tight truncate">{app.title}</p>
+          <div className="flex items-center gap-1.5">
+            <p className="font-semibold text-sm text-[#111827] dark:text-white leading-tight truncate">{app.title}</p>
+            {app.isSpontaneous && (
+              <span className="shrink-0 inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-[#F3F0FF] text-[#7D5CFF] border border-[#7D5CFF]/30" title="Candidature spontanée">
+                <Navigation size={9} /> Spontanée
+              </span>
+            )}
+          </div>
           <p className="flex items-center gap-1.5 text-xs text-[#6B7280] mt-1">
             <Building2 size={13} className="shrink-0" /> <span className="truncate">{app.company}</span>
           </p>

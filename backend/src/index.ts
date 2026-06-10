@@ -15,6 +15,8 @@ import coverLetterRoutes from './routes/coverletter.routes';
 import opportunityRoutes from './routes/opportunity.routes';
 import dashboardRoutes from './routes/dashboard.routes';
 import lbbRoutes from './routes/lbb.routes';
+import spontaneousRoutes from './routes/spontaneous.routes';
+import { resendWebhookController } from './controllers/webhook.resend.controller';
 import stripeRoutes from './routes/stripe.routes';
 import businessRoutes from './routes/business.routes';
 
@@ -57,6 +59,10 @@ app.use('/api/opportunities', requireAuth, opportunityRoutes);
 app.use('/api/dashboard', requireAuth, dashboardRoutes);
 // Initialize La Bonne Boite (Company search)
 app.use('/api/lbb', requireAuth, lbbRoutes);
+// Candidatures spontanées (préparation / envoi / suivi)
+app.use('/api/spontaneous', requireAuth, spontaneousRoutes);
+// Webhook Resend (tracking envois) — route publique
+app.post('/api/webhooks/resend', resendWebhookController.handle);
 // Initialize Stripe Billing
 app.use('/api/stripe', stripeRoutes);
 // Initialize Business Session (partenaires professionnels)
@@ -76,4 +82,17 @@ app.use((err: any, req: express.Request, res: express.Response, next: express.Ne
 app.listen(PORT, async () => {
     console.log(`🚀 Serveur démarré sur http://localhost:${PORT}`);
     await checkDbConnection();
+
+    // Relances des candidatures spontanées : scheduler in-process optionnel.
+    // Activer avec ENABLE_FOLLOWUP_CRON=true (sinon utiliser un cron externe : `npm run job:followup`).
+    if (process.env.ENABLE_FOLLOWUP_CRON === 'true') {
+      const { runFollowUpJob } = await import('./jobs/followup.job');
+      const SIX_HOURS = 6 * 60 * 60 * 1000;
+      const tick = () => runFollowUpJob()
+        .then((r) => console.log('[followup] passage :', r))
+        .catch((e) => console.error('[followup] erreur :', e?.message || e));
+      setTimeout(tick, 60_000);        // premier passage 1 min après le démarrage
+      setInterval(tick, SIX_HOURS);    // puis toutes les 6 h
+      console.log('⏰ Relances spontanées : scheduler in-process activé (toutes les 6 h).');
+    }
 });

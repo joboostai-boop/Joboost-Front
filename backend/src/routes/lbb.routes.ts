@@ -8,6 +8,6 @@ const asyncHandler = (fn: any) => (req: any, res: any, next: any) => {
 };
 
 router.get('/search', asyncHandler(lbbController.searchCompanies));
-router.post('/apply', asyncHandler(lbbController.applySpontaneous));
+// NB : la préparation/l'envoi des candidatures spontanées a migré vers /api/spontaneous
 
 export default router;

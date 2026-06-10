@@ -1,8 +1,10 @@
 import { Request, Response } from 'express';
 import { prisma } from '../db';
+import { franceTravailService, isFranceTravailConfigured } from '../services/francetravail.service';
 
 export const opportunityController = {
-  // Simule des recommandations intelligentes basées sur le vrai profil de l'utilisateur
+  // Recommandations : vraies offres France Travail sourcées sur le profil,
+  // avec repli sur des exemples simulés si FT n'est pas configuré / indisponible.
   getRecommendations: async (req: Request, res: Response) => {
     try {
       const user = await prisma.user.findUnique({ where: { id: req.userId! } });
@@ -10,7 +12,20 @@ export const opportunityController = {
 
       const title = user.title || 'Développeur';
       const city = user.city || 'Paris';
-      
+
+      // 1. Vraies offres France Travail si les identifiants sont configurés.
+      if (isFranceTravailConfigured()) {
+        try {
+          const real = await franceTravailService.searchOffers(title, city);
+          if (real.length > 0) {
+            return res.json({ success: true, source: 'francetravail', recommendations: real });
+          }
+        } catch (e: any) {
+          console.error('France Travail indisponible (offres), repli sur la simulation :', e?.message || e);
+        }
+      }
+
+      // 2. Repli : exemples simulés basés sur le profil.
       let skillsArray: string[] = [];
       if (Array.isArray(user.skills)) {
          skillsArray = user.skills.map((s: any) => typeof s === 'string' ? s : s.name || s.label || '');
@@ -61,7 +76,7 @@ export const opportunityController = {
         }
       ];
 
-      res.json({ success: true, recommendations: simulatedRecommendations });
+      res.json({ success: true, source: 'demo', recommendations: simulatedRecommendations });
     } catch (error: any) {
       console.error(error);
       res.status(500).json({ success: false, error: "Erreur récupération recommandations" });

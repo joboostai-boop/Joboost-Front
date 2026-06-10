@@ -92,10 +92,17 @@ model User {
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
   
+  // Candidatures spontanées — automatisation (opt-in explicite requis pour l'envoi auto)
+  autoSentThisMonth   Int      @default(0) // compteur d'envois automatiques sur le mois courant
+  autoSentMonth       String?  // "YYYY-MM" — sert au reset mensuel du compteur auto
+  autoSendEnabled     Boolean  @default(false) // l'utilisateur a explicitement activé l'envoi automatique
+
   applications      Application[]
   cvs               CV[]
   coverLetters      CoverLetter[]
   savedOpportunities SavedOpportunity[]
+  spontaneousApplications SpontaneousApplication[]
+  companyBlacklist  CompanyBlacklist[]
 
   // Business Partner relations
   businessOffers          BusinessOffer[]
@@ -121,10 +128,14 @@ model Application {
   source    String            @default("Candidature spontanée")
   status    ApplicationStatus @default(PENDING)
   notes     String?
-  
+
+  // Différenciation candidature spontanée vs candidature sur offre
+  isSpontaneous Boolean        @default(false)
+  spontaneous   SpontaneousApplication?
+
   appliedAt DateTime          @default(now())
   updatedAt DateTime          @updatedAt
-  
+
   userId    String
   user      User              @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -132,6 +143,103 @@ model Application {
   @@index([status])
   @@index([userId, status])
   @@index([appliedAt])
+  @@index([isSpontaneous])
+}
+
+// ==================== CANDIDATURES SPONTANÉES ====================
+
+enum SpontaneousStatus {
+  DRAFT          // entreprise identifiée, rien de préparé
+  READY          // lettre + pièces jointes prêtes, non envoyé
+  PENDING_REVIEW // JobBoost attend la validation de l'utilisateur (AUTO_REVIEW)
+  SENDING        // envoi en cours (job async)
+  SENT           // email envoyé avec succès
+  BOUNCED        // adresse invalide / bounce
+  REPLIED        // l'entreprise a répondu
+  FOLLOWED_UP    // relance envoyée
+  ARCHIVED       // écarté / ignoré
+}
+
+enum AutoLevel {
+  AUTO_SAFE   // envoi immédiat sans validation
+  AUTO_REVIEW // envoi après validation utilisateur
+  NO_SEND     // jamais automatique, action manuelle uniquement
+}
+
+model SpontaneousApplication {
+  id              String            @id @default(uuid())
+  userId          String
+  user            User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Entreprise ciblée
+  companyName     String
+  companyAddress  String?
+  companySector   String?
+  companySize     String?
+  companyDomain   String?  // ex: "monentreprise.fr" (estimé ou enrichi)
+  contactEmail    String?  // email trouvé / estimé / saisi manuellement
+  contactName     String?
+  contactRole     String?
+  contactSource   String?  // "ft_contact" | "estimated" | "manual" | "hunter"
+
+  // Métier / offre source
+  jobTitle        String
+  ftOfferId       String?
+  ftOfferUrl      String?
+  ftSource        String?  // "francetravail" | "demo"
+  reason          String?  // raison de pertinence (texte)
+  hiringPotential String?
+
+  // Lettre de motivation
+  coverLetterId   String?
+  coverLetter     CoverLetter? @relation(fields: [coverLetterId], references: [id], onDelete: SetNull)
+  coverLetterText String?  // snapshot du texte au moment de l'envoi
+
+  // Automatisation
+  autoLevel       AutoLevel @default(AUTO_REVIEW)
+  autoScore       Int       @default(0) // 0-100
+  autoBlockReason String?   // raison si NO_SEND
+
+  // Statut / suivi
+  status          SpontaneousStatus @default(DRAFT)
+  applicationId   String?           @unique
+  application     Application?      @relation(fields: [applicationId], references: [id], onDelete: SetNull)
+
+  // Tracking email
+  sentAt          DateTime?
+  messageId       String?  // Message-ID SMTP pour rapprocher les réponses
+  openedAt        DateTime?
+  bouncedAt       DateTime?
+  repliedAt       DateTime?
+
+  // Relances
+  followUpAt      DateTime? // prochaine relance planifiée
+  followUpCount   Int       @default(0)
+  lastFollowUpAt  DateTime?
+
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@index([userId])
+  @@index([userId, status])
+  @@index([userId, autoLevel])
+  @@index([status])
+  @@index([followUpAt])
+  @@index([companyDomain])
+}
+
+model CompanyBlacklist {
+  id          String   @id @default(uuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  companyName String
+  domain      String?
+  reason      String?
+  createdAt   DateTime @default(now())
+
+  @@unique([userId, companyName])
+  @@index([userId])
+  @@index([userId, domain])
 }
 
 model CV {
@@ -158,9 +266,11 @@ model CoverLetter {
   
   userId    String
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  spontaneousApplications SpontaneousApplication[]
 
   @@index([userId])
 }
