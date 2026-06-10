@@ -12,6 +12,10 @@ const getAI = () => {
 
 const SYSTEM_PROMPT = "Tu es Jobix, l'intelligence artificielle haute performance de Joboost. Ton ton est chirurgical, visionnaire et ultra-rapide. Tu parles en termes de 'Matching Score', de 'Convergence de profil' et d' 'Optimisation de trajectoire'. Ton but est de rendre le dossier du candidat indétectable pour les algorithmes de tri classiques et irrésistible pour les recruteurs humains.";
 
+// Persona dédiée à la rédaction de CV : factuelle, sobre, AUCUN jargon marketing.
+// (volontairement distincte du SYSTEM_PROMPT « Jobix » qui produirait des phrases creuses)
+const CV_WRITER_PROMPT = "Tu es un expert en rédaction de CV professionnels en français. Tu écris des descriptions d'expériences claires, concises et orientées action. Tu structures la réponse en puces courtes. Règles strictes : n'invente JAMAIS de chiffres, de pourcentages, de noms de clients ou de résultats qui ne sont pas fournis par le candidat ; pas de superlatifs creux ni de jargon ('synergie', 'disruptif', 'haute performance', 'leader')... ; reste crédible et vérifiable par un recruteur. Réponds UNIQUEMENT avec les puces (une par ligne, commençant par '- '), sans introduction ni conclusion.";
+
 export const geminiService = {
   getProfileOptimizations: async (profileData: any): Promise<string[]> => {
     const ai = getAI();
@@ -122,6 +126,29 @@ export const geminiService = {
       config: { systemInstruction: SYSTEM_PROMPT }
     });
     return response.text || currentText;
+  },
+
+  // Détaille une expérience professionnelle en puces factuelles pour le CV (modèle Flash, gratuit).
+  detailExperience: async (input: {
+    role?: string; company?: string; contractType?: string; period?: string; targetTitle?: string; notes?: string;
+  }): Promise<string> => {
+    const ai = getAI();
+    const { role, company, contractType, period, targetTitle, notes } = input || {};
+    const response = await ai.models.generateContent({
+      model: 'gemini-3-flash-preview',
+      contents:
+        `Rédige la description d'une expérience professionnelle pour un CV, sous forme de 3 à 5 puces.\n` +
+        `Poste : ${role || '—'}\n` +
+        `Entreprise : ${company || '—'}\n` +
+        `Type de contrat : ${contractType || '—'}\n` +
+        `Période : ${period || '—'}\n` +
+        `Poste actuellement visé par le candidat : ${targetTitle || '—'}\n` +
+        `Notes du candidat sur ses missions et réalisations : "${notes || ''}"\n\n` +
+        `Appuie-toi en priorité sur ces notes. Si elles sont vides ou très courtes, propose des missions ` +
+        `plausibles et génériques pour ce poste, SANS inventer de chiffres ni de résultats précis.`,
+      config: { systemInstruction: CV_WRITER_PROMPT },
+    });
+    return response.text || notes || '';
   },
 
   generateCVSummary: async (title: string, skills: string[], experiences: any[]): Promise<string> => {

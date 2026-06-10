@@ -83,6 +83,15 @@ router.post('/rewrite-section', async (req, res) => {
     }
 });
 
+router.post('/detail-experience', async (req, res) => {
+    try {
+        const result = await geminiService.detailExperience(req.body || {});
+        res.json({ success: true, data: result });
+    } catch (error: any) {
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
 router.post('/generate-cv-summary', async (req, res) => {
     try {
         const { title, skills, experiences } = req.body;

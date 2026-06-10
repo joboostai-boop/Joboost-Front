@@ -8,7 +8,7 @@ import { User as UserType } from '../types';
 import toast from 'react-hot-toast';
 import { useAuth } from '../context/AuthContext';
 import { authHeaders } from '../services/authToken';
-import { rewriteSection } from '../services/gemini';
+import { rewriteSection, detailExperience } from '../services/gemini';
 
 interface ProfileProps { user: UserType; }
 
@@ -132,6 +132,7 @@ const Profile: React.FC<ProfileProps> = ({ user }) => {
   const [open, setOpen] = useState<string | null>('identity');
   const [saving, setSaving] = useState(false);
   const [loadingAI, setLoadingAI] = useState(false);
+  const [aiExpId, setAiExpId] = useState<string | null>(null);
   const toggle = (id: string) => setOpen((o) => (o === id ? null : id));
 
   const initialName = { first: user.firstName || user.name?.split(' ')[0] || '', last: user.lastName || user.name?.split(' ').slice(1).join(' ') || '' };
@@ -223,6 +224,29 @@ const Profile: React.FC<ProfileProps> = ({ user }) => {
       toast.success('Résumé optimisé !');
     } catch { toast.error("Erreur de l'IA."); }
     finally { setLoadingAI(false); }
+  };
+
+  const handleDetailExperience = async (exp: any) => {
+    if (!exp.role) { toast.error("Renseigne au moins l'intitulé du poste."); return; }
+    setAiExpId(exp.id);
+    try {
+      const period = exp.current
+        ? `${exp.startDate || ''} – Aujourd'hui`.trim()
+        : [exp.startDate, exp.endDate].filter(Boolean).join(' – ');
+      const txt = await detailExperience({
+        role: exp.role, company: exp.company, contractType: exp.contractType, period,
+        targetTitle: f.title,
+        notes: [exp.missions, exp.achievements].filter(Boolean).join('\n'),
+      });
+      if (txt && txt.trim()) {
+        updItem('experiences', exp.id, { missions: txt.trim() });
+        toast.success("Missions détaillées par l'IA — relis et ajuste si besoin.");
+      } else {
+        toast.error("L'IA n'a rien renvoyé, réessaie.");
+      }
+    } catch (e: any) {
+      toast.error(e?.message || "Erreur de l'IA.");
+    } finally { setAiExpId(null); }
   };
 
   const handleSave = async () => {
@@ -369,7 +393,16 @@ const Profile: React.FC<ProfileProps> = ({ user }) => {
               <input type="checkbox" checked={exp.current} onChange={(e) => updItem('experiences', exp.id, { current: e.target.checked })} className="w-4 h-4 accent-[#7D5CFF]" />
               Poste actuel
             </label>
-            <textarea className="textarea-pro" value={exp.missions} onChange={(e) => updItem('experiences', exp.id, { missions: e.target.value })} placeholder="Missions — ex : J'ai géré 30 dossiers clients par semaine…" />
+            <div>
+              <div className="flex justify-between items-center mb-1.5">
+                <span className="text-xs font-semibold text-slate-500">Missions</span>
+                <button type="button" onClick={() => handleDetailExperience(exp)} disabled={aiExpId === exp.id}
+                  className="flex items-center gap-1 text-[#7D5CFF] text-xs font-bold hover:underline disabled:opacity-50">
+                  {aiExpId === exp.id ? <RefreshCw className="animate-spin" size={13} /> : <Wand2 size={13} />} Détailler avec l'IA
+                </button>
+              </div>
+              <textarea className="textarea-pro" value={exp.missions} onChange={(e) => updItem('experiences', exp.id, { missions: e.target.value })} placeholder="Décris en quelques mots, puis clique « Détailler avec l'IA » — ex : gestion dossiers clients, prospection…" />
+            </div>
             <textarea className="textarea-pro !min-h-[60px]" value={exp.achievements} onChange={(e) => updItem('experiences', exp.id, { achievements: e.target.value })} placeholder="Réalisations chiffrées — ex : +15% de ventes" />
           </div>
         ))}

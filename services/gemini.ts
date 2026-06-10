@@ -52,6 +52,13 @@ export const rewriteSection = async (sectionName: string, currentText: string, c
   }
 };
 
+export const detailExperience = async (input: {
+  role?: string; company?: string; contractType?: string; period?: string; targetTitle?: string; notes?: string;
+}): Promise<string> => {
+  // On laisse l'erreur remonter pour afficher un vrai message (ex. quota) côté UI.
+  return await fetchFromAPI('/detail-experience', input);
+};
+
 export const generateCVSummary = async (title: string, skills: string[], experiences: any[]): Promise<string> => {
   try {
     return await fetchFromAPI('/generate-cv-summary', { title, skills, experiences });
