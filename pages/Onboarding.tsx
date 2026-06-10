@@ -20,11 +20,12 @@ import { authHeaders } from '../services/authToken';
 
 interface OnboardingProps {
   onComplete: (data: any) => void;
+  onSkip: () => void;
 }
 
 type OnboardingStep = 'choice' | 'form' | 'uploading';
 
-const Onboarding: React.FC<OnboardingProps> = ({ onComplete }) => {
+const Onboarding: React.FC<OnboardingProps> = ({ onComplete, onSkip }) => {
   const [step, setStep] = useState<OnboardingStep>('choice');
   const [isLoading, setIsLoading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -169,6 +170,13 @@ const Onboarding: React.FC<OnboardingProps> = ({ onComplete }) => {
                 <p className="text-sm text-slate-500 font-medium">Ces infos servent à générer ton CV et tes lettres.</p>
               </div>
             </div>
+            <button
+              type="button"
+              onClick={onSkip}
+              className="text-sm font-semibold text-slate-400 hover:text-indigo-600 transition-colors px-3 py-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800"
+            >
+              Plus tard
+            </button>
           </header>
 
           <form onSubmit={handleFormSubmit} className="grid grid-cols-1 lg:grid-cols-2 gap-8 pb-20">
@@ -332,6 +340,14 @@ const Onboarding: React.FC<OnboardingProps> = ({ onComplete }) => {
                 Remplir à la main <ArrowRight size={14} />
               </div>
             </div>
+          </button>
+
+          <button
+            type="button"
+            onClick={onSkip}
+            className="text-sm font-semibold text-slate-400 hover:text-indigo-600 transition-colors py-2 text-center"
+          >
+            Je remplirai mon profil plus tard
           </button>
         </div>
 

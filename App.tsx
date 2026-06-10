@@ -36,13 +36,19 @@ const App: React.FC = () => {
   const { user, loading: isAppLoading, checkAuth } = useAuth();
   const isAuthenticated = !!user;
   const isBusinessPartner = user?.role === 'BUSINESS_PARTNER';
-  // Onboarding considéré fait dès que le poste recherché est renseigné.
-  // (Le nom seul ne suffit pas : il est posé automatiquement par l'inscription et par Google.)
-  const hasCompletedOnboarding = !!user?.title;
-  
+
   const [isDarkMode, setIsDarkMode] = useState<boolean>(() => {
     return localStorage.getItem('joboost-theme') === 'dark';
   });
+  // L'utilisateur peut choisir de remplir son profil plus tard ; on mémorise ce choix.
+  const [onboardingSkipped, setOnboardingSkipped] = useState<boolean>(() => {
+    return localStorage.getItem('joboost-onboarding-skipped') === 'true';
+  });
+
+  // Onboarding considéré fait dès que le poste recherché est renseigné, OU si
+  // l'utilisateur a choisi de le remplir plus tard. (Le nom seul ne suffit pas :
+  // il est posé automatiquement par l'inscription et par Google.)
+  const hasCompletedOnboarding = !!user?.title || onboardingSkipped;
 
   const location = useLocation();
   const navigate = useNavigate();
@@ -73,6 +79,14 @@ const App: React.FC = () => {
     } catch {
       /* en cas d'échec réseau, on laisse l'utilisateur réessayer */
     }
+    navigate('/home');
+  };
+
+  // « Je remplirai plus tard » : on entre dans l'app sans forcer le profil.
+  // L'Accueil rappellera ensuite de le compléter (carte « prochaine action »).
+  const handleSkipOnboarding = () => {
+    localStorage.setItem('joboost-onboarding-skipped', 'true');
+    setOnboardingSkipped(true);
     navigate('/home');
   };
 
@@ -120,7 +134,7 @@ const App: React.FC = () => {
       <div className="min-h-screen bg-slate-50 dark:bg-slate-950 transition-colors duration-300">
         <Toaster position="top-right" />
         <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div></div>}>
-          <Onboarding onComplete={handleOnboardingComplete} />
+          <Onboarding onComplete={handleOnboardingComplete} onSkip={handleSkipOnboarding} />
         </Suspense>
       </div>
     );
