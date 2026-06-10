@@ -25,8 +25,8 @@ interface PricingProps {
   user: User;
 }
 
-// ⚠️ À COMPLÉTER : email pro réel pour les demandes B2B (recruteurs/entreprises).
-const B2B_CONTACT_EMAIL = 'contact@joboost.fr';
+// Email de contact pour les demandes B2B (recruteurs/entreprises).
+const B2B_CONTACT_EMAIL = 'joboost.ai@gmail.com';
 
 // Liens de paiement Stripe (Payment Links). Laisser '' = bouton « Bientôt disponible ».
 // ⚠️ Pour chaque lien, dans le dashboard Stripe :

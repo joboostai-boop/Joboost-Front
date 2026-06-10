@@ -17,7 +17,7 @@ import Logo from '../components/Logo';
  */
 
 const LAST_UPDATE = '10 juin 2026';
-const CONTACT_EMAIL = '[À COMPLÉTER : email de contact, ex. contact@joboost.fr]';
+const CONTACT_EMAIL = 'joboost.ai@gmail.com';
 
 type Section = { heading: string; body: React.ReactNode };
 
@@ -39,7 +39,7 @@ const mentionsLegales: Section[] = [
           <li>Siège social / adresse : 4 allée de Vendée, 78200 Magnanville, France</li>
           <li>SIREN : 105 996 334 — SIRET : 105 996 334 00014</li>
           <li>TVA : TVA non applicable, article 293 B du CGI (franchise en base)</li>
-          <li>Adresse e-mail : <TODO>{CONTACT_EMAIL}</TODO></li>
+          <li>Adresse e-mail : <a href={`mailto:${CONTACT_EMAIL}`} className="text-indigo-600 font-bold hover:underline">{CONTACT_EMAIL}</a></li>
           <li>Directeur de la publication : Sana Anger</li>
         </ul>
       </>
@@ -71,7 +71,7 @@ const mentionsLegales: Section[] = [
   },
   {
     heading: '4. Contact',
-    body: <p>Pour toute question : <TODO>{CONTACT_EMAIL}</TODO>.</p>,
+    body: <p>Pour toute question : <a href={`mailto:${CONTACT_EMAIL}`} className="text-indigo-600 font-bold hover:underline">{CONTACT_EMAIL}</a>.</p>,
   },
 ];
 
@@ -82,7 +82,7 @@ const confidentialite: Section[] = [
       <p>
         Le responsable du traitement des données est l'éditeur du site (voir Mentions légales) :{' '}
         <strong>Sana Anger (BOOST)</strong>, entrepreneur individuel. Pour toute question relative à vos données,
-        vous pouvez écrire à <TODO>{CONTACT_EMAIL}</TODO>.
+        vous pouvez écrire à <a href={`mailto:${CONTACT_EMAIL}`} className="text-indigo-600 font-bold hover:underline">{CONTACT_EMAIL}</a>.
       </p>
     ),
   },
@@ -144,7 +144,7 @@ const confidentialite: Section[] = [
           <li>Droit de retirer votre consentement à tout moment.</li>
         </ul>
         <p className="mt-2">
-          Pour exercer ces droits : <TODO>{CONTACT_EMAIL}</TODO>. Vous pouvez également introduire une réclamation
+          Pour exercer ces droits : <a href={`mailto:${CONTACT_EMAIL}`} className="text-indigo-600 font-bold hover:underline">{CONTACT_EMAIL}</a>. Vous pouvez également introduire une réclamation
           auprès de la CNIL (www.cnil.fr).
         </p>
       </>
@@ -274,7 +274,7 @@ const cgv: Section[] = [
     heading: '5. Réclamations et médiation',
     body: (
       <p>
-        Toute réclamation peut être adressée à <TODO>{CONTACT_EMAIL}</TODO>. Conformément à l'article L612-1 du
+        Toute réclamation peut être adressée à <a href={`mailto:${CONTACT_EMAIL}`} className="text-indigo-600 font-bold hover:underline">{CONTACT_EMAIL}</a>. Conformément à l'article L612-1 du
         Code de la consommation, le consommateur peut recourir gratuitement à un médiateur de la consommation :{' '}
         <TODO>[Adhésion en cours auprès de CM2C (cm2c.net) — les coordonnées complètes du médiateur seront
         publiées ici dès validation de l'adhésion.]</TODO>
