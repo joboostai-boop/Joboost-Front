@@ -1,4 +1,5 @@
 import { Request, Response } from 'express';
+import bcrypt from 'bcryptjs';
 import { prisma } from '../db';
 
 export const userController = {
@@ -168,6 +169,37 @@ export const userController = {
     } catch (error: any) {
       console.error('deleteAccount error:', error);
       res.status(500).json({ success: false, error: "Erreur lors de la suppression du compte." });
+    }
+  },
+
+  // Changement / définition du mot de passe (sécurité du compte).
+  changePassword: async (req: Request, res: Response) => {
+    try {
+      const { currentPassword, newPassword } = req.body;
+      if (!newPassword || String(newPassword).length < 6) {
+        return res.status(400).json({ success: false, error: "Le nouveau mot de passe doit faire au moins 6 caractères." });
+      }
+      const user = await prisma.user.findUnique({ where: { id: req.userId! } });
+      if (!user) return res.status(404).json({ success: false, error: "Utilisateur non trouvé." });
+
+      // Si un mot de passe existe déjà (compte email), on exige et vérifie l'actuel.
+      // Pour un compte OAuth sans mot de passe, on autorise la définition initiale.
+      if (user.password) {
+        if (!currentPassword) {
+          return res.status(400).json({ success: false, error: "Mot de passe actuel requis." });
+        }
+        const ok = await bcrypt.compare(currentPassword, user.password);
+        if (!ok) {
+          return res.status(401).json({ success: false, error: "Mot de passe actuel incorrect." });
+        }
+      }
+
+      const hashed = await bcrypt.hash(newPassword, 10);
+      await prisma.user.update({ where: { id: user.id }, data: { password: hashed } });
+      res.json({ success: true, message: "Mot de passe mis à jour.", hadPassword: !!user.password });
+    } catch (error: any) {
+      console.error('changePassword error:', error);
+      res.status(500).json({ success: false, error: "Erreur lors du changement de mot de passe." });
     }
   }
 };

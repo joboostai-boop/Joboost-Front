@@ -5,6 +5,7 @@ const router = Router();
 
 router.get('/me', userController.getCurrentUser);
 router.put('/me', userController.updateCurrentUser);
+router.put('/me/password', userController.changePassword);
 
 // RGPD
 router.get('/me/export', userController.exportData);
