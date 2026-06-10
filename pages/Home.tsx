@@ -75,7 +75,19 @@ const Home: React.FC<HomeProps> = ({ onStart }) => {
         toast.error('Erreur de connexion au serveur.', { id: toastId });
       }
     } else if (provider === 'Apple') {
-      toast('Apple Sign-In sera disponible prochainement.', { icon: '🍎' });
+      const toastId = toast.loading('Redirection vers Apple...');
+      try {
+        const res = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/auth/apple`);
+        const data = await res.json();
+        if (data.success && data.url) {
+          toast.dismiss(toastId);
+          window.location.href = data.url;
+        } else {
+          toast.error(data.error || 'Sign in with Apple non configuré.', { id: toastId });
+        }
+      } catch (err) {
+        toast.error('Erreur de connexion au serveur.', { id: toastId });
+      }
     }
   };
 

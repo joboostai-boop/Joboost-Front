@@ -24,3 +24,13 @@ export const GOOGLE_REDIRECT_URI = process.env.GOOGLE_REDIRECT_URI || 'http://lo
 export const LINKEDIN_CLIENT_ID = process.env.LINKEDIN_CLIENT_ID || '';
 export const LINKEDIN_CLIENT_SECRET = process.env.LINKEDIN_CLIENT_SECRET || '';
 export const LINKEDIN_REDIRECT_URI = process.env.LINKEDIN_REDIRECT_URI || 'http://localhost:4000/api/auth/linkedin/callback';
+
+// « Sign in with Apple » (optionnel — le serveur démarre sans).
+// APPLE_CLIENT_ID = identifiant du Services ID (ex. com.joboost.signin).
+// APPLE_TEAM_ID   = Team ID (10 caractères). APPLE_KEY_ID = Key ID de la clé .p8.
+// APPLE_PRIVATE_KEY = contenu PEM de la clé .p8 (sauts de ligne échappés \n autorisés dans le .env).
+export const APPLE_CLIENT_ID = process.env.APPLE_CLIENT_ID || '';
+export const APPLE_TEAM_ID = process.env.APPLE_TEAM_ID || '';
+export const APPLE_KEY_ID = process.env.APPLE_KEY_ID || '';
+export const APPLE_PRIVATE_KEY = (process.env.APPLE_PRIVATE_KEY || '').replace(/\\n/g, '\n');
+export const APPLE_REDIRECT_URI = process.env.APPLE_REDIRECT_URI || 'http://localhost:4000/api/auth/apple/callback';
