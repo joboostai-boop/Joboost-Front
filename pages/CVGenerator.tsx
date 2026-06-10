@@ -1,36 +1,12 @@
 
 import React, { useState, useEffect } from 'react';
-import { Printer, FileDown, Wand2, RefreshCw, Layout, Check, ShieldCheck, Save, Clock } from 'lucide-react';
+import { Printer, FileDown, Wand2, RefreshCw, Layout, Save, Clock } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { generateCVSummary } from '../services/gemini';
 import { exportCvPdf, exportCvDocx } from '../services/atsExport';
 import { authHeaders } from '../services/authToken';
-
-type CVTemplate = 'Classique' | 'Moderne' | 'Minimaliste';
-
-// Aperçu miniature réel du rendu de chaque template (texte simulé en barres).
-const MiniCvPreview: React.FC<{ template: CVTemplate }> = ({ template }) => {
-  const accent = template === 'Moderne' ? '#4F46E5' : template === 'Classique' ? '#1F2937' : '#111827';
-  const serif = template === 'Classique';
-  return (
-    <div className={`bg-white rounded-md border border-slate-200 p-3 h-32 overflow-hidden shadow-inner ${serif ? 'font-serif' : 'font-sans'}`}>
-      <div className="h-2.5 w-2/3 rounded-sm" style={{ background: accent }} />
-      <div className="h-1.5 w-1/3 bg-slate-300 rounded-sm mt-1" />
-      <div className="h-px w-full bg-slate-200 my-2" />
-      <div className="h-1 w-1/5 rounded-sm mb-1" style={{ background: accent, opacity: 0.65 }} />
-      <div className="space-y-1">
-        <div className="h-1 w-full bg-slate-200 rounded-sm" />
-        <div className="h-1 w-5/6 bg-slate-200 rounded-sm" />
-      </div>
-      <div className="h-1 w-1/5 rounded-sm mt-2 mb-1" style={{ background: accent, opacity: 0.65 }} />
-      <div className="flex gap-1">
-        <div className="h-1.5 w-6 bg-slate-200 rounded-sm" />
-        <div className="h-1.5 w-8 bg-slate-200 rounded-sm" />
-        <div className="h-1.5 w-5 bg-slate-200 rounded-sm" />
-      </div>
-    </div>
-  );
-};
+import TemplateGallery from '../components/TemplateGallery';
+import { CV_TEMPLATES, getCvTemplate } from '../services/cvTemplates';
 
 const CVGenerator: React.FC = () => {
   const [loadingSummary, setLoadingSummary] = useState(false);
@@ -45,7 +21,7 @@ const CVGenerator: React.FC = () => {
     phone: '',
     city: '',
     summary: '',
-    template: 'Moderne' as CVTemplate,
+    template: 'vertex',
     skills: [] as string[],
     experiences: [] as any[],
     education: [] as any[]
@@ -85,12 +61,6 @@ const CVGenerator: React.FC = () => {
     };
     init();
   }, []);
-
-  const templates: { name: CVTemplate; desc: string; color: string }[] = [
-    { name: 'Minimaliste', desc: 'Structure ultra-claire, 100% ATS Compliant', color: 'bg-slate-400' },
-    { name: 'Moderne', desc: 'Design épuré avec accents stratégiques', color: 'bg-indigo-600' },
-    { name: 'Classique', desc: 'Le standard indémodable des recruteurs', color: 'bg-slate-900' },
-  ];
 
   const handleGenerateSummary = async () => {
     setLoadingSummary(true);
@@ -161,34 +131,7 @@ const CVGenerator: React.FC = () => {
     } finally { setExporting(false); }
   };
 
-  // Helper pour obtenir les styles dynamiques de la prévisualisation
-  const getTemplateStyles = () => {
-    switch (formData.template) {
-      case 'Minimaliste':
-        return {
-          accentColor: 'text-slate-900 dark:text-white',
-          headerBg: 'border-slate-200 dark:border-slate-800',
-          font: 'font-sans',
-          containerClass: 'p-10'
-        };
-      case 'Classique':
-        return {
-          accentColor: 'text-slate-800 dark:text-slate-300',
-          headerBg: 'border-slate-400 dark:border-slate-600',
-          font: 'font-serif',
-          containerClass: 'p-12'
-        };
-      default: // Moderne
-        return {
-          accentColor: 'text-indigo-600',
-          headerBg: 'border-indigo-100 dark:border-indigo-900/30',
-          font: 'font-sans',
-          containerClass: 'p-10'
-        };
-    }
-  };
-
-  const styles = getTemplateStyles();
+  const SelectedPreview = getCvTemplate(formData.template).Preview;
 
   return (
     <div className="p-6 md:p-10 max-w-6xl mx-auto flex flex-col lg:flex-row gap-10">
@@ -217,45 +160,17 @@ const CVGenerator: React.FC = () => {
            </section>
         )}
 
-        {/* Sélection du Modèle */}
+        {/* Choix du modèle (carrousel un par un) */}
         <section className="space-y-3">
-          <div className="flex items-center justify-between mb-2">
-            <div className="flex items-center gap-2">
-              <Layout size={18} className="text-[#7D5CFF]" />
-              <h3 className="text-xs font-bold uppercase tracking-widest text-[#6B7280]">Modèle de CV</h3>
-            </div>
-            <div className="flex items-center gap-1.5 px-2 py-1 bg-emerald-50 text-emerald-700 rounded border border-emerald-200">
-               <ShieldCheck size={12} />
-               <span className="text-[10px] font-bold uppercase tracking-widest">ATS Ready</span>
-            </div>
+          <div className="flex items-center gap-2 mb-1">
+            <Layout size={18} className="text-[#7D5CFF]" />
+            <h3 className="text-xs font-bold uppercase tracking-widest text-[#6B7280]">Choisis ton modèle</h3>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            {templates.map((t) => (
-              <button
-                key={t.name}
-                onClick={() => setFormData({ ...formData, template: t.name })}
-                className={`relative flex flex-col p-3 rounded-xl border-2 transition-all text-left group outline-none ${
-                  formData.template === t.name
-                    ? 'border-[#7D5CFF] bg-[#F3F0FF] dark:bg-[#7D5CFF]/10 shadow-md'
-                    : 'border-[#E5E7EB] dark:border-[#1F2937] bg-white dark:bg-[#111827] hover:border-[#D1D5DB]'
-                }`}
-              >
-                {formData.template === t.name && (
-                  <div className="absolute top-2 right-2 z-10 w-5 h-5 rounded-full bg-[#7D5CFF] text-white flex items-center justify-center shadow">
-                    <Check size={12} />
-                  </div>
-                )}
-                <MiniCvPreview template={t.name} />
-                <div className="mt-2.5">
-                  <div className="flex items-center gap-1.5">
-                    <p className="text-sm font-bold text-[#111827] dark:text-white">{t.name}</p>
-                    <span className="text-[8px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200">ATS</span>
-                  </div>
-                  <p className="text-[11px] text-[#6B7280] leading-tight mt-0.5">{t.desc}</p>
-                </div>
-              </button>
-            ))}
-          </div>
+          <TemplateGallery
+            items={CV_TEMPLATES.map((t) => ({ id: t.id, name: t.name, ats: t.ats, node: <t.Preview data={formData} /> }))}
+            selectedId={formData.template}
+            onSelect={(id) => setFormData({ ...formData, template: id })}
+          />
         </section>
 
         <div className="space-y-6">
@@ -304,47 +219,9 @@ const CVGenerator: React.FC = () => {
           </button>
         </div>
         
-        <div className={`card-modern ${styles.containerClass} bg-white dark:bg-[#0F172A] shadow-2xl relative overflow-auto`}>
-          {/* Filigrane discret JoBoost */}
-          <div className="absolute bottom-4 right-8 text-[8px] font-black text-slate-200 dark:text-slate-800 uppercase tracking-[0.2em]">JoBoost Protocol • ATS Validated</div>
-          
-          <div id="cv-preview" className={`text-slate-900 dark:text-slate-100 text-sm space-y-6 ${styles.font} bg-white p-12 min-h-[1100px] w-full max-w-[800px] mx-auto`}>
-             <div className={`pb-4 border-b ${styles.headerBg}`}>
-                <h2 className="text-xl font-black uppercase tracking-tight">{formData.name}</h2>
-                <p className={`font-bold ${styles.accentColor}`}>{formData.title}</p>
-                {[formData.email, formData.phone, formData.city].filter(Boolean).length > 0 && (
-                  <p className="text-xs text-slate-500 mt-1">{[formData.email, formData.phone, formData.city].filter(Boolean).join('  •  ')}</p>
-                )}
-             </div>
-             
-             <div className="space-y-2">
-                <h3 className="font-black uppercase tracking-widest text-xs text-slate-500 border-b pb-1 mb-2">Résumé</h3>
-                <p className="leading-relaxed whitespace-pre-wrap">{formData.summary}</p>
-             </div>
-
-             <div className="space-y-2">
-                <h3 className="font-black uppercase tracking-widest text-xs text-slate-500 border-b pb-1 mb-2">Compétences</h3>
-                <div className="flex flex-wrap gap-2">
-                   {formData.skills.map(skill => (
-                      <span key={skill} className="bg-slate-100 text-slate-800 px-2 py-0.5 rounded text-xs font-bold">{skill}</span>
-                   ))}
-                </div>
-             </div>
-
-             <div className="space-y-4">
-                <h3 className="font-black uppercase tracking-widest text-xs text-slate-500 border-b pb-1 mb-2">Expérience Professionnelle</h3>
-                {formData.experiences.map((exp: any) => (
-                   <div key={exp.id || Math.random()} className="space-y-1">
-                      <div className="flex justify-between items-baseline">
-                         <p className="font-bold text-base">{exp.role}</p>
-                         <p className="text-xs text-slate-500 font-bold">{exp.period}</p>
-                      </div>
-                      <p className={`font-bold text-sm italic ${styles.accentColor}`}>{exp.company}</p>
-                      <p className="text-sm text-slate-700">{exp.desc}</p>
-                   </div>
-                ))}
-             </div>
-          </div>
+        {/* Aperçu du modèle sélectionné (grand format) */}
+        <div id="cv-preview" className="rounded-xl overflow-hidden shadow-2xl ring-1 ring-slate-200 dark:ring-slate-700">
+          <SelectedPreview data={formData} />
         </div>
       </div>
     </div>
