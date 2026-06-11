@@ -103,18 +103,16 @@ export const authController = {
 
   businessLogin: async (req: Request, res: Response) => {
     try {
-      // ⚠️⚠️ ACCÈS LIBRE RÉ-OUVERT TEMPORAIREMENT (2026-06-08, demande utilisateur : pas encore de clients).
-      // RGPD : cet accès connecte sans identifiant et donne accès aux données personnelles
-      // des candidats (art. 32 RGPD). À REFERMER IMPÉRATIVEMENT avant d'avoir de vrais candidats inscrits.
-      // 👉 POUR REFERMER : décommenter le bloc 403 ci-dessous (et exiger ENABLE_DEMO_BUSINESS_LOGIN=true).
-      // ---- VERROU DE SÉCURITÉ (désactivé temporairement) ----
-      // if (process.env.ENABLE_DEMO_BUSINESS_LOGIN !== 'true') {
-      //   return res.status(403).json({
-      //     success: false,
-      //     error: "L'accès partenaire nécessite une connexion avec identifiants.",
-      //   });
-      // }
-      // ---- FIN VERROU ----
+      // 🔒 VERROU DE SÉCURITÉ ACTIF (refermé 2026-06-12 avant lancement pub / vrais candidats).
+      // RGPD art. 32 : l'accès partenaire SANS identifiant donnerait accès aux données
+      // personnelles des candidats. Bloqué par défaut ; n'autorisé qu'en démo locale
+      // via ENABLE_DEMO_BUSINESS_LOGIN=true (à NE JAMAIS mettre en prod Render).
+      if (process.env.ENABLE_DEMO_BUSINESS_LOGIN !== 'true') {
+        return res.status(403).json({
+          success: false,
+          error: "L'accès partenaire nécessite une connexion avec identifiants.",
+        });
+      }
 
       // Find any existing business partner, or create one
       let user = await prisma.user.findFirst({
