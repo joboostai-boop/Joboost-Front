@@ -442,18 +442,18 @@ const Home: React.FC<HomeProps> = ({ onStart }) => {
           <div className="space-y-4">
             <p className="text-xs font-black text-slate-900 uppercase tracking-widest">Produit</p>
             <ul className="space-y-3 text-sm font-bold text-slate-500">
-              <li><a href="#" className="hover:text-indigo-600 transition-colors">Scanner ATS</a></li>
-              <li><a href="#" className="hover:text-indigo-600 transition-colors">Bulk Apply</a></li>
-              <li><a href="#" className="hover:text-indigo-600 transition-colors">IA Cover Letter</a></li>
+              <li><Link to="/auth/register" className="hover:text-indigo-600 transition-colors">Scanner ATS</Link></li>
+              <li><Link to="/auth/register" className="hover:text-indigo-600 transition-colors">Candidatures spontanées</Link></li>
+              <li><Link to="/auth/register" className="hover:text-indigo-600 transition-colors">Lettre de motivation IA</Link></li>
             </ul>
           </div>
 
           <div className="space-y-4">
             <p className="text-xs font-black text-slate-900 uppercase tracking-widest">Compagnie</p>
             <ul className="space-y-3 text-sm font-bold text-slate-500">
-              <li><a href="#" className="hover:text-indigo-600 transition-colors">À propos</a></li>
-              <li><a href="#" className="hover:text-indigo-600 transition-colors">Blog</a></li>
-              <li><a href="#" className="hover:text-indigo-600 transition-colors">Contact</a></li>
+              <li><Link to="/legal/mentions" className="hover:text-indigo-600 transition-colors">À propos</Link></li>
+              <li><a href="#faq" className="hover:text-indigo-600 transition-colors">FAQ</a></li>
+              <li><a href="mailto:joboost.ai@gmail.com" className="hover:text-indigo-600 transition-colors">Contact</a></li>
             </ul>
           </div>
 

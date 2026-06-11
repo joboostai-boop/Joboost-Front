@@ -24,6 +24,7 @@ const Pricing = React.lazy(() => import('./pages/Pricing'));
 const Profile = React.lazy(() => import('./pages/Profile'));
 const Settings = React.lazy(() => import('./pages/Settings'));
 const Onboarding = React.lazy(() => import('./pages/Onboarding'));
+const NotFound = React.lazy(() => import('./pages/NotFound'));
 const Spontaneous = React.lazy(() => import('./pages/Spontaneous'));
 const Login = React.lazy(() => import('./pages/Auth/Login'));
 const Register = React.lazy(() => import('./pages/Auth/Register'));
@@ -122,8 +123,9 @@ const App: React.FC = () => {
         <Toaster position="top-right" />
         <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div></div>}>
           <Routes>
+            <Route path="/" element={<Home onStart={() => navigate('/auth/register')} />} />
             <Route path="/legal/:page" element={<Legal />} />
-            <Route path="*" element={<Home onStart={() => navigate('/auth/register')} />} />
+            <Route path="*" element={<NotFound />} />
           </Routes>
         </Suspense>
       </div>
