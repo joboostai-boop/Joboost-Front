@@ -1,5 +1,5 @@
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   UploadCloud,
   UserPlus,
@@ -19,26 +19,51 @@ import toast from 'react-hot-toast';
 import { authHeaders } from '../services/authToken';
 
 interface OnboardingProps {
+  user?: any;
   onComplete: (data: any) => void;
   onSkip: () => void;
 }
 
 type OnboardingStep = 'choice' | 'form' | 'uploading';
 
-const Onboarding: React.FC<OnboardingProps> = ({ onComplete, onSkip }) => {
+// Expérience structurée : même forme que le profil et les modèles de CV
+// (role / company / period / missions) → l'expérience s'affiche correctement
+// dans le CV au lieu d'un « Poste » vide.
+interface ExperienceForm {
+  role: string;
+  company: string;
+  period: string;
+  missions: string;
+}
+
+const emptyExperience = (): ExperienceForm => ({ role: '', company: '', period: '', missions: '' });
+
+const Onboarding: React.FC<OnboardingProps> = ({ user, onComplete, onSkip }) => {
   const [step, setStep] = useState<OnboardingStep>('choice');
   const [isLoading, setIsLoading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    phone: '',
-    title: '',
-    linkedin: '',
-    experiences: ['', '', ''],
+    name: user?.name || '',
+    email: user?.email || '',
+    phone: user?.phone || '',
+    title: user?.title || '',
+    linkedin: user?.linkedin || '',
+    experiences: [emptyExperience(), emptyExperience(), emptyExperience()],
     skills: '',
   });
+
+  // Pré-remplit le nom / l'email dès que l'utilisateur connecté est disponible
+  // (l'inscription et Google les renseignent déjà) — sans écraser une saisie en cours.
+  useEffect(() => {
+    if (!user) return;
+    setFormData((prev) => ({
+      ...prev,
+      name: prev.name || user.name || '',
+      email: prev.email || user.email || '',
+      phone: prev.phone || user.phone || '',
+    }));
+  }, [user]);
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -65,22 +90,27 @@ const Onboarding: React.FC<OnboardingProps> = ({ onComplete, onSkip }) => {
 
       if (data.success && data.data) {
         const d = data.data;
-        // Les expériences extraites (objets) sont converties en lignes lisibles pour le formulaire.
-        const exps: string[] = Array.isArray(d.experiences)
+        // Les expériences extraites sont gardées structurées (role / company / period / missions)
+        // pour alimenter directement le CV.
+        const exps: ExperienceForm[] = Array.isArray(d.experiences)
           ? d.experiences.map((x: any) =>
               typeof x === 'string'
-                ? x
-                : [x.role, x.company ? `chez ${x.company}` : '', x.period ? `(${x.period})` : '']
-                    .filter(Boolean).join(' ') + (x.desc ? ` : ${x.desc}` : '')
+                ? { ...emptyExperience(), missions: x }
+                : {
+                    role: x.role || '',
+                    company: x.company || '',
+                    period: x.period || [x.startDate, x.endDate].filter(Boolean).join(' – ') || '',
+                    missions: x.desc || x.missions || '',
+                  }
             )
           : [];
-        while (exps.length < 3) exps.push('');
+        while (exps.length < 3) exps.push(emptyExperience());
 
         setFormData((prev) => ({
           ...prev,
-          name: d.name || '',
-          email: d.email || '',
-          phone: d.phone || '',
+          name: d.name || prev.name || '',
+          email: d.email || prev.email || '',
+          phone: d.phone || prev.phone || '',
           title: d.title || '',
           skills: Array.isArray(d.skills) ? d.skills.join(', ') : (d.skills || ''),
           experiences: exps.slice(0, 3),
@@ -107,16 +137,28 @@ const Onboarding: React.FC<OnboardingProps> = ({ onComplete, onSkip }) => {
     }
 
     setIsLoading(true);
+    // On ne garde que les expériences renseignées et on les normalise au format
+    // attendu par le CV / le profil (role, company, period, missions + desc).
+    const experiences = formData.experiences
+      .filter((e) => e.role.trim() || e.company.trim() || e.missions.trim())
+      .map((e) => ({
+        role: e.role.trim(),
+        company: e.company.trim(),
+        period: e.period.trim(),
+        endDate: e.period.trim(),
+        missions: e.missions.trim(),
+        desc: e.missions.trim(),
+      }));
+
     setTimeout(() => {
       setIsLoading(false);
-      onComplete(formData);
+      onComplete({ ...formData, experiences });
       toast.success("Profil enregistré !");
     }, 1000);
   };
 
-  const updateExperience = (index: number, val: string) => {
-    const newExps = [...formData.experiences];
-    newExps[index] = val;
+  const updateExperience = (index: number, patch: Partial<ExperienceForm>) => {
+    const newExps = formData.experiences.map((e, i) => (i === index ? { ...e, ...patch } : e));
     setFormData({ ...formData, experiences: newExps });
   };
 
@@ -250,19 +292,40 @@ const Onboarding: React.FC<OnboardingProps> = ({ onComplete, onSkip }) => {
               <h3 className="text-xs font-black uppercase tracking-widest text-indigo-600 flex items-center gap-2">
                 <FileText size={14} /> Mes expériences
               </h3>
-              <p className="text-xs text-slate-400 font-medium italic">Décris tes 3 expériences les plus importantes.</p>
+              <p className="text-xs text-slate-400 font-medium italic">Décris tes 3 expériences les plus importantes. Tu pourras les affiner plus tard dans ton profil.</p>
               <div className="space-y-6">
                 {formData.experiences.map((exp, idx) => (
-                  <div key={idx} className="space-y-1.5">
-                    <div className="flex justify-between items-center px-1">
-                      <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Expérience #{idx + 1}</label>
+                  <div key={idx} className="space-y-2.5 border-b border-slate-100 dark:border-slate-800 pb-5 last:border-0 last:pb-0">
+                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-1">Expérience #{idx + 1}</label>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                      <input
+                        type="text"
+                        placeholder="Poste (ex : Développeur)"
+                        className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-2xl outline-none focus:ring-2 focus:ring-indigo-600 transition-all font-bold text-sm"
+                        value={exp.role}
+                        onChange={e => updateExperience(idx, { role: e.target.value })}
+                      />
+                      <input
+                        type="text"
+                        placeholder="Entreprise"
+                        className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-2xl outline-none focus:ring-2 focus:ring-indigo-600 transition-all font-bold text-sm"
+                        value={exp.company}
+                        onChange={e => updateExperience(idx, { company: e.target.value })}
+                      />
                     </div>
+                    <input
+                      type="text"
+                      placeholder="Période (ex : 2021 – 2024)"
+                      className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-2xl outline-none focus:ring-2 focus:ring-indigo-600 transition-all font-medium text-sm"
+                      value={exp.period}
+                      onChange={e => updateExperience(idx, { period: e.target.value })}
+                    />
                     <textarea
-                      rows={3}
-                      placeholder="Poste, entreprise et ce que tu y as accompli..."
-                      className="w-full px-5 py-4 bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-2xl outline-none focus:ring-2 focus:ring-indigo-600 transition-all font-medium text-sm resize-none"
-                      value={exp}
-                      onChange={e => updateExperience(idx, e.target.value)}
+                      rows={2}
+                      placeholder="Ce que tu y as accompli (missions, résultats)..."
+                      className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-2xl outline-none focus:ring-2 focus:ring-indigo-600 transition-all font-medium text-sm resize-none"
+                      value={exp.missions}
+                      onChange={e => updateExperience(idx, { missions: e.target.value })}
                     />
                   </div>
                 ))}

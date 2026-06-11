@@ -135,7 +135,7 @@ const App: React.FC = () => {
       <div className="min-h-screen bg-slate-50 dark:bg-slate-950 transition-colors duration-300">
         <Toaster position="top-right" />
         <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div></div>}>
-          <Onboarding onComplete={handleOnboardingComplete} onSkip={handleSkipOnboarding} />
+          <Onboarding user={user} onComplete={handleOnboardingComplete} onSkip={handleSkipOnboarding} />
         </Suspense>
       </div>
     );
