@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { RefreshCw, Wand2, Zap, Printer, FileDown, Save, Clock, Link as LinkIcon, AlignLeft, Edit3 } from 'lucide-react';
-import { generateCoverLetter } from '../services/gemini';
+import { generateCoverLetter, extractOfferFromUrl } from '../services/gemini';
 import toast from 'react-hot-toast';
 import { exportLetterPdf, exportLetterDocx } from '../services/atsExport';
 import { authHeaders } from '../services/authToken';
@@ -61,11 +61,26 @@ const LetterGenerator: React.FC = () => {
       toast.error("Veuillez remplir le Poste et l'Entreprise.");
       return;
     }
+    if (mode === 'link' && !offerUrl) {
+      toast.error("Collez l'URL de l'offre, ou utilisez l'onglet « Texte de l'offre ».");
+      return;
+    }
     setLoading(true);
     try {
       let jobDescription = "";
       if (mode === 'text') jobDescription = offerText;
-      if (mode === 'link') jobDescription = `Lien de l'offre (pour info contextuelle) : ${offerUrl}`;
+      if (mode === 'link') {
+        // On tente d'extraire le contenu réel de la page. Souvent bloqué (LinkedIn/Indeed) :
+        // dans ce cas on le dit clairement et on génère depuis le poste/entreprise seuls.
+        const extraction = await extractOfferFromUrl(offerUrl);
+        if (extraction.ok && extraction.text) {
+          jobDescription = extraction.text;
+          toast.success("Offre lue depuis le lien ✓");
+        } else {
+          jobDescription = `URL de l'offre (contenu non extractible) : ${offerUrl}`;
+          toast("Page non lisible (LinkedIn/Indeed bloquent souvent l'accès). Lettre basée sur le poste et l'entreprise — collez le texte de l'offre pour un meilleur ciblage.", { icon: '⚠️', duration: 6500 });
+        }
+      }
 
       const text = await generateCoverLetter(jobTitle, company, tone, userProfile, jobDescription);
       setGeneratedText(text);
@@ -223,8 +238,8 @@ const LetterGenerator: React.FC = () => {
             {mode === 'link' && (
               <div className="space-y-1.5 animate-in fade-in slide-in-from-top-2">
                 <label className="input-label">Lien de l'offre (URL)</label>
-                <input type="text" value={offerUrl} onChange={(e) => setOfferUrl(e.target.value)} className="input-pro" placeholder="https://www.linkedin.com/jobs/view/..." />
-                <p className="text-[9px] text-[#9CA3AF]">Le scraping automatique est en cours de développement. L'URL est transmise à l'IA pour l'instant.</p>
+                <input type="text" value={offerUrl} onChange={(e) => setOfferUrl(e.target.value)} className="input-pro" placeholder="https://entreprise.com/carrieres/..." />
+                <p className="text-[10px] text-[#9CA3AF] leading-relaxed">On tente de lire automatiquement la page. Les grands sites (LinkedIn, Indeed) bloquent souvent l'accès : si c'est le cas, copiez-collez le texte de l'offre via l'onglet « Texte de l'offre » pour une lettre mieux ciblée.</p>
               </div>
             )}
 
@@ -235,53 +250,42 @@ const LetterGenerator: React.FC = () => {
           </div>
         </div>
 
-        <div className="lg:col-span-8">
-          {generatedText ? (
-            <div className="space-y-5">
-              {/* Actions */}
-              <div className="flex flex-wrap justify-end gap-2">
-                <button onClick={handleExportPDF} disabled={exporting || !generatedText} className="btn btn-primary disabled:opacity-60">
-                  <FileDown size={14} /> PDF
-                </button>
-                <button onClick={handleExportDocx} disabled={exporting || !generatedText} className="btn btn-secondary text-[#7D5CFF] disabled:opacity-60">
-                  <FileDown size={14} /> Word
-                </button>
-                <button onClick={() => window.print()} className="btn btn-secondary px-3" title="Imprimer">
-                  <Printer size={14} />
-                </button>
-              </div>
+        <div className="lg:col-span-8 space-y-5">
+          {/* Actions (export quand une lettre existe) */}
+          <div className="flex flex-wrap justify-end gap-2">
+            <button onClick={handleExportPDF} disabled={exporting || !generatedText} className="btn btn-primary disabled:opacity-50">
+              <FileDown size={14} /> PDF
+            </button>
+            <button onClick={handleExportDocx} disabled={exporting || !generatedText} className="btn btn-secondary text-[#7D5CFF] disabled:opacity-50">
+              <FileDown size={14} /> Word
+            </button>
+            <button onClick={() => window.print()} disabled={!generatedText} className="btn btn-secondary px-3 disabled:opacity-50" title="Imprimer">
+              <Printer size={14} />
+            </button>
+          </div>
 
-              {/* Choix du modèle (carrousel un par un) */}
-              <TemplateGallery
-                items={LETTER_TEMPLATES.map((t) => ({ id: t.id, name: t.name, ats: t.ats, node: <t.Preview data={previewData} /> }))}
-                selectedId={letterTemplate}
-                onSelect={setLetterTemplate}
-              />
+          {/* Choix du modèle (carrousel un par un) — toujours visible */}
+          <TemplateGallery
+            items={LETTER_TEMPLATES.map((t) => ({ id: t.id, name: t.name, ats: t.ats, node: <t.Preview data={previewData} /> }))}
+            selectedId={letterTemplate}
+            onSelect={setLetterTemplate}
+          />
 
-              {/* Édition du texte */}
-              <div>
-                <label className="input-label">Modifier le texte de la lettre</label>
-                <textarea
-                  className="textarea-pro !min-h-[180px]"
-                  value={generatedText}
-                  onChange={(e) => setGeneratedText(e.target.value)}
-                />
-              </div>
+          {/* Édition du texte */}
+          <div>
+            <label className="input-label">Texte de la lettre</label>
+            <textarea
+              className="textarea-pro !min-h-[180px]"
+              value={generatedText}
+              onChange={(e) => setGeneratedText(e.target.value)}
+              placeholder="Génère ta lettre avec l'IA à gauche, ou écris-la directement ici."
+            />
+          </div>
 
-              {/* Aperçu grand format du modèle sélectionné */}
-              <div id="letter-preview" className="rounded-xl overflow-hidden shadow-2xl ring-1 ring-slate-200 dark:ring-slate-700 max-w-[800px] mx-auto">
-                <SelectedLetterPreview data={previewData} />
-              </div>
-            </div>
-          ) : (
-            <div className="h-[500px] flex flex-col items-center justify-center p-12 card-pro bg-[#F3F4F6] dark:bg-[#111827] border-dashed border-2 border-[#D1D5DB] dark:border-[#374151] text-center">
-              <div className="w-16 h-16 bg-white dark:bg-[#1F2937] rounded-full shadow-sm flex items-center justify-center text-[#9CA3AF] mb-6 border border-[#E5E7EB] dark:border-[#374151]">
-                <Wand2 size={24} />
-              </div>
-              <h4>Prêt à rédiger ?</h4>
-              <p className="mt-2 text-sm text-[#6B7280]">Remplissez les éléments et l'IA ciblera sa rédaction.</p>
-            </div>
-          )}
+          {/* Aperçu grand format du modèle sélectionné */}
+          <div id="letter-preview" className="rounded-xl overflow-hidden shadow-2xl ring-1 ring-slate-200 dark:ring-slate-700 max-w-[800px] mx-auto">
+            <SelectedLetterPreview data={previewData} />
+          </div>
         </div>
       </div>
     </div>

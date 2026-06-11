@@ -3,6 +3,7 @@ import multer from 'multer';
 import mammoth from 'mammoth';
 import { geminiService } from '../services/gemini.service';
 import { usageService } from '../services/usage.service';
+import { scraperService } from '../services/scraper.service';
 
 // pdf-parse n'a pas de types officiels → require pour éviter l'erreur de déclaration.
 // eslint-disable-next-line @typescript-eslint/no-var-requires
@@ -133,6 +134,19 @@ router.post('/generate-cover-letter', async (req, res) => {
         if (consumption.source) await usageService.refundCandidature(userId, consumption.source);
         res.status(500).json({ success: false, error: error.message });
     }
+});
+
+// Extraction du contenu d'une offre depuis son URL (mode « Lien URL » de la lettre IA).
+// Action gratuite (pas de quota) : la facturation a lieu à la génération de la lettre.
+// Renvoie toujours 200 avec { ok } : un échec d'extraction (mur d'auth, timeout…)
+// n'est pas une erreur applicative, l'UI invite alors à coller le texte.
+router.post('/extract-offer', async (req, res) => {
+    const { url } = req.body;
+    if (!url || typeof url !== 'string') {
+        return res.status(400).json({ success: false, error: 'URL manquante.' });
+    }
+    const result = await scraperService.extractOffer(url);
+    res.json({ success: true, data: result });
 });
 
 router.post('/generate-bulk-message', async (req, res) => {

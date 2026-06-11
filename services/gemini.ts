@@ -75,6 +75,23 @@ export const generateCoverLetter = async (jobTitle: string, company: string, ton
   }
 };
 
+export interface OfferExtraction {
+  ok: boolean;
+  title?: string;
+  text?: string;
+  reason?: string;
+}
+
+// Tente d'extraire le contenu d'une offre depuis son URL (via le micro-service de scraping).
+// Échec attendu sur LinkedIn/Indeed (mur d'auth) → l'appelant invite à coller le texte.
+export const extractOfferFromUrl = async (url: string): Promise<OfferExtraction> => {
+  try {
+    return await fetchFromAPI('/extract-offer', { url });
+  } catch {
+    return { ok: false, reason: 'request_failed' };
+  }
+};
+
 export const generateBulkMessage = async (candidateName: string, candidateTitle: string, companyName: string, companySector: string): Promise<string> => {
   try {
     return await fetchFromAPI('/generate-bulk-message', { candidateName, candidateTitle, companyName, companySector });
