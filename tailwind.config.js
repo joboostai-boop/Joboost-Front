@@ -14,8 +14,46 @@ export default {
         sans: ['Plus Jakarta Sans', 'sans-serif'],
       },
       colors: {
-        brand: '#4F46E5',
-      }
+        // Identité Joboost — violet #7D5CFF décliné en échelle.
+        // `brand` (DEFAULT = 500) sert d'alias court ; les pages peuvent
+        // aussi continuer d'utiliser les valeurs hex existantes.
+        brand: {
+          DEFAULT: '#7D5CFF',
+          50: '#F3F0FF',
+          100: '#E8E1FF',
+          200: '#D4C7FF',
+          300: '#B9A3FF',
+          400: '#9B7BFF',
+          500: '#7D5CFF',
+          600: '#6023C0',
+          700: '#4F46E5',
+        },
+      },
+      keyframes: {
+        'fade-in-up': {
+          '0%': { opacity: '0', transform: 'translateY(16px)' },
+          '100%': { opacity: '1', transform: 'translateY(0)' },
+        },
+        'fade-in': {
+          '0%': { opacity: '0' },
+          '100%': { opacity: '1' },
+        },
+        'scale-in': {
+          '0%': { opacity: '0', transform: 'scale(0.96)' },
+          '100%': { opacity: '1', transform: 'scale(1)' },
+        },
+        shimmer: {
+          '100%': { transform: 'translateX(100%)' },
+        },
+      },
+      animation: {
+        // Apparitions au montage / au scroll — `both` garde l'état final.
+        'fade-in-up': 'fade-in-up 0.5s cubic-bezier(0.16, 1, 0.3, 1) both',
+        'fade-in': 'fade-in 0.4s ease-out both',
+        'scale-in': 'scale-in 0.25s cubic-bezier(0.16, 1, 0.3, 1) both',
+        // Effet de chargement (skeleton) pour les générateurs IA.
+        shimmer: 'shimmer 1.5s infinite',
+      },
     },
   },
   plugins: [],

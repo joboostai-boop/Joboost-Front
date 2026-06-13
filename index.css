@@ -33,6 +33,15 @@
     @apply bg-[#111827] border-[#1F2937];
   }
 
+  /* Carte « moderne » (landing, pricing, onboarding) : grand radius + ombre douce.
+     Le padding est fourni par les pages (ex: `card-modern p-6`). */
+  .card-modern {
+    @apply bg-white border border-slate-100 rounded-3xl shadow-sm;
+  }
+  .dark .card-modern {
+    @apply bg-[#111827] border-[#1F2937];
+  }
+
   /* ================== BUTTONS ================== */
   .btn {
     @apply min-h-[44px] px-4 py-3 inline-flex items-center justify-center gap-2 rounded-md text-sm font-medium transition-all duration-200 outline-none;
@@ -104,6 +113,67 @@
 }
 .animate-slide-in-right {
   animation: slide-in-right 0.3s ease-out;
+}
+
+/* ================== INTERACTIONS (Phase 3) ================== */
+
+/* Apparition au scroll : on pose `.reveal` (état initial caché) puis on ajoute
+   `.is-visible` via IntersectionObserver pour déclencher la transition. */
+.reveal {
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: opacity, transform;
+}
+.reveal.is-visible {
+  opacity: 1;
+  transform: none;
+}
+
+/* Skeleton « shimmer » pour les états de chargement (générateurs IA). */
+.skeleton {
+  @apply relative overflow-hidden bg-slate-100 dark:bg-slate-800 rounded-md;
+}
+.skeleton::after {
+  content: '';
+  @apply absolute inset-0;
+  transform: translateX(-100%);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.55),
+    transparent
+  );
+  animation: shimmer 1.5s infinite;
+}
+.dark .skeleton::after {
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.06),
+    transparent
+  );
+}
+
+/* Pression tactile : léger enfoncement sans décaler la mise en page. */
+.press {
+  @apply transition-transform duration-150 active:scale-[0.97];
+}
+
+/* Accessibilité : on neutralise quasi toutes les animations si l'utilisateur
+   a demandé moins de mouvement (prefers-reduced-motion). Filet de sécurité global. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  .reveal {
+    opacity: 1;
+    transform: none;
+  }
 }
 
 /* Utilities */
