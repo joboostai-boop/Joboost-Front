@@ -3,6 +3,7 @@ import { Routes, Route, useLocation, Navigate, useNavigate } from 'react-router-
 import { useAuth } from './context/AuthContext';
 import { authHeaders, getToken } from './services/authToken';
 import Sidebar from './components/Sidebar';
+import Topbar from './components/Topbar';
 import MobileNav from './components/MobileNav';
 import { Toaster } from 'react-hot-toast';
 import { Plan, User } from './types';
@@ -152,6 +153,7 @@ const App: React.FC = () => {
 
       {/* Main Fluid Content */}
       <main className="flex-1 min-w-0 md:pb-0 pb-20 overflow-y-auto">
+        <Topbar user={user} />
         <div className="min-h-full">
           <Suspense fallback={<div className="flex-1 flex items-center justify-center min-h-[50vh]"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#7D5CFF]"></div></div>}>
           <Routes>
