@@ -334,7 +334,7 @@ const Onboarding: React.FC<OnboardingProps> = ({ user, onComplete, onSkip }) => 
               <button
                 type="submit"
                 disabled={isLoading}
-                className="press w-full py-5 bg-[#7D5CFF] text-white rounded-[2rem] font-black text-sm uppercase tracking-widest hover:bg-[#6023C0] transition-all shadow-xl shadow-[#7D5CFF]/20 dark:shadow-none flex items-center justify-center gap-3 group disabled:opacity-60"
+                className="press btn btn-primary btn-lg w-full group disabled:opacity-60"
               >
                 {isLoading ? <Loader2 className="animate-spin" size={20} /> : "Enregistrer mon profil"}
                 {!isLoading && <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />}

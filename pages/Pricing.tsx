@@ -147,7 +147,7 @@ const Pricing: React.FC<PricingProps> = ({ user }) => {
         </div>
         <h1 className="text-3xl md:text-6xl font-black text-slate-900 dark:text-white tracking-tighter leading-tight md:leading-[1.1]">
           Passez de candidat à <br />
-          <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#7D5CFF] to-[#4F46E5]">Recruté d'élite.</span>
+          <span className="text-[#7D5CFF]">Recruté d'élite.</span>
         </h1>
         <p className="text-slate-500 dark:text-slate-400 text-base md:text-lg font-medium">
           Abonnez-vous pour une recherche intensive, ou prenez un pack ponctuel.
@@ -179,7 +179,7 @@ const Pricing: React.FC<PricingProps> = ({ user }) => {
           return (
             <div
               key={plan.name}
-              className={`relative flex flex-col rounded-[2.5rem] transition-all duration-500 group ${
+              className={`relative flex flex-col rounded-2xl transition-all duration-300 group ${
                 plan.popular
                   ? 'bg-[#7D5CFF] p-[2px] shadow-2xl shadow-[#7D5CFF]/25 md:scale-105 z-10 hover:-translate-y-1'
                   : 'bg-slate-200 dark:bg-slate-800 p-[1px] md:mt-4 md:mb-4 hover:-translate-y-1'
@@ -191,7 +191,7 @@ const Pricing: React.FC<PricingProps> = ({ user }) => {
                 </div>
               )}
 
-              <div className={`flex flex-col h-full bg-white dark:bg-[#030712] p-6 md:p-10 rounded-[2.4rem] transition-all duration-500 ${plan.popular ? 'dark:bg-slate-950/90' : ''}`}>
+              <div className={`flex flex-col h-full bg-white dark:bg-[#030712] p-6 md:p-10 rounded-[14px] transition-all duration-300 ${plan.popular ? 'dark:bg-slate-950/90' : ''}`}>
                 <div className="flex justify-between items-start mb-6 md:mb-8">
                   <div className={`w-12 h-12 md:w-14 md:h-14 rounded-2xl flex items-center justify-center border shadow-inner ${
                     plan.popular ? 'bg-[#7D5CFF] text-white border-[#9B7BFF]' : 'bg-slate-50 dark:bg-slate-900 text-slate-400 border-slate-100 dark:border-slate-800'
@@ -321,8 +321,7 @@ const Pricing: React.FC<PricingProps> = ({ user }) => {
 
       {/* Bloc B2B Recruteurs */}
       <section className="max-w-5xl mx-auto">
-        <div className="relative overflow-hidden rounded-[2.5rem] bg-slate-900 dark:bg-slate-950 border border-slate-800 p-8 md:p-12 text-white flex flex-col md:flex-row items-start md:items-center gap-8">
-          <div className="absolute top-0 right-0 w-64 h-64 bg-[#7D5CFF]/15 rounded-full blur-3xl -mr-20 -mt-20" />
+        <div className="relative overflow-hidden rounded-2xl bg-slate-900 dark:bg-slate-950 border border-slate-800 p-8 md:p-12 text-white flex flex-col md:flex-row items-start md:items-center gap-8">
           <div className="relative z-10 flex-1 space-y-3">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 text-[#A78BFA] text-[10px] font-black uppercase tracking-[0.2em]">
               <Building2 size={12} /> Recruteurs & Entreprises
