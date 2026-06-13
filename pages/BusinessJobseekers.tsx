@@ -392,7 +392,7 @@ const BusinessJobseekers: React.FC = () => {
                       <h4 className="text-sm font-bold text-slate-900 dark:text-white mb-3 uppercase tracking-wider">Compétences</h4>
                       <div className="flex flex-wrap gap-2">
                         {selectedDetail.skills.map((s: string) => (
-                          <span key={s} className="px-3 py-1.5 bg-indigo-50 text-indigo-700 border border-indigo-100 dark:bg-indigo-900/20 dark:text-indigo-300 dark:border-indigo-800 rounded-lg text-sm font-medium">
+                          <span key={s} className="px-3 py-1.5 bg-[#F3F0FF] text-[#7D5CFF] border border-[#7D5CFF]/15 dark:bg-[#7D5CFF]/10 dark:text-[#A78BFA] dark:border-[#7D5CFF]/20 rounded-lg text-sm font-medium">
                             {s}
                           </span>
                         ))}
@@ -435,7 +435,7 @@ const BusinessJobseekers: React.FC = () => {
                         {selectedDetail.cvs.map((cv) => (
                           <div key={cv.id} className="flex items-center gap-3 p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer">
                             <div className="w-8 h-8 rounded-lg bg-white dark:bg-slate-700 shadow-sm flex items-center justify-center shrink-0">
-                              <FileText size={14} className="text-indigo-600 dark:text-indigo-400" />
+                              <FileText size={14} className="text-[#7D5CFF] dark:text-[#A78BFA]" />
                             </div>
                             <span className="text-sm font-medium text-slate-700 dark:text-slate-300 flex-1 truncate">{cv.title}</span>
                             <span className="text-xs text-slate-400 shrink-0">{new Date(cv.updatedAt).toLocaleDateString('fr-FR')}</span>

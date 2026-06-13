@@ -39,7 +39,7 @@ const mentionsLegales: Section[] = [
           <li>Siège social / adresse : 4 allée de Vendée, 78200 Magnanville, France</li>
           <li>SIREN : 105 996 334 — SIRET : 105 996 334 00014</li>
           <li>TVA : TVA non applicable, article 293 B du CGI (franchise en base)</li>
-          <li>Adresse e-mail : <a href={`mailto:${CONTACT_EMAIL}`} className="text-indigo-600 font-bold hover:underline">{CONTACT_EMAIL}</a></li>
+          <li>Adresse e-mail : <a href={`mailto:${CONTACT_EMAIL}`} className="text-[#7D5CFF] font-bold hover:underline">{CONTACT_EMAIL}</a></li>
           <li>Directeur de la publication : Sana Anger</li>
         </ul>
       </>
@@ -71,7 +71,7 @@ const mentionsLegales: Section[] = [
   },
   {
     heading: '4. Contact',
-    body: <p>Pour toute question : <a href={`mailto:${CONTACT_EMAIL}`} className="text-indigo-600 font-bold hover:underline">{CONTACT_EMAIL}</a>.</p>,
+    body: <p>Pour toute question : <a href={`mailto:${CONTACT_EMAIL}`} className="text-[#7D5CFF] font-bold hover:underline">{CONTACT_EMAIL}</a>.</p>,
   },
 ];
 
@@ -82,7 +82,7 @@ const confidentialite: Section[] = [
       <p>
         Le responsable du traitement des données est l'éditeur du site (voir Mentions légales) :{' '}
         <strong>Sana Anger (BOOST)</strong>, entrepreneur individuel. Pour toute question relative à vos données,
-        vous pouvez écrire à <a href={`mailto:${CONTACT_EMAIL}`} className="text-indigo-600 font-bold hover:underline">{CONTACT_EMAIL}</a>.
+        vous pouvez écrire à <a href={`mailto:${CONTACT_EMAIL}`} className="text-[#7D5CFF] font-bold hover:underline">{CONTACT_EMAIL}</a>.
       </p>
     ),
   },
@@ -144,7 +144,7 @@ const confidentialite: Section[] = [
           <li>Droit de retirer votre consentement à tout moment.</li>
         </ul>
         <p className="mt-2">
-          Pour exercer ces droits : <a href={`mailto:${CONTACT_EMAIL}`} className="text-indigo-600 font-bold hover:underline">{CONTACT_EMAIL}</a>. Vous pouvez également introduire une réclamation
+          Pour exercer ces droits : <a href={`mailto:${CONTACT_EMAIL}`} className="text-[#7D5CFF] font-bold hover:underline">{CONTACT_EMAIL}</a>. Vous pouvez également introduire une réclamation
           auprès de la CNIL (www.cnil.fr).
         </p>
       </>
@@ -274,7 +274,7 @@ const cgv: Section[] = [
     heading: '5. Réclamations et médiation',
     body: (
       <p>
-        Toute réclamation peut être adressée à <a href={`mailto:${CONTACT_EMAIL}`} className="text-indigo-600 font-bold hover:underline">{CONTACT_EMAIL}</a>. Conformément à l'article L612-1 du
+        Toute réclamation peut être adressée à <a href={`mailto:${CONTACT_EMAIL}`} className="text-[#7D5CFF] font-bold hover:underline">{CONTACT_EMAIL}</a>. Conformément à l'article L612-1 du
         Code de la consommation, le consommateur peut recourir gratuitement à un médiateur de la consommation :{' '}
         <TODO>[Adhésion en cours auprès de CM2C (cm2c.net) — les coordonnées complètes du médiateur seront
         publiées ici dès validation de l'adhésion.]</TODO>
@@ -336,7 +336,7 @@ const Legal: React.FC = () => {
           </Link>
           <Link
             to="/"
-            className="flex items-center gap-2 text-slate-500 hover:text-indigo-600 transition-colors text-sm font-bold"
+            className="flex items-center gap-2 text-slate-500 hover:text-[#7D5CFF] transition-colors text-sm font-bold"
           >
             <ArrowLeft size={16} /> Retour à l'accueil
           </Link>
@@ -344,7 +344,7 @@ const Legal: React.FC = () => {
       </nav>
 
       <div className="max-w-4xl mx-auto px-6 py-12 md:py-16">
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 text-[10px] font-black uppercase tracking-[0.2em] border border-indigo-100 dark:border-indigo-900 mb-6">
+        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#7D5CFF]/5 dark:bg-[#7D5CFF]/10 text-[#7D5CFF] dark:text-[#A78BFA] text-[10px] font-black uppercase tracking-[0.2em] border border-[#7D5CFF]/15 dark:border-[#7D5CFF]/20 mb-6">
           <ShieldCheck size={14} /> Informations légales
         </div>
 
@@ -362,8 +362,8 @@ const Legal: React.FC = () => {
               to={`/legal/${t.key}`}
               className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
                 page === t.key
-                  ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-200 dark:shadow-none'
-                  : 'bg-slate-50 dark:bg-slate-900 text-slate-500 hover:text-indigo-600'
+                  ? 'bg-[#7D5CFF] text-white shadow-lg shadow-[#7D5CFF]/20 dark:shadow-none'
+                  : 'bg-slate-50 dark:bg-slate-900 text-slate-500 hover:text-[#7D5CFF]'
               }`}
             >
               {t.label}

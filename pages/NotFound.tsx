@@ -25,7 +25,7 @@ const NotFound: React.FC = () => {
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
           <Link
             to="/"
-            className="inline-flex items-center justify-center gap-2 px-6 py-3.5 bg-[#7D5CFF] text-white rounded-2xl font-bold text-sm hover:bg-[#6D28D9] transition-colors shadow-lg shadow-indigo-200 dark:shadow-none"
+            className="press inline-flex items-center justify-center gap-2 px-6 py-3.5 bg-[#7D5CFF] text-white rounded-2xl font-bold text-sm hover:bg-[#6023C0] transition-colors shadow-lg shadow-[#7D5CFF]/20 dark:shadow-none"
           >
             <HomeIcon size={16} /> Retour à l'accueil
           </Link>

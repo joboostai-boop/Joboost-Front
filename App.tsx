@@ -98,7 +98,7 @@ const App: React.FC = () => {
   // /api/auth/me, qui peut être lent si le backend Render gratuit s'est endormi (~50s).
   const hasStoredSession = !!getToken();
   if (isAppLoading && hasStoredSession) {
-    return <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex items-center justify-center text-indigo-600"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div></div>;
+    return <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex items-center justify-center text-[#7D5CFF]"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#7D5CFF]"></div></div>;
   }
 
   // Permettre l'accès aux pages d'authentification
@@ -106,7 +106,7 @@ const App: React.FC = () => {
     return (
       <div className="min-h-screen bg-white dark:bg-slate-950 transition-colors duration-300">
          <Toaster position="top-right" />
-         <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div></div>}>
+         <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#7D5CFF]"></div></div>}>
            <Routes>
               <Route path="/auth/login" element={<Login />} />
               <Route path="/auth/register" element={<Register />} />
@@ -119,9 +119,9 @@ const App: React.FC = () => {
 
   if (!isAuthenticated) {
     return (
-      <div className="min-h-screen bg-white dark:bg-slate-950 selection:bg-indigo-100 selection:text-indigo-900 transition-colors duration-300">
+      <div className="min-h-screen bg-white dark:bg-slate-950 selection:bg-[#7D5CFF]/15 selection:text-[#4F46E5] transition-colors duration-300">
         <Toaster position="top-right" />
-        <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div></div>}>
+        <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#7D5CFF]"></div></div>}>
           <Routes>
             <Route path="/" element={<Home onStart={() => navigate('/auth/register')} />} />
             <Route path="/legal/:page" element={<Legal />} />
@@ -136,7 +136,7 @@ const App: React.FC = () => {
     return (
       <div className="min-h-screen bg-slate-50 dark:bg-slate-950 transition-colors duration-300">
         <Toaster position="top-right" />
-        <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div></div>}>
+        <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#7D5CFF]"></div></div>}>
           <Onboarding user={user} onComplete={handleOnboardingComplete} onSkip={handleSkipOnboarding} />
         </Suspense>
       </div>
@@ -144,7 +144,7 @@ const App: React.FC = () => {
   }
 
   return (
-    <div className="flex min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 selection:bg-indigo-100 selection:text-indigo-900 transition-colors duration-300">
+    <div className="flex min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 selection:bg-[#7D5CFF]/15 selection:text-[#4F46E5] transition-colors duration-300">
       <Toaster position="top-right" />
       
       {/* Static Sidebar */}
@@ -153,7 +153,7 @@ const App: React.FC = () => {
       {/* Main Fluid Content */}
       <main className="flex-1 min-w-0 md:pb-0 pb-20 overflow-y-auto">
         <div className="min-h-full">
-          <Suspense fallback={<div className="flex-1 flex items-center justify-center min-h-[50vh]"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div></div>}>
+          <Suspense fallback={<div className="flex-1 flex items-center justify-center min-h-[50vh]"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#7D5CFF]"></div></div>}>
           <Routes>
             {/* Accueil (hub) */}
             <Route path="/home" element={<Accueil user={user} />} />

@@ -125,7 +125,7 @@ const PersonalizedOffers: React.FC = () => {
 
       {loading ? (
         <div className="h-64 flex flex-col items-center justify-center gap-3">
-          <div className="w-8 h-8 border-4 border-slate-200 border-t-indigo-600 rounded-full animate-spin" />
+          <div className="w-8 h-8 border-4 border-slate-200 border-t-[#7D5CFF] rounded-full animate-spin" />
           <p className="text-sm font-medium text-slate-500">Génération intelligente de vos offres en cours...</p>
         </div>
       ) : (

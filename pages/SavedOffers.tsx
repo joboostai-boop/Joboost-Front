@@ -69,7 +69,7 @@ const SavedOffers: React.FC = () => {
 
       {loading ? (
         <div className="h-64 flex items-center justify-center">
-          <div className="w-8 h-8 border-4 border-slate-200 border-t-indigo-600 rounded-full animate-spin"></div>
+          <div className="w-8 h-8 border-4 border-slate-200 border-t-[#7D5CFF] rounded-full animate-spin"></div>
         </div>
       ) : savedOffers.length === 0 ? (
         <div className="h-64 flex flex-col items-center justify-center text-center p-8 card-modern border-dashed bg-slate-50/50">
@@ -82,31 +82,31 @@ const SavedOffers: React.FC = () => {
           {savedOffers.map((offer) => {
             return (
               <div key={offer.id}>
-                <div className="card-modern p-6 flex flex-col md:flex-row gap-6 hover:border-indigo-200 transition-all">
+                <div className="card-modern p-6 flex flex-col md:flex-row gap-6 hover:border-[#7D5CFF]/40 hover:shadow-md hover:-translate-y-0.5 transition-all">
                   <div className="flex-1 space-y-4">
                     <div className="flex justify-between items-start">
                       <div>
                         <h2 className="text-xl font-bold text-slate-900 dark:text-white">{offer.title}</h2>
-                        <p className="text-indigo-600 font-bold text-sm">{offer.company}</p>
+                        <p className="text-[#7D5CFF] font-bold text-sm">{offer.company}</p>
                       </div>
-                      <span className="text-[10px] font-bold text-indigo-600 bg-indigo-50 px-3 py-1 rounded-full uppercase tracking-wider">{offer.matchScore}% Match</span>
+                      <span className="text-[10px] font-bold text-[#7D5CFF] bg-[#F3F0FF] dark:bg-[#7D5CFF]/10 px-3 py-1 rounded-full uppercase tracking-wider">{offer.matchScore}% Match</span>
                     </div>
-                    
+
                     <div className="flex gap-4 text-xs font-bold text-slate-500 uppercase tracking-tight">
                       <span className="flex items-center gap-1.5"><MapPin size={14} /> {offer.location}</span>
-                      <span className="text-indigo-600">{offer.salary || 'Non spécifié'}</span>
+                      <span className="text-[#7D5CFF]">{offer.salary || 'Non spécifié'}</span>
                       <span className="flex items-center gap-1"><Clock size={14}/> {offer.postedDate || "Récent"}</span>
                     </div>
 
-                    <div className="p-3 bg-indigo-50/50 rounded-xl border-l-2 border-indigo-500 text-sm italic text-slate-600">
+                    <div className="p-3 bg-[#F3F0FF]/50 dark:bg-[#7D5CFF]/5 rounded-xl border-l-2 border-[#7D5CFF] text-sm italic text-slate-600 dark:text-slate-300">
                        "{offer.aiInsight}"
                     </div>
                   </div>
 
                   <div className="md:w-48 flex md:flex-col gap-2 justify-center">
-                    <button 
+                    <button
                        onClick={() => navigate('/target/letter', { state: { jobTitle: offer.title, company: offer.company, targetContext: offer.aiInsight } })}
-                       className="flex-1 py-3 bg-indigo-600 text-white rounded-xl text-xs font-bold shadow-md hover:bg-indigo-700 flex items-center justify-center gap-2"
+                       className="press flex-1 py-3 bg-[#7D5CFF] text-white rounded-xl text-xs font-bold shadow-md hover:bg-[#6023C0] flex items-center justify-center gap-2"
                     >
                       Générer Lettre <ArrowRight size={14} />
                     </button>
