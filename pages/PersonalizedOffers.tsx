@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search, MapPin, Bookmark, Star, Euro, Clock, Edit3, ExternalLink } from 'lucide-react';
+import { Search, MapPin, Bookmark, Clock, Edit3, ExternalLink, Briefcase, Euro, Sparkles, Inbox } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
 import { authHeaders } from '../services/authToken';
@@ -19,12 +19,50 @@ export interface JobOffer {
   aiInsight: string;
 }
 
+/* Jauge circulaire de pertinence (SVG, sans dépendance). */
+const MatchRing: React.FC<{ score: number }> = ({ score }) => {
+  const r = 18;
+  const c = 2 * Math.PI * r;
+  const offset = c - (Math.max(0, Math.min(100, score)) / 100) * c;
+  return (
+    <div className="relative w-12 h-12 shrink-0" title={`${score}% de pertinence`}>
+      <svg className="w-12 h-12 -rotate-90" viewBox="0 0 44 44">
+        <circle cx="22" cy="22" r={r} fill="none" strokeWidth="4" className="stroke-slate-100 dark:stroke-slate-800" />
+        <circle cx="22" cy="22" r={r} fill="none" stroke="#7D5CFF" strokeWidth="4" strokeLinecap="round" strokeDasharray={c} strokeDashoffset={offset} />
+      </svg>
+      <span className="absolute inset-0 flex items-center justify-center text-[11px] font-bold text-[#7D5CFF] tabular-nums">{score}%</span>
+    </div>
+  );
+};
+
+const OfferSkeleton: React.FC = () => (
+  <div className="surface p-5 space-y-4">
+    <div className="flex items-start justify-between gap-4">
+      <div className="flex items-center gap-3">
+        <div className="skeleton w-10 h-10 rounded-lg" />
+        <div className="space-y-2">
+          <div className="skeleton h-4 w-44 rounded" />
+          <div className="skeleton h-3 w-28 rounded" />
+        </div>
+      </div>
+      <div className="skeleton w-12 h-12 rounded-full" />
+    </div>
+    <div className="skeleton h-9 w-full rounded-lg" />
+    <div className="skeleton h-14 w-full rounded-lg" />
+    <div className="flex gap-2">
+      <div className="skeleton h-8 w-32 rounded-lg" />
+      <div className="skeleton h-8 w-28 rounded-lg" />
+    </div>
+  </div>
+);
+
 const PersonalizedOffers: React.FC = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [offers, setOffers] = useState<JobOffer[]>([]);
   const [savedOffers, setSavedOffers] = useState<any[]>([]);
   const [source, setSource] = useState<'francetravail' | 'demo' | null>(null);
+  const [query, setQuery] = useState('');
 
   useEffect(() => {
     const fetchData = async () => {
@@ -33,19 +71,19 @@ const PersonalizedOffers: React.FC = () => {
           fetch(`${import.meta.env.VITE_API_URL || ''}/api/opportunities/recommendations`, { credentials: 'include', headers: { ...authHeaders() } }),
           fetch(`${import.meta.env.VITE_API_URL || ''}/api/opportunities/saved`, { credentials: 'include', headers: { ...authHeaders() } })
         ]);
-        
+
         const recData = await recRes.json();
         const savedData = await savedRes.json();
 
         if (recData.success) {
-           setOffers(recData.recommendations);
-           setSource(recData.source || 'demo');
+          setOffers(recData.recommendations);
+          setSource(recData.source || 'demo');
         }
-        
+
         if (savedData.success) {
-           setSavedOffers(savedData.saved);
+          setSavedOffers(savedData.saved);
         }
-      } catch(e) {
+      } catch (e) {
         toast.error("Erreur de récupération des offres.");
       } finally {
         setLoading(false);
@@ -54,7 +92,6 @@ const PersonalizedOffers: React.FC = () => {
     fetchData();
   }, []);
 
-  // Détermine si une offre est sauvegardée en cherchant son titre et entreprise
   const getSavedId = (offer: JobOffer) => {
     const found = savedOffers.find(s => s.title === offer.title && s.company === offer.company);
     return found ? found.id : null;
@@ -62,19 +99,17 @@ const PersonalizedOffers: React.FC = () => {
 
   const toggleSave = async (offer: JobOffer) => {
     const savedId = getSavedId(offer);
-    
+
     if (savedId) {
-      // DELETE
       try {
         const res = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/opportunities/saved/${savedId}`, { method: 'DELETE', credentials: 'include', headers: { ...authHeaders() } });
         const data = await res.json();
-        if(data.success) {
+        if (data.success) {
           setSavedOffers(savedOffers.filter(s => s.id !== savedId));
           toast.success("Offre retirée des favoris");
         }
-      } catch(e) { toast.error("Erreur système"); }
+      } catch (e) { toast.error("Erreur système"); }
     } else {
-      // POST
       try {
         const payload = {
           title: offer.title,
@@ -97,98 +132,136 @@ const PersonalizedOffers: React.FC = () => {
           body: JSON.stringify(payload)
         });
         const data = await res.json();
-        if(data.success) {
+        if (data.success) {
           setSavedOffers([...savedOffers, data.saved]);
           toast.success("Offre enregistrée");
         }
-      } catch(e) { toast.error("Erreur système"); }
+      } catch (e) { toast.error("Erreur système"); }
     }
   };
 
+  const q = query.trim().toLowerCase();
+  const filtered = q
+    ? offers.filter(o => o.title.toLowerCase().includes(q) || o.company.toLowerCase().includes(q) || o.location.toLowerCase().includes(q))
+    : offers;
+
   return (
-    <div className="p-6 md:p-10 max-w-5xl mx-auto space-y-8">
-      <header className="flex flex-col md:flex-row md:items-center justify-between gap-6 border-b border-[#E5E7EB] dark:border-[#1F2937] pb-8">
-        <div>
-          <h1>Offres recommandées</h1>
-          <p className="mt-1">
+    <div className="p-5 md:p-8 max-w-5xl mx-auto space-y-6">
+      {/* En-tête */}
+      <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="space-y-1.5">
+          <div className="flex items-center gap-2.5">
+            <h1 className="text-2xl font-bold tracking-tight text-[#111827] dark:text-white">Offres recommandées</h1>
+            {!loading && (
+              <span className="text-xs font-medium text-[#6B7280] bg-slate-100 dark:bg-slate-800 rounded-full px-2 py-0.5 tabular-nums">{offers.length}</span>
+            )}
+          </div>
+          <p className="text-sm text-[#6B7280] dark:text-slate-400 flex items-center gap-1.5">
+            <span className={`inline-block w-1.5 h-1.5 rounded-full ${source === 'demo' ? 'bg-amber-500' : 'bg-emerald-500'}`} />
             {source === 'demo'
               ? "Exemples illustratifs (France Travail momentanément indisponible)."
               : "Offres réelles France Travail, sourcées selon votre profil."}
           </p>
         </div>
-        
-        <div className="relative w-full md:w-auto">
+
+        <div className="relative w-full md:w-72">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-[#9CA3AF]" size={16} />
-          <input type="text" placeholder="Rechercher par métier..." className="input-pro pl-10 w-full md:w-64" />
+          <input
+            type="text"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Rechercher par métier, ville…"
+            className="input-pro pl-10 w-full"
+          />
         </div>
       </header>
 
       {loading ? (
-        <div className="h-64 flex flex-col items-center justify-center gap-3">
-          <div className="w-8 h-8 border-4 border-slate-200 border-t-[#7D5CFF] rounded-full animate-spin" />
-          <p className="text-sm font-medium text-slate-500">Génération intelligente de vos offres en cours...</p>
+        <div className="space-y-4">
+          <OfferSkeleton />
+          <OfferSkeleton />
+          <OfferSkeleton />
+        </div>
+      ) : filtered.length === 0 ? (
+        <div className="surface p-10 flex flex-col items-center text-center gap-3">
+          <span className="w-12 h-12 rounded-xl surface-accent text-[#7D5CFF] flex items-center justify-center"><Inbox size={24} /></span>
+          <div>
+            <h3 className="text-base font-semibold text-[#111827] dark:text-white">{q ? 'Aucun résultat' : 'Aucune offre pour le moment'}</h3>
+            <p className="text-sm text-[#6B7280] mt-1">{q ? 'Essayez un autre métier ou une autre ville.' : 'Complétez votre profil pour affiner les recommandations.'}</p>
+          </div>
+          {!q && <button onClick={() => navigate('/prepare/profile')} className="press btn btn-secondary mt-1">Compléter mon profil</button>}
         </div>
       ) : (
         <div className="space-y-4">
-          {offers.map((offer, index) => {
+          {filtered.map((offer, index) => {
             const isBookmarked = !!getSavedId(offer);
             return (
-              <div key={offer.id || index}>
-                <div className="card-pro p-6 hover:border-[#D1D5DB] dark:hover:border-[#4B5563] transition-colors flex flex-col md:flex-row gap-6">
-                  <div className="flex-1 space-y-4">
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <h2 className="text-xl font-bold text-[#111827] dark:text-white">{offer.title}</h2>
-                        <p className="text-[#7D5CFF] font-semibold text-sm tracking-wide">{offer.company}</p>
-                      </div>
-                      <div className="flex items-center gap-1 bg-[#F3F0FF] dark:bg-[#7D5CFF]/10 text-[#7D5CFF] px-3 py-1.5 rounded-full text-xs font-bold border border-[#7D5CFF]/30">
-                         <Star size={14} fill="currentColor" />
-                         {offer.matchScore}% de pertinence
-                      </div>
-                    </div>
-
-                    <div className="flex flex-wrap gap-4 text-xs font-medium text-[#6B7280] bg-[#F3F4F6] dark:bg-[#111827] p-3 rounded border border-[#E5E7EB] dark:border-[#1F2937]">
-                      <span className="flex items-center gap-1.5"><MapPin size={14} className="text-[#9CA3AF]" /> {offer.location}</span>
-                      <span className="flex items-center gap-1.5"><Euro size={14} className="text-[#9CA3AF]" /> {offer.salary}</span>
-                      <span className="flex items-center gap-1.5"><Clock size={14} className="text-[#9CA3AF]" /> {offer.postedDate}</span>
-                    </div>
-
-                    <div className="space-y-2 text-sm pt-2">
-                       <p className="font-semibold text-[#111827] dark:text-gray-200">Pourquoi cette offre vous matche-t-elle ?</p>
-                       <div className="p-4 bg-[#F3F0FF] dark:bg-[#111827] rounded border-l-4 border-[#7D5CFF]">
-                         <p className="text-sm text-[#4B5563] dark:text-[#D1D5DB] font-medium leading-relaxed">"{offer.aiInsight}"</p>
-                       </div>
-                    </div>
-
-                    <div className="flex gap-2 pt-2">
-                       {offer.tags.map(t => (
-                          <span key={t} className="px-2 py-1 bg-white dark:bg-[#111827] border border-[#E5E7EB] dark:border-[#374151] text-xs text-[#6B7280] dark:text-[#9CA3AF] rounded font-semibold">{t}</span>
-                       ))}
+              <article
+                key={offer.id || index}
+                style={{ animationDelay: `${Math.min(index, 6) * 50}ms` }}
+                className="surface p-5 hover:shadow-card-hover hover:-translate-y-0.5 transition-all duration-200 animate-fade-in-up"
+              >
+                {/* Tête : entreprise + titre + jauge */}
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex items-start gap-3 min-w-0">
+                    <span className="w-10 h-10 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 flex items-center justify-center font-semibold text-sm shrink-0">
+                      {offer.company?.charAt(0) || '?'}
+                    </span>
+                    <div className="min-w-0">
+                      <h2 className="text-base font-semibold text-[#111827] dark:text-white leading-tight">{offer.title}</h2>
+                      <p className="text-sm text-[#7D5CFF] font-medium truncate">{offer.company}</p>
                     </div>
                   </div>
-
-                  <div className="md:w-48 flex md:flex-col gap-2 justify-center">
-                    <button onClick={() => navigate('/target/letter', { state: { jobTitle: offer.title, company: offer.company, targetContext: offer.aiInsight } })} className="btn btn-primary w-full shadow-none flex items-center justify-center gap-2">
-                      <Edit3 size={16} />
-                      Créer la lettre
-                    </button>
-                    {offer.url && (
-                      <a href={offer.url} target="_blank" rel="noopener noreferrer" className="btn btn-secondary bg-white w-full font-semibold flex items-center justify-center gap-2">
-                        <ExternalLink size={16} /> Voir l'offre
-                      </a>
-                    )}
-                    <button
-                      onClick={() => toggleSave(offer)}
-                      className={`btn w-full font-semibold transition-colors flex items-center justify-center gap-2 ${
-                        isBookmarked ? 'bg-amber-50 text-amber-600 border border-amber-200 hover:bg-amber-100' : 'btn-secondary bg-white'
-                      }`}
-                    >
-                      <Bookmark size={16} fill={isBookmarked ? "currentColor" : "none"} />
-                      {isBookmarked ? 'Sauvegardé' : 'Enregistrer'}
-                    </button>
-                  </div>
+                  <MatchRing score={offer.matchScore} />
                 </div>
-              </div>
+
+                {/* Méta en ligne */}
+                <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 mt-4 text-xs font-medium text-[#6B7280] dark:text-slate-400">
+                  {offer.location && <span className="flex items-center gap-1.5"><MapPin size={13} className="text-[#9CA3AF]" /> {offer.location}</span>}
+                  {offer.salary && <span className="flex items-center gap-1.5"><Euro size={13} className="text-[#9CA3AF]" /> {offer.salary}</span>}
+                  {offer.type && <span className="flex items-center gap-1.5"><Briefcase size={13} className="text-[#9CA3AF]" /> {offer.type}</span>}
+                  {offer.postedDate && <span className="flex items-center gap-1.5"><Clock size={13} className="text-[#9CA3AF]" /> {offer.postedDate}</span>}
+                </div>
+
+                {/* Encart IA */}
+                {offer.aiInsight && (
+                  <div className="mt-4 surface-accent rounded-lg p-3">
+                    <p className="flex items-center gap-1.5 text-[11px] font-semibold text-[#7D5CFF] uppercase tracking-wide mb-1">
+                      <Sparkles size={12} /> Pourquoi ça matche
+                    </p>
+                    <p className="text-sm text-[#4B5563] dark:text-slate-300 leading-relaxed">{offer.aiInsight}</p>
+                  </div>
+                )}
+
+                {/* Tags */}
+                {offer.tags?.length > 0 && (
+                  <div className="flex flex-wrap gap-1.5 mt-4">
+                    {offer.tags.map(t => (
+                      <span key={t} className="px-2 py-0.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-[11px] text-[#6B7280] dark:text-slate-300 rounded-md font-medium">{t}</span>
+                    ))}
+                  </div>
+                )}
+
+                {/* Actions */}
+                <div className="flex items-center gap-2 mt-5 pt-4 border-t border-slate-100 dark:border-slate-800">
+                  <button onClick={() => navigate('/target/letter', { state: { jobTitle: offer.title, company: offer.company, targetContext: offer.aiInsight } })} className="press btn btn-primary flex-1 sm:flex-none">
+                    <Edit3 size={15} /> Créer la lettre
+                  </button>
+                  {offer.url && (
+                    <a href={offer.url} target="_blank" rel="noopener noreferrer" className="press btn btn-secondary">
+                      <ExternalLink size={15} /> Voir l'offre
+                    </a>
+                  )}
+                  <button
+                    onClick={() => toggleSave(offer)}
+                    aria-label={isBookmarked ? 'Retirer des favoris' : 'Enregistrer'}
+                    title={isBookmarked ? 'Retirer des favoris' : 'Enregistrer'}
+                    className={`press btn !px-3 ml-auto ${isBookmarked ? 'bg-amber-50 text-amber-600 border border-amber-200 hover:bg-amber-100 dark:bg-amber-500/10 dark:border-amber-500/30' : 'btn-secondary'}`}
+                  >
+                    <Bookmark size={16} fill={isBookmarked ? 'currentColor' : 'none'} />
+                  </button>
+                </div>
+              </article>
             );
           })}
         </div>
