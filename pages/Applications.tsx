@@ -82,7 +82,7 @@ const Applications: React.FC = () => {
       draggable
       onDragStart={() => setDragId(app.id)}
       onDragEnd={() => { setDragId(null); setDragOver(null); }}
-      className={`group bg-white dark:bg-[#0b1220] border border-slate-200 dark:border-slate-800 rounded-xl p-3.5 shadow-sm hover:shadow-md transition-all cursor-grab active:cursor-grabbing ${dragId === app.id ? 'opacity-40' : ''}`}
+      className={`group bg-white dark:bg-[#0b1220] border border-slate-200 dark:border-slate-800 rounded-xl p-3.5 shadow-sm hover:shadow-md hover:-translate-y-0.5 hover:border-slate-300 dark:hover:border-slate-700 transition-all cursor-grab active:cursor-grabbing ${dragId === app.id ? 'opacity-40 scale-95' : ''}`}
     >
       <div className="flex items-start gap-2">
         <GripVertical size={15} className="text-slate-300 dark:text-slate-600 mt-0.5 shrink-0 hidden lg:block" />
@@ -148,7 +148,7 @@ const Applications: React.FC = () => {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-[#9CA3AF]" size={16} />
             <input type="text" placeholder="Filtrer entreprise, poste…" value={search} onChange={(e) => setSearch(e.target.value)} className="input-pro pl-9 w-full" />
           </div>
-          <button onClick={fetchApplications} className="btn btn-secondary px-3 shrink-0" title="Actualiser">
+          <button onClick={fetchApplications} className="press btn btn-secondary px-3 shrink-0" title="Actualiser">
             <RefreshCw size={18} className={loading ? 'animate-spin text-[#7D5CFF]' : ''} />
           </button>
         </div>
@@ -166,7 +166,7 @@ const Applications: React.FC = () => {
                   onDragOver={(e) => { e.preventDefault(); setDragOver(col.id); }}
                   onDragLeave={() => setDragOver((c) => (c === col.id ? null : c))}
                   onDrop={() => { if (dragId) moveTo(dragId, col.id); setDragId(null); setDragOver(null); }}
-                  className={`rounded-2xl p-2.5 transition-colors ${col.soft} ${dragOver === col.id ? `ring-2 ${col.ring}` : 'ring-1 ring-transparent'}`}
+                  className={`rounded-2xl p-2.5 transition-all duration-200 ${col.soft} ${dragOver === col.id ? `ring-2 ${col.ring} scale-[1.02]` : 'ring-1 ring-transparent'}`}
                 >
                   <div className="flex items-center justify-between px-2 py-1.5 mb-2">
                     <div className="flex items-center gap-2">
@@ -194,7 +194,7 @@ const Applications: React.FC = () => {
                   <button
                     key={col.id}
                     onClick={() => setMobileTab(col.id)}
-                    className={`shrink-0 flex items-center gap-2 px-3.5 py-2 rounded-full text-sm font-semibold border transition-colors ${
+                    className={`press shrink-0 flex items-center gap-2 px-3.5 py-2 rounded-full text-sm font-semibold border transition-colors ${
                       active ? 'bg-[#7D5CFF] text-white border-[#7D5CFF]' : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300'
                     }`}
                   >
@@ -225,7 +225,7 @@ const Applications: React.FC = () => {
             <h3 className="text-base font-bold text-[#111827] dark:text-white">Aucune candidature pour l'instant</h3>
             <p className="text-sm text-[#6B7280] mt-1">Dès que tu postules, tes candidatures apparaissent dans le tableau ci-dessus.</p>
           </div>
-          <button onClick={() => navigate('/target/offers')} className="btn btn-primary">
+          <button onClick={() => navigate('/target/offers')} className="press btn btn-primary">
             Trouver des offres <ArrowRight size={16} />
           </button>
         </div>

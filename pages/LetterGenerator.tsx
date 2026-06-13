@@ -168,9 +168,6 @@ const LetterGenerator: React.FC = () => {
     } finally { setExporting(false); }
   };
 
-  const activeModeClass = "border-indigo-600 bg-indigo-50 dark:bg-indigo-900/20 text-indigo-700 dark:text-indigo-300";
-  const inactiveModeClass = "border-slate-200 dark:border-slate-700 hover:border-indigo-300 text-slate-500 dark:text-slate-400";
-
   return (
     <div className="p-6 md:p-10 max-w-6xl mx-auto space-y-10">
       <header className="border-b border-[#E5E7EB] pb-6 flex flex-col md:flex-row justify-between md:items-end gap-4">
@@ -178,7 +175,7 @@ const LetterGenerator: React.FC = () => {
           <h1>IA Rédacteur</h1>
           <p>Générez des lettres de motivation percutantes à partir de votre profil et d'une offre.</p>
         </div>
-        <button onClick={handleSaveLetter} disabled={!generatedText} className="btn btn-secondary text-[#7D5CFF] disabled:opacity-50">
+        <button onClick={handleSaveLetter} disabled={!generatedText} className="press btn btn-secondary text-[#7D5CFF] disabled:opacity-50">
           <Save size={16} /> Sauvegarder
         </button>
       </header>
@@ -229,23 +226,23 @@ const LetterGenerator: React.FC = () => {
             </div>
 
             {mode === 'text' && (
-              <div className="space-y-1.5 animate-in fade-in slide-in-from-top-2">
+              <div className="space-y-1.5 animate-fade-in">
                 <label className="input-label">Collez l'annonce entière</label>
                 <textarea rows={4} value={offerText} onChange={(e) => setOfferText(e.target.value)} className="textarea-pro text-xs" placeholder="Vos missions : ...&#10;Profil recherché : ..." />
               </div>
             )}
 
             {mode === 'link' && (
-              <div className="space-y-1.5 animate-in fade-in slide-in-from-top-2">
+              <div className="space-y-1.5 animate-fade-in">
                 <label className="input-label">Lien de l'offre (URL)</label>
                 <input type="text" value={offerUrl} onChange={(e) => setOfferUrl(e.target.value)} className="input-pro" placeholder="https://entreprise.com/carrieres/..." />
                 <p className="text-[10px] text-[#9CA3AF] leading-relaxed">On tente de lire automatiquement la page. Les grands sites (LinkedIn, Indeed) bloquent souvent l'accès : si c'est le cas, copiez-collez le texte de l'offre via l'onglet « Texte de l'offre » pour une lettre mieux ciblée.</p>
               </div>
             )}
 
-            <button onClick={handleGenerate} disabled={loading || loadingInit} className="btn btn-lg btn-primary w-full mt-4">
+            <button onClick={handleGenerate} disabled={loading || loadingInit} className="press btn btn-lg btn-primary w-full mt-4 disabled:opacity-60">
               {loading ? <RefreshCw className="animate-spin" size={18} /> : <Zap size={18} />}
-              Rédiger la lettre magique
+              {loading ? 'Rédaction en cours…' : 'Rédiger la lettre magique'}
             </button>
           </div>
         </div>
@@ -253,13 +250,13 @@ const LetterGenerator: React.FC = () => {
         <div className="lg:col-span-8 space-y-5">
           {/* Actions (export quand une lettre existe) */}
           <div className="flex flex-wrap justify-end gap-2">
-            <button onClick={handleExportPDF} disabled={exporting || !generatedText} className="btn btn-primary disabled:opacity-50">
-              <FileDown size={14} /> PDF
+            <button onClick={handleExportPDF} disabled={exporting || !generatedText} className="press btn btn-primary disabled:opacity-50">
+              {exporting ? <RefreshCw size={14} className="animate-spin" /> : <FileDown size={14} />} PDF
             </button>
-            <button onClick={handleExportDocx} disabled={exporting || !generatedText} className="btn btn-secondary text-[#7D5CFF] disabled:opacity-50">
-              <FileDown size={14} /> Word
+            <button onClick={handleExportDocx} disabled={exporting || !generatedText} className="press btn btn-secondary text-[#7D5CFF] disabled:opacity-50">
+              {exporting ? <RefreshCw size={14} className="animate-spin" /> : <FileDown size={14} />} Word
             </button>
-            <button onClick={() => window.print()} disabled={!generatedText} className="btn btn-secondary px-3 disabled:opacity-50" title="Imprimer">
+            <button onClick={() => window.print()} disabled={!generatedText} className="press btn btn-secondary px-3 disabled:opacity-50" title="Imprimer">
               <Printer size={14} />
             </button>
           </div>

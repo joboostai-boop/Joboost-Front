@@ -15,7 +15,7 @@ const CustomTooltip = ({ active, payload, label }: any) => {
     return (
       <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-3 rounded-xl shadow-xl">
         <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">{label}</p>
-        <p className="text-sm font-extrabold text-indigo-600">
+        <p className="text-sm font-extrabold text-[#7D5CFF]">
           {payload[0].value} <span className="text-slate-500 font-medium">actions</span>
         </p>
       </div>
@@ -82,7 +82,7 @@ const Dashboard: React.FC = () => {
   if (loading) {
      return (
         <div className="h-screen flex flex-col items-center justify-center gap-3">
-          <div className="w-8 h-8 border-4 border-slate-200 border-t-indigo-600 rounded-full animate-spin" />
+          <div className="w-8 h-8 border-4 border-slate-200 border-t-[#7D5CFF] rounded-full animate-spin" />
           <p className="text-sm font-medium text-slate-500">Chargement de votre cockpit...</p>
         </div>
      );
@@ -97,10 +97,10 @@ const Dashboard: React.FC = () => {
     { 
       label: 'Candidatures Total', 
       value: statsData.applications?.total || '0', 
-      icon: <Layers size={22} strokeWidth={2.5} />, 
-      color: 'text-indigo-600', 
-      bg: 'bg-indigo-50 dark:bg-indigo-500/10',
-      border: 'border-indigo-100 dark:border-indigo-500/20'
+      icon: <Layers size={22} strokeWidth={2.5} />,
+      color: 'text-[#7D5CFF]',
+      bg: 'bg-[#F3F0FF] dark:bg-[#7D5CFF]/10',
+      border: 'border-[#7D5CFF]/15 dark:border-[#7D5CFF]/20'
     },
     { 
       label: 'Offres Liées (Reco + Sauvé)', 
@@ -151,16 +151,16 @@ const Dashboard: React.FC = () => {
             </span>
           </div>
           <div className="flex items-center gap-2">
-            <button 
+            <button
               onClick={() => handleExport('json')}
-              className="btn btn-secondary px-3 py-2"
+              className="press btn btn-secondary px-3 py-2"
               title="Exporter JSON"
             >
               <FileJson size={16} />
             </button>
-            <button 
+            <button
               onClick={() => handleExport('csv')}
-              className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-indigo-600 to-indigo-500 text-white rounded-xl text-[10px] font-bold hover:shadow-indigo-200 transition-all shadow-lg shadow-indigo-100 dark:shadow-none"
+              className="press flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-[#7D5CFF] to-[#9B7BFF] text-white rounded-xl text-[10px] font-bold hover:shadow-[#7D5CFF]/30 transition-all shadow-lg shadow-[#7D5CFF]/20 dark:shadow-none"
             >
               <Download size={14} /> <span>Rapport (CSV)</span>
             </button>
@@ -171,7 +171,11 @@ const Dashboard: React.FC = () => {
       {/* Statistiques d'Activité */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-6">
         {stats.map((stat, i) => (
-          <div key={i} className="card-pro p-4 md:p-6 flex flex-col justify-between group overflow-hidden">
+          <div
+            key={i}
+            style={{ animationDelay: `${i * 60}ms` }}
+            className="card-pro p-4 md:p-6 flex flex-col justify-between group overflow-hidden hover:-translate-y-0.5 hover:shadow-md transition-all animate-fade-in-up"
+          >
             <div className="flex justify-between items-start mb-3 md:mb-6">
               <div className={`w-10 h-10 md:w-12 md:h-12 rounded-lg flex items-center justify-center border ${stat.border} ${stat.bg} ${stat.color} transition-colors`}>
                 {React.cloneElement(stat.icon as React.ReactElement, { size: 18 })}
@@ -201,8 +205,8 @@ const Dashboard: React.FC = () => {
                 <BarChart data={appStatusData} margin={{ top: 0, right: 0, left: -20, bottom: 0 }}>
                   <defs>
                     <linearGradient id="barGradient" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="#4F46E5" stopOpacity={1} />
-                      <stop offset="100%" stopColor="#818CF8" stopOpacity={0.8} />
+                      <stop offset="0%" stopColor="#7D5CFF" stopOpacity={1} />
+                      <stop offset="100%" stopColor="#B9A3FF" stopOpacity={0.85} />
                     </linearGradient>
                   </defs>
                   <CartesianGrid strokeDasharray="4 4" vertical={false} stroke={isDark ? "#1F2937" : "#F1F5F9"} />
@@ -235,13 +239,13 @@ const Dashboard: React.FC = () => {
           </div>
 
           <div className="grid grid-cols-2 gap-4">
-             <button onClick={() => navigate('/prepare/cv')} className="p-6 bg-white dark:bg-[#111827] border border-[#E5E7EB] dark:border-[#1F2937] rounded-md flex flex-col items-center justify-center gap-3 hover:border-[#D1D5DB] transition-colors group outline-none">
-                <div className="w-12 h-12 bg-[#F3F0FF] dark:bg-[#7D5CFF]/10 rounded flex items-center justify-center text-[#7D5CFF]">
+             <button onClick={() => navigate('/prepare/cv')} className="press p-6 bg-white dark:bg-[#111827] border border-[#E5E7EB] dark:border-[#1F2937] rounded-md flex flex-col items-center justify-center gap-3 hover:border-[#7D5CFF]/40 hover:shadow-md transition-all group outline-none">
+                <div className="w-12 h-12 bg-[#F3F0FF] dark:bg-[#7D5CFF]/10 rounded flex items-center justify-center text-[#7D5CFF] group-hover:scale-110 transition-transform">
                    <PlusCircle size={24} />
                 </div>
                 <span className="font-semibold text-[#111827] dark:text-white">Générer un CV</span>
              </button>
-             <button onClick={() => navigate('/prepare/letter')} className="p-6 bg-white dark:bg-[#111827] border border-[#E5E7EB] dark:border-[#1F2937] rounded-md flex flex-col items-center justify-center gap-3 hover:border-[#D1D5DB] transition-colors group outline-none">
+             <button onClick={() => navigate('/prepare/letter')} className="press p-6 bg-white dark:bg-[#111827] border border-[#E5E7EB] dark:border-[#1F2937] rounded-md flex flex-col items-center justify-center gap-3 hover:border-emerald-300 hover:shadow-md transition-all group outline-none">
                 <div className="w-12 h-12 bg-emerald-50 text-emerald-600 rounded flex items-center justify-center">
                    <PlusCircle size={24} />
                 </div>
@@ -257,10 +261,10 @@ const Dashboard: React.FC = () => {
                 <CheckCircle2 size={32} className="text-white" />
               </div>
               <h3 className="text-xl font-bold mb-2">Profil Incomplet ?</h3>
-              <p className="text-indigo-100 text-sm leading-relaxed mb-6 font-medium">
+              <p className="text-white/80 text-sm leading-relaxed mb-6 font-medium">
                 Plus vous remplissez votre profil central, plus le générateur d'offres et d'IA ciblera juste. Précision actuelle: {statsData.profileCompletion}%.
               </p>
-              <button onClick={() => navigate('/prepare/profile')} className="w-full py-3 bg-white text-[#7D5CFF] rounded-md text-xs font-bold uppercase tracking-widest hover:bg-opacity-90 transition-colors">
+              <button onClick={() => navigate('/prepare/profile')} className="press w-full py-3 bg-white text-[#7D5CFF] rounded-md text-xs font-bold uppercase tracking-widest hover:bg-white/90 transition-colors">
                 Compléter mon profil
               </button>
             </div>
@@ -281,10 +285,10 @@ const Dashboard: React.FC = () => {
               ))}
             </div>
             <div className="grid grid-cols-2 gap-2 mt-4">
-               <button onClick={() => navigate('/target/offers')} className="btn btn-secondary w-full text-xs py-2 bg-white flex justify-center">
+               <button onClick={() => navigate('/target/offers')} className="press btn btn-secondary w-full text-xs py-2 bg-white flex justify-center">
                  Voir Offres
                </button>
-               <button onClick={() => navigate('/track/applications')} className="btn btn-secondary w-full text-xs py-2 bg-white flex justify-center">
+               <button onClick={() => navigate('/track/applications')} className="press btn btn-secondary w-full text-xs py-2 bg-white flex justify-center">
                  Suivi
                </button>
             </div>

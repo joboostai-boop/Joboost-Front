@@ -522,7 +522,7 @@ const Profile: React.FC<ProfileProps> = ({ user }) => {
 
       {/* Bouton de sauvegarde en bas de page (dans le flux) */}
       <div className="pt-4">
-        <button onClick={handleSave} disabled={saving} className="btn btn-primary btn-lg w-full">
+        <button onClick={handleSave} disabled={saving} className="press btn btn-primary btn-lg w-full disabled:opacity-60">
           {saving ? <RefreshCw className="animate-spin" size={18} /> : <Save size={18} />} Enregistrer mon profil
         </button>
       </div>

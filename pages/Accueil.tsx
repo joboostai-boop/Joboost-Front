@@ -92,7 +92,7 @@ const Accueil: React.FC<AccueilProps> = ({ user }) => {
   return (
     <div className="p-5 md:p-10 max-w-5xl mx-auto space-y-8 md:space-y-10 pb-28 md:pb-12">
       {/* En-tête */}
-      <header className="space-y-2">
+      <header className="space-y-2 animate-fade-in-up">
         <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-[#111827] dark:text-white">
           Bonjour {firstName} 👋
         </h1>
@@ -104,7 +104,7 @@ const Accueil: React.FC<AccueilProps> = ({ user }) => {
       {/* Prochaine action (contextuelle) */}
       <Link
         to={next.to}
-        className="group flex items-center justify-between gap-4 rounded-2xl bg-[#7D5CFF] text-white p-5 md:p-6 shadow-lg shadow-[#7D5CFF]/20 hover:bg-[#6023C0] transition-colors"
+        className="press group flex items-center justify-between gap-4 rounded-2xl bg-[#7D5CFF] text-white p-5 md:p-6 shadow-lg shadow-[#7D5CFF]/20 hover:bg-[#6023C0] hover:shadow-xl hover:shadow-[#7D5CFF]/30 transition-all animate-fade-in-up"
       >
         <div className="flex items-center gap-4 min-w-0">
           <span className="w-11 h-11 rounded-xl bg-white/15 flex items-center justify-center shrink-0">
@@ -121,8 +121,12 @@ const Accueil: React.FC<AccueilProps> = ({ user }) => {
 
       {/* 3 chiffres clés */}
       <section className="grid grid-cols-3 gap-3 md:gap-4">
-        {tiles.map((t) => (
-          <div key={t.label} className="card-pro !p-4 md:!p-5 text-center">
+        {tiles.map((t, i) => (
+          <div
+            key={t.label}
+            className="card-pro !p-4 md:!p-5 text-center animate-fade-in-up"
+            style={{ animationDelay: `${i * 60}ms` }}
+          >
             <p className="text-2xl md:text-3xl font-bold text-[#111827] dark:text-white tabular-nums">
               {loading ? '–' : t.value}
             </p>
@@ -135,11 +139,12 @@ const Accueil: React.FC<AccueilProps> = ({ user }) => {
       <section className="space-y-4">
         <h2 className="text-sm font-bold uppercase tracking-wider text-[#9CA3AF]">Mon parcours</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {spaces.map((s) => (
+          {spaces.map((s, i) => (
             <Link
               key={s.to}
               to={s.to}
-              className="card-pro group hover:border-[#7D5CFF]/40 hover:shadow-md transition-all flex flex-col gap-3"
+              style={{ animationDelay: `${i * 70}ms` }}
+              className="press card-pro group hover:border-[#7D5CFF]/40 hover:shadow-md hover:-translate-y-0.5 transition-all flex flex-col gap-3 animate-fade-in-up"
             >
               <span className="w-11 h-11 rounded-xl bg-[#F3F0FF] dark:bg-[#7D5CFF]/10 text-[#7D5CFF] flex items-center justify-center">
                 {s.icon}

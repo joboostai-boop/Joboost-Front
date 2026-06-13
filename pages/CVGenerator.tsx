@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { Printer, FileDown, Wand2, RefreshCw, Layout, Save, Clock } from 'lucide-react';
+import { Printer, FileDown, Wand2, RefreshCw, Layout, Save, Clock, Loader2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { generateCVSummary } from '../services/gemini';
 import { exportCvPdf, exportCvDocx } from '../services/atsExport';
@@ -141,7 +141,7 @@ const CVGenerator: React.FC = () => {
             <h1>Éditeur de CV</h1>
             <p>Créez un CV certifié ATS pour maximiser vos chances de recrutement.</p>
           </div>
-          <button onClick={handleSaveCV} className="btn btn-secondary text-[#7D5CFF]">
+          <button onClick={handleSaveCV} className="press btn btn-secondary text-[#7D5CFF]">
             <Save size={16} /> Sauvegarder
           </button>
         </header>
@@ -208,13 +208,13 @@ const CVGenerator: React.FC = () => {
 
       <div className="w-full lg:w-[450px] space-y-4">
         <div className="flex gap-2">
-          <button onClick={handleExportPDF} disabled={exporting} className="btn btn-primary flex-1 disabled:opacity-60">
-            <FileDown size={16} /> PDF ATS
+          <button onClick={handleExportPDF} disabled={exporting} className="press btn btn-primary flex-1 disabled:opacity-60">
+            {exporting ? <Loader2 size={16} className="animate-spin" /> : <FileDown size={16} />} PDF ATS
           </button>
-          <button onClick={handleExportDocx} disabled={exporting} className="btn btn-secondary flex-1 text-[#7D5CFF] disabled:opacity-60">
-            <FileDown size={16} /> Word .docx
+          <button onClick={handleExportDocx} disabled={exporting} className="press btn btn-secondary flex-1 text-[#7D5CFF] disabled:opacity-60">
+            {exporting ? <Loader2 size={16} className="animate-spin" /> : <FileDown size={16} />} Word .docx
           </button>
-          <button onClick={() => window.print()} className="btn btn-secondary px-3" title="Imprimer">
+          <button onClick={() => window.print()} className="press btn btn-secondary px-3" title="Imprimer">
             <Printer size={18} />
           </button>
         </div>
