@@ -144,10 +144,14 @@ const Dashboard: React.FC = () => {
           <p>Moteur alimenté par vos véritables données de navigation.</p>
         </div>
         <div className="flex flex-wrap items-center gap-3">
-          <div className="flex items-center gap-2 px-3 py-1 bg-emerald-50 text-emerald-700 rounded-full border border-emerald-200">
-            <div className={`w-2 h-2 ${statsData.profileCompletion === 100 ? 'bg-emerald-500' : 'bg-amber-500'} rounded-full animate-pulse`} />
-            <span className={`text-[10px] font-bold uppercase tracking-widest`}>
-               {statsData.profileCompletion === 100 ? 'Profil Parfait' : 'Profil Incomplet'}
+          <div className={`flex items-center gap-2 px-3 py-1 rounded-full border ${
+            statsData.profileCompletion === 100
+              ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+              : 'bg-amber-50 text-amber-700 border-amber-200'
+          }`}>
+            <div className={`w-1.5 h-1.5 rounded-full ${statsData.profileCompletion === 100 ? 'bg-emerald-500' : 'bg-amber-500'}`} />
+            <span className="text-[11px] font-medium">
+               {statsData.profileCompletion === 100 ? 'Profil complet' : 'Profil à compléter'}
             </span>
           </div>
           <div className="flex items-center gap-2">
@@ -255,23 +259,32 @@ const Dashboard: React.FC = () => {
         </div>
 
         <div className="space-y-6">
-          <div className="card-pro p-8 bg-gradient-to-br from-[#7D5CFF] to-[#6348E0] text-white border-none shadow-sm relative overflow-hidden group">
-            <div className="relative z-10 flex flex-col items-center text-center">
-              <div className="w-16 h-16 bg-white/20 rounded flex items-center justify-center mb-6 backdrop-blur-sm">
-                <CheckCircle2 size={32} className="text-white" />
+          <div className="card-pro p-6">
+            <div className="flex items-center gap-3 mb-4">
+              <span className="w-10 h-10 rounded-lg surface-accent text-[#7D5CFF] flex items-center justify-center shrink-0">
+                <CheckCircle2 size={20} />
+              </span>
+              <div className="min-w-0">
+                <h3 className="text-base font-semibold text-[#111827] dark:text-white">Complétez votre profil</h3>
+                <p className="text-xs text-[#6B7280]">Un profil complet améliore le ciblage de l'IA.</p>
               </div>
-              <h3 className="text-xl font-bold mb-2">Profil Incomplet ?</h3>
-              <p className="text-white/80 text-sm leading-relaxed mb-6 font-medium">
-                Plus vous remplissez votre profil central, plus le générateur d'offres et d'IA ciblera juste. Précision actuelle: {statsData.profileCompletion}%.
-              </p>
-              <button onClick={() => navigate('/prepare/profile')} className="press w-full py-3 bg-white text-[#7D5CFF] rounded-md text-xs font-bold uppercase tracking-widest hover:bg-white/90 transition-colors">
-                Compléter mon profil
-              </button>
             </div>
+            <div className="space-y-1.5 mb-5">
+              <div className="flex justify-between text-xs font-medium">
+                <span className="text-[#6B7280]">Progression</span>
+                <span className="text-[#7D5CFF] tabular-nums">{statsData.profileCompletion}%</span>
+              </div>
+              <div className="h-2 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                <div className="h-full bg-[#7D5CFF] rounded-full transition-[width] duration-500" style={{ width: `${statsData.profileCompletion}%` }} />
+              </div>
+            </div>
+            <button onClick={() => navigate('/prepare/profile')} className="press btn btn-primary w-full">
+              Compléter mon profil
+            </button>
           </div>
 
-          <div className="card-pro p-6 space-y-6 bg-[#F3F4F6] border-none shadow-none dark:bg-[#111827]">
-            <h3 className="text-sm font-bold text-[#6B7280] uppercase tracking-widest">Activité Récente</h3>
+          <div className="card-pro p-6 space-y-6">
+            <h3 className="text-sm font-semibold text-[#111827] dark:text-white">Activité récente</h3>
             <div className="space-y-4">
               {[
                  { label: 'Offres Sauvegardées en attente', val: statsData.savedCount, color: 'bg-[#7D5CFF]' },
