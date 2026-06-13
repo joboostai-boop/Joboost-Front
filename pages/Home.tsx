@@ -1,19 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import {
   ArrowRight,
-  Zap,
-  Rocket,
   CheckCircle2,
-  Sparkles,
-  Target,
-  Cpu,
-  BarChart3,
-  Globe,
   ChevronDown,
   HelpCircle,
-  Layers,
-  Send,
   Building2,
+  FileText,
+  PenLine,
+  Search,
+  LineChart,
+  ShieldCheck,
+  Check,
   X
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
@@ -28,21 +25,100 @@ interface HomeProps {
 const FAQItem: React.FC<{ question: string; answer: string }> = ({ question, answer }) => {
   const [isOpen, setIsOpen] = useState(false);
   return (
-    <div className="card-modern overflow-hidden border-slate-100">
+    <div className="surface overflow-hidden">
       <button
         onClick={() => setIsOpen(!isOpen)}
         aria-expanded={isOpen}
-        className="w-full flex items-center justify-between p-6 text-left hover:bg-slate-50 transition-colors"
+        className="w-full flex items-center justify-between gap-4 p-5 text-left hover:bg-slate-50 transition-colors"
       >
-        <span className="font-bold text-slate-900">{question}</span>
-        <ChevronDown size={20} className={`text-slate-400 shrink-0 transition-transform duration-300 ${isOpen ? 'rotate-180 text-[#7D5CFF]' : ''}`} />
+        <span className="font-semibold text-slate-900 text-sm">{question}</span>
+        <ChevronDown size={18} className={`text-slate-400 shrink-0 transition-transform duration-300 ${isOpen ? 'rotate-180 text-[#7D5CFF]' : ''}`} />
       </button>
       <div className={`grid transition-all duration-300 ease-in-out ${isOpen ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'}`}>
         <div className="overflow-hidden">
-          <div className="p-6 pt-0 text-slate-500 text-sm leading-relaxed font-medium">
-            {answer}
+          <p className="px-5 pb-5 text-sm text-slate-500 leading-relaxed">{answer}</p>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+/* Aperçu produit : mini « Suivi des candidatures » fidèle à l'app réelle.
+   Profondeur sobre (bordure + ombre douce), animation d'entrée légère,
+   un seul indicateur « live » qui pulse. Aucune animation lourde permanente. */
+const ProductPreview: React.FC = () => {
+  const rows = [
+    { role: 'Développeur Front-end', company: 'Atlas Digital', status: 'Entretien', tone: 'amber' as const },
+    { role: 'Product Manager', company: 'Nova Studio', status: 'Envoyée', tone: 'blue' as const },
+    { role: 'Data Analyst', company: 'Lumen Group', status: 'Offre', tone: 'emerald' as const },
+  ];
+  const toneClass: Record<string, string> = {
+    amber: 'bg-amber-50 text-amber-700 border-amber-200',
+    blue: 'bg-blue-50 text-blue-700 border-blue-200',
+    emerald: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+  };
+  const stats = [
+    { label: 'Envoyées', value: 24 },
+    { label: 'Entretiens', value: 5 },
+    { label: 'Offres', value: 2 },
+  ];
+
+  return (
+    <div className="surface shadow-card p-4 sm:p-5 w-full max-w-md mx-auto animate-fade-in-up">
+      {/* En-tête du panneau */}
+      <div className="flex items-center justify-between pb-4 border-b border-slate-100">
+        <div className="flex items-center gap-2">
+          <span className="w-8 h-8 rounded-lg surface-accent flex items-center justify-center text-[#7D5CFF]">
+            <LineChart size={16} />
+          </span>
+          <div className="leading-tight">
+            <p className="text-[13px] font-semibold text-slate-900">Suivi des candidatures</p>
+            <p className="text-[11px] text-slate-400">Mis à jour à l'instant</p>
           </div>
         </div>
+        <span className="flex items-center gap-1.5 text-[11px] font-medium text-emerald-600">
+          <span className="relative flex h-2 w-2">
+            <span className="absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75 animate-ping" />
+            <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
+          </span>
+          Synchronisé
+        </span>
+      </div>
+
+      {/* Mini-stats */}
+      <div className="grid grid-cols-3 gap-2 py-4">
+        {stats.map((s, i) => (
+          <div key={s.label} className="rounded-lg bg-slate-50 border border-slate-100 px-2 py-2.5 text-center animate-fade-in-up" style={{ animationDelay: `${100 + i * 70}ms` }}>
+            <p className="text-lg font-bold text-slate-900 tabular-nums">{s.value}</p>
+            <p className="text-[10px] text-slate-500 mt-0.5">{s.label}</p>
+          </div>
+        ))}
+      </div>
+
+      {/* Lignes de candidatures */}
+      <div className="space-y-2">
+        {rows.map((r, i) => (
+          <div
+            key={r.company}
+            className="flex items-center justify-between gap-3 rounded-lg border border-slate-100 px-3 py-2.5 animate-fade-in-up"
+            style={{ animationDelay: `${300 + i * 90}ms` }}
+          >
+            <div className="flex items-center gap-2.5 min-w-0">
+              <span className="w-7 h-7 rounded-md bg-slate-100 text-slate-500 flex items-center justify-center shrink-0 text-[11px] font-semibold">
+                {r.company.charAt(0)}
+              </span>
+              <div className="min-w-0">
+                <p className="text-[13px] font-medium text-slate-900 truncate">{r.role}</p>
+                <p className="text-[11px] text-slate-400 truncate flex items-center gap-1">
+                  <Building2 size={10} /> {r.company}
+                </p>
+              </div>
+            </div>
+            <span className={`shrink-0 text-[11px] font-medium px-2 py-0.5 rounded-full border ${toneClass[r.tone]}`}>
+              {r.status}
+            </span>
+          </div>
+        ))}
       </div>
     </div>
   );
@@ -51,18 +127,9 @@ const FAQItem: React.FC<{ question: string; answer: string }> = ({ question, ans
 const Home: React.FC<HomeProps> = ({ onStart }) => {
   const [showAuth, setShowAuth] = useState(false);
   const [isSignUp, setIsSignUp] = useState(false);
-  const [deploymentProgress, setDeploymentProgress] = useState(0);
   const [scrolled, setScrolled] = useState(false);
 
-  // Animation pour illustrer l'envoi massif
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setDeploymentProgress(prev => (prev < 50 ? prev + 1 : 0));
-    }, 150);
-    return () => clearInterval(interval);
-  }, []);
-
-  // Ombre / opacité du header au défilement (micro-interaction discrète).
+  // Ombre / bordure du header au défilement (micro-interaction discrète).
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 8);
     onScroll();
@@ -107,382 +174,201 @@ const Home: React.FC<HomeProps> = ({ onStart }) => {
     setShowAuth(true);
   };
 
-  // Capacités réelles du produit (remplace l'ancien bandeau de logos de marques tierces,
-  // qui laissait croire à tort à des partenariats / placements chez ces entreprises).
-  const capabilities = ["CV OPTIMISÉ ATS", "LETTRES DE MOTIVATION IA", "MATCHING CV / OFFRE", "CANDIDATURES CIBLÉES", "GÉNÉRATION EN MASSE", "SUIVI DES CANDIDATURES"];
+  // Capacités réelles du produit (factuelles, sans marques tierces).
+  const capabilities = ['CV optimisé ATS', 'Lettres de motivation', 'Offres ciblées', 'Suivi des candidatures', 'Candidatures spontanées'];
 
-  // Offres « cibles » illustratives du moteur (libellés génériques : pas de marques
-  // réelles, pour ne pas laisser croire à des partenariats).
-  const targets = [
-    { n: 'Développeur · Paris', s: 98 },
-    { n: 'Product Manager · Lyon', s: 94 },
-    { n: 'Data Analyst · Remote', s: 96 },
+  const features = [
+    { icon: <FileText size={18} />, title: 'CV optimisé pour les ATS', desc: 'Un CV structuré, lisible par les logiciels de recrutement, généré à partir de votre profil.' },
+    { icon: <PenLine size={18} />, title: 'Lettres de motivation', desc: 'Des lettres adaptées à chaque offre, à partir de votre expérience — relues et modifiables.' },
+    { icon: <Search size={18} />, title: 'Offres ciblées', desc: 'Des offres pertinentes issues de France Travail, filtrées selon votre recherche.' },
+    { icon: <LineChart size={18} />, title: 'Suivi des candidatures', desc: 'Un tableau clair pour suivre chaque candidature, de l\'envoi à la réponse.' },
   ];
 
   return (
     <div className="min-h-screen bg-white text-slate-900 selection:bg-[#7D5CFF]/15 selection:text-[#4F46E5]">
-      {/* Styles inline pour l'animation du carrousel et radar */}
-      <style>{`
-        @keyframes marquee {
-          0% { transform: translateX(0); }
-          100% { transform: translateX(-50%); }
-        }
-        @keyframes radar-ping {
-          0% { transform: scale(0.5); opacity: 0.8; }
-          100% { transform: scale(2.5); opacity: 0; }
-        }
-        @keyframes float {
-          0%, 100% { transform: translateY(0px); }
-          50% { transform: translateY(-10px); }
-        }
-        .animate-marquee {
-          display: flex;
-          width: max-content;
-          animation: marquee 30s linear infinite;
-        }
-        .mask-fade {
-          mask-image: linear-gradient(to right, transparent, black 15%, black 85%, transparent);
-          -webkit-mask-image: linear-gradient(to right, transparent, black 15%, black 85%, transparent);
-        }
-        .radar-ping {
-          animation: radar-ping 4s cubic-bezier(0, 0, 0.2, 1) infinite;
-        }
-        .animate-float {
-          animation: float 6s ease-in-out infinite;
-        }
-        @media (prefers-reduced-motion: reduce) {
-          .animate-marquee, .radar-ping, .animate-float { animation: none !important; }
-        }
-      `}</style>
-
-      {/* Grid Pattern Background */}
-      <div className="absolute inset-0 z-0 opacity-[0.04] pointer-events-none overflow-hidden">
-        <div className="absolute inset-0" style={{ backgroundImage: 'radial-gradient(#7D5CFF 1px, transparent 1px)', backgroundSize: '40px 40px' }}></div>
-      </div>
-
       {/* Header */}
-      <nav className={`fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-md px-6 py-4 transition-all duration-300 ${scrolled ? 'border-b border-slate-100 shadow-sm' : 'border-b border-transparent'}`}>
-        <div className="max-w-7xl mx-auto flex justify-between items-center">
-          <div className="flex items-center cursor-pointer" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
+      <nav className={`fixed top-0 left-0 right-0 z-50 bg-white/85 backdrop-blur-md px-5 sm:px-6 py-3.5 transition-shadow duration-200 ${scrolled ? 'border-b border-slate-200 shadow-xs' : 'border-b border-transparent'}`}>
+        <div className="max-w-6xl mx-auto flex justify-between items-center">
+          <button className="flex items-center" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} aria-label="Haut de page">
             <Logo />
-          </div>
+          </button>
 
-          <div className="flex items-center gap-2 sm:gap-4">
-            <Link to="/auth/login" className="hidden sm:flex items-center gap-1.5 text-slate-500 font-bold text-xs px-3 py-2 hover:text-[#7D5CFF] transition-colors rounded-lg hover:bg-[#7D5CFF]/5 border border-transparent hover:border-[#7D5CFF]/10">
-              <Building2 size={14} />
-              Espace Partenaires
+          <div className="flex items-center gap-1.5 sm:gap-3">
+            <Link to="/auth/login" className="hidden sm:flex items-center gap-1.5 text-slate-500 font-medium text-sm px-3 py-2 hover:text-[#7D5CFF] transition-colors rounded-lg hover:bg-slate-50">
+              <Building2 size={15} />
+              Espace recruteurs
             </Link>
-            <button onClick={() => openAuth(false)} className="hidden sm:block text-slate-600 font-bold text-sm px-4 py-2 hover:text-[#7D5CFF] transition-colors">
+            <button onClick={() => openAuth(false)} className="hidden sm:block text-slate-600 font-medium text-sm px-3 py-2 rounded-lg hover:bg-slate-50 hover:text-slate-900 transition-colors">
               Connexion
             </button>
-            <button onClick={() => openAuth(true)} className="press bg-[#7D5CFF] text-white px-5 sm:px-6 py-2.5 rounded-xl font-bold text-sm hover:bg-[#6023C0] transition-all shadow-lg shadow-[#7D5CFF]/25">
-              Démarrer l'essai
+            <button onClick={() => openAuth(true)} className="press btn btn-primary !min-h-0 px-4 py-2 text-sm">
+              Commencer
             </button>
           </div>
         </div>
       </nav>
 
-      {/* Hero Section */}
-      <section className="relative pt-32 pb-20 px-6 overflow-hidden">
-        {/* Halo ambient violet */}
-        <div className="absolute top-20 left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-[#7D5CFF]/10 blur-[140px] rounded-full pointer-events-none"></div>
-
-        <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
-          <div className="relative z-10 text-center lg:text-left space-y-8 animate-fade-in-up">
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#7D5CFF]/5 text-[#7D5CFF] text-[10px] font-black uppercase tracking-[0.2em] border border-[#7D5CFF]/15">
-              <Sparkles size={14} fill="currentColor" />
-              <span>Propulsé par l'IA générative</span>
-            </div>
-            <h1 className="text-3xl sm:text-5xl md:text-7xl font-extrabold text-slate-900 leading-[1.15] tracking-tight">
-              l'IA au service <br />
-              <span className="bg-clip-text text-transparent bg-gradient-to-r from-[#7D5CFF] to-[#4F46E5]">de votre Carrière</span>
+      {/* Hero */}
+      <section className="px-5 sm:px-6 pt-28 sm:pt-32 pb-16 sm:pb-20">
+        <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+          <div className="text-center lg:text-left">
+            <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full surface-accent text-[#7D5CFF] text-xs font-medium mb-5">
+              <ShieldCheck size={14} /> Recherche d'emploi assistée par l'IA
+            </span>
+            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-slate-900 leading-tight tracking-tight">
+              Décrochez plus d'entretiens,<br className="hidden sm:block" /> avec moins d'efforts.
             </h1>
-            <p className="text-base md:text-xl text-slate-500 max-w-xl mx-auto lg:mx-0 leading-relaxed font-medium">
-              Joboost révolutionne votre recherche d'emploi avec une IA simple et puissante : candidatures sur-mesure, optimisation automatique et plus d'entretiens en quelques clics !
+            <p className="mt-5 text-base sm:text-lg text-slate-500 max-w-xl mx-auto lg:mx-0 leading-relaxed">
+              JobBoost vous aide à préparer des candidatures sur-mesure : CV optimisé, lettres adaptées à chaque offre et suivi clair de vos démarches.
             </p>
 
-            <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start pt-4">
-              <button onClick={() => openAuth(true)} className="press w-full sm:w-auto bg-[#7D5CFF] text-white px-8 md:px-10 py-4 md:py-5 rounded-2xl font-black text-base md:text-lg hover:bg-[#6023C0] transition-all shadow-2xl shadow-[#7D5CFF]/30 flex items-center justify-center gap-3 group">
-                Lancer mon optimisation <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
+            <div className="mt-8 flex flex-col sm:flex-row gap-3 justify-center lg:justify-start">
+              <button onClick={() => openAuth(true)} className="press btn btn-primary btn-lg group">
+                Commencer gratuitement
+                <ArrowRight size={18} className="group-hover:translate-x-0.5 transition-transform" />
               </button>
-              <div className="flex flex-col justify-center px-4">
-                <div className="flex items-center gap-2 text-emerald-500">
-                  <CheckCircle2 size={18} />
-                  <span className="text-sm font-black text-slate-700">Essai gratuit</span>
-                </div>
-                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-2">Sans carte bancaire</p>
-              </div>
+              <button onClick={() => openAuth(false)} className="press btn btn-secondary btn-lg">
+                J'ai déjà un compte
+              </button>
+            </div>
+
+            <div className="mt-5 flex items-center gap-2 justify-center lg:justify-start text-sm text-slate-500">
+              <CheckCircle2 size={16} className="text-emerald-500" />
+              Gratuit pour commencer · sans carte bancaire
             </div>
           </div>
 
-          {/* Floating UI Preview */}
-          <div className="relative lg:h-[600px] flex items-center justify-center scale-75 sm:scale-90 lg:scale-100 -mt-10 lg:mt-0">
-            <div className="absolute inset-0 bg-[#7D5CFF]/10 blur-[120px] rounded-full"></div>
-
-            <div className="relative w-full max-w-lg aspect-square flex items-center justify-center animate-float">
-
-              {/* Radar Waves background */}
-              <div className="absolute w-[80%] h-[80%] border border-slate-100 rounded-full"></div>
-              <div className="absolute w-[60%] h-[60%] border border-slate-100 rounded-full"></div>
-              <div className="absolute w-[40%] h-[40%] border border-[#7D5CFF]/20 rounded-full radar-ping"></div>
-
-              {/* Central Master Unit Card */}
-              <div className="relative z-20 w-[280px] bg-white rounded-[2.5rem] border border-slate-100 shadow-[0_32px_64px_-16px_rgba(125,92,255,0.25)] p-8 flex flex-col gap-6 group transition-all duration-500 hover:-translate-y-1">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-[#7D5CFF] rounded-xl flex items-center justify-center text-white shadow-lg shadow-[#7D5CFF]/30">
-                      <Layers size={20} />
-                    </div>
-                    <div>
-                      <p className="text-[9px] font-black uppercase tracking-widest text-[#7D5CFF]">Moteur de candidatures</p>
-                      <p className="text-[10px] font-bold text-slate-400">Statut : Actif</p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* List of active transmissions */}
-                <div className="space-y-3">
-                  {targets.map((target, idx) => (
-                    <div key={idx} className={`flex items-center justify-between p-3 rounded-xl border ${idx === 0 ? 'bg-[#7D5CFF]/5 border-[#7D5CFF]/15' : 'bg-slate-50/50 border-slate-100 opacity-60'}`}>
-                      <div className="flex items-center gap-3 min-w-0">
-                        <div className={`w-6 h-6 rounded-md flex items-center justify-center shrink-0 ${idx === 0 ? 'bg-[#7D5CFF] text-white' : 'bg-slate-200 text-slate-400'}`}>
-                          <Target size={12} />
-                        </div>
-                        <span className="text-[10px] font-bold text-slate-700 truncate">{target.n}</span>
-                      </div>
-                      <span className="text-[10px] font-black text-[#7D5CFF] shrink-0">{target.s}%</span>
-                    </div>
-                  ))}
-                </div>
-
-                <div className="space-y-2 pt-2">
-                  <div className="flex justify-between items-center text-[9px] font-black text-[#7D5CFF] uppercase tracking-widest">
-                    <span>Transmission en masse</span>
-                    <span className="tabular-nums">{deploymentProgress}/50</span>
-                  </div>
-                  <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-[#7D5CFF] transition-all duration-300 shadow-[0_0_10px_rgba(125,92,255,0.5)]"
-                      style={{ width: `${(deploymentProgress / 50) * 100}%` }}
-                    ></div>
-                  </div>
-                </div>
-
-                <div className="mt-2">
-                  <button className="w-full py-3 bg-[#0F172A] text-white rounded-xl text-[10px] font-black uppercase tracking-[0.15em] flex items-center justify-center gap-2 group-hover:bg-[#7D5CFF] transition-colors">
-                    Lancer le déploiement <Send size={12} />
-                  </button>
-                </div>
-              </div>
-
-              {/* Satellite elements */}
-              <div className="absolute top-10 left-10 w-12 h-12 bg-white rounded-xl shadow-xl border border-slate-50 flex items-center justify-center text-[#7D5CFF] rotate-12 transition-transform hover:scale-110">
-                <Target size={20} />
-              </div>
-              <div className="absolute bottom-10 right-10 w-14 h-14 bg-white rounded-2xl shadow-xl border border-slate-50 flex items-center justify-center text-emerald-500 -rotate-12 transition-transform hover:scale-110">
-                <CheckCircle2 size={24} />
-              </div>
-              <div className="absolute top-1/2 -right-8 w-10 h-10 bg-[#7D5CFF] rounded-lg shadow-xl flex items-center justify-center text-white rotate-45">
-                <Zap size={18} />
-              </div>
-            </div>
+          {/* Aperçu produit */}
+          <div className="lg:pl-4">
+            <ProductPreview />
           </div>
         </div>
       </section>
 
-      {/* Trust Section : Carrousel Défilant avec Fondu */}
-      <section className="py-16 border-y border-slate-100 bg-slate-50/50 overflow-hidden">
-        <div className="max-w-7xl mx-auto px-6">
-          <p className="text-center text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] mb-12">Tout ce que l'IA fait pour votre recherche</p>
-
-          <div className="relative mask-fade overflow-hidden">
-            <div className="animate-marquee py-4">
-              {capabilities.map((p, i) => (
-                <span key={`p1-${i}`} className="mx-12 text-2xl font-black tracking-tighter text-slate-900/40 hover:text-[#7D5CFF]/70 transition-colors cursor-default whitespace-nowrap">
-                  {p}
-                </span>
-              ))}
-              {capabilities.map((p, i) => (
-                <span key={`p2-${i}`} className="mx-12 text-2xl font-black tracking-tighter text-slate-900/40 hover:text-[#7D5CFF]/70 transition-colors cursor-default whitespace-nowrap">
-                  {p}
-                </span>
-              ))}
-            </div>
+      {/* Bandeau capacités (statique, sobre) */}
+      <section className="px-5 sm:px-6 py-10 border-y border-slate-100 bg-slate-50/60">
+        <div className="max-w-6xl mx-auto flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-8">
+          <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider shrink-0">Tout au même endroit</p>
+          <div className="flex flex-wrap gap-2">
+            {capabilities.map((c) => (
+              <span key={c} className="inline-flex items-center gap-1.5 text-sm font-medium text-slate-600 bg-white border border-slate-200 rounded-full px-3 py-1.5">
+                <Check size={13} className="text-[#7D5CFF]" /> {c}
+              </span>
+            ))}
           </div>
         </div>
       </section>
 
-      {/* Features - Bento Grid */}
-      <section id="features" className="py-24 px-6 bg-white">
-        <div className="max-w-7xl mx-auto">
-          <Reveal className="text-center max-w-3xl mx-auto mb-12 md:mb-20 space-y-4">
-            <h2 className="text-3xl md:text-5xl font-black text-slate-900 tracking-tight">Un arsenal technologique complet.</h2>
-            <p className="text-slate-500 font-medium text-sm md:text-base">L'IA ne fait pas que rédiger, elle analyse, simule et automatise pour vous.</p>
+      {/* Fonctionnalités */}
+      <section id="features" className="px-5 sm:px-6 py-20 sm:py-24">
+        <div className="max-w-6xl mx-auto">
+          <Reveal className="max-w-2xl mb-12">
+            <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">Un outil complet, du CV à l'entretien</h2>
+            <p className="mt-3 text-slate-500">Chaque étape de votre recherche, dans une interface claire et structurée.</p>
           </Reveal>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
-            <Reveal as="div" className="md:col-span-2">
-              <div className="card-modern p-6 md:p-10 bg-[#7D5CFF] text-white border-none relative overflow-hidden group h-full hover:-translate-y-1 transition-transform duration-300">
-                <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 blur-[100px] rounded-full group-hover:bg-white/20 transition-colors"></div>
-                <div className="relative z-10 flex flex-col h-full">
-                  <div className="w-12 h-12 md:w-14 md:h-14 bg-white/10 rounded-2xl flex items-center justify-center mb-6 md:mb-8 border border-white/10">
-                    <BarChart3 size={24} className="md:w-7 md:h-7 text-white" />
-                  </div>
-                  <h3 className="text-2xl md:text-3xl font-bold mb-4">Analyse de Convergence</h3>
-                  <p className="text-white/90 leading-relaxed text-base md:text-lg max-w-md">
-                    Notre algorithme scanne les offres d'emploi et note votre CV en temps réel. Découvrez exactement ce qui manque à votre profil pour atteindre les 100%.
-                  </p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-5">
+            {features.map((f, i) => (
+              <Reveal as="div" key={f.title} delay={i * 70}>
+                <div className="surface h-full p-6 hover:shadow-card-hover hover:-translate-y-0.5 transition-all duration-200">
+                  <span className="w-10 h-10 rounded-lg surface-accent text-[#7D5CFF] flex items-center justify-center mb-4">
+                    {f.icon}
+                  </span>
+                  <h3 className="text-base font-semibold text-slate-900">{f.title}</h3>
+                  <p className="mt-1.5 text-sm text-slate-500 leading-relaxed">{f.desc}</p>
                 </div>
-              </div>
-            </Reveal>
-
-            <Reveal as="div" delay={80}>
-              <div className="card-modern p-6 md:p-10 hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 border-slate-100 group h-full">
-                <div className="w-12 h-12 md:w-14 md:h-14 bg-emerald-50 rounded-2xl flex items-center justify-center mb-6 md:mb-8 border border-emerald-100 group-hover:bg-emerald-600 transition-all">
-                  <Target size={24} className="md:w-7 md:h-7 text-emerald-600 group-hover:text-white transition-colors" />
-                </div>
-                <h3 className="text-xl md:text-2xl font-bold mb-4">Scanner ATS</h3>
-                <p className="text-slate-500 font-medium leading-relaxed text-sm md:text-base">
-                  Passez les filtres automatiques des logiciels de RH. Nous injectons les bons vecteurs de mots-clés de façon organique.
-                </p>
-              </div>
-            </Reveal>
-
-            <Reveal as="div" delay={80}>
-              <div className="card-modern p-6 md:p-10 hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 border-slate-100 group h-full">
-                <div className="w-12 h-12 md:w-14 md:h-14 bg-[#7D5CFF]/10 rounded-2xl flex items-center justify-center mb-6 md:mb-8 border border-[#7D5CFF]/15 group-hover:bg-[#7D5CFF] transition-all">
-                  <Cpu size={24} className="md:w-7 md:h-7 text-[#7D5CFF] group-hover:text-white transition-colors" />
-                </div>
-                <h3 className="text-xl md:text-2xl font-bold mb-4">Génération Bulk</h3>
-                <p className="text-slate-500 font-medium leading-relaxed text-sm md:text-base">
-                  Envoyez 50 candidatures spontanées personnalisées en moins de 10 minutes. L'IA rédige un message unique pour chaque entreprise.
-                </p>
-              </div>
-            </Reveal>
-
-            <Reveal as="div" className="md:col-span-2" delay={80}>
-              <div className="card-modern p-6 md:p-10 bg-[#7D5CFF]/5 border-[#7D5CFF]/15 relative overflow-hidden group h-full">
-                <div className="absolute -bottom-10 -right-10 w-48 h-48 bg-[#7D5CFF]/15 rounded-full blur-3xl"></div>
-                <div className="relative z-10 flex flex-col md:flex-row items-center gap-8 md:gap-10">
-                  <div className="flex-1 space-y-4">
-                    <div className="w-12 h-12 md:w-14 md:h-14 bg-white rounded-2xl flex items-center justify-center border border-[#7D5CFF]/15 text-[#7D5CFF]">
-                      <Globe size={24} className="md:w-7 md:h-7" />
-                    </div>
-                    <h3 className="text-2xl md:text-3xl font-bold text-slate-900">Reach Global</h3>
-                    <p className="text-slate-600 font-medium text-base md:text-lg">
-                      Ciblez des entreprises par secteur, taille et localisation partout en France et à l'international.
-                    </p>
-                  </div>
-                  <div className="flex flex-col gap-3 w-full md:w-64">
-                    {[
-                      { l: 'Tech & SaaS', v: '92%' },
-                      { l: 'Finance', v: '88%' },
-                      { l: 'Marketing', v: '95%' }
-                    ].map((item, i) => (
-                      <div key={i} className="bg-white p-3 rounded-xl border border-[#7D5CFF]/15 flex justify-between items-center shadow-sm">
-                        <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">{item.l}</span>
-                        <span className="text-[10px] font-black text-[#7D5CFF]">{item.v}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </Reveal>
+              </Reveal>
+            ))}
           </div>
         </div>
       </section>
 
-      {/* FAQ Section */}
-      <section id="faq" className="py-24 px-6 bg-white border-t border-slate-50">
-        <div className="max-w-4xl mx-auto">
-          <Reveal className="text-center mb-16 space-y-4">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-50 text-slate-500 text-[10px] font-black uppercase tracking-[0.2em] border border-slate-100">
-              <HelpCircle size={14} />
-              <span>Questions fréquentes</span>
-            </div>
-            <h2 className="text-4xl font-black text-slate-900 tracking-tight">On répond à vos interrogations.</h2>
-            <p className="text-slate-500 font-medium">Tout ce qu'il faut savoir sur l'unité JoBoost.</p>
+      {/* FAQ */}
+      <section id="faq" className="px-5 sm:px-6 py-20 sm:py-24 bg-slate-50/60 border-y border-slate-100">
+        <div className="max-w-3xl mx-auto">
+          <Reveal className="mb-10 text-center">
+            <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white border border-slate-200 text-slate-500 text-xs font-medium">
+              <HelpCircle size={14} /> Questions fréquentes
+            </span>
+            <h2 className="mt-4 text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">Vous vous demandez peut-être…</h2>
           </Reveal>
 
-          <div className="space-y-4">
+          <div className="space-y-3">
             <FAQItem
               question="Comment l'IA optimise-t-elle mon CV ?"
-              answer="Notre moteur analyse les mots-clés sémantiques des offres d'emploi et les compare à votre profil pour maximiser le score de compatibilité avec les systèmes ATS (Applicant Tracking Systems)."
+              answer="JobBoost structure votre CV pour qu'il soit lisible par les logiciels de recrutement (ATS) et met en avant les éléments pertinents par rapport à l'offre visée. Vous gardez la main : tout reste modifiable."
             />
             <FAQItem
-              question="Est-ce que JoBoost envoie des emails en mon nom ?"
-              answer="Oui, via le module Bulk Apply, nous préparons et envoyons des candidatures personnalisées directement aux recruteurs identifiés. Chaque message est unique et adapté à l'entreprise."
+              question="Les lettres sont-elles vraiment personnalisées ?"
+              answer="Oui. Chaque lettre est rédigée à partir de votre profil et de l'offre concernée. Vous pouvez ensuite la relire et l'ajuster avant de l'envoyer."
             />
             <FAQItem
-              question="Puis-je utiliser JoBoost gratuitement ?"
-              answer="Absolument. Le plan gratuit vous permet de tester la puissance de notre IA avec 5 candidatures par jour et un accès limité aux outils d'édition."
+              question="Puis-je utiliser JobBoost gratuitement ?"
+              answer="Oui. Le plan gratuit permet de tester l'outil avec une candidature par mois. Vous pouvez passer à l'offre Élite ou prendre un pack de crédits selon votre rythme."
             />
             <FAQItem
-              question="Mes données personnelles sont-elles sécurisées ?"
-              answer="JoBoost est conçu dans le respect du RGPD. Vos données ne sont jamais revendues et servent uniquement à l'optimisation de votre recherche d'emploi. Consultez notre politique de confidentialité pour le détail."
+              question="Mes données sont-elles protégées ?"
+              answer="JobBoost respecte le RGPD. Vos données ne sont jamais revendues et servent uniquement à vous aider dans votre recherche. Vous pouvez les exporter ou les supprimer à tout moment."
             />
             <FAQItem
-              question="Comment fonctionne le score de matching ?"
-              answer="Le score est calculé en analysant plus de 50 points de convergence : compétences techniques, expérience sectorielle, niveau de séniorité et adéquation culturelle détectée dans l'offre."
+              question="D'où viennent les offres d'emploi ?"
+              answer="Les offres proviennent de France Travail, filtrées selon votre recherche. Vous candidatez ensuite directement depuis votre espace."
             />
           </div>
         </div>
       </section>
 
-      {/* CTA Section */}
-      <section className="py-16 md:py-24 px-6 bg-slate-50 overflow-hidden relative border-y border-slate-100">
-        <div className="absolute inset-0 opacity-[0.04] pointer-events-none" style={{ backgroundImage: 'radial-gradient(#7D5CFF 1px, transparent 1px)', backgroundSize: '32px 32px' }}></div>
-        <Reveal className="max-w-4xl mx-auto text-center space-y-8 md:space-y-10 relative z-10">
-          <h2 className="text-3xl md:text-6xl font-black text-slate-800 leading-tight tracking-tight">
-            Prêt à changer de dimension <br /> <span className="bg-clip-text text-transparent bg-gradient-to-r from-[#7D5CFF] to-[#4F46E5]">professionnelle ?</span>
+      {/* CTA */}
+      <section className="px-5 sm:px-6 py-20 sm:py-24">
+        <Reveal className="max-w-3xl mx-auto surface p-8 sm:p-12 text-center">
+          <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">
+            Prêt à structurer votre recherche d'emploi ?
           </h2>
-          <p className="text-slate-600 text-base md:text-xl font-medium max-w-2xl mx-auto leading-relaxed">
-            N'attendez pas que la chance tourne. Utilisez la technologie pour forcer les portes des meilleures entreprises.
+          <p className="mt-3 text-slate-500 max-w-xl mx-auto">
+            Créez votre profil en quelques minutes et générez votre première candidature dès aujourd'hui.
           </p>
-          <div className="flex flex-col sm:flex-row gap-4 md:gap-6 justify-center pt-4">
-            <button onClick={() => openAuth(true)} className="press w-full sm:w-auto bg-[#7D5CFF] text-white px-10 md:px-12 py-4 md:py-5 rounded-2xl font-black text-base md:text-lg hover:bg-[#6023C0] transition-all flex items-center justify-center gap-3 shadow-xl shadow-[#7D5CFF]/30">
-              Démarrer gratuitement <ArrowRight size={20} />
+          <div className="mt-7 flex flex-col sm:flex-row gap-3 justify-center">
+            <button onClick={() => openAuth(true)} className="press btn btn-primary btn-lg">
+              Commencer gratuitement <ArrowRight size={18} />
             </button>
-            <div className="flex items-center justify-center gap-4 text-slate-400 text-sm font-bold">
-              <CheckCircle2 className="text-emerald-500" /> Sans carte bancaire
-            </div>
           </div>
+          <p className="mt-4 text-sm text-slate-400">Sans carte bancaire</p>
         </Reveal>
       </section>
 
       {/* Footer */}
-      <footer className="bg-white py-20 px-6 border-t border-slate-100">
-        <div className="max-w-7xl mx-auto grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-12">
-          <div className="col-span-2 lg:col-span-2 space-y-6">
-            <div className="flex items-center group cursor-pointer" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
+      <footer className="px-5 sm:px-6 py-16 border-t border-slate-100">
+        <div className="max-w-6xl mx-auto grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-10">
+          <div className="col-span-2 lg:col-span-2 space-y-4">
+            <button className="flex items-center" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} aria-label="Haut de page">
               <Logo />
-            </div>
-            <p className="text-slate-500 text-sm leading-relaxed max-w-xs font-medium">
-              L'allié des candidats ambitieux pour une recherche d'emploi assistée par l'IA : CV, lettres, candidatures ciblées et suivi.
+            </button>
+            <p className="text-sm text-slate-500 leading-relaxed max-w-xs">
+              L'allié des candidats pour une recherche d'emploi assistée par l'IA : CV, lettres, offres ciblées et suivi.
             </p>
           </div>
 
-          <div className="space-y-4">
-            <p className="text-xs font-black text-slate-900 uppercase tracking-widest">Produit</p>
-            <ul className="space-y-3 text-sm font-bold text-slate-500">
-              <li><Link to="/auth/register" className="hover:text-[#7D5CFF] transition-colors">Scanner ATS</Link></li>
-              <li><Link to="/auth/register" className="hover:text-[#7D5CFF] transition-colors">Candidatures spontanées</Link></li>
-              <li><Link to="/auth/register" className="hover:text-[#7D5CFF] transition-colors">Lettre de motivation IA</Link></li>
+          <div className="space-y-3">
+            <p className="text-xs font-semibold text-slate-900 uppercase tracking-wider">Produit</p>
+            <ul className="space-y-2.5 text-sm text-slate-500">
+              <li><Link to="/auth/register" className="hover:text-[#7D5CFF] transition-colors">CV optimisé ATS</Link></li>
+              <li><Link to="/auth/register" className="hover:text-[#7D5CFF] transition-colors">Lettres de motivation</Link></li>
+              <li><Link to="/auth/register" className="hover:text-[#7D5CFF] transition-colors">Suivi des candidatures</Link></li>
             </ul>
           </div>
 
-          <div className="space-y-4">
-            <p className="text-xs font-black text-slate-900 uppercase tracking-widest">Compagnie</p>
-            <ul className="space-y-3 text-sm font-bold text-slate-500">
+          <div className="space-y-3">
+            <p className="text-xs font-semibold text-slate-900 uppercase tracking-wider">Entreprise</p>
+            <ul className="space-y-2.5 text-sm text-slate-500">
               <li><Link to="/legal/mentions" className="hover:text-[#7D5CFF] transition-colors">À propos</Link></li>
               <li><a href="#faq" className="hover:text-[#7D5CFF] transition-colors">FAQ</a></li>
               <li><a href="mailto:joboost.ai@gmail.com" className="hover:text-[#7D5CFF] transition-colors">Contact</a></li>
             </ul>
           </div>
 
-          <div className="space-y-4">
-            <p className="text-xs font-black text-slate-900 uppercase tracking-widest">Légal</p>
-            <ul className="space-y-3 text-sm font-bold text-slate-500">
+          <div className="space-y-3">
+            <p className="text-xs font-semibold text-slate-900 uppercase tracking-wider">Légal</p>
+            <ul className="space-y-2.5 text-sm text-slate-500">
               <li><Link to="/legal/mentions" className="hover:text-[#7D5CFF] transition-colors">Mentions légales</Link></li>
               <li><Link to="/legal/confidentialite" className="hover:text-[#7D5CFF] transition-colors">Confidentialité</Link></li>
               <li><Link to="/legal/cgu" className="hover:text-[#7D5CFF] transition-colors">CGU</Link></li>
@@ -490,77 +376,61 @@ const Home: React.FC<HomeProps> = ({ onStart }) => {
             </ul>
           </div>
         </div>
-        <div className="max-w-7xl mx-auto mt-20 pt-8 border-t border-slate-50 flex justify-between items-center text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">
-          <span>© 2026 JoBoost</span>
-          <div className="flex gap-4">
-            <Globe size={14} /> <span>France (FR)</span>
-          </div>
+        <div className="max-w-6xl mx-auto mt-12 pt-6 border-t border-slate-100 flex justify-between items-center text-xs text-slate-400">
+          <span>© 2026 JobBoost</span>
+          <span>France</span>
         </div>
       </footer>
 
-      {/* Auth Modal */}
+      {/* Modale d'authentification */}
       {showAuth && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 animate-fade-in" onClick={() => setShowAuth(false)}>
-          <div className="bg-white w-full max-w-md p-10 rounded-[2.5rem] shadow-2xl relative border border-slate-100 animate-scale-in" onClick={(e) => e.stopPropagation()}>
-            <button onClick={() => setShowAuth(false)} aria-label="Fermer" className="absolute top-8 right-8 text-slate-400 hover:text-slate-900 transition-colors">
-              <X size={24} />
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4 animate-fade-in" onClick={() => setShowAuth(false)}>
+          <div className="bg-white w-full max-w-md p-7 sm:p-8 rounded-2xl shadow-pop relative border border-slate-200 animate-scale-in" onClick={(e) => e.stopPropagation()}>
+            <button onClick={() => setShowAuth(false)} aria-label="Fermer" className="absolute top-5 right-5 text-slate-400 hover:text-slate-900 transition-colors">
+              <X size={20} />
             </button>
-            <div className="text-center mb-10">
-              <div className="w-14 h-14 bg-[#7D5CFF]/10 rounded-2xl flex items-center justify-center text-[#7D5CFF] mx-auto mb-6">
-                <Rocket size={28} />
-              </div>
-              <h2 className="text-3xl font-black text-slate-900 mb-2">
-                {isSignUp ? 'Créer un profil' : 'Réactiver l\'unité'}
+
+            <div className="mb-7">
+              <Logo />
+              <h2 className="mt-5 text-xl font-bold text-slate-900">
+                {isSignUp ? 'Créer un compte' : 'Se connecter'}
               </h2>
-              <p className="text-slate-500 font-bold text-sm tracking-tight italic">
-                {isSignUp ? 'Commencez votre ascension stratégique.' : 'Reprenez votre recherche haute-performance.'}
+              <p className="mt-1 text-sm text-slate-500">
+                {isSignUp ? 'Gratuit pour commencer, sans carte bancaire.' : 'Content de vous revoir.'}
               </p>
             </div>
 
-            <div className="space-y-4">
-              <button onClick={() => handleSocialLogin('Google')} className="w-full flex items-center justify-center gap-3 px-6 py-4 border border-slate-200 rounded-2xl font-black text-slate-700 hover:bg-slate-50 hover:border-[#7D5CFF]/30 transition-all text-sm shadow-sm group">
-                <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" className="w-5 h-5" alt="G" />
+            <div className="space-y-3">
+              <button onClick={() => handleSocialLogin('Google')} className="w-full flex items-center justify-center gap-3 px-5 py-3 border border-slate-200 rounded-xl font-medium text-slate-700 hover:bg-slate-50 transition-colors text-sm">
+                <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" className="w-5 h-5" alt="" />
                 Continuer avec Google
               </button>
 
-              {/* Bouton « Continuer avec Apple » masqué tant qu'aucun compte Apple Developer
-                  n'est configuré (Sign in with Apple exige un Services ID + clé .p8).
-                  Le flux backend (/api/auth/apple) reste prêt : poser les variables d'env
-                  APPLE_* puis ré-afficher ce bouton suffira à le réactiver. */}
-              {/*
-              <button onClick={() => handleSocialLogin('Apple')} className="w-full flex items-center justify-center gap-3 px-6 py-4 border border-slate-200 rounded-2xl font-black text-slate-700 hover:bg-slate-50 hover:border-indigo-200 transition-all text-sm shadow-sm group">
-                <svg className="w-5 h-5 mb-0.5" viewBox="0 0 384 512" fill="currentColor">
-                  <path d="M318.7 268.7c-.2-36.7 16.4-64.4 50-84.8-18.8-26.9-47.2-41.7-84.7-44.6-35.5-2.8-74.3 20.7-88.5 20.7-15 0-49.4-19.7-76.4-19.7C63.3 141.2 4 184.8 4 273.5q0 39.3 14.4 81.2c12.8 36.7 59 126.7 107.2 125.2 25.2-.6 43-17.9 75.8-17.9 31.8 0 48.3 17.9 76.4 17.9 48.6-.7 90.4-82.5 102.6-119.3-65.2-30.7-61.7-90-61.7-91.9zm-56.6-164.2c27.3-32.4 24.8-61.9 24-72.5-24.1 1.4-52 16.4-67.9 34.9-17.5 19.8-27.8 44.3-25.6 71.9 26.1 2 49.9-11.4 69.5-34.3z"/>
-                </svg>
-                Continuer avec Apple
-              </button>
-              */}
-
-              <div className="relative my-8">
-                <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-slate-100"></div></div>
-                <div className="relative flex justify-center text-[10px] uppercase font-black text-slate-400 tracking-[0.2em]"><span className="bg-white px-6">Protocole Email</span></div>
+              <div className="relative my-6">
+                <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-slate-200"></div></div>
+                <div className="relative flex justify-center text-xs text-slate-400"><span className="bg-white px-3">ou avec votre e-mail</span></div>
               </div>
 
-              <div className="space-y-2">
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-4">Vecteur d'identité</label>
-                <input type="email" placeholder="votre@agence.com" className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-[#7D5CFF]/15 focus:border-[#7D5CFF]/30 outline-none transition-all" />
+              <div className="space-y-1.5">
+                <label className="text-sm font-medium text-slate-700">Adresse e-mail</label>
+                <input type="email" placeholder="vous@exemple.com" className="w-full px-4 py-3 bg-white border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-[#7D5CFF]/40 focus:border-[#7D5CFF] outline-none transition-all" />
               </div>
 
-              <button onClick={onStart} className="press w-full py-5 bg-[#7D5CFF] text-white rounded-2xl font-black shadow-2xl shadow-[#7D5CFF]/30 hover:bg-[#6023C0] transition-all text-sm uppercase tracking-widest mt-6">
-                {isSignUp ? "Lancer mon unité" : "Initialiser Connexion"}
+              <button onClick={onStart} className="press btn btn-primary w-full mt-2">
+                {isSignUp ? 'Créer mon compte' : 'Se connecter'}
               </button>
 
               {isSignUp && (
-                <p className="text-[10px] text-slate-400 text-center leading-relaxed mt-4 px-2">
+                <p className="text-xs text-slate-400 text-center leading-relaxed mt-3">
                   En créant un compte, vous acceptez les{' '}
-                  <Link to="/legal/cgu" className="font-bold text-[#7D5CFF] hover:underline">conditions générales</Link>
+                  <Link to="/legal/cgu" className="font-medium text-[#7D5CFF] hover:underline">conditions générales</Link>
                   {' '}et la{' '}
-                  <Link to="/legal/confidentialite" className="font-bold text-[#7D5CFF] hover:underline">politique de confidentialité</Link>.
+                  <Link to="/legal/confidentialite" className="font-medium text-[#7D5CFF] hover:underline">politique de confidentialité</Link>.
                 </p>
               )}
 
-              <button onClick={() => setIsSignUp(!isSignUp)} className="w-full text-[10px] font-black text-[#7D5CFF] hover:underline mt-6 uppercase tracking-widest">
-                {isSignUp ? "Déjà membre ? Se connecter" : "Nouvelle unité ? S'inscrire"}
+              <button onClick={() => setIsSignUp(!isSignUp)} className="w-full text-sm font-medium text-[#7D5CFF] hover:underline mt-4">
+                {isSignUp ? 'Déjà un compte ? Se connecter' : 'Pas encore de compte ? S\'inscrire'}
               </button>
             </div>
           </div>
