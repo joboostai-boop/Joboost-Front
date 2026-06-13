@@ -165,12 +165,12 @@ const Onboarding: React.FC<OnboardingProps> = ({ user, onComplete, onSkip }) => 
   if (step === 'uploading') {
     return (
       <div className="min-h-screen flex items-center justify-center p-6 text-center">
-        <div className="max-w-md w-full space-y-8 animate-in fade-in zoom-in duration-500">
+        <div className="max-w-md w-full space-y-8 animate-scale-in">
           <div className="relative">
-            <div className="w-24 h-24 bg-indigo-600/10 rounded-3xl mx-auto flex items-center justify-center text-indigo-600">
+            <div className="w-24 h-24 bg-[#7D5CFF]/10 rounded-3xl mx-auto flex items-center justify-center text-[#7D5CFF]">
               <Loader2 size={48} className="animate-spin" />
             </div>
-            <div className="absolute -top-2 -right-2 w-8 h-8 bg-indigo-600 rounded-full flex items-center justify-center text-white shadow-lg">
+            <div className="absolute -top-2 -right-2 w-8 h-8 bg-[#7D5CFF] rounded-full flex items-center justify-center text-white shadow-lg">
               <Rocket size={16} />
             </div>
           </div>
@@ -180,9 +180,9 @@ const Onboarding: React.FC<OnboardingProps> = ({ user, onComplete, onSkip }) => 
           </div>
           <div className="space-y-3">
              <div className="h-2 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
-                <div className="h-full bg-indigo-600 animate-[loading_2s_ease-in-out_infinite]" style={{width: '60%'}}></div>
+                <div className="h-full bg-[#7D5CFF] animate-[loading_2s_ease-in-out_infinite]" style={{width: '60%'}}></div>
              </div>
-             <p className="text-[10px] uppercase font-black tracking-[0.2em] text-indigo-600">Lecture en cours</p>
+             <p className="text-[10px] uppercase font-black tracking-[0.2em] text-[#7D5CFF]">Lecture en cours</p>
           </div>
         </div>
         <style>{`
@@ -198,7 +198,7 @@ const Onboarding: React.FC<OnboardingProps> = ({ user, onComplete, onSkip }) => 
   if (step === 'form') {
     return (
       <div className="min-h-screen p-6 md:p-12 overflow-y-auto">
-        <div className="max-w-4xl mx-auto space-y-10 animate-in slide-in-from-bottom-8 duration-500">
+        <div className="max-w-4xl mx-auto space-y-10 animate-fade-in-up">
           <header className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <button
@@ -215,7 +215,7 @@ const Onboarding: React.FC<OnboardingProps> = ({ user, onComplete, onSkip }) => 
             <button
               type="button"
               onClick={onSkip}
-              className="text-sm font-semibold text-slate-400 hover:text-indigo-600 transition-colors px-3 py-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800"
+              className="text-sm font-semibold text-slate-400 hover:text-[#7D5CFF] transition-colors px-3 py-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800"
             >
               Plus tard
             </button>
@@ -224,7 +224,7 @@ const Onboarding: React.FC<OnboardingProps> = ({ user, onComplete, onSkip }) => 
           <form onSubmit={handleFormSubmit} className="grid grid-cols-1 lg:grid-cols-2 gap-8 pb-20">
             {/* Infos de Base */}
             <div className="card-modern p-8 space-y-6">
-              <h3 className="text-xs font-black uppercase tracking-widest text-indigo-600 flex items-center gap-2">
+              <h3 className="text-xs font-black uppercase tracking-widest text-[#7D5CFF] flex items-center gap-2">
                 <User size={14} /> Mes infos
               </h3>
               <div className="space-y-4">
@@ -234,7 +234,7 @@ const Onboarding: React.FC<OnboardingProps> = ({ user, onComplete, onSkip }) => 
                     required
                     type="text"
                     placeholder="Jean Dupont"
-                    className="w-full px-5 py-3.5 bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-2xl outline-none focus:ring-2 focus:ring-indigo-600 transition-all font-bold text-sm"
+                    className="w-full px-5 py-3.5 bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-2xl outline-none focus:ring-2 focus:ring-[#7D5CFF] transition-all font-bold text-sm"
                     value={formData.name}
                     onChange={e => setFormData({...formData, name: e.target.value})}
                   />
@@ -245,7 +245,7 @@ const Onboarding: React.FC<OnboardingProps> = ({ user, onComplete, onSkip }) => 
                     required
                     type="email"
                     placeholder="jean@exemple.com"
-                    className="w-full px-5 py-3.5 bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-2xl outline-none focus:ring-2 focus:ring-indigo-600 transition-all font-bold text-sm"
+                    className="w-full px-5 py-3.5 bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-2xl outline-none focus:ring-2 focus:ring-[#7D5CFF] transition-all font-bold text-sm"
                     value={formData.email}
                     onChange={e => setFormData({...formData, email: e.target.value})}
                   />
@@ -256,7 +256,7 @@ const Onboarding: React.FC<OnboardingProps> = ({ user, onComplete, onSkip }) => 
                     required
                     type="text"
                     placeholder="Développeur Fullstack"
-                    className="w-full px-5 py-3.5 bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-2xl outline-none focus:ring-2 focus:ring-indigo-600 transition-all font-bold text-sm"
+                    className="w-full px-5 py-3.5 bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-2xl outline-none focus:ring-2 focus:ring-[#7D5CFF] transition-all font-bold text-sm"
                     value={formData.title}
                     onChange={e => setFormData({...formData, title: e.target.value})}
                   />
@@ -266,7 +266,7 @@ const Onboarding: React.FC<OnboardingProps> = ({ user, onComplete, onSkip }) => 
                   <input
                     type="text"
                     placeholder="React, gestion de projet, anglais..."
-                    className="w-full px-5 py-3.5 bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-2xl outline-none focus:ring-2 focus:ring-indigo-600 transition-all font-bold text-sm"
+                    className="w-full px-5 py-3.5 bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-2xl outline-none focus:ring-2 focus:ring-[#7D5CFF] transition-all font-bold text-sm"
                     value={formData.skills}
                     onChange={e => setFormData({...formData, skills: e.target.value})}
                   />
@@ -278,7 +278,7 @@ const Onboarding: React.FC<OnboardingProps> = ({ user, onComplete, onSkip }) => 
                     <input
                       type="url"
                       placeholder="linkedin.com/in/..."
-                      className="w-full pl-12 pr-5 py-3.5 bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-2xl outline-none focus:ring-2 focus:ring-indigo-600 transition-all font-bold text-sm"
+                      className="w-full pl-12 pr-5 py-3.5 bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-2xl outline-none focus:ring-2 focus:ring-[#7D5CFF] transition-all font-bold text-sm"
                       value={formData.linkedin}
                       onChange={e => setFormData({...formData, linkedin: e.target.value})}
                     />
@@ -289,7 +289,7 @@ const Onboarding: React.FC<OnboardingProps> = ({ user, onComplete, onSkip }) => 
 
             {/* Expériences */}
             <div className="card-modern p-8 space-y-6">
-              <h3 className="text-xs font-black uppercase tracking-widest text-indigo-600 flex items-center gap-2">
+              <h3 className="text-xs font-black uppercase tracking-widest text-[#7D5CFF] flex items-center gap-2">
                 <FileText size={14} /> Mes expériences
               </h3>
               <p className="text-xs text-slate-400 font-medium italic">Décris tes 3 expériences les plus importantes. Tu pourras les affiner plus tard dans ton profil.</p>
@@ -301,14 +301,14 @@ const Onboarding: React.FC<OnboardingProps> = ({ user, onComplete, onSkip }) => 
                       <input
                         type="text"
                         placeholder="Poste (ex : Développeur)"
-                        className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-2xl outline-none focus:ring-2 focus:ring-indigo-600 transition-all font-bold text-sm"
+                        className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-2xl outline-none focus:ring-2 focus:ring-[#7D5CFF] transition-all font-bold text-sm"
                         value={exp.role}
                         onChange={e => updateExperience(idx, { role: e.target.value })}
                       />
                       <input
                         type="text"
                         placeholder="Entreprise"
-                        className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-2xl outline-none focus:ring-2 focus:ring-indigo-600 transition-all font-bold text-sm"
+                        className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-2xl outline-none focus:ring-2 focus:ring-[#7D5CFF] transition-all font-bold text-sm"
                         value={exp.company}
                         onChange={e => updateExperience(idx, { company: e.target.value })}
                       />
@@ -316,14 +316,14 @@ const Onboarding: React.FC<OnboardingProps> = ({ user, onComplete, onSkip }) => 
                     <input
                       type="text"
                       placeholder="Période (ex : 2021 – 2024)"
-                      className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-2xl outline-none focus:ring-2 focus:ring-indigo-600 transition-all font-medium text-sm"
+                      className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-2xl outline-none focus:ring-2 focus:ring-[#7D5CFF] transition-all font-medium text-sm"
                       value={exp.period}
                       onChange={e => updateExperience(idx, { period: e.target.value })}
                     />
                     <textarea
                       rows={2}
                       placeholder="Ce que tu y as accompli (missions, résultats)..."
-                      className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-2xl outline-none focus:ring-2 focus:ring-indigo-600 transition-all font-medium text-sm resize-none"
+                      className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-2xl outline-none focus:ring-2 focus:ring-[#7D5CFF] transition-all font-medium text-sm resize-none"
                       value={exp.missions}
                       onChange={e => updateExperience(idx, { missions: e.target.value })}
                     />
@@ -334,7 +334,7 @@ const Onboarding: React.FC<OnboardingProps> = ({ user, onComplete, onSkip }) => 
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full py-5 bg-indigo-600 text-white rounded-[2rem] font-black text-sm uppercase tracking-widest hover:bg-indigo-700 transition-all shadow-xl shadow-indigo-100 dark:shadow-none flex items-center justify-center gap-3 group"
+                className="press w-full py-5 bg-[#7D5CFF] text-white rounded-[2rem] font-black text-sm uppercase tracking-widest hover:bg-[#6023C0] transition-all shadow-xl shadow-[#7D5CFF]/20 dark:shadow-none flex items-center justify-center gap-3 group disabled:opacity-60"
               >
                 {isLoading ? <Loader2 className="animate-spin" size={20} /> : "Enregistrer mon profil"}
                 {!isLoading && <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />}
@@ -352,11 +352,11 @@ const Onboarding: React.FC<OnboardingProps> = ({ user, onComplete, onSkip }) => 
 
         {/* Left: Message */}
         <div className="space-y-8 text-center md:text-left p-4">
-          <div className="inline-flex items-center gap-3 px-4 py-2 bg-indigo-50 dark:bg-indigo-900/30 rounded-full text-indigo-600 dark:text-indigo-400 text-xs font-black uppercase tracking-widest">
+          <div className="inline-flex items-center gap-3 px-4 py-2 bg-[#F3F0FF] dark:bg-[#7D5CFF]/10 rounded-full text-[#7D5CFF] dark:text-[#A78BFA] text-xs font-black uppercase tracking-widest">
             <Rocket size={16} /> Bienvenue sur JoBoost
           </div>
           <h1 className="text-5xl md:text-7xl font-black text-slate-900 dark:text-white leading-[1.05] tracking-tight">
-            Crée ton profil en <span className="text-indigo-600">2 minutes.</span>
+            Crée ton profil en <span className="text-[#7D5CFF]">2 minutes.</span>
           </h1>
           <p className="text-lg text-slate-500 font-medium leading-relaxed max-w-md">
             Pour générer tes documents, JoBoost a besoin de te connaître. Choisis comment commencer.
@@ -367,16 +367,16 @@ const Onboarding: React.FC<OnboardingProps> = ({ user, onComplete, onSkip }) => 
         <div className="grid grid-cols-1 gap-6">
           <button
             onClick={() => fileInputRef.current?.click()}
-            className="group card-modern p-10 text-left border-2 border-transparent hover:border-indigo-600 transition-all bg-white dark:bg-slate-900 shadow-2xl hover:shadow-indigo-100 dark:hover:shadow-none relative overflow-hidden"
+            className="press group card-modern p-10 text-left border-2 border-transparent hover:border-[#7D5CFF] hover:-translate-y-0.5 transition-all bg-white dark:bg-slate-900 shadow-2xl hover:shadow-[#7D5CFF]/20 dark:hover:shadow-none relative overflow-hidden"
           >
-            <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-50 dark:bg-indigo-900/10 rounded-full -mr-16 -mt-16 group-hover:scale-110 transition-transform"></div>
+            <div className="absolute top-0 right-0 w-32 h-32 bg-[#F3F0FF] dark:bg-[#7D5CFF]/10 rounded-full -mr-16 -mt-16 group-hover:scale-110 transition-transform"></div>
             <div className="relative z-10 flex flex-col h-full">
-              <div className="w-16 h-16 bg-indigo-600 text-white rounded-2xl flex items-center justify-center mb-8 shadow-lg shadow-indigo-200 dark:shadow-none">
+              <div className="w-16 h-16 bg-[#7D5CFF] text-white rounded-2xl flex items-center justify-center mb-8 shadow-lg shadow-[#7D5CFF]/30 dark:shadow-none">
                 <UploadCloud size={32} />
               </div>
               <h3 className="text-2xl font-black text-slate-900 dark:text-white mb-2">Importer mon CV</h3>
               <p className="text-slate-500 font-medium">L'IA lit ton fichier (PDF/DOCX) et préremplit tout automatiquement.</p>
-              <div className="mt-8 flex items-center gap-2 text-indigo-600 font-black text-xs uppercase tracking-widest">
+              <div className="mt-8 flex items-center gap-2 text-[#7D5CFF] font-black text-xs uppercase tracking-widest">
                 Importer mon CV <ArrowRight size={14} />
               </div>
             </div>
@@ -391,7 +391,7 @@ const Onboarding: React.FC<OnboardingProps> = ({ user, onComplete, onSkip }) => 
 
           <button
             onClick={() => setStep('form')}
-            className="group card-modern p-10 text-left border-2 border-transparent hover:border-indigo-600 transition-all bg-white dark:bg-slate-900 shadow-xl hover:shadow-indigo-100 dark:hover:shadow-none relative overflow-hidden"
+            className="press group card-modern p-10 text-left border-2 border-transparent hover:border-[#7D5CFF] hover:-translate-y-0.5 transition-all bg-white dark:bg-slate-900 shadow-xl hover:shadow-[#7D5CFF]/20 dark:hover:shadow-none relative overflow-hidden"
           >
             <div className="relative z-10 flex flex-col h-full">
               <div className="w-16 h-16 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 rounded-2xl flex items-center justify-center mb-8">
@@ -399,7 +399,7 @@ const Onboarding: React.FC<OnboardingProps> = ({ user, onComplete, onSkip }) => 
               </div>
               <h3 className="text-2xl font-black text-slate-900 dark:text-white mb-2">Saisie manuelle</h3>
               <p className="text-slate-500 font-medium">Remplis ton profil toi-même, étape par étape.</p>
-              <div className="mt-8 flex items-center gap-2 text-slate-400 group-hover:text-indigo-600 font-black text-xs uppercase tracking-widest transition-colors">
+              <div className="mt-8 flex items-center gap-2 text-slate-400 group-hover:text-[#7D5CFF] font-black text-xs uppercase tracking-widest transition-colors">
                 Remplir à la main <ArrowRight size={14} />
               </div>
             </div>
@@ -408,7 +408,7 @@ const Onboarding: React.FC<OnboardingProps> = ({ user, onComplete, onSkip }) => 
           <button
             type="button"
             onClick={onSkip}
-            className="text-sm font-semibold text-slate-400 hover:text-indigo-600 transition-colors py-2 text-center"
+            className="text-sm font-semibold text-slate-400 hover:text-[#7D5CFF] transition-colors py-2 text-center"
           >
             Je remplirai mon profil plus tard
           </button>
