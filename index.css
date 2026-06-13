@@ -62,23 +62,29 @@
     @apply bg-[#7D5CFF]/10 border-[#7D5CFF]/20;
   }
 
-  /* ================== BUTTONS ================== */
+  /* ================== BUTTONS ==================
+     Boutons « premium » : profondeur fine (dégradé vertical très subtil +
+     liseré interne clair sur le primaire), focus-visible accessible,
+     enfoncement léger au clic. */
   .btn {
-    @apply min-h-[44px] px-4 py-3 inline-flex items-center justify-center gap-2 rounded-md text-sm font-medium transition-all duration-200 outline-none;
+    @apply min-h-[42px] px-4 py-2.5 inline-flex items-center justify-center gap-2 rounded-lg text-sm font-medium transition-all duration-150 outline-none select-none
+           active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-[#7D5CFF]/45 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none;
   }
-  
+
   .btn-lg {
-    @apply min-h-[52px] px-6 py-4 text-base;
+    @apply min-h-[48px] px-5 py-3 text-[15px] rounded-xl;
   }
 
   .btn-primary {
-    @apply bg-[#7D5CFF] text-white border border-transparent shadow-sm hover:bg-[#6023C0] hover:shadow-md focus:ring-2 focus:ring-[#7D5CFF] focus:ring-offset-2;
+    @apply text-white border border-[#5B21B6]/40 bg-gradient-to-b from-[#8C6DFF] to-[#7D5CFF]
+           shadow-[0_1px_2px_rgba(16,24,40,0.10),inset_0_1px_0_rgba(255,255,255,0.18)]
+           hover:from-[#7D5CFF] hover:to-[#6D28D9] hover:shadow-[0_2px_8px_rgba(125,92,255,0.30)];
   }
 
   .btn-secondary {
-    @apply bg-white border border-[#E5E7EB] text-[#111827] hover:bg-[#F3F4F6] focus:ring-2 focus:ring-[#E5E7EB] focus:ring-offset-1;
+    @apply bg-white text-[#374151] border border-[#E5E7EB] shadow-xs hover:bg-[#F9FAFB] hover:border-[#D1D5DB];
   }
-  
+
   .btn-ghost {
     @apply bg-transparent text-[#6B7280] hover:bg-[#F3F4F6] hover:text-[#111827];
   }
@@ -94,16 +100,16 @@
   }
 
   .input-pro {
-    @apply w-full min-h-[44px] px-4 py-3 bg-white border border-[#D1D5DB] rounded-md text-sm text-[#111827] placeholder:text-[#9CA3AF] transition-colors focus:border-[#7D5CFF] focus:ring-1 focus:ring-[#7D5CFF] outline-none;
+    @apply w-full min-h-[42px] px-3.5 py-2.5 bg-white border border-[#D1D5DB] rounded-lg shadow-xs text-base sm:text-sm text-[#111827] placeholder:text-[#9CA3AF] transition-all outline-none focus:border-[#7D5CFF] focus:ring-2 focus:ring-[#7D5CFF]/25;
   }
-  
+
   /* Textarea */
   .textarea-pro {
-    @apply w-full p-4 bg-white border border-[#D1D5DB] rounded-md text-sm text-[#111827] placeholder:text-[#9CA3AF] transition-colors focus:border-[#7D5CFF] focus:ring-1 focus:ring-[#7D5CFF] outline-none resize-y min-h-[100px];
+    @apply w-full p-3.5 bg-white border border-[#D1D5DB] rounded-lg shadow-xs text-base sm:text-sm text-[#111827] placeholder:text-[#9CA3AF] transition-all outline-none focus:border-[#7D5CFF] focus:ring-2 focus:ring-[#7D5CFF]/25 resize-y min-h-[100px];
   }
 
   /* Dark mode variants for components */
-  .dark .btn-secondary { @apply bg-[#1F2937] border-[#374151] text-[#E5E7EB] hover:bg-[#374151]; }
+  .dark .btn-secondary { @apply bg-[#1F2937] border-[#374151] text-[#E5E7EB] shadow-none hover:bg-[#374151] hover:border-[#4B5563]; }
   .dark .btn-ghost { @apply text-[#9CA3AF] hover:bg-[#1F2937] hover:text-white; }
   .dark .badge-ai { @apply bg-[#7D5CFF]/10 text-[#A78BFA] border-[#7D5CFF]/20; }
   .dark .input-label { @apply text-[#D1D5DB]; }
