@@ -3,6 +3,7 @@ import { Search, MapPin, Bookmark, Clock, Edit3, ExternalLink, Briefcase, Euro, 
 import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
 import { authHeaders } from '../services/authToken';
+import MatchRing from '../components/MatchRing';
 
 export interface JobOffer {
   id?: string;
@@ -18,22 +19,6 @@ export interface JobOffer {
   tags: string[];
   aiInsight: string;
 }
-
-/* Jauge circulaire de pertinence (SVG, sans dépendance). */
-const MatchRing: React.FC<{ score: number }> = ({ score }) => {
-  const r = 18;
-  const c = 2 * Math.PI * r;
-  const offset = c - (Math.max(0, Math.min(100, score)) / 100) * c;
-  return (
-    <div className="relative w-12 h-12 shrink-0" title={`${score}% de pertinence`}>
-      <svg className="w-12 h-12 -rotate-90" viewBox="0 0 44 44">
-        <circle cx="22" cy="22" r={r} fill="none" strokeWidth="4" className="stroke-slate-100 dark:stroke-slate-800" />
-        <circle cx="22" cy="22" r={r} fill="none" stroke="#7D5CFF" strokeWidth="4" strokeLinecap="round" strokeDasharray={c} strokeDashoffset={offset} />
-      </svg>
-      <span className="absolute inset-0 flex items-center justify-center text-[11px] font-bold text-[#7D5CFF] tabular-nums">{score}%</span>
-    </div>
-  );
-};
 
 const OfferSkeleton: React.FC = () => (
   <div className="surface p-5 space-y-4">
