@@ -109,13 +109,8 @@ const BusinessJobseekers: React.FC = () => {
 
   return (
     <div className="relative">
-      {/* Header Mobile: Actions in bottom sheet */}
-      <div className="flex items-center justify-between mb-4 md:mb-6">
-        <div>
-          <h1 className="text-xl md:text-2xl font-bold text-slate-900 dark:text-white">Demandeurs d'emploi</h1>
-          <p className="text-xs md:text-sm text-slate-500 mt-0.5">Consultez et suivez vos adhérents affiliés</p>
-        </div>
-        
+      {/* Barre d'outils (le titre est porté par le hero du layout) */}
+      <div className="flex items-center justify-end mb-4 md:mb-6">
         {/* Desktop Actions */}
         <div className="hidden md:flex">
           <button onClick={exportCSV} className="btn btn-secondary min-h-[44px]" disabled={jobseekers.length === 0}>

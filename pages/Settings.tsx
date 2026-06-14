@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
 import {
   Bell, LogOut, ChevronRight, UserRound, Moon, Sun,
-  Crown, Download, Trash2, Linkedin, Calendar, ShieldAlert, X, KeyRound
+  Crown, Download, Trash2, Linkedin, Calendar, ShieldAlert, X, KeyRound, SlidersHorizontal
 } from 'lucide-react';
 import { User as UserType } from '../types';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { authHeaders } from '../services/authToken';
 import toast from 'react-hot-toast';
+import PageHero from '../components/PageHero';
 
 interface SettingsProps {
   user: UserType;
@@ -140,12 +141,15 @@ const Settings: React.FC<SettingsProps> = ({ user, isDarkMode, toggleDarkMode })
   const accountChanged = account.name !== (user.name || '') || account.email !== (user.email || '');
 
   return (
-    <div className="p-5 md:p-10 max-w-5xl mx-auto space-y-6 pb-16">
-      {/* En-tête */}
-      <header className="space-y-1.5">
-        <h1 className="text-2xl font-bold tracking-tight text-[#111827] dark:text-white">Paramètres</h1>
-        <p className="text-sm text-[#6B7280] dark:text-slate-400">Gère ton compte, tes préférences et tes notifications.</p>
-      </header>
+    <>
+      <PageHero
+        tone="slate"
+        eyebrow="Mon compte"
+        icon={<SlidersHorizontal size={22} />}
+        title="Paramètres"
+        subtitle="Gère ton compte, tes préférences et tes notifications."
+      />
+      <div className="p-5 md:p-10 max-w-5xl mx-auto space-y-6 pb-16">
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
         {/* ───────── Colonne gauche ───────── */}
@@ -336,7 +340,8 @@ const Settings: React.FC<SettingsProps> = ({ user, isDarkMode, toggleDarkMode })
           </div>
         </div>
       )}
-    </div>
+      </div>
+    </>
   );
 };
 

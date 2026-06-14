@@ -132,22 +132,16 @@ const PersonalizedOffers: React.FC = () => {
 
   return (
     <div className="p-5 md:p-8 max-w-5xl mx-auto space-y-6">
-      {/* En-tête */}
+      {/* Barre d'outils (le titre est porté par le hero du layout) */}
       <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div className="space-y-1.5">
-          <div className="flex items-center gap-2.5">
-            <h1 className="text-2xl font-bold tracking-tight text-[#111827] dark:text-white">Offres recommandées</h1>
-            {!loading && (
-              <span className="text-xs font-medium text-[#6B7280] bg-slate-100 dark:bg-slate-800 rounded-full px-2 py-0.5 tabular-nums">{offers.length}</span>
-            )}
-          </div>
-          <p className="text-sm text-[#6B7280] dark:text-slate-400 flex items-center gap-1.5">
-            <span className={`inline-block w-1.5 h-1.5 rounded-full ${source === 'demo' ? 'bg-amber-500' : 'bg-emerald-500'}`} />
-            {source === 'demo'
-              ? "Exemples illustratifs (France Travail momentanément indisponible)."
-              : "Offres réelles France Travail, sourcées selon votre profil."}
-          </p>
-        </div>
+        <p className="text-sm text-[#6B7280] dark:text-slate-400 flex items-center gap-1.5">
+          <span className={`inline-block w-1.5 h-1.5 rounded-full ${source === 'demo' ? 'bg-amber-500' : 'bg-emerald-500'}`} />
+          {loading
+            ? 'Recherche des meilleures offres pour vous…'
+            : source === 'demo'
+              ? `Exemples illustratifs (France Travail momentanément indisponible) · ${offers.length}`
+              : `${offers.length} offres réelles France Travail, sourcées selon votre profil.`}
+        </p>
 
         <div className="relative w-full md:w-72">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-[#9CA3AF]" size={16} />

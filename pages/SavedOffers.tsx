@@ -69,12 +69,9 @@ const SavedOffers: React.FC = () => {
 
   return (
     <div className="p-5 md:p-8 max-w-5xl mx-auto space-y-6">
-      <header className="space-y-1.5">
-        <div className="flex items-center gap-2.5">
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">Offres sauvegardées</h1>
-          {!loading && <span className="text-xs font-medium text-[#6B7280] bg-slate-100 dark:bg-slate-800 rounded-full px-2 py-0.5 tabular-nums">{savedOffers.length}</span>}
-        </div>
-        <p className="text-sm text-[#6B7280] dark:text-slate-400">Les opportunités que vous avez mises de côté.</p>
+      <header className="flex items-center gap-2 text-sm text-[#6B7280] dark:text-slate-400">
+        <span className="inline-flex items-center justify-center min-w-7 h-7 px-2 rounded-lg bg-[#7D5CFF]/10 text-[#7D5CFF] font-bold tabular-nums">{loading ? '–' : savedOffers.length}</span>
+        opportunité{savedOffers.length > 1 ? 's' : ''} mise{savedOffers.length > 1 ? 's' : ''} de côté
       </header>
 
       {loading ? (

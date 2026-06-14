@@ -188,16 +188,6 @@ const Spontaneous: React.FC = () => {
 
   return (
     <div className="p-5 md:p-8 max-w-5xl mx-auto space-y-6">
-      <header className="space-y-1.5">
-        <div className="flex items-center gap-2.5">
-          <span className="w-9 h-9 rounded-lg surface-accent text-[#7D5CFF] flex items-center justify-center"><Navigation size={18} /></span>
-          <h1 className="text-2xl font-bold tracking-tight text-[#111827] dark:text-white">Candidatures spontanées</h1>
-        </div>
-        <p className="text-sm text-[#6B7280] dark:text-slate-400 max-w-2xl leading-relaxed">
-          Détectez les entreprises qui recrutent réellement près de chez vous (via France Travail), préparez votre candidature et envoyez-la — avec des garde-fous pour ne jamais spammer.
-        </p>
-      </header>
-
       <form onSubmit={handleSearch} className="surface p-5 md:p-6">
         <h3 className="text-sm font-semibold text-[#111827] dark:text-white mb-4">Critères de ciblage</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

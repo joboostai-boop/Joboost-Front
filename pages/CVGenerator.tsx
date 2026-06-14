@@ -136,14 +136,11 @@ const CVGenerator: React.FC = () => {
   return (
     <div className="p-6 md:p-10 max-w-6xl mx-auto flex flex-col lg:flex-row gap-10">
       <div className="flex-1 space-y-10">
-        <header className="flex flex-col md:flex-row justify-between md:items-end gap-4">
-          <div className="space-y-1.5">
-            <h1 className="text-2xl font-bold tracking-tight text-[#111827] dark:text-white">Éditeur de CV</h1>
-            <p className="text-sm text-[#6B7280] dark:text-slate-400 flex items-center gap-1.5">
-              <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-500" />
-              Format texte certifié ATS, lisible par les robots de recrutement.
-            </p>
-          </div>
+        <header className="flex flex-col md:flex-row justify-between md:items-center gap-4">
+          <p className="text-sm text-[#6B7280] dark:text-slate-400 flex items-center gap-1.5">
+            <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-500" />
+            Format texte certifié ATS, lisible par les robots de recrutement.
+          </p>
           <button onClick={handleSaveCV} className="press btn btn-secondary text-[#7D5CFF]">
             <Save size={16} /> Sauvegarder
           </button>

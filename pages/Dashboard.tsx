@@ -137,12 +137,9 @@ const Dashboard: React.FC = () => {
 
   return (
     <div className="p-6 md:p-10 max-w-6xl mx-auto space-y-8 pb-20">
-      {/* Header */}
-      <header className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-        <div className="space-y-1.5">
-          <h1 className="text-2xl font-bold tracking-tight text-[#111827] dark:text-white">Tableau de bord</h1>
-          <p className="text-sm text-[#6B7280] dark:text-slate-400">Vos statistiques calculées à partir de votre activité réelle.</p>
-        </div>
+      {/* Barre d'outils (le titre est porté par le hero du layout) */}
+      <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <p className="text-sm text-[#6B7280] dark:text-slate-400">Statistiques calculées à partir de votre activité réelle.</p>
         <div className="flex flex-wrap items-center gap-3">
           <div className={`flex items-center gap-2 px-3 py-1 rounded-full border ${
             statsData.profileCompletion === 100

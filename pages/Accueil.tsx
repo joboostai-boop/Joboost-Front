@@ -2,9 +2,10 @@ import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { User } from '../types';
 import { authHeaders } from '../services/authToken';
+import PageHero from '../components/PageHero';
 import {
   UserRound, Send, LineChart, Plus, ArrowRight,
-  FileText, Search, Bell, Loader2, Clock, CalendarCheck, Award, PenLine
+  FileText, Search, Bell, Loader2, Clock, CalendarCheck, Award, PenLine, Sparkles
 } from 'lucide-react';
 
 interface AccueilProps {
@@ -100,41 +101,42 @@ const Accueil: React.FC<AccueilProps> = ({ user }) => {
   const pct = stats?.profileCompletion ?? 0;
 
   return (
-    <div className="p-5 md:p-8 max-w-6xl mx-auto space-y-6 pb-28 md:pb-10">
-      {/* En-tête */}
-      <header className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3 animate-fade-in-up">
-        <div>
-          <h1 className="text-3xl sm:text-4xl font-extrabold tracking-[-0.025em] text-[#0B0B14] dark:text-white">Bonjour {firstName}</h1>
-          <p className="text-[15px] text-[#6B7280] dark:text-slate-400 mt-1.5">Voici l'état de votre recherche aujourd'hui.</p>
-        </div>
-        {!loading && pct < 100 && (
-          <Link to="/prepare/profile" className="inline-flex items-center gap-2 text-xs font-medium text-[#6B7280] hover:text-[#7D5CFF] transition-colors shrink-0">
-            <span className="w-24 h-1.5 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
-              <span className="block h-full bg-[#7D5CFF] rounded-full" style={{ width: `${pct}%` }} />
-            </span>
-            Profil {pct}%
-          </Link>
-        )}
-      </header>
+    <>
+      <PageHero
+        tone="violet"
+        eyebrow="Accueil"
+        icon={<Sparkles size={22} />}
+        title={`Bonjour ${firstName}`}
+        subtitle="Voici l'état de votre recherche aujourd'hui."
+        actions={
+          !loading && pct < 100 ? (
+            <Link to="/prepare/profile" className="inline-flex items-center gap-2.5 text-xs font-semibold text-white bg-white/10 hover:bg-white/20 ring-1 ring-white/20 rounded-full px-3.5 py-2 transition-colors">
+              <span className="w-20 h-1.5 rounded-full bg-white/25 overflow-hidden">
+                <span className="block h-full bg-white rounded-full" style={{ width: `${pct}%` }} />
+              </span>
+              Profil {pct}%
+            </Link>
+          ) : undefined
+        }
+      />
 
-      {/* Prochaine action (focale) */}
+      <div className="p-5 md:p-8 max-w-6xl mx-auto space-y-6 pb-28 md:pb-10 -mt-4">
+      {/* Prochaine action (focale) — carte blanche pour ne pas redoubler le violet du hero */}
       <Link
         to={next.to}
-        className="press group relative overflow-hidden flex items-center justify-between gap-4 rounded-2xl bg-gradient-to-br from-[#8C6DFF] via-[#7D5CFF] to-[#6D28D9] text-white p-6 shadow-[0_12px_32px_-10px_rgba(124,92,255,0.55)] transition-shadow hover:shadow-[0_16px_40px_-10px_rgba(124,92,255,0.65)] animate-fade-in-up"
+        className="press group relative overflow-hidden flex items-center justify-between gap-4 card-pro hover:shadow-card-hover hover:-translate-y-0.5 transition-all animate-fade-in-up"
       >
-        {/* Halo décoratif subtil (signature pitch) */}
-        <span className="pointer-events-none absolute -right-8 -top-10 w-40 h-40 rounded-full bg-white/10 blur-2xl" />
         <div className="relative flex items-center gap-4 min-w-0">
-          <span className="w-12 h-12 rounded-xl bg-white/15 backdrop-blur flex items-center justify-center shrink-0 ring-1 ring-white/20">
+          <span className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#8C6DFF] to-[#6D28D9] text-white flex items-center justify-center shrink-0 shadow-[0_6px_16px_-6px_rgba(124,92,255,0.6)]">
             {loading ? <Loader2 size={22} className="animate-spin" /> : next.icon}
           </span>
           <div className="min-w-0">
-            <p className="text-[11px] uppercase tracking-wider font-semibold text-white/75">Prochaine étape</p>
-            <p className="font-bold text-lg truncate">{next.title}</p>
-            <p className="text-white/80 text-[13px] truncate">{next.desc}</p>
+            <p className="text-[11px] uppercase tracking-wider font-semibold text-[#7D5CFF]">Prochaine étape</p>
+            <p className="font-bold text-lg truncate text-[#111827] dark:text-white">{next.title}</p>
+            <p className="text-[#6B7280] dark:text-slate-400 text-[13px] truncate">{next.desc}</p>
           </div>
         </div>
-        <ArrowRight size={22} className="relative shrink-0 group-hover:translate-x-1 transition-transform" />
+        <ArrowRight size={22} className="relative shrink-0 text-[#7D5CFF] group-hover:translate-x-1 transition-transform" />
       </Link>
 
       {/* KPIs */}
@@ -184,7 +186,8 @@ const Accueil: React.FC<AccueilProps> = ({ user }) => {
           ))}
         </div>
       </section>
-    </div>
+      </div>
+    </>
   );
 };
 

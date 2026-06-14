@@ -315,8 +315,8 @@ const Profile: React.FC<ProfileProps> = ({ user }) => {
               {user.photoUrl ? <img src={user.photoUrl} alt={user.name} className="w-full h-full object-cover" referrerPolicy="no-referrer" /> : <span>{(f.firstName || '?').charAt(0).toUpperCase()}</span>}
             </div>
             <div className="min-w-0">
-              <h1 className="text-2xl font-bold tracking-tight text-[#111827] dark:text-white truncate">Mon profil</h1>
-              <p className="text-sm text-[#6B7280] dark:text-slate-400">Plus il est complet, meilleurs sont tes CV et lettres.</p>
+              <h2 className="text-xl font-bold tracking-tight text-[#111827] dark:text-white truncate">{[f.firstName, f.lastName].filter(Boolean).join(' ') || 'Mon profil'}</h2>
+              <p className="text-sm text-[#6B7280] dark:text-slate-400">{f.title || 'Plus ton profil est complet, meilleurs sont tes CV et lettres.'}</p>
             </div>
           </div>
           <button onClick={connectLinkedIn} className="btn btn-secondary !border-[#0A66C2] !text-[#0A66C2] hover:!bg-[#0A66C2]/5 hidden sm:flex">

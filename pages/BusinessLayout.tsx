@@ -1,45 +1,37 @@
 import React from 'react';
-import { Outlet, Link, useLocation } from 'react-router-dom';
-import { Megaphone, Users, BarChart3 } from 'lucide-react';
+import { Outlet, NavLink, useLocation } from 'react-router-dom';
+import { Megaphone, Users, BarChart3, Building2 } from 'lucide-react';
+import PageHero, { heroTab } from '../components/PageHero';
 
 const BUSINESS_TABS = [
-  { name: 'Offres d\'emploi', icon: <Megaphone size={16} />, path: '/business/offers' },
-  { name: 'Demandeurs', icon: <Users size={16} />, path: '/business/jobseekers' },
-  { name: 'Statistiques', icon: <BarChart3 size={16} />, path: '/business/stats' },
+  { name: 'Offres d\'emploi', icon: <Megaphone size={18} />, path: '/business/offers', title: 'Offres d\'emploi', subtitle: 'Créez et gérez les offres proposées à vos adhérents.' },
+  { name: 'Demandeurs', icon: <Users size={18} />, path: '/business/jobseekers', title: 'Demandeurs d\'emploi', subtitle: 'Explorez votre vivier de talents et suivez vos contacts.' },
+  { name: 'Statistiques', icon: <BarChart3 size={18} />, path: '/business/stats', title: 'Statistiques', subtitle: 'Mesurez l\'activité et la performance de votre espace recruteur.' },
 ];
 
 const BusinessLayout: React.FC = () => {
   const location = useLocation();
+  const active = BUSINESS_TABS.find((t) => location.pathname.startsWith(t.path)) ?? BUSINESS_TABS[0];
 
   return (
     <div className="min-h-full">
-      {/* Sub-navigation — HIDDEN on mobile, shown md+ (bottom bar handles mobile nav) */}
-      <div className="hidden md:block sticky top-0 z-20 bg-white/80 dark:bg-[#030712]/80 backdrop-blur-xl border-b border-slate-200 dark:border-slate-800">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6">
-          <div className="flex items-center gap-1 py-2 overflow-x-auto scrollbar-hide">
-            {BUSINESS_TABS.map((tab) => {
-              const isActive = location.pathname.startsWith(tab.path);
-              return (
-                <Link
-                  key={tab.path}
-                  to={tab.path}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all duration-200 min-h-[44px] ${
-                    isActive
-                      ? 'bg-[#7D5CFF]/10 text-[#7D5CFF] dark:bg-[#7D5CFF]/20'
-                      : 'text-slate-500 hover:text-slate-900 hover:bg-slate-100 dark:text-slate-400 dark:hover:text-white dark:hover:bg-slate-800'
-                  }`}
-                >
-                  {tab.icon}
-                  {tab.name}
-                </Link>
-              );
-            })}
-          </div>
-        </div>
-      </div>
+      <PageHero
+        tone="slate"
+        eyebrow="Espace recruteur"
+        icon={<Building2 size={22} />}
+        title={active.title}
+        subtitle={active.subtitle}
+        maxWidth="max-w-7xl"
+        tabs={BUSINESS_TABS.map((tab) => (
+          <NavLink key={tab.path} to={tab.path} className={({ isActive }) => heroTab(isActive)}>
+            {tab.icon}
+            {tab.name}
+          </NavLink>
+        ))}
+      />
 
       {/* Page content — padded for mobile bottom bar */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 md:py-6 pb-24 md:pb-6">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-5 md:py-7 pb-24 md:pb-7">
         <Outlet />
       </div>
     </div>

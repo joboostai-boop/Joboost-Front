@@ -236,15 +236,12 @@ const BusinessStatsPage: React.FC = () => {
 
   return (
     <div className="print:bg-white relative">
-      {/* Header */}
+      {/* Barre d'outils (le titre est porté par le hero du layout) */}
       <div className="flex items-center justify-between mb-4 gap-3 flex-wrap">
-        <div>
-          <h1 className="text-xl md:text-2xl font-bold text-slate-900 dark:text-white">Statistiques</h1>
-          <p className="text-xs md:text-sm text-slate-500 mt-0.5">
-            Vue d'ensemble de vos adhérents
-            {refreshing && <Loader2 className="inline ml-2 animate-spin text-[#7D5CFF]" size={12} />}
-          </p>
-        </div>
+        <p className="text-xs md:text-sm text-slate-500">
+          Vue d'ensemble de vos adhérents
+          {refreshing && <Loader2 className="inline ml-2 animate-spin text-[#7D5CFF]" size={12} />}
+        </p>
 
         {/* Desktop actions */}
         <div className="hidden md:flex items-center gap-2 print:hidden">

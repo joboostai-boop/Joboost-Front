@@ -166,12 +166,8 @@ const BusinessOffers: React.FC = () => {
 
   return (
     <div>
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 md:mb-6">
-        <div>
-          <h1 className="text-xl md:text-2xl font-bold text-slate-900 dark:text-white">Offres d'emploi</h1>
-          <p className="text-xs md:text-sm text-slate-500 mt-0.5">Créez et gérez vos offres pour vos adhérents</p>
-        </div>
+      {/* Barre d'outils (le titre est porté par le hero du layout) */}
+      <div className="flex justify-end mb-4 md:mb-6">
         <button onClick={openCreate} className="btn btn-primary min-h-[44px] px-4 w-full sm:w-auto">
           <Plus size={16} /> Nouvelle offre
         </button>

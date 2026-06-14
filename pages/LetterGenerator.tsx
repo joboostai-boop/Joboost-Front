@@ -170,11 +170,8 @@ const LetterGenerator: React.FC = () => {
 
   return (
     <div className="p-6 md:p-10 max-w-6xl mx-auto space-y-10">
-      <header className="flex flex-col md:flex-row justify-between md:items-end gap-4">
-        <div className="space-y-1.5">
-          <h1 className="text-2xl font-bold tracking-tight text-[#111827] dark:text-white">Rédacteur de lettres</h1>
-          <p className="text-sm text-[#6B7280] dark:text-slate-400">Des lettres de motivation ciblées, écrites à partir de votre profil et de l'offre.</p>
-        </div>
+      <header className="flex flex-col md:flex-row justify-between md:items-center gap-4">
+        <p className="text-sm text-[#6B7280] dark:text-slate-400">Des lettres de motivation ciblées, écrites à partir de votre profil et de l'offre.</p>
         <button onClick={handleSaveLetter} disabled={!generatedText} className="press btn btn-secondary text-[#7D5CFF] disabled:opacity-50">
           <Save size={16} /> Sauvegarder
         </button>
