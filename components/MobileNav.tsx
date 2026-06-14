@@ -27,8 +27,8 @@ const MobileNav: React.FC<MobileNavProps> = ({ currentPath }) => {
   /* ═════════ BUSINESS : barre du bas ═════════ */
   if (isBusinessPartner) {
     return (
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-white/95 dark:bg-[#030712]/95 backdrop-blur-lg border-t border-slate-200 dark:border-slate-800 safe-area-bottom">
-        <div className="flex items-stretch justify-around" style={{ height: '64px' }}>
+      <nav className="md:hidden fixed inset-x-0 bottom-0 z-50 px-3 pt-2 pointer-events-none" style={{ paddingBottom: 'calc(0.6rem + env(safe-area-inset-bottom))' }}>
+        <div className="pointer-events-auto mx-auto max-w-md flex items-stretch justify-around rounded-2xl bg-white/95 dark:bg-[#0B1120]/95 backdrop-blur-lg border border-slate-200 dark:border-slate-800 shadow-pop" style={{ height: '64px' }}>
           {BUSINESS_BOTTOM_ITEMS.map((item) => {
             const active = isActivePath(currentPath, item.path);
             return (
@@ -78,8 +78,8 @@ const MobileNav: React.FC<MobileNavProps> = ({ currentPath }) => {
   };
 
   return (
-    <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-white/95 dark:bg-[#030712]/95 backdrop-blur-lg border-t border-slate-200 dark:border-slate-800 safe-area-bottom">
-      <div className="flex items-stretch" style={{ height: '64px' }}>
+    <nav className="md:hidden fixed inset-x-0 bottom-0 z-50 px-3 pt-2 pointer-events-none" style={{ paddingBottom: 'calc(0.6rem + env(safe-area-inset-bottom))' }}>
+      <div className="pointer-events-auto mx-auto max-w-md flex items-stretch rounded-2xl bg-white/95 dark:bg-[#0B1120]/95 backdrop-blur-lg border border-slate-200 dark:border-slate-800 shadow-pop" style={{ height: '64px' }}>
         {left.map(renderTab)}
 
         {/* Bouton d'action central (FAB) — Nouvelle candidature */}
@@ -87,7 +87,7 @@ const MobileNav: React.FC<MobileNavProps> = ({ currentPath }) => {
           <button
             onClick={() => navigate('/target/offers')}
             aria-label="Nouvelle candidature"
-            className="w-14 h-14 -mt-6 rounded-2xl bg-[#7D5CFF] text-white flex items-center justify-center shadow-lg shadow-[#7D5CFF]/30 active:scale-95 transition-transform border-4 border-[#F7F7F9] dark:border-[#030712]"
+            className="w-14 h-14 -mt-6 rounded-2xl bg-gradient-to-b from-[#8C6DFF] to-[#7D5CFF] text-white flex items-center justify-center shadow-lg shadow-[#7D5CFF]/40 active:scale-95 transition-transform border-4 border-[#F5F4FB] dark:border-[#030712]"
           >
             <Plus size={26} strokeWidth={2.75} />
           </button>

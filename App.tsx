@@ -2,7 +2,7 @@ import React, { useState, useEffect, Suspense } from 'react';
 import { Routes, Route, useLocation, Navigate, useNavigate } from 'react-router-dom';
 import { useAuth } from './context/AuthContext';
 import { authHeaders, getToken } from './services/authToken';
-import Sidebar from './components/Sidebar';
+import TopNav from './components/TopNav';
 import Topbar from './components/Topbar';
 import MobileNav from './components/MobileNav';
 import { Toaster } from 'react-hot-toast';
@@ -145,15 +145,15 @@ const App: React.FC = () => {
   }
 
   return (
-    <div className="flex min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 selection:bg-[#7D5CFF]/15 selection:text-[#4F46E5] transition-colors duration-300">
+    <div className="min-h-screen flex flex-col bg-[#F5F4FB] dark:bg-[#030712] text-slate-900 dark:text-slate-100 selection:bg-[#7D5CFF]/15 selection:text-[#4F46E5] transition-colors duration-300">
       <Toaster position="top-right" />
-      
-      {/* Static Sidebar */}
-      <Sidebar currentPath={location.pathname} />
 
-      {/* Main Fluid Content */}
-      <main className="flex-1 min-w-0 md:pb-0 pb-20 overflow-y-auto">
-        <Topbar user={user} />
+      {/* Navigation : dock flottant en haut (desktop) — barre mobile flottante en bas */}
+      <TopNav user={user} currentPath={location.pathname} />
+      <Topbar user={user} />
+
+      {/* Contenu fluide */}
+      <main className="flex-1 min-w-0 pb-28 md:pb-12">
         <div key={location.pathname} className="min-h-full animate-page">
           <Suspense fallback={<div className="flex-1 flex items-center justify-center min-h-[50vh]"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#7D5CFF]"></div></div>}>
           <Routes>

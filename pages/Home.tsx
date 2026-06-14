@@ -9,7 +9,6 @@ import {
   PenLine,
   Search,
   LineChart,
-  Sparkles,
   Check,
   X
 } from 'lucide-react';
@@ -208,22 +207,44 @@ const Home: React.FC<HomeProps> = ({ onStart }) => {
         </div>
       </nav>
 
-      {/* Hero */}
-      <section className="px-5 sm:px-6 pt-32 sm:pt-40 pb-20 sm:pb-28">
-        <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 items-center">
+      {/* Hero — direction « Pitch » (palette Joboost) : titre ultra-bold à gauche,
+          produit qui « pop » devant un grand panneau violet arrondi & incliné à droite,
+          stickers ludiques + encarts flottants factuels.
+          ⚠️ Éléments interactifs conservés à l'identique (boutons openAuth, slogan, ProductPreview). */}
+      <section className="relative overflow-hidden px-5 sm:px-6 pt-32 sm:pt-40 pb-20 sm:pb-28">
+        {/* Décor de fond léger (purement visuel) */}
+        <div aria-hidden className="pointer-events-none absolute inset-0 -z-10">
+          <div className="absolute -top-44 -left-32 w-[42rem] h-[42rem] rounded-full bg-[#7D5CFF]/12 blur-[140px]" />
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_1px_1px,rgba(15,23,42,0.04)_1px,transparent_0)] [background-size:36px_36px] [mask-image:radial-gradient(ellipse_70%_55%_at_55%_35%,#000_50%,transparent_100%)]" />
+        </div>
+
+        <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-[1.02fr_0.98fr] gap-16 lg:gap-12 items-center">
+          {/* Colonne gauche : message */}
           <div className="text-center lg:text-left">
-            <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full surface-accent text-[#7D5CFF] text-xs font-semibold mb-6">
-              <Sparkles size={14} /> Recherche d'emploi propulsée par l'IA
+            <span className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#7D5CFF]/[0.07] border border-[#7D5CFF]/20 text-[#6023C0] text-xs font-semibold mb-7 animate-fade-in-up">
+              <span className="relative flex h-2 w-2">
+                <span className="absolute inline-flex h-full w-full rounded-full bg-[#7D5CFF] opacity-75 animate-ping" />
+                <span className="relative inline-flex h-2 w-2 rounded-full bg-[#7D5CFF]" />
+              </span>
+              Recherche d'emploi propulsée par l'IA
             </span>
-            <h1 className="font-extrabold text-[#0B0B14] dark:text-white tracking-[-0.03em] leading-[1.04] text-[2.75rem] sm:text-6xl lg:text-[4.5rem]">
-              L'IA au service de votre <span className="text-[#7D5CFF]">carrière</span>.
+
+            <h1 className="font-extrabold text-[#0B0B14] dark:text-white tracking-[-0.04em] leading-[0.98] text-[3rem] sm:text-[4rem] lg:text-[5rem] animate-fade-in-up" style={{ animationDelay: '60ms' }}>
+              L'IA au service de votre{' '}
+              <span className="relative inline-block text-[#7D5CFF]">
+                carrière
+                <svg aria-hidden viewBox="0 0 220 16" className="absolute left-0 -bottom-1.5 w-full h-3 text-[#7D5CFF]/45" preserveAspectRatio="none">
+                  <path d="M3 11 C 60 3, 160 3, 217 9" fill="none" stroke="currentColor" strokeWidth="5" strokeLinecap="round" />
+                </svg>
+              </span>
             </h1>
-            <p className="mt-6 text-lg sm:text-xl text-slate-500 max-w-xl mx-auto lg:mx-0 leading-relaxed">
+
+            <p className="mt-7 text-lg sm:text-xl text-slate-500 max-w-xl mx-auto lg:mx-0 leading-relaxed animate-fade-in-up" style={{ animationDelay: '120ms' }}>
               JobBoost prépare vos candidatures sur-mesure — CV optimisé pour les ATS, lettres adaptées à chaque offre et suivi clair de vos démarches. Pour décrocher <span className="text-slate-700 font-semibold">plus d'entretiens</span>, avec moins d'efforts.
             </p>
 
-            <div className="mt-9 flex flex-col sm:flex-row gap-3 justify-center lg:justify-start">
-              <button onClick={() => openAuth(true)} className="press btn btn-primary btn-lg group text-base px-6">
+            <div className="mt-9 flex flex-col sm:flex-row gap-3 justify-center lg:justify-start animate-fade-in-up" style={{ animationDelay: '180ms' }}>
+              <button onClick={() => openAuth(true)} className="press btn btn-primary btn-lg group text-base px-7 shadow-[0_10px_28px_-8px_rgba(124,92,255,0.6)]">
                 Commencer gratuitement
                 <ArrowRight size={18} className="group-hover:translate-x-0.5 transition-transform" />
               </button>
@@ -232,15 +253,48 @@ const Home: React.FC<HomeProps> = ({ onStart }) => {
               </button>
             </div>
 
-            <div className="mt-6 flex items-center gap-2 justify-center lg:justify-start text-sm text-slate-500">
+            <div className="mt-6 flex items-center gap-2 justify-center lg:justify-start text-sm text-slate-500 animate-fade-in-up" style={{ animationDelay: '220ms' }}>
               <CheckCircle2 size={16} className="text-emerald-500" />
               Gratuit pour commencer · sans carte bancaire
             </div>
           </div>
 
-          {/* Aperçu produit */}
-          <div className="lg:pl-4">
-            <ProductPreview />
+          {/* Colonne droite : grand panneau violet + produit en relief (signature Pitch) */}
+          <div className="relative animate-fade-in-up" style={{ animationDelay: '160ms' }}>
+            <div className="relative rounded-[2.5rem] bg-gradient-to-br from-[#9B7BFF] via-[#7D5CFF] to-[#6023C0] p-7 sm:p-12 lg:p-14 shadow-[0_30px_70px_-25px_rgba(96,35,192,0.6)] overflow-hidden">
+              {/* Stickers décoratifs (purement visuels) */}
+              <span aria-hidden className="absolute top-7 right-9 w-3.5 h-3.5 rounded-full bg-amber-300" />
+              <span aria-hidden className="absolute bottom-8 left-9 w-2.5 h-2.5 rounded-full bg-white/70" />
+              <span aria-hidden className="absolute top-1/3 left-6 w-2 h-2 rounded-full bg-white/40" />
+              <svg aria-hidden viewBox="0 0 24 24" className="absolute bottom-12 right-12 w-5 h-5 text-amber-300" fill="currentColor">
+                <path d="M12 2l2.4 6.9H22l-6 4.4 2.3 7-6.3-4.6L5.7 20l2.3-7-6-4.4h7.6z" />
+              </svg>
+              {/* Glow doux derrière la carte */}
+              <span aria-hidden className="absolute inset-x-10 top-10 bottom-10 rounded-[2rem] bg-white/10 blur-2xl" />
+
+              {/* Carte produit existante — légèrement inclinée, façon « capture qui pop » */}
+              <div className="relative [transform:rotate(-2.5deg)] hover:[transform:rotate(0deg)] transition-transform duration-500 drop-shadow-[0_24px_48px_rgba(20,10,60,0.35)]">
+                <ProductPreview />
+              </div>
+            </div>
+
+            {/* Encart flottant haut-gauche (capacité réelle) */}
+            <div className="absolute -left-2 sm:-left-7 top-10 z-10 hidden sm:flex items-center gap-2.5 rounded-2xl bg-white border border-slate-100 shadow-pop px-3.5 py-2.5 [transform:rotate(-3deg)] animate-fade-in-up" style={{ animationDelay: '360ms' }}>
+              <span className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0"><FileText size={15} /></span>
+              <div className="leading-tight text-left">
+                <p className="text-[12px] font-bold text-slate-900">CV optimisé ATS</p>
+                <p className="text-[11px] text-slate-400">Lisible par les recruteurs</p>
+              </div>
+            </div>
+
+            {/* Encart flottant bas-droite (capacité réelle) */}
+            <div className="absolute -right-2 sm:-right-6 bottom-12 z-10 hidden sm:flex items-center gap-2.5 rounded-2xl bg-white border border-slate-100 shadow-pop px-3.5 py-2.5 [transform:rotate(3deg)] animate-fade-in-up" style={{ animationDelay: '460ms' }}>
+              <span className="w-8 h-8 rounded-lg bg-[#7D5CFF]/10 text-[#7D5CFF] flex items-center justify-center shrink-0"><PenLine size={15} /></span>
+              <div className="leading-tight text-left">
+                <p className="text-[12px] font-bold text-slate-900">Lettre sur-mesure</p>
+                <p className="text-[11px] text-slate-400">Adaptée à chaque offre</p>
+              </div>
+            </div>
           </div>
         </div>
       </section>
