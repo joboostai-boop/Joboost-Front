@@ -213,13 +213,13 @@ const Home: React.FC<HomeProps> = ({ onStart }) => {
         <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 items-center">
           <div className="text-center lg:text-left">
             <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full surface-accent text-[#7D5CFF] text-xs font-semibold mb-6">
-              <Sparkles size={14} /> Propulsé par l'IA
+              <Sparkles size={14} /> Recherche d'emploi propulsée par l'IA
             </span>
-            <h1 className="font-extrabold text-[#0B0B14] dark:text-white tracking-tight leading-[1.05] text-[2.5rem] sm:text-6xl lg:text-[4.25rem]">
-              Décrochez <span className="text-[#7D5CFF]">plus d'entretiens</span>, avec moins d'efforts.
+            <h1 className="font-extrabold text-[#0B0B14] dark:text-white tracking-[-0.03em] leading-[1.04] text-[2.75rem] sm:text-6xl lg:text-[4.5rem]">
+              L'IA au service de votre <span className="text-[#7D5CFF]">carrière</span>.
             </h1>
             <p className="mt-6 text-lg sm:text-xl text-slate-500 max-w-xl mx-auto lg:mx-0 leading-relaxed">
-              JobBoost prépare vos candidatures sur-mesure : CV optimisé pour les ATS, lettres adaptées à chaque offre et suivi clair de vos démarches.
+              JobBoost prépare vos candidatures sur-mesure — CV optimisé pour les ATS, lettres adaptées à chaque offre et suivi clair de vos démarches. Pour décrocher <span className="text-slate-700 font-semibold">plus d'entretiens</span>, avec moins d'efforts.
             </p>
 
             <div className="mt-9 flex flex-col sm:flex-row gap-3 justify-center lg:justify-start">

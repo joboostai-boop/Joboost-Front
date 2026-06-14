@@ -1,21 +1,25 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+/* Police Inter chargée via <link> dans index.html (preconnect + display=swap,
+   plus rapide qu'un @import bloquant). Fallback système si indisponible. */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
   body {
-    font-family: 'Inter', sans-serif;
+    font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
     -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    /* Stylistic sets Inter : chiffres tabulaires nets + L/I plus lisibles. */
+    font-feature-settings: 'cv11', 'ss01';
     font-size: clamp(0.875rem, 2vw, 1rem);
-    @apply bg-[#F7F7F9] text-[#111827];
+    @apply bg-[#F7F7F9] text-[#0B0B14];
   }
 
-  /* Standardisation des titres avec hiérarchie */
-  h1 { @apply text-2xl font-bold tracking-tight text-[#111827]; }
-  h2 { @apply text-xl font-bold tracking-tight text-[#111827]; }
-  h3 { @apply text-lg font-bold tracking-tight text-[#111827]; }
-  h4 { @apply text-base font-bold text-[#111827]; }
+  /* Hiérarchie de titres modernisée : extrabold + interlettrage resserré (look SaaS/Pitch). */
+  h1 { @apply text-2xl font-extrabold tracking-[-0.02em] text-[#0B0B14]; }
+  h2 { @apply text-xl font-extrabold tracking-[-0.018em] text-[#0B0B14]; }
+  h3 { @apply text-lg font-bold tracking-[-0.014em] text-[#0B0B14]; }
+  h4 { @apply text-base font-bold tracking-[-0.01em] text-[#0B0B14]; }
   p { @apply text-sm text-[#4B5563] leading-relaxed; }
 
   /* Dark mode overrides */
