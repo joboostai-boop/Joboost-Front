@@ -187,6 +187,17 @@
   @apply transition-transform duration-150 active:scale-[0.97];
 }
 
+/* Transition d'entrée de page : rejouée à chaque changement de route
+   (le conteneur est re-monté via une `key` sur le pathname dans App.tsx).
+   Donne une navigation fluide et vivante, sans dépendance JS. */
+@keyframes page-in {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: none; }
+}
+.animate-page {
+  animation: page-in 0.34s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
 /* Accessibilité : on neutralise quasi toutes les animations si l'utilisateur
    a demandé moins de mouvement (prefers-reduced-motion). Filet de sécurité global. */
 @media (prefers-reduced-motion: reduce) {

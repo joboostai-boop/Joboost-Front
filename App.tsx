@@ -154,7 +154,7 @@ const App: React.FC = () => {
       {/* Main Fluid Content */}
       <main className="flex-1 min-w-0 md:pb-0 pb-20 overflow-y-auto">
         <Topbar user={user} />
-        <div className="min-h-full">
+        <div key={location.pathname} className="min-h-full animate-page">
           <Suspense fallback={<div className="flex-1 flex items-center justify-center min-h-[50vh]"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#7D5CFF]"></div></div>}>
           <Routes>
             {/* Accueil (hub) */}

@@ -38,7 +38,7 @@ const Sidebar: React.FC<SidebarProps> = ({ currentPath }) => {
       >
         {/* Barre d'accent à gauche quand actif */}
         {active && <span className="absolute left-0 top-1.5 bottom-1.5 w-0.5 rounded-full bg-[#7D5CFF] hidden lg:block" />}
-        <span className={`flex items-center justify-center w-5 h-5 shrink-0 transition-colors duration-150 ${
+        <span className={`flex items-center justify-center w-5 h-5 shrink-0 transition-all duration-150 group-hover:scale-110 ${
           active ? 'text-[#A78BFA]' : 'text-slate-500 group-hover:text-white'
         }`}>
           {item.icon}
