@@ -326,21 +326,21 @@ const Home: React.FC<HomeProps> = ({ onStart }) => {
         </div>
       </section>
 
-      {/* CTA */}
-      <section className="px-5 sm:px-6 py-20 sm:py-24">
-        <Reveal className="max-w-3xl mx-auto surface p-8 sm:p-12 text-center">
-          <h2 className="text-3xl sm:text-4xl font-extrabold text-[#0B0B14] dark:text-white tracking-tight">
-            Prêt à structurer votre recherche d'emploi ?
+      {/* CTA — bande pleine couleur (signature pitch) */}
+      <section className="px-5 sm:px-6 py-24 sm:py-28">
+        <Reveal className="max-w-5xl mx-auto rounded-3xl bg-[#7D5CFF] px-6 py-14 sm:px-12 sm:py-20 text-center">
+          <h2 className="text-3xl sm:text-5xl font-extrabold text-white tracking-tight leading-[1.1]">
+            Prêt à décrocher plus d'entretiens ?
           </h2>
-          <p className="mt-3 text-slate-500 max-w-xl mx-auto">
+          <p className="mt-4 text-lg text-white/80 max-w-xl mx-auto leading-relaxed">
             Créez votre profil en quelques minutes et générez votre première candidature dès aujourd'hui.
           </p>
-          <div className="mt-7 flex flex-col sm:flex-row gap-3 justify-center">
-            <button onClick={() => openAuth(true)} className="press btn btn-primary btn-lg">
-              Commencer gratuitement <ArrowRight size={18} />
+          <div className="mt-8 flex flex-col sm:flex-row gap-3 justify-center">
+            <button onClick={() => openAuth(true)} className="press btn btn-lg bg-white text-[#7D5CFF] hover:bg-white/90 border-transparent text-base px-6 group">
+              Commencer gratuitement <ArrowRight size={18} className="group-hover:translate-x-0.5 transition-transform" />
             </button>
           </div>
-          <p className="mt-4 text-sm text-slate-400">Sans carte bancaire</p>
+          <p className="mt-4 text-sm text-white/70">Sans carte bancaire</p>
         </Reveal>
       </section>
 
