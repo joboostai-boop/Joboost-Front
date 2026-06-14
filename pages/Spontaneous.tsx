@@ -4,6 +4,7 @@ import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { authHeaders } from '../services/authToken';
+import MatchRing from '../components/MatchRing';
 
 type AutoLevel = 'AUTO_SAFE' | 'AUTO_REVIEW' | 'NO_SEND';
 
@@ -186,28 +187,19 @@ const Spontaneous: React.FC = () => {
   const visible = filter === 'ALL' ? companies : companies.filter((c) => c.autoLevel === filter);
 
   return (
-    <div className="p-6 md:p-10 max-w-5xl mx-auto space-y-8">
-      <header className="flex flex-col border-b border-[#E5E7EB] dark:border-[#1F2937] pb-8 space-y-4">
-        <div>
-          <h1 className="flex items-center gap-3">
-            <Navigation className="text-[#7D5CFF]" size={32} />
-            Marché Caché · Candidatures spontanées
-          </h1>
-          <p className="mt-2 text-sm text-[#6B7280] max-w-3xl leading-relaxed">
-            Connecté à France Travail : détectez les entreprises qui recrutent réellement près de chez vous, préparez votre candidature (profil + lettre IA) et envoyez-la — avec des garde-fous automatiques pour ne jamais spammer.
-          </p>
+    <div className="p-5 md:p-8 max-w-5xl mx-auto space-y-6">
+      <header className="space-y-1.5">
+        <div className="flex items-center gap-2.5">
+          <span className="w-9 h-9 rounded-lg surface-accent text-[#7D5CFF] flex items-center justify-center"><Navigation size={18} /></span>
+          <h1 className="text-2xl font-bold tracking-tight text-[#111827] dark:text-white">Candidatures spontanées</h1>
         </div>
+        <p className="text-sm text-[#6B7280] dark:text-slate-400 max-w-2xl leading-relaxed">
+          Détectez les entreprises qui recrutent réellement près de chez vous (via France Travail), préparez votre candidature et envoyez-la — avec des garde-fous pour ne jamais spammer.
+        </p>
       </header>
 
-      <div className="bg-violet-50 border border-violet-200 rounded-lg p-4 flex items-start gap-3">
-        <Zap className="text-violet-600 shrink-0 mt-0.5" size={18} />
-        <p className="text-violet-800 text-sm">
-          Chaque entreprise est notée automatiquement : <strong>Envoi auto</strong> (conditions réunies), <strong>À valider</strong> (vérification recommandée) ou <strong>Manuel</strong> (envoi automatique impossible). Vous gardez toujours le contrôle.
-        </p>
-      </div>
-
-      <form onSubmit={handleSearch} className="card-pro p-6 md:p-8 bg-[#F3F0FF] dark:bg-[#7D5CFF]/10 border-[#7D5CFF] relative">
-        <h3 className="text-sm font-bold text-[#111827] dark:text-white uppercase tracking-widest mb-6">Critères de ciblage</h3>
+      <form onSubmit={handleSearch} className="surface p-5 md:p-6">
+        <h3 className="text-sm font-semibold text-[#111827] dark:text-white mb-4">Critères de ciblage</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label className="input-label">Métier Ciblé</label>
@@ -234,7 +226,14 @@ const Spontaneous: React.FC = () => {
       {loading && (
         <div className="space-y-4">
           {[0, 1, 2].map((i) => (
-            <div key={i} className="card-pro p-6 animate-pulse h-40 bg-slate-50 dark:bg-slate-900/40" />
+            <div key={i} className="surface p-5 space-y-4">
+              <div className="flex items-center gap-3">
+                <div className="skeleton w-10 h-10 rounded-lg" />
+                <div className="space-y-2"><div className="skeleton h-4 w-40 rounded" /><div className="skeleton h-3 w-28 rounded" /></div>
+              </div>
+              <div className="flex gap-2"><div className="skeleton h-6 w-20 rounded" /><div className="skeleton h-6 w-24 rounded" /></div>
+              <div className="skeleton h-12 w-full rounded-lg" />
+            </div>
           ))}
         </div>
       )}
@@ -263,19 +262,22 @@ const Spontaneous: React.FC = () => {
             const ctaLabel = blocked ? 'Postuler manuellement' : company.autoLevel === 'AUTO_REVIEW' ? 'Valider et envoyer' : 'Envoyer la candidature';
 
             return (
-              <div key={company.id} className={`card-pro p-6 flex flex-col md:flex-row gap-6 transition-colors group ${busy ? 'opacity-70 pointer-events-none border-[#7D5CFF] ring-1 ring-[#7D5CFF]' : 'hover:border-[#D1D5DB] dark:hover:border-[#374151]'}`}>
+              <div key={company.id} className={`surface p-5 flex flex-col md:flex-row gap-6 transition-all duration-200 group animate-fade-in-up ${busy ? 'opacity-70 pointer-events-none ring-1 ring-[#7D5CFF]' : 'hover:shadow-card-hover hover:-translate-y-0.5'}`}>
                 <div className="flex-1 space-y-4">
                   <div className="flex justify-between items-start gap-3">
-                    <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 bg-[#F3F4F6] dark:bg-[#1F2937] rounded flex items-center justify-center text-[#6B7280]">
-                        <Building2 size={24} />
-                      </div>
-                      <div>
-                        <h2 className="text-xl font-bold text-[#111827] dark:text-white">{company.name}</h2>
-                        <p className="text-[#6B7280] text-sm flex items-center gap-1.5 mt-1"><MapPin size={14} /> {company.address}</p>
+                    <div className="flex items-center gap-3 min-w-0">
+                      <span className="w-10 h-10 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 flex items-center justify-center font-semibold text-sm shrink-0">
+                        {company.name?.charAt(0) || <Building2 size={18} />}
+                      </span>
+                      <div className="min-w-0">
+                        <h2 className="text-base font-semibold text-[#111827] dark:text-white leading-tight">{company.name}</h2>
+                        <p className="text-[#6B7280] text-xs flex items-center gap-1.5 mt-0.5"><MapPin size={13} /> {company.address}</p>
                       </div>
                     </div>
-                    <AutoLevelBadge level={company.autoLevel} label={company.autoLevelLabel} score={company.autoScore} />
+                    <div className="flex items-center gap-3 shrink-0">
+                      {company.matchScore ? <MatchRing score={company.matchScore} size={40} /> : null}
+                      <AutoLevelBadge level={company.autoLevel} label={company.autoLevelLabel} score={company.autoScore} />
+                    </div>
                   </div>
 
                   <div className="flex flex-wrap gap-2 text-xs font-medium">
