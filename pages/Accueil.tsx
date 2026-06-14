@@ -104,8 +104,8 @@ const Accueil: React.FC<AccueilProps> = ({ user }) => {
       {/* En-tête */}
       <header className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3 animate-fade-in-up">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-[#111827] dark:text-white">Bonjour {firstName}</h1>
-          <p className="text-sm text-[#6B7280] dark:text-slate-400 mt-1">Voici l'état de votre recherche.</p>
+          <h1 className="text-3xl sm:text-4xl font-extrabold tracking-[-0.025em] text-[#0B0B14] dark:text-white">Bonjour {firstName}</h1>
+          <p className="text-[15px] text-[#6B7280] dark:text-slate-400 mt-1.5">Voici l'état de votre recherche aujourd'hui.</p>
         </div>
         {!loading && pct < 100 && (
           <Link to="/prepare/profile" className="inline-flex items-center gap-2 text-xs font-medium text-[#6B7280] hover:text-[#7D5CFF] transition-colors shrink-0">
@@ -120,19 +120,21 @@ const Accueil: React.FC<AccueilProps> = ({ user }) => {
       {/* Prochaine action (focale) */}
       <Link
         to={next.to}
-        className="press group flex items-center justify-between gap-4 rounded-xl bg-[#7D5CFF] text-white p-5 shadow-card hover:bg-[#6023C0] transition-colors animate-fade-in-up"
+        className="press group relative overflow-hidden flex items-center justify-between gap-4 rounded-2xl bg-gradient-to-br from-[#8C6DFF] via-[#7D5CFF] to-[#6D28D9] text-white p-6 shadow-[0_12px_32px_-10px_rgba(124,92,255,0.55)] transition-shadow hover:shadow-[0_16px_40px_-10px_rgba(124,92,255,0.65)] animate-fade-in-up"
       >
-        <div className="flex items-center gap-4 min-w-0">
-          <span className="w-11 h-11 rounded-lg bg-white/15 flex items-center justify-center shrink-0">
-            {loading ? <Loader2 size={20} className="animate-spin" /> : next.icon}
+        {/* Halo décoratif subtil (signature pitch) */}
+        <span className="pointer-events-none absolute -right-8 -top-10 w-40 h-40 rounded-full bg-white/10 blur-2xl" />
+        <div className="relative flex items-center gap-4 min-w-0">
+          <span className="w-12 h-12 rounded-xl bg-white/15 backdrop-blur flex items-center justify-center shrink-0 ring-1 ring-white/20">
+            {loading ? <Loader2 size={22} className="animate-spin" /> : next.icon}
           </span>
           <div className="min-w-0">
-            <p className="text-[11px] uppercase tracking-wider font-medium text-white/70">Prochaine étape</p>
-            <p className="font-semibold text-base truncate">{next.title}</p>
-            <p className="text-white/80 text-xs truncate">{next.desc}</p>
+            <p className="text-[11px] uppercase tracking-wider font-semibold text-white/75">Prochaine étape</p>
+            <p className="font-bold text-lg truncate">{next.title}</p>
+            <p className="text-white/80 text-[13px] truncate">{next.desc}</p>
           </div>
         </div>
-        <ArrowRight size={20} className="shrink-0 group-hover:translate-x-1 transition-transform" />
+        <ArrowRight size={22} className="relative shrink-0 group-hover:translate-x-1 transition-transform" />
       </Link>
 
       {/* KPIs */}

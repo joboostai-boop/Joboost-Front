@@ -30,16 +30,14 @@ const Sidebar: React.FC<SidebarProps> = ({ currentPath }) => {
         key={item.path}
         to={`/${item.path}`}
         title={item.name}
-        className={`group relative flex items-center gap-3 rounded-lg text-sm font-medium transition-colors duration-150 outline-none
-          px-3 py-2.5 lg:py-2 justify-center lg:justify-start
+        className={`group relative flex items-center gap-3 rounded-xl text-sm font-semibold transition-all duration-150 outline-none
+          px-3 py-2.5 justify-center lg:justify-start
           ${active
-            ? 'bg-[#7D5CFF]/15 text-white'
-            : 'text-slate-400 hover:bg-white/5 hover:text-white'}`}
+            ? 'bg-gradient-to-b from-[#8C6DFF] to-[#7D5CFF] text-white shadow-[0_4px_14px_-2px_rgba(124,92,255,0.55)]'
+            : 'text-slate-400 hover:bg-white/[0.07] hover:text-white'}`}
       >
-        {/* Barre d'accent à gauche quand actif */}
-        {active && <span className="absolute left-0 top-1.5 bottom-1.5 w-0.5 rounded-full bg-[#7D5CFF] hidden lg:block" />}
-        <span className={`flex items-center justify-center w-5 h-5 shrink-0 transition-all duration-150 group-hover:scale-110 ${
-          active ? 'text-[#A78BFA]' : 'text-slate-500 group-hover:text-white'
+        <span className={`flex items-center justify-center w-5 h-5 shrink-0 transition-transform duration-150 group-hover:scale-110 ${
+          active ? 'text-white' : 'text-slate-500 group-hover:text-white'
         }`}>
           {item.icon}
         </span>

@@ -12,7 +12,7 @@
     /* Stylistic sets Inter : chiffres tabulaires nets + L/I plus lisibles. */
     font-feature-settings: 'cv11', 'ss01';
     font-size: clamp(0.875rem, 2vw, 1rem);
-    @apply bg-[#F7F7F9] text-[#0B0B14];
+    @apply bg-[#F5F4FB] text-[#0B0B14];
   }
 
   /* Hiérarchie de titres modernisée : extrabold + interlettrage resserré (look SaaS/Pitch). */
@@ -34,17 +34,18 @@
      rayons mesurés (8–16px), pas de halo. Les 3 classes partagent le
      même langage visuel ; elles diffèrent surtout par le rayon. */
 
-  /* Carte applicative dense (dashboard, listes, formulaires). */
+  /* Carte applicative dense (dashboard, listes, formulaires).
+     Direction pitch.com : rayon généreux + ombre douce présente. */
   .card-pro {
-    @apply bg-white border border-[#E5E7EB] rounded-lg shadow-card p-6 overflow-hidden;
+    @apply bg-white border border-[#ECEAF6] rounded-2xl shadow-card p-6 overflow-hidden;
   }
   .dark .card-pro {
     @apply bg-[#111827] border-[#1F2937] shadow-none;
   }
 
-  /* Carte « moderne » (landing, pricing, onboarding) : rayon un peu plus doux. */
+  /* Carte « moderne » (landing, pricing, onboarding) : rayon encore plus doux. */
   .card-modern {
-    @apply bg-white border border-[#E5E7EB] rounded-2xl shadow-card;
+    @apply bg-white border border-[#ECEAF6] rounded-3xl shadow-card;
   }
   .dark .card-modern {
     @apply bg-[#111827] border-[#1F2937] shadow-none;
@@ -52,7 +53,7 @@
 
   /* Surface neutre réutilisable (aperçus, panneaux). */
   .surface {
-    @apply bg-white border border-[#E5E7EB] rounded-xl shadow-xs;
+    @apply bg-white border border-[#ECEAF6] rounded-2xl shadow-card;
   }
   .dark .surface {
     @apply bg-[#111827] border-[#1F2937] shadow-none;
@@ -71,12 +72,12 @@
      liseré interne clair sur le primaire), focus-visible accessible,
      enfoncement léger au clic. */
   .btn {
-    @apply min-h-[42px] px-4 py-2.5 inline-flex items-center justify-center gap-2 rounded-lg text-sm font-medium transition-all duration-150 outline-none select-none
+    @apply min-h-[42px] px-4 py-2.5 inline-flex items-center justify-center gap-2 rounded-xl text-sm font-semibold transition-all duration-150 outline-none select-none
            active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-[#7D5CFF]/45 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none;
   }
 
   .btn-lg {
-    @apply min-h-[48px] px-5 py-3 text-[15px] rounded-xl;
+    @apply min-h-[50px] px-6 py-3 text-[15px] rounded-2xl;
   }
 
   .btn-primary {
@@ -104,12 +105,12 @@
   }
 
   .input-pro {
-    @apply w-full min-h-[42px] px-3.5 py-2.5 bg-white border border-[#D1D5DB] rounded-lg shadow-xs text-base sm:text-sm text-[#111827] placeholder:text-[#9CA3AF] transition-all outline-none focus:border-[#7D5CFF] focus:ring-2 focus:ring-[#7D5CFF]/25;
+    @apply w-full min-h-[44px] px-4 py-2.5 bg-white border border-[#E2E0EF] rounded-xl shadow-xs text-base sm:text-sm text-[#111827] placeholder:text-[#9CA3AF] transition-all outline-none focus:border-[#7D5CFF] focus:ring-4 focus:ring-[#7D5CFF]/15;
   }
 
   /* Textarea */
   .textarea-pro {
-    @apply w-full p-3.5 bg-white border border-[#D1D5DB] rounded-lg shadow-xs text-base sm:text-sm text-[#111827] placeholder:text-[#9CA3AF] transition-all outline-none focus:border-[#7D5CFF] focus:ring-2 focus:ring-[#7D5CFF]/25 resize-y min-h-[100px];
+    @apply w-full p-4 bg-white border border-[#E2E0EF] rounded-xl shadow-xs text-base sm:text-sm text-[#111827] placeholder:text-[#9CA3AF] transition-all outline-none focus:border-[#7D5CFF] focus:ring-4 focus:ring-[#7D5CFF]/15 resize-y min-h-[100px];
   }
 
   /* Dark mode variants for components */

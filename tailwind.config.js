@@ -29,12 +29,12 @@ export default {
           700: '#4F46E5',
         },
       },
-      // Échelle d'ombres douces (élévation discrète, pas de halo) — direction « outil pro ».
+      // Échelle d'ombres douces et présentes (élévation aérée façon pitch.com).
       boxShadow: {
         xs: '0 1px 2px 0 rgb(16 24 40 / 0.05)',
-        'card': '0 1px 2px 0 rgb(16 24 40 / 0.04), 0 1px 3px 0 rgb(16 24 40 / 0.06)',
-        'card-hover': '0 4px 12px -2px rgb(16 24 40 / 0.10), 0 2px 6px -2px rgb(16 24 40 / 0.06)',
-        'pop': '0 12px 32px -8px rgb(16 24 40 / 0.18)',
+        'card': '0 1px 2px 0 rgb(16 24 40 / 0.04), 0 6px 16px -6px rgb(16 24 40 / 0.10)',
+        'card-hover': '0 8px 24px -8px rgb(124 92 255 / 0.22), 0 4px 10px -4px rgb(16 24 40 / 0.08)',
+        'pop': '0 20px 48px -12px rgb(16 24 40 / 0.22)',
       },
       keyframes: {
         'fade-in-up': {
