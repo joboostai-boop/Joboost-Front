@@ -170,10 +170,10 @@ const LetterGenerator: React.FC = () => {
 
   return (
     <div className="p-6 md:p-10 max-w-6xl mx-auto space-y-10">
-      <header className="border-b border-[#E5E7EB] pb-6 flex flex-col md:flex-row justify-between md:items-end gap-4">
-        <div>
-          <h1>IA Rédacteur</h1>
-          <p>Générez des lettres de motivation percutantes à partir de votre profil et d'une offre.</p>
+      <header className="flex flex-col md:flex-row justify-between md:items-end gap-4">
+        <div className="space-y-1.5">
+          <h1 className="text-2xl font-bold tracking-tight text-[#111827] dark:text-white">Rédacteur de lettres</h1>
+          <p className="text-sm text-[#6B7280] dark:text-slate-400">Des lettres de motivation ciblées, écrites à partir de votre profil et de l'offre.</p>
         </div>
         <button onClick={handleSaveLetter} disabled={!generatedText} className="press btn btn-secondary text-[#7D5CFF] disabled:opacity-50">
           <Save size={16} /> Sauvegarder
@@ -185,7 +185,7 @@ const LetterGenerator: React.FC = () => {
              <h3 className="text-xs font-bold uppercase tracking-widest text-[#6B7280]">Vos lettres sauvegardées</h3>
              <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-none">
                {letters.map(letter => (
-                 <div key={letter.id} onClick={() => loadLetter(letter)} className={`shrink-0 cursor-pointer p-4 border rounded-md w-48 transition-colors ${currentLetterId === letter.id ? 'border-[#7D5CFF] bg-[#F3F0FF] dark:bg-[#7D5CFF]/10' : 'border-[#E5E7EB] dark:border-[#1F2937] bg-white dark:bg-[#111827] hover:border-[#D1D5DB]'}`}>
+                 <div key={letter.id} onClick={() => loadLetter(letter)} className={`press shrink-0 cursor-pointer p-4 rounded-xl w-48 transition-all duration-200 hover:shadow-card-hover hover:-translate-y-0.5 ${currentLetterId === letter.id ? 'surface-accent ring-1 ring-[#7D5CFF]/40' : 'surface'}`}>
                    <p className="text-sm font-semibold text-[#111827] dark:text-white truncate">{letter.title}</p>
                    <p className="text-[10px] text-[#9CA3AF] flex items-center gap-1 mt-1"><Clock size={10} /> {new Date(letter.updatedAt).toLocaleDateString()}</p>
                  </div>
@@ -196,7 +196,7 @@ const LetterGenerator: React.FC = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
         <div className="lg:col-span-4 space-y-6">
-          <div className="card-pro space-y-6">
+          <div className="surface p-5 md:p-6 space-y-6">
             <h3 className="text-xs font-bold text-[#6B7280] uppercase tracking-widest border-b border-[#E5E7EB] dark:border-[#1F2937] pb-2">1. Informations de l'offre</h3>
             <div className="space-y-4">
               <div>
@@ -211,15 +211,15 @@ const LetterGenerator: React.FC = () => {
 
             <h3 className="text-xs font-bold text-[#6B7280] uppercase tracking-widest border-b border-[#E5E7EB] dark:border-[#1F2937] pb-2 pt-2">2. Contexte de personnalisation</h3>
             <div className="grid grid-cols-3 gap-2">
-              <button onClick={() => setMode('zero')} className={`flex flex-col items-center justify-center p-2 rounded-md border transition-colors outline-none ${mode === 'zero' ? 'border-[#7D5CFF] bg-[#F3F0FF] text-[#7D5CFF] dark:bg-[#7D5CFF]/10' : 'border-[#E5E7EB] dark:border-[#1F2937] text-[#6B7280] hover:bg-[#F3F4F6] dark:hover:bg-[#1F2937]'}`}>
+              <button onClick={() => setMode('zero')} className={`press flex flex-col items-center justify-center p-2.5 rounded-lg border transition-all outline-none ${mode === 'zero' ? 'surface-accent text-[#7D5CFF] ring-1 ring-[#7D5CFF]/30' : 'border-[#E5E7EB] dark:border-[#1F2937] text-[#6B7280] hover:bg-[#F3F4F6] dark:hover:bg-[#1F2937]'}`}>
                 <Edit3 size={16} className="mb-1" />
                 <span className="text-[10px] font-bold">Depuis zéro</span>
               </button>
-              <button onClick={() => setMode('text')} className={`flex flex-col items-center justify-center p-2 rounded-md border transition-colors outline-none ${mode === 'text' ? 'border-[#7D5CFF] bg-[#F3F0FF] text-[#7D5CFF] dark:bg-[#7D5CFF]/10' : 'border-[#E5E7EB] dark:border-[#1F2937] text-[#6B7280] hover:bg-[#F3F4F6] dark:hover:bg-[#1F2937]'}`}>
+              <button onClick={() => setMode('text')} className={`press flex flex-col items-center justify-center p-2.5 rounded-lg border transition-all outline-none ${mode === 'text' ? 'surface-accent text-[#7D5CFF] ring-1 ring-[#7D5CFF]/30' : 'border-[#E5E7EB] dark:border-[#1F2937] text-[#6B7280] hover:bg-[#F3F4F6] dark:hover:bg-[#1F2937]'}`}>
                 <AlignLeft size={16} className="mb-1" />
                 <span className="text-[10px] font-bold">Texte de l'offre</span>
               </button>
-              <button onClick={() => setMode('link')} className={`flex flex-col items-center justify-center p-2 rounded-md border transition-colors outline-none ${mode === 'link' ? 'border-[#7D5CFF] bg-[#F3F0FF] text-[#7D5CFF] dark:bg-[#7D5CFF]/10' : 'border-[#E5E7EB] dark:border-[#1F2937] text-[#6B7280] hover:bg-[#F3F4F6] dark:hover:bg-[#1F2937]'}`}>
+              <button onClick={() => setMode('link')} className={`press flex flex-col items-center justify-center p-2.5 rounded-lg border transition-all outline-none ${mode === 'link' ? 'surface-accent text-[#7D5CFF] ring-1 ring-[#7D5CFF]/30' : 'border-[#E5E7EB] dark:border-[#1F2937] text-[#6B7280] hover:bg-[#F3F4F6] dark:hover:bg-[#1F2937]'}`}>
                 <LinkIcon size={16} className="mb-1" />
                 <span className="text-[10px] font-bold">Lien URL</span>
               </button>
@@ -280,7 +280,7 @@ const LetterGenerator: React.FC = () => {
           </div>
 
           {/* Aperçu grand format du modèle sélectionné */}
-          <div id="letter-preview" className="rounded-xl overflow-hidden shadow-2xl ring-1 ring-slate-200 dark:ring-slate-700 max-w-[800px] mx-auto">
+          <div id="letter-preview" className="rounded-xl overflow-hidden shadow-pop ring-1 ring-slate-200 dark:ring-slate-700 max-w-[800px] mx-auto">
             <SelectedLetterPreview data={previewData} />
           </div>
         </div>

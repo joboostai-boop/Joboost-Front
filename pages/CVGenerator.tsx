@@ -136,10 +136,13 @@ const CVGenerator: React.FC = () => {
   return (
     <div className="p-6 md:p-10 max-w-6xl mx-auto flex flex-col lg:flex-row gap-10">
       <div className="flex-1 space-y-10">
-        <header className="border-b border-[#E5E7EB] pb-6 flex flex-col md:flex-row justify-between md:items-end gap-4">
-          <div>
-            <h1>Éditeur de CV</h1>
-            <p>Créez un CV certifié ATS pour maximiser vos chances de recrutement.</p>
+        <header className="flex flex-col md:flex-row justify-between md:items-end gap-4">
+          <div className="space-y-1.5">
+            <h1 className="text-2xl font-bold tracking-tight text-[#111827] dark:text-white">Éditeur de CV</h1>
+            <p className="text-sm text-[#6B7280] dark:text-slate-400 flex items-center gap-1.5">
+              <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-500" />
+              Format texte certifié ATS, lisible par les robots de recrutement.
+            </p>
           </div>
           <button onClick={handleSaveCV} className="press btn btn-secondary text-[#7D5CFF]">
             <Save size={16} /> Sauvegarder
@@ -151,7 +154,7 @@ const CVGenerator: React.FC = () => {
                <h3 className="text-xs font-bold uppercase tracking-widest text-[#6B7280]">Vos CV sauvegardés</h3>
                <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-none">
                  {cvs.map(cv => (
-                   <div key={cv.id} onClick={() => loadCv(cv)} className={`shrink-0 cursor-pointer p-4 border rounded-md w-48 transition-colors ${currentCvId === cv.id ? 'border-[#7D5CFF] bg-[#F3F0FF] dark:bg-[#7D5CFF]/10' : 'border-[#E5E7EB] dark:border-[#1F2937] bg-white dark:bg-[#111827] hover:border-[#D1D5DB]'}`}>
+                   <div key={cv.id} onClick={() => loadCv(cv)} className={`press shrink-0 cursor-pointer p-4 rounded-xl w-48 transition-all duration-200 hover:shadow-card-hover hover:-translate-y-0.5 ${currentCvId === cv.id ? 'surface-accent ring-1 ring-[#7D5CFF]/40' : 'surface'}`}>
                      <p className="text-sm font-semibold text-[#111827] dark:text-white truncate">{cv.title}</p>
                      <p className="text-[10px] text-[#9CA3AF] flex items-center gap-1 mt-1"><Clock size={10} /> {new Date(cv.updatedAt).toLocaleDateString()}</p>
                    </div>
@@ -173,22 +176,22 @@ const CVGenerator: React.FC = () => {
           />
         </section>
 
-        <div className="space-y-6">
+        <div className="surface p-5 md:p-6 space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="input-label">Nom complet</label>
-              <input 
-                type="text" value={formData.name} 
-                onChange={(e) => setFormData({...formData, name: e.target.value})} 
-                className="input-pro" 
+              <input
+                type="text" value={formData.name}
+                onChange={(e) => setFormData({...formData, name: e.target.value})}
+                className="input-pro"
               />
             </div>
             <div>
               <label className="input-label">Poste recherché</label>
-              <input 
-                type="text" value={formData.title} 
-                onChange={(e) => setFormData({...formData, title: e.target.value})} 
-                className="input-pro" 
+              <input
+                type="text" value={formData.title}
+                onChange={(e) => setFormData({...formData, title: e.target.value})}
+                className="input-pro"
               />
             </div>
           </div>
@@ -197,7 +200,7 @@ const CVGenerator: React.FC = () => {
             <div className="flex justify-between items-center mb-1.5">
               <label className="input-label mb-0">Résumé du profil</label>
               <button onClick={handleGenerateSummary} className="text-[#7D5CFF] text-xs font-semibold flex items-center gap-1 hover:underline outline-none">
-                {loadingSummary ? <RefreshCw className="animate-spin" size={12} /> : <Wand2 size={12} />} 
+                {loadingSummary ? <RefreshCw className="animate-spin" size={12} /> : <Wand2 size={12} />}
                 Aider à rédiger
               </button>
             </div>
@@ -220,7 +223,7 @@ const CVGenerator: React.FC = () => {
         </div>
         
         {/* Aperçu du modèle sélectionné (grand format) */}
-        <div id="cv-preview" className="rounded-xl overflow-hidden shadow-2xl ring-1 ring-slate-200 dark:ring-slate-700">
+        <div id="cv-preview" className="rounded-xl overflow-hidden shadow-pop ring-1 ring-slate-200 dark:ring-slate-700">
           <SelectedPreview data={formData} />
         </div>
       </div>

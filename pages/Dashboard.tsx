@@ -139,9 +139,9 @@ const Dashboard: React.FC = () => {
     <div className="p-6 md:p-10 max-w-6xl mx-auto space-y-8 pb-20">
       {/* Header */}
       <header className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-        <div>
-          <h1>Tableau de Bord</h1>
-          <p>Moteur alimenté par vos véritables données de navigation.</p>
+        <div className="space-y-1.5">
+          <h1 className="text-2xl font-bold tracking-tight text-[#111827] dark:text-white">Tableau de bord</h1>
+          <p className="text-sm text-[#6B7280] dark:text-slate-400">Vos statistiques calculées à partir de votre activité réelle.</p>
         </div>
         <div className="flex flex-wrap items-center gap-3">
           <div className={`flex items-center gap-2 px-3 py-1 rounded-full border ${
@@ -164,9 +164,9 @@ const Dashboard: React.FC = () => {
             </button>
             <button
               onClick={() => handleExport('csv')}
-              className="press flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-[#7D5CFF] to-[#9B7BFF] text-white rounded-xl text-[10px] font-bold hover:shadow-[#7D5CFF]/30 transition-all shadow-lg shadow-[#7D5CFF]/20 dark:shadow-none"
+              className="press btn btn-primary"
             >
-              <Download size={14} /> <span>Rapport (CSV)</span>
+              <Download size={15} /> Rapport CSV
             </button>
           </div>
         </div>
@@ -243,14 +243,14 @@ const Dashboard: React.FC = () => {
           </div>
 
           <div className="grid grid-cols-2 gap-4">
-             <button onClick={() => navigate('/prepare/cv')} className="press p-6 bg-white dark:bg-[#111827] border border-[#E5E7EB] dark:border-[#1F2937] rounded-md flex flex-col items-center justify-center gap-3 hover:border-[#7D5CFF]/40 hover:shadow-md transition-all group outline-none">
-                <div className="w-12 h-12 bg-[#F3F0FF] dark:bg-[#7D5CFF]/10 rounded flex items-center justify-center text-[#7D5CFF] group-hover:scale-110 transition-transform">
+             <button onClick={() => navigate('/prepare/cv')} className="press surface p-6 flex flex-col items-center justify-center gap-3 hover:shadow-card-hover hover:-translate-y-0.5 transition-all duration-200 group outline-none">
+                <div className="w-12 h-12 surface-accent rounded-xl flex items-center justify-center text-[#7D5CFF] group-hover:scale-110 transition-transform">
                    <PlusCircle size={24} />
                 </div>
                 <span className="font-semibold text-[#111827] dark:text-white">Générer un CV</span>
              </button>
-             <button onClick={() => navigate('/prepare/letter')} className="press p-6 bg-white dark:bg-[#111827] border border-[#E5E7EB] dark:border-[#1F2937] rounded-md flex flex-col items-center justify-center gap-3 hover:border-emerald-300 hover:shadow-md transition-all group outline-none">
-                <div className="w-12 h-12 bg-emerald-50 text-emerald-600 rounded flex items-center justify-center">
+             <button onClick={() => navigate('/prepare/letter')} className="press surface p-6 flex flex-col items-center justify-center gap-3 hover:shadow-card-hover hover:-translate-y-0.5 transition-all duration-200 group outline-none">
+                <div className="w-12 h-12 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
                    <PlusCircle size={24} />
                 </div>
                 <span className="font-semibold text-[#111827] dark:text-white">Générer une Lettre</span>

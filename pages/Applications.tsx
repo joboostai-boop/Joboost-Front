@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Briefcase, Building2, Calendar, Search, RefreshCw, Inbox, ArrowRight, GripVertical, Navigation } from 'lucide-react';
+import { Building2, Calendar, Search, RefreshCw, Inbox, ArrowRight, Navigation } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
 import { authHeaders } from '../services/authToken';
@@ -82,10 +82,12 @@ const Applications: React.FC = () => {
       draggable
       onDragStart={() => setDragId(app.id)}
       onDragEnd={() => { setDragId(null); setDragOver(null); }}
-      className={`group bg-white dark:bg-[#0b1220] border border-slate-200 dark:border-slate-800 rounded-xl p-3.5 shadow-sm hover:shadow-md hover:-translate-y-0.5 hover:border-slate-300 dark:hover:border-slate-700 transition-all cursor-grab active:cursor-grabbing ${dragId === app.id ? 'opacity-40 scale-95' : ''}`}
+      className={`group surface p-3.5 hover:shadow-card-hover hover:-translate-y-0.5 transition-all duration-200 cursor-grab active:cursor-grabbing ${dragId === app.id ? 'opacity-40 scale-95' : ''}`}
     >
-      <div className="flex items-start gap-2">
-        <GripVertical size={15} className="text-slate-300 dark:text-slate-600 mt-0.5 shrink-0 hidden lg:block" />
+      <div className="flex items-start gap-2.5">
+        <span className="w-9 h-9 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 flex items-center justify-center font-semibold text-sm shrink-0">
+          {app.company?.charAt(0)?.toUpperCase() || '?'}
+        </span>
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-1.5">
             <p className="font-semibold text-sm text-[#111827] dark:text-white leading-tight truncate">{app.title}</p>
@@ -130,18 +132,31 @@ const Applications: React.FC = () => {
     </div>
   );
 
+  const CardSkeleton: React.FC = () => (
+    <div className="surface p-3.5 space-y-3">
+      <div className="flex items-start gap-2.5">
+        <div className="skeleton w-9 h-9 rounded-lg shrink-0" />
+        <div className="flex-1 space-y-2">
+          <div className="skeleton h-3.5 w-3/4 rounded" />
+          <div className="skeleton h-3 w-1/2 rounded" />
+        </div>
+      </div>
+      <div className="skeleton h-3 w-2/3 rounded" />
+    </div>
+  );
+
   return (
     <div className="p-5 md:p-8 max-w-[1500px] mx-auto space-y-6">
       {/* En-tête */}
       <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div className="flex items-center gap-3">
-          <span className="w-11 h-11 rounded-2xl bg-[#F3F0FF] text-[#7D5CFF] dark:bg-[#7D5CFF]/10 flex items-center justify-center shrink-0">
-            <Briefcase size={22} />
-          </span>
-          <div>
-            <h1>Mes candidatures</h1>
-            <p className="text-sm text-[#6B7280]">{total} candidature{total > 1 ? 's' : ''} · suis l'avancement de chacune.</p>
+        <div className="space-y-1.5">
+          <div className="flex items-center gap-2.5">
+            <h1 className="text-2xl font-bold tracking-tight text-[#111827] dark:text-white">Mes candidatures</h1>
+            {!loading && (
+              <span className="text-xs font-medium text-[#6B7280] bg-slate-100 dark:bg-slate-800 rounded-full px-2 py-0.5 tabular-nums">{total}</span>
+            )}
           </div>
+          <p className="text-sm text-[#6B7280] dark:text-slate-400">Suis l'avancement de chaque candidature, de la préparation à l'offre.</p>
         </div>
         <div className="flex items-center gap-2 w-full md:w-auto">
           <div className="flex-1 md:w-64 relative">
@@ -176,8 +191,14 @@ const Applications: React.FC = () => {
                     <span className="text-xs font-bold text-slate-400">{apps.length}</span>
                   </div>
                   <div className="space-y-2.5 min-h-[120px]">
-                    {apps.map((app) => <Card key={app.id} app={app} col={col} />)}
-                    {apps.length === 0 && <EmptyCol />}
+                    {loading ? (
+                      <><CardSkeleton /><CardSkeleton /></>
+                    ) : (
+                      <>
+                        {apps.map((app) => <Card key={app.id} app={app} col={col} />)}
+                        {apps.length === 0 && <EmptyCol />}
+                      </>
+                    )}
                   </div>
                 </div>
               );
@@ -206,12 +227,18 @@ const Applications: React.FC = () => {
               })}
             </div>
             <div className="space-y-2.5">
-              {byStatus(mobileTab).map((app) => {
-                const col = COLUMNS.find((c) => c.id === mobileTab)!;
-                return <Card key={app.id} app={app} col={col} />;
-              })}
-              {byStatus(mobileTab).length === 0 && !loading && (
-                <div className="card-pro"><EmptyCol /></div>
+              {loading ? (
+                <><CardSkeleton /><CardSkeleton /><CardSkeleton /></>
+              ) : (
+                <>
+                  {byStatus(mobileTab).map((app) => {
+                    const col = COLUMNS.find((c) => c.id === mobileTab)!;
+                    return <Card key={app.id} app={app} col={col} />;
+                  })}
+                  {byStatus(mobileTab).length === 0 && (
+                    <div className="surface"><EmptyCol /></div>
+                  )}
+                </>
               )}
             </div>
           </div>
@@ -219,13 +246,13 @@ const Applications: React.FC = () => {
 
       {/* CTA sous le board quand aucune candidature */}
       {!loading && total === 0 && (
-        <div className="card-pro flex flex-col items-center text-center gap-4 py-10">
-          <span className="w-14 h-14 rounded-2xl bg-[#F3F0FF] text-[#7D5CFF] dark:bg-[#7D5CFF]/10 flex items-center justify-center"><Inbox size={26} /></span>
+        <div className="surface p-10 flex flex-col items-center text-center gap-3">
+          <span className="w-12 h-12 rounded-xl surface-accent text-[#7D5CFF] flex items-center justify-center"><Inbox size={24} /></span>
           <div>
-            <h3 className="text-base font-bold text-[#111827] dark:text-white">Aucune candidature pour l'instant</h3>
+            <h3 className="text-base font-semibold text-[#111827] dark:text-white">Aucune candidature pour l'instant</h3>
             <p className="text-sm text-[#6B7280] mt-1">Dès que tu postules, tes candidatures apparaissent dans le tableau ci-dessus.</p>
           </div>
-          <button onClick={() => navigate('/target/offers')} className="press btn btn-primary">
+          <button onClick={() => navigate('/target/offers')} className="press btn btn-primary mt-1">
             Trouver des offres <ArrowRight size={16} />
           </button>
         </div>

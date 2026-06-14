@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import {
-  Settings as SettingsIcon, Bell, LogOut, ChevronRight, UserRound, Moon, Sun,
-  Crown, Download, Trash2, Linkedin, Calendar, ShieldAlert, X, KeyRound, Mail
+  Bell, LogOut, ChevronRight, UserRound, Moon, Sun,
+  Crown, Download, Trash2, Linkedin, Calendar, ShieldAlert, X, KeyRound
 } from 'lucide-react';
 import { User as UserType } from '../types';
 import { useNavigate } from 'react-router-dom';
@@ -64,6 +64,16 @@ const Settings: React.FC<SettingsProps> = ({ user, isDarkMode, toggleDarkMode })
   const [deleting, setDeleting] = useState(false);
 
   const handleLogout = async () => { await logout(); navigate('/'); };
+
+  const connectLinkedIn = async () => {
+    const toastId = toast.loading('Redirection vers LinkedIn...');
+    try {
+      const res = await fetch(`${API}/api/auth/linkedin`, { credentials: 'include', headers: { ...authHeaders() } });
+      const data = await res.json();
+      if (data.success && data.url) { toast.dismiss(toastId); window.location.href = data.url; }
+      else toast.error(data.error || 'Connexion LinkedIn non configurée.', { id: toastId });
+    } catch { toast.error('Erreur de connexion au serveur.', { id: toastId }); }
+  };
 
   const handleSaveAccount = async () => {
     setSavingAccount(true);
@@ -132,14 +142,9 @@ const Settings: React.FC<SettingsProps> = ({ user, isDarkMode, toggleDarkMode })
   return (
     <div className="p-5 md:p-10 max-w-5xl mx-auto space-y-6 pb-16">
       {/* En-tête */}
-      <header className="flex items-center gap-4">
-        <span className="w-12 h-12 rounded-2xl bg-[#F3F0FF] text-[#7D5CFF] dark:bg-[#7D5CFF]/10 flex items-center justify-center">
-          <SettingsIcon size={24} />
-        </span>
-        <div>
-          <h1>Paramètres</h1>
-          <p className="text-sm text-[#6B7280]">Gère ton compte, tes préférences et tes notifications.</p>
-        </div>
+      <header className="space-y-1.5">
+        <h1 className="text-2xl font-bold tracking-tight text-[#111827] dark:text-white">Paramètres</h1>
+        <p className="text-sm text-[#6B7280] dark:text-slate-400">Gère ton compte, tes préférences et tes notifications.</p>
       </header>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
@@ -211,10 +216,12 @@ const Settings: React.FC<SettingsProps> = ({ user, isDarkMode, toggleDarkMode })
                 <span className="w-9 h-9 rounded-lg bg-[#0A66C2] text-white flex items-center justify-center"><Linkedin size={18} /></span>
                 <div>
                   <p className="text-sm font-semibold text-[#111827] dark:text-white">LinkedIn</p>
-                  <p className="text-xs text-slate-400">Importer ton profil et tes expériences</p>
+                  <p className="text-xs text-slate-400">Connecte ton compte pour récupérer ta photo et ton identité</p>
                 </div>
               </div>
-              <span className="px-2.5 py-1 bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 text-[11px] font-bold rounded-full shrink-0">Connecté</span>
+              <button onClick={connectLinkedIn} className="press btn btn-secondary !min-h-0 !py-1.5 !px-3 text-xs !text-[#0A66C2] !border-[#0A66C2]/30 hover:!bg-[#0A66C2]/5 shrink-0">
+                Connecter
+              </button>
             </Row>
             <Row>
               <div className="flex items-center gap-3">
@@ -253,7 +260,7 @@ const Settings: React.FC<SettingsProps> = ({ user, isDarkMode, toggleDarkMode })
       </div>
 
       {/* Déconnexion (pleine largeur) */}
-      <button onClick={handleLogout} className="btn btn-secondary w-full max-w-md mx-auto flex">
+      <button onClick={handleLogout} className="press btn btn-secondary w-full max-w-md mx-auto flex">
         <LogOut size={16} /> Se déconnecter
       </button>
 
