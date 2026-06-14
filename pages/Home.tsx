@@ -9,7 +9,7 @@ import {
   PenLine,
   Search,
   LineChart,
-  ShieldCheck,
+  Sparkles,
   Check,
   X
 } from 'lucide-react';
@@ -209,30 +209,30 @@ const Home: React.FC<HomeProps> = ({ onStart }) => {
       </nav>
 
       {/* Hero */}
-      <section className="px-5 sm:px-6 pt-28 sm:pt-32 pb-16 sm:pb-20">
-        <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+      <section className="px-5 sm:px-6 pt-32 sm:pt-40 pb-20 sm:pb-28">
+        <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 items-center">
           <div className="text-center lg:text-left">
-            <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full surface-accent text-[#7D5CFF] text-xs font-medium mb-5">
-              <ShieldCheck size={14} /> Recherche d'emploi assistée par l'IA
+            <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full surface-accent text-[#7D5CFF] text-xs font-semibold mb-6">
+              <Sparkles size={14} /> Propulsé par l'IA
             </span>
-            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-slate-900 leading-tight tracking-tight">
-              Décrochez plus d'entretiens,<br className="hidden sm:block" /> avec moins d'efforts.
+            <h1 className="font-extrabold text-[#0B0B14] dark:text-white tracking-tight leading-[1.05] text-[2.5rem] sm:text-6xl lg:text-[4.25rem]">
+              Décrochez <span className="text-[#7D5CFF]">plus d'entretiens</span>, avec moins d'efforts.
             </h1>
-            <p className="mt-5 text-base sm:text-lg text-slate-500 max-w-xl mx-auto lg:mx-0 leading-relaxed">
-              JobBoost vous aide à préparer des candidatures sur-mesure : CV optimisé, lettres adaptées à chaque offre et suivi clair de vos démarches.
+            <p className="mt-6 text-lg sm:text-xl text-slate-500 max-w-xl mx-auto lg:mx-0 leading-relaxed">
+              JobBoost prépare vos candidatures sur-mesure : CV optimisé pour les ATS, lettres adaptées à chaque offre et suivi clair de vos démarches.
             </p>
 
-            <div className="mt-8 flex flex-col sm:flex-row gap-3 justify-center lg:justify-start">
-              <button onClick={() => openAuth(true)} className="press btn btn-primary btn-lg group">
+            <div className="mt-9 flex flex-col sm:flex-row gap-3 justify-center lg:justify-start">
+              <button onClick={() => openAuth(true)} className="press btn btn-primary btn-lg group text-base px-6">
                 Commencer gratuitement
                 <ArrowRight size={18} className="group-hover:translate-x-0.5 transition-transform" />
               </button>
-              <button onClick={() => openAuth(false)} className="press btn btn-secondary btn-lg">
+              <button onClick={() => openAuth(false)} className="press btn btn-secondary btn-lg text-base">
                 J'ai déjà un compte
               </button>
             </div>
 
-            <div className="mt-5 flex items-center gap-2 justify-center lg:justify-start text-sm text-slate-500">
+            <div className="mt-6 flex items-center gap-2 justify-center lg:justify-start text-sm text-slate-500">
               <CheckCircle2 size={16} className="text-emerald-500" />
               Gratuit pour commencer · sans carte bancaire
             </div>
@@ -260,25 +260,33 @@ const Home: React.FC<HomeProps> = ({ onStart }) => {
       </section>
 
       {/* Fonctionnalités */}
-      <section id="features" className="px-5 sm:px-6 py-20 sm:py-24">
+      <section id="features" className="px-5 sm:px-6 py-24 sm:py-28">
         <div className="max-w-6xl mx-auto">
-          <Reveal className="max-w-2xl mb-12">
-            <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">Un outil complet, du CV à l'entretien</h2>
-            <p className="mt-3 text-slate-500">Chaque étape de votre recherche, dans une interface claire et structurée.</p>
+          <Reveal className="max-w-2xl mx-auto mb-14 text-center">
+            <h2 className="text-3xl sm:text-4xl font-extrabold text-[#0B0B14] dark:text-white tracking-tight">Un outil complet, du CV à l'entretien</h2>
+            <p className="mt-4 text-lg text-slate-500">Chaque étape de votre recherche, dans une interface claire et structurée.</p>
           </Reveal>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-5">
-            {features.map((f, i) => (
-              <Reveal as="div" key={f.title} delay={i * 70}>
-                <div className="surface h-full p-6 hover:shadow-card-hover hover:-translate-y-0.5 transition-all duration-200">
-                  <span className="w-10 h-10 rounded-lg surface-accent text-[#7D5CFF] flex items-center justify-center mb-4">
-                    {f.icon}
-                  </span>
-                  <h3 className="text-base font-semibold text-slate-900">{f.title}</h3>
-                  <p className="mt-1.5 text-sm text-slate-500 leading-relaxed">{f.desc}</p>
-                </div>
-              </Reveal>
-            ))}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+            {features.map((f, i) => {
+              const tints = [
+                'bg-[#7D5CFF]/10 text-[#7D5CFF]',
+                'bg-blue-500/10 text-blue-600',
+                'bg-emerald-500/10 text-emerald-600',
+                'bg-amber-500/10 text-amber-600',
+              ];
+              return (
+                <Reveal as="div" key={f.title} delay={i * 70}>
+                  <div className="surface h-full p-7 hover:shadow-card-hover hover:-translate-y-1 transition-all duration-200">
+                    <span className={`w-11 h-11 rounded-xl flex items-center justify-center mb-5 ${tints[i % tints.length]}`}>
+                      {f.icon}
+                    </span>
+                    <h3 className="text-lg font-semibold text-[#0B0B14] dark:text-white">{f.title}</h3>
+                    <p className="mt-2 text-[15px] text-slate-500 leading-relaxed">{f.desc}</p>
+                  </div>
+                </Reveal>
+              );
+            })}
           </div>
         </div>
       </section>
@@ -290,7 +298,7 @@ const Home: React.FC<HomeProps> = ({ onStart }) => {
             <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white border border-slate-200 text-slate-500 text-xs font-medium">
               <HelpCircle size={14} /> Questions fréquentes
             </span>
-            <h2 className="mt-4 text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">Vous vous demandez peut-être…</h2>
+            <h2 className="mt-4 text-3xl sm:text-4xl font-extrabold text-[#0B0B14] dark:text-white tracking-tight">Vous vous demandez peut-être…</h2>
           </Reveal>
 
           <div className="space-y-3">
@@ -321,7 +329,7 @@ const Home: React.FC<HomeProps> = ({ onStart }) => {
       {/* CTA */}
       <section className="px-5 sm:px-6 py-20 sm:py-24">
         <Reveal className="max-w-3xl mx-auto surface p-8 sm:p-12 text-center">
-          <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">
+          <h2 className="text-3xl sm:text-4xl font-extrabold text-[#0B0B14] dark:text-white tracking-tight">
             Prêt à structurer votre recherche d'emploi ?
           </h2>
           <p className="mt-3 text-slate-500 max-w-xl mx-auto">
