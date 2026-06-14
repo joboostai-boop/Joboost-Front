@@ -110,9 +110,9 @@ const Accueil: React.FC<AccueilProps> = ({ user }) => {
         subtitle="Voici l'état de votre recherche aujourd'hui."
         actions={
           !loading && pct < 100 ? (
-            <Link to="/prepare/profile" className="inline-flex items-center gap-2.5 text-xs font-semibold text-white bg-white/10 hover:bg-white/20 ring-1 ring-white/20 rounded-full px-3.5 py-2 transition-colors">
-              <span className="w-20 h-1.5 rounded-full bg-white/25 overflow-hidden">
-                <span className="block h-full bg-white rounded-full" style={{ width: `${pct}%` }} />
+            <Link to="/prepare/profile" className="inline-flex items-center gap-2.5 text-xs font-semibold text-slate-500 dark:text-slate-300 bg-white dark:bg-[#111827] border border-[#ECEAF6] dark:border-[#1F2937] hover:border-[#7D5CFF]/40 hover:text-[#7D5CFF] rounded-full px-3.5 py-2 shadow-xs transition-colors">
+              <span className="w-20 h-1.5 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
+                <span className="block h-full bg-[#7D5CFF] rounded-full" style={{ width: `${pct}%` }} />
               </span>
               Profil {pct}%
             </Link>
@@ -120,7 +120,7 @@ const Accueil: React.FC<AccueilProps> = ({ user }) => {
         }
       />
 
-      <div className="p-5 md:p-8 max-w-6xl mx-auto space-y-6 pb-28 md:pb-10 -mt-4">
+      <div className="p-5 md:p-8 max-w-6xl mx-auto space-y-6 pb-28 md:pb-10">
       {/* Prochaine action (focale) — carte blanche pour ne pas redoubler le violet du hero */}
       <Link
         to={next.to}
