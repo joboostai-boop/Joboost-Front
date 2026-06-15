@@ -3,6 +3,7 @@ import { Building2, Calendar, Search, RefreshCw, Inbox, ArrowRight, Navigation }
 import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
 import { authHeaders } from '../services/authToken';
+import EmptyState from '../components/EmptyState';
 
 interface Application {
   id: string;
@@ -239,18 +240,18 @@ const Applications: React.FC = () => {
           </div>
       </>
 
-      {/* CTA sous le board quand aucune candidature */}
+      {/* État vide illustré quand aucune candidature */}
       {!loading && total === 0 && (
-        <div className="surface p-10 flex flex-col items-center text-center gap-3">
-          <span className="w-12 h-12 rounded-xl surface-accent text-[#7D5CFF] flex items-center justify-center"><Inbox size={24} /></span>
-          <div>
-            <h3 className="text-base font-semibold text-[#111827] dark:text-white">Aucune candidature pour l'instant</h3>
-            <p className="text-sm text-[#6B7280] mt-1">Dès que tu postules, tes candidatures apparaissent dans le tableau ci-dessus.</p>
-          </div>
-          <button onClick={() => navigate('/target/offers')} className="press btn btn-primary mt-1">
-            Trouver des offres <ArrowRight size={16} />
-          </button>
-        </div>
+        <EmptyState
+          variant="applications"
+          title="Aucune candidature pour l'instant"
+          description="Dès que tu postules, tes candidatures apparaissent ici et tu suis leur avancement — de l'envoi à l'offre."
+          action={
+            <button onClick={() => navigate('/target/offers')} className="press btn btn-primary">
+              Trouver des offres <ArrowRight size={16} />
+            </button>
+          }
+        />
       )}
     </div>
   );

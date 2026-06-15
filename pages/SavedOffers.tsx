@@ -4,6 +4,7 @@ import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
 import { authHeaders } from '../services/authToken';
 import MatchRing from '../components/MatchRing';
+import EmptyState from '../components/EmptyState';
 
 interface SavedOffer {
   id: string;
@@ -77,14 +78,14 @@ const SavedOffers: React.FC = () => {
       {loading ? (
         <div className="space-y-4"><SavedSkeleton /><SavedSkeleton /></div>
       ) : savedOffers.length === 0 ? (
-        <div className="surface p-10 flex flex-col items-center text-center gap-3">
-          <span className="w-12 h-12 rounded-xl surface-accent text-[#7D5CFF] flex items-center justify-center"><Bookmark size={24} /></span>
-          <div>
-            <h3 className="text-base font-semibold text-slate-900 dark:text-white">Aucun favori</h3>
-            <p className="text-sm text-[#6B7280] mt-1">Parcourez les offres recommandées et enregistrez celles qui vous intéressent.</p>
-          </div>
-          <button onClick={() => navigate('/target/offers')} className="press btn btn-secondary mt-1">Voir les offres <ArrowRight size={15} /></button>
-        </div>
+        <EmptyState
+          variant="saved"
+          title="Aucun favori pour l'instant"
+          description="Parcourez les offres recommandées et mettez de côté celles qui vous intéressent pour y revenir plus tard."
+          action={
+            <button onClick={() => navigate('/target/offers')} className="press btn btn-secondary">Voir les offres <ArrowRight size={15} /></button>
+          }
+        />
       ) : (
         <div className="space-y-4">
           {savedOffers.map((offer, index) => (

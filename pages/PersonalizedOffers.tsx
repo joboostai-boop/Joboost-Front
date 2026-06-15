@@ -4,6 +4,7 @@ import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
 import { authHeaders } from '../services/authToken';
 import MatchRing from '../components/MatchRing';
+import EmptyState from '../components/EmptyState';
 
 export interface JobOffer {
   id?: string;
@@ -162,14 +163,12 @@ const PersonalizedOffers: React.FC = () => {
           <OfferSkeleton />
         </div>
       ) : filtered.length === 0 ? (
-        <div className="surface p-10 flex flex-col items-center text-center gap-3">
-          <span className="w-12 h-12 rounded-xl surface-accent text-[#7D5CFF] flex items-center justify-center"><Inbox size={24} /></span>
-          <div>
-            <h3 className="text-base font-semibold text-[#111827] dark:text-white">{q ? 'Aucun résultat' : 'Aucune offre pour le moment'}</h3>
-            <p className="text-sm text-[#6B7280] mt-1">{q ? 'Essayez un autre métier ou une autre ville.' : 'Complétez votre profil pour affiner les recommandations.'}</p>
-          </div>
-          {!q && <button onClick={() => navigate('/prepare/profile')} className="press btn btn-secondary mt-1">Compléter mon profil</button>}
-        </div>
+        <EmptyState
+          variant="offers"
+          title={q ? 'Aucun résultat' : 'Aucune offre pour le moment'}
+          description={q ? 'Essayez un autre métier ou une autre ville.' : 'Complétez votre profil pour que l\'IA cible des offres qui vous correspondent vraiment.'}
+          action={!q ? <button onClick={() => navigate('/prepare/profile')} className="press btn btn-secondary">Compléter mon profil</button> : undefined}
+        />
       ) : (
         <div className="space-y-4">
           {filtered.map((offer, index) => {

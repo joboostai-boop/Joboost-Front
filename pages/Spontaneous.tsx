@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { authHeaders } from '../services/authToken';
 import MatchRing from '../components/MatchRing';
+import EmptyState from '../components/EmptyState';
 
 type AutoLevel = 'AUTO_SAFE' | 'AUTO_REVIEW' | 'NO_SEND';
 
@@ -338,13 +339,11 @@ const Spontaneous: React.FC = () => {
 
       {/* État vide initial */}
       {!loading && companies.length === 0 && (
-        <div className="card-pro flex flex-col items-center text-center gap-4 py-12">
-          <span className="w-14 h-14 rounded-2xl bg-[#F3F0FF] text-[#7D5CFF] dark:bg-[#7D5CFF]/10 flex items-center justify-center"><Navigation size={26} /></span>
-          <div>
-            <h3 className="text-base font-bold text-[#111827] dark:text-white">Lancez le radar d'entreprises</h3>
-            <p className="text-sm text-[#6B7280] mt-1 max-w-md">Détectez les entreprises qui recrutent sur votre métier près de chez vous, puis préparez vos candidatures spontanées en un clic.</p>
-          </div>
-        </div>
+        <EmptyState
+          variant="companies"
+          title="Lancez le radar d'entreprises"
+          description="Détectez les entreprises qui recrutent sur votre métier près de chez vous, puis préparez vos candidatures spontanées en un clic."
+        />
       )}
     </div>
   );
