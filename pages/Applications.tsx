@@ -165,7 +165,8 @@ const Applications: React.FC = () => {
         </div>
       </header>
 
-      {/* Aperçu Kanban (toujours visible) */}
+      {/* Tableau Kanban — masqué tant qu'aucune candidature (l'état vide illustré prend le relais) */}
+      {(loading || total > 0) && (
       <>
           {/* ───── PC : board 5 colonnes (drag & drop) ───── */}
           <div className="hidden lg:grid grid-cols-5 gap-4 items-start">
@@ -239,6 +240,7 @@ const Applications: React.FC = () => {
             </div>
           </div>
       </>
+      )}
 
       {/* État vide illustré quand aucune candidature */}
       {!loading && total === 0 && (
