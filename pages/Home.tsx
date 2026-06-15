@@ -221,22 +221,24 @@ const Home: React.FC<HomeProps> = ({ onStart }) => {
         <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-[1.02fr_0.98fr] gap-16 lg:gap-12 items-center">
           {/* Colonne gauche : message */}
           <div className="text-center lg:text-left">
-            <span className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#7D5CFF]/[0.07] border border-[#7D5CFF]/20 text-[#6023C0] text-xs font-semibold mb-7 animate-fade-in-up">
+            {/* Slogan exact conservé, mis en valeur en badge au-dessus du titre bénéfice */}
+            <span className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#7D5CFF]/[0.08] border border-[#7D5CFF]/20 text-[#6023C0] text-[13px] font-semibold mb-7 animate-fade-in-up">
               <span className="relative flex h-2 w-2">
                 <span className="absolute inline-flex h-full w-full rounded-full bg-[#7D5CFF] opacity-75 animate-ping" />
                 <span className="relative inline-flex h-2 w-2 rounded-full bg-[#7D5CFF]" />
               </span>
-              Recherche d'emploi propulsée par l'IA
+              L'IA au service de votre carrière
             </span>
 
-            <h1 className="font-extrabold text-[#0B0B14] dark:text-white tracking-[-0.04em] leading-[0.98] text-[3rem] sm:text-[4rem] lg:text-[5rem] animate-fade-in-up" style={{ animationDelay: '60ms' }}>
-              L'IA au service de votre{' '}
+            <h1 className="font-display font-extrabold text-[#0B0B14] dark:text-white tracking-[-0.035em] leading-[1.0] text-[2.85rem] sm:text-[3.75rem] lg:text-[4.5rem] animate-fade-in-up" style={{ animationDelay: '60ms' }}>
+              Décrochez{' '}
               <span className="relative inline-block text-[#7D5CFF]">
-                carrière
-                <svg aria-hidden viewBox="0 0 220 16" className="absolute left-0 -bottom-1.5 w-full h-3 text-[#7D5CFF]/45" preserveAspectRatio="none">
-                  <path d="M3 11 C 60 3, 160 3, 217 9" fill="none" stroke="currentColor" strokeWidth="5" strokeLinecap="round" />
+                plus d'entretiens
+                <svg aria-hidden viewBox="0 0 300 16" className="absolute left-0 -bottom-1 w-full h-3 text-[#7D5CFF]/40" preserveAspectRatio="none">
+                  <path d="M3 11 C 90 3, 210 3, 297 9" fill="none" stroke="currentColor" strokeWidth="5" strokeLinecap="round" />
                 </svg>
               </span>
+              <span className="text-slate-300">.</span>
             </h1>
 
             <p className="mt-7 text-lg sm:text-xl text-slate-500 max-w-xl mx-auto lg:mx-0 leading-relaxed animate-fade-in-up" style={{ animationDelay: '120ms' }}>
@@ -248,9 +250,9 @@ const Home: React.FC<HomeProps> = ({ onStart }) => {
                 Commencer gratuitement
                 <ArrowRight size={18} className="group-hover:translate-x-0.5 transition-transform" />
               </button>
-              <button onClick={() => openAuth(false)} className="press btn btn-secondary btn-lg text-base">
-                J'ai déjà un compte
-              </button>
+              <a href="#features" className="press btn btn-secondary btn-lg text-base">
+                Découvrir les fonctionnalités
+              </a>
             </div>
 
             <div className="mt-6 flex items-center gap-2 justify-center lg:justify-start text-sm text-slate-500 animate-fade-in-up" style={{ animationDelay: '220ms' }}>
@@ -259,21 +261,14 @@ const Home: React.FC<HomeProps> = ({ onStart }) => {
             </div>
           </div>
 
-          {/* Colonne droite : grand panneau violet + produit en relief (signature Pitch) */}
+          {/* Colonne droite : aperçu produit sur fond coloré LÉGER (direction vitrine pitch). */}
           <div className="relative animate-fade-in-up" style={{ animationDelay: '160ms' }}>
-            <div className="relative rounded-[2.5rem] bg-gradient-to-br from-[#9B7BFF] via-[#7D5CFF] to-[#6023C0] p-7 sm:p-12 lg:p-14 shadow-[0_30px_70px_-25px_rgba(96,35,192,0.6)] overflow-hidden">
-              {/* Stickers décoratifs (purement visuels) */}
-              <span aria-hidden className="absolute top-7 right-9 w-3.5 h-3.5 rounded-full bg-amber-300" />
-              <span aria-hidden className="absolute bottom-8 left-9 w-2.5 h-2.5 rounded-full bg-white/70" />
-              <span aria-hidden className="absolute top-1/3 left-6 w-2 h-2 rounded-full bg-white/40" />
-              <svg aria-hidden viewBox="0 0 24 24" className="absolute bottom-12 right-12 w-5 h-5 text-amber-300" fill="currentColor">
-                <path d="M12 2l2.4 6.9H22l-6 4.4 2.3 7-6.3-4.6L5.7 20l2.3-7-6-4.4h7.6z" />
-              </svg>
+            <div className="relative rounded-[2.25rem] bg-gradient-to-br from-[#7D5CFF]/[0.08] via-[#7D5CFF]/[0.05] to-emerald-400/[0.07] border border-[#7D5CFF]/10 p-6 sm:p-10 lg:p-12 overflow-hidden">
               {/* Glow doux derrière la carte */}
-              <span aria-hidden className="absolute inset-x-10 top-10 bottom-10 rounded-[2rem] bg-white/10 blur-2xl" />
+              <span aria-hidden className="pointer-events-none absolute inset-x-10 top-8 bottom-8 rounded-[2rem] bg-[#7D5CFF]/10 blur-3xl" />
 
-              {/* Carte produit existante — légèrement inclinée, façon « capture qui pop » */}
-              <div className="relative [transform:rotate(-2.5deg)] hover:[transform:rotate(0deg)] transition-transform duration-500 drop-shadow-[0_24px_48px_rgba(20,10,60,0.35)]">
+              {/* Carte produit existante — légère inclinaison qui se redresse au survol */}
+              <div className="relative [transform:rotate(-1.5deg)] hover:[transform:rotate(0deg)] transition-transform duration-500 drop-shadow-[0_20px_44px_rgba(20,10,60,0.18)]">
                 <ProductPreview />
               </div>
             </div>

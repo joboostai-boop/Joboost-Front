@@ -15,11 +15,12 @@
     @apply bg-[#F5F4FB] text-[#0B0B14];
   }
 
-  /* Hiérarchie de titres modernisée : extrabold + interlettrage resserré (look SaaS/Pitch). */
-  h1 { @apply text-2xl font-extrabold tracking-[-0.02em] text-[#0B0B14]; }
-  h2 { @apply text-xl font-extrabold tracking-[-0.018em] text-[#0B0B14]; }
-  h3 { @apply text-lg font-bold tracking-[-0.014em] text-[#0B0B14]; }
-  h4 { @apply text-base font-bold tracking-[-0.01em] text-[#0B0B14]; }
+  /* Hiérarchie de titres : Space Grotesk (grotesque éditorial, direction pitch.com)
+     + interlettrage resserré. Moins « rond/enfantin » qu'Inter. */
+  h1 { @apply font-display text-2xl font-bold tracking-[-0.02em] text-[#0B0B14]; }
+  h2 { @apply font-display text-xl font-bold tracking-[-0.018em] text-[#0B0B14]; }
+  h3 { @apply font-display text-lg font-bold tracking-[-0.014em] text-[#0B0B14]; }
+  h4 { @apply font-display text-base font-bold tracking-[-0.01em] text-[#0B0B14]; }
   p { @apply text-sm text-[#4B5563] leading-relaxed; }
 
   /* Dark mode overrides */
@@ -35,9 +36,11 @@
      même langage visuel ; elles diffèrent surtout par le rayon. */
 
   /* Carte applicative dense (dashboard, listes, formulaires).
-     Direction pitch.com : rayon généreux + ombre douce présente. */
+     Direction pitch.com : rayon généreux + ombre douce + hover qui « soulève »
+     très légèrement (micro-interaction soft, transition CSS courte). */
   .card-pro {
-    @apply bg-white border border-[#ECEAF6] rounded-2xl shadow-card p-6 overflow-hidden;
+    @apply bg-white border border-[#ECEAF6] rounded-2xl shadow-card p-6 overflow-hidden
+           transition-all duration-200 ease-out hover:-translate-y-0.5 hover:shadow-card-hover;
   }
   .dark .card-pro {
     @apply bg-[#111827] border-[#1F2937] shadow-none;
@@ -45,15 +48,16 @@
 
   /* Carte « moderne » (landing, pricing, onboarding) : rayon encore plus doux. */
   .card-modern {
-    @apply bg-white border border-[#ECEAF6] rounded-3xl shadow-card;
+    @apply bg-white border border-[#ECEAF6] rounded-3xl shadow-card
+           transition-all duration-200 ease-out hover:-translate-y-0.5 hover:shadow-card-hover;
   }
   .dark .card-modern {
     @apply bg-[#111827] border-[#1F2937] shadow-none;
   }
 
-  /* Surface neutre réutilisable (aperçus, panneaux). */
+  /* Surface neutre réutilisable (aperçus, panneaux) : transition douce, sans lift forcé. */
   .surface {
-    @apply bg-white border border-[#ECEAF6] rounded-2xl shadow-card;
+    @apply bg-white border border-[#ECEAF6] rounded-2xl shadow-card transition-all duration-200 ease-out;
   }
   .dark .surface {
     @apply bg-[#111827] border-[#1F2937] shadow-none;
@@ -72,8 +76,8 @@
      liseré interne clair sur le primaire), focus-visible accessible,
      enfoncement léger au clic. */
   .btn {
-    @apply min-h-[42px] px-4 py-2.5 inline-flex items-center justify-center gap-2 rounded-xl text-sm font-semibold transition-all duration-150 outline-none select-none
-           active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-[#7D5CFF]/45 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none;
+    @apply min-h-[42px] px-4 py-2.5 inline-flex items-center justify-center gap-2 rounded-xl text-sm font-semibold transition-all duration-200 ease-out outline-none select-none
+           hover:-translate-y-px active:translate-y-0 active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-[#7D5CFF]/45 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none disabled:hover:translate-y-0;
   }
 
   .btn-lg {
@@ -196,11 +200,11 @@
    (le conteneur est re-monté via une `key` sur le pathname dans App.tsx).
    Donne une navigation fluide et vivante, sans dépendance JS. */
 @keyframes page-in {
-  from { opacity: 0; transform: translateY(10px); }
+  from { opacity: 0; transform: translateY(16px); }
   to   { opacity: 1; transform: none; }
 }
 .animate-page {
-  animation: page-in 0.34s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: page-in 0.42s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
 /* Accessibilité : on neutralise quasi toutes les animations si l'utilisateur

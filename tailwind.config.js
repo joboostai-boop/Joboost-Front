@@ -12,6 +12,9 @@ export default {
     extend: {
       fontFamily: {
         sans: ['Inter', 'ui-sans-serif', 'system-ui', '-apple-system', 'Segoe UI', 'sans-serif'],
+        // Titres : sans-serif moderne neutre & légèrement arrondie (Manrope ≈ Graphik/SF Pro),
+        // plus premium qu'Inter brut, fidèle à la vitrine pitch.com.
+        display: ['Manrope', 'Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'],
       },
       colors: {
         // Identité Joboost — violet #7D5CFF décliné en échelle.
