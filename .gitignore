@@ -16,7 +16,8 @@ backend/.env
 secrets.txt
 migrated_prompt_history/
 
-# Editor directories and files
+# Editor / agent directories and files
+.claude/
 .vscode/*
 !.vscode/extensions.json
 .idea
