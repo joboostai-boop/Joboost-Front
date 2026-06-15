@@ -222,40 +222,59 @@ const Accueil: React.FC<AccueilProps> = ({ user }) => {
         </section>
       )}
 
-      {/* Actions rapides */}
-      <section className="flex flex-wrap gap-2.5">
-        {quickActions.map((a) => (
-          <Link key={a.to} to={a.to} className="press inline-flex items-center gap-2 text-sm font-medium text-[#374151] dark:text-slate-200 bg-white dark:bg-[#111827] border border-[#E5E7EB] dark:border-[#1F2937] rounded-lg px-3.5 py-2 hover:border-[#7D5CFF]/40 hover:text-[#7D5CFF] transition-colors">
-            <span className="text-[#7D5CFF]">{a.icon}</span> {a.label}
-          </Link>
-        ))}
-      </section>
+      {/* Parcours + rail — mise en page app premium (remplit la largeur, densifie) */}
+      <div className="grid lg:grid-cols-3 gap-5 items-start">
+        {/* Mon parcours */}
+        <section className="lg:col-span-2 space-y-3">
+          <h2 className="text-xs font-semibold uppercase tracking-wider text-[#9CA3AF]">Mon parcours</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            {spaces.map((s, i) => (
+              <Link
+                key={s.to}
+                to={s.to}
+                style={{ animationDelay: `${i * 60}ms` }}
+                className="press card-pro group hover:border-[#7D5CFF]/40 hover:shadow-card-hover hover:-translate-y-0.5 transition-all flex flex-col gap-3 animate-fade-in-up"
+              >
+                <span className="w-10 h-10 rounded-lg surface-accent text-[#7D5CFF] flex items-center justify-center">
+                  {s.icon}
+                </span>
+                <div className="space-y-1">
+                  <h3 className="text-base font-semibold text-[#111827] dark:text-white flex items-center gap-1.5">
+                    {s.title}
+                    <ArrowRight size={15} className="text-[#9CA3AF] group-hover:text-[#7D5CFF] group-hover:translate-x-0.5 transition-all" />
+                  </h3>
+                  <p className="text-xs text-[#6B7280] dark:text-slate-400 leading-relaxed">{s.desc}</p>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </section>
 
-      {/* Mon parcours */}
-      <section className="space-y-3">
-        <h2 className="text-xs font-semibold uppercase tracking-wider text-[#9CA3AF]">Mon parcours</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          {spaces.map((s, i) => (
-            <Link
-              key={s.to}
-              to={s.to}
-              style={{ animationDelay: `${i * 60}ms` }}
-              className="press card-pro group hover:border-[#7D5CFF]/40 hover:shadow-card-hover hover:-translate-y-0.5 transition-all flex flex-col gap-3 animate-fade-in-up"
-            >
-              <span className="w-10 h-10 rounded-lg surface-accent text-[#7D5CFF] flex items-center justify-center">
-                {s.icon}
-              </span>
-              <div className="space-y-1">
-                <h3 className="text-base font-semibold text-[#111827] dark:text-white flex items-center gap-1.5">
-                  {s.title}
+        {/* Rail latéral : actions rapides + astuce */}
+        <aside className="space-y-4">
+          <div className="card-pro !p-5">
+            <h2 className="text-xs font-semibold uppercase tracking-wider text-[#9CA3AF] mb-3">Actions rapides</h2>
+            <div className="space-y-1">
+              {quickActions.map((a) => (
+                <Link key={a.to} to={a.to} className="press group flex items-center gap-3 rounded-lg px-2.5 py-2 hover:bg-[#F5F4FB] dark:hover:bg-[#1F2937] transition-colors">
+                  <span className="w-8 h-8 rounded-lg surface-accent text-[#7D5CFF] flex items-center justify-center shrink-0">{a.icon}</span>
+                  <span className="text-sm font-medium text-[#374151] dark:text-slate-200 flex-1">{a.label}</span>
                   <ArrowRight size={15} className="text-[#9CA3AF] group-hover:text-[#7D5CFF] group-hover:translate-x-0.5 transition-all" />
-                </h3>
-                <p className="text-xs text-[#6B7280] dark:text-slate-400 leading-relaxed">{s.desc}</p>
-              </div>
-            </Link>
-          ))}
-        </div>
-      </section>
+                </Link>
+              ))}
+            </div>
+          </div>
+
+          <div className="card-pro !p-5">
+            <div className="flex items-center gap-2 mb-2">
+              <span className="w-7 h-7 rounded-lg surface-accent text-[#7D5CFF] flex items-center justify-center shrink-0"><PenLine size={15} /></span>
+              <h2 className="text-xs font-semibold uppercase tracking-wider text-[#9CA3AF]">Astuce</h2>
+            </div>
+            <p className="text-sm text-[#374151] dark:text-slate-300 leading-relaxed">Une lettre adaptée à chaque offre fait vraiment la différence. JobBoost la rédige à partir de l'offre — tu n'as plus qu'à relire.</p>
+            <Link to="/prepare/letter" className="press inline-flex items-center gap-1.5 text-sm font-semibold text-[#7D5CFF] mt-3 hover:gap-2.5 transition-all">Rédiger une lettre <ArrowRight size={15} /></Link>
+          </div>
+        </aside>
+      </div>
       </div>
     </>
   );
