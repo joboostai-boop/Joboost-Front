@@ -5,7 +5,7 @@ import { authHeaders } from '../services/authToken';
 import PageHero from '../components/PageHero';
 import {
   UserRound, Send, LineChart, Plus, ArrowRight,
-  FileText, Search, Bell, Loader2, Clock, CalendarCheck, Award, PenLine, Sparkles
+  FileText, Search, Bell, Loader2, Clock, CalendarCheck, Award, PenLine, Sparkles, Check
 } from 'lucide-react';
 
 interface AccueilProps {
@@ -64,6 +64,21 @@ const getNextAction = (stats: DashboardStats | null) => {
   return { to: '/target/offers', icon: <Plus size={22} strokeWidth={2.5} />, title: 'Trouve de nouvelles offres', desc: 'Continue sur ta lancée, vise plus large.' };
 };
 
+// Étapes de démarrage (onboarding du nouveau compte) — chaque étape est « faite »
+// dès que la donnée réelle correspondante existe. Donne un cap à un compte vide.
+const getStartupSteps = (stats: DashboardStats | null) => {
+  const profileDone = (stats?.profileCompletion ?? 0) >= 60;
+  const cvDone = (stats?.cvCount ?? 0) > 0;
+  const offersDone = (stats?.savedCount ?? 0) > 0 || (stats?.applications.total ?? 0) > 0;
+  const applyDone = (stats?.applications.total ?? 0) > 0;
+  return [
+    { to: '/prepare/profile', icon: <UserRound size={18} />, title: 'Complète ton profil', desc: 'La base de tous tes documents.', done: profileDone },
+    { to: '/prepare/cv', icon: <FileText size={18} />, title: 'Génère ton premier CV', desc: 'Un CV optimisé ATS en un clic.', done: cvDone },
+    { to: '/target/offers', icon: <Search size={18} />, title: 'Trouve des offres', desc: 'Des offres ciblées sur ton profil.', done: offersDone },
+    { to: '/target/offers', icon: <Send size={18} />, title: 'Postule à ta première offre', desc: "L'IA prépare ta candidature.", done: applyDone },
+  ];
+};
+
 const Accueil: React.FC<AccueilProps> = ({ user }) => {
   const firstName = user?.name?.split(' ')[0] || 'à toi';
   const [stats, setStats] = useState<DashboardStats | null>(null);
@@ -89,6 +104,12 @@ const Accueil: React.FC<AccueilProps> = ({ user }) => {
   }, []);
 
   const next = getNextAction(stats);
+
+  // Onboarding : tant que toutes les étapes ne sont pas faites, on met en avant
+  // la checklist de démarrage (et on masque les KPIs à zéro) plutôt qu'un dashboard vide.
+  const steps = getStartupSteps(stats);
+  const doneCount = steps.filter((s) => s.done).length;
+  const showOnboarding = !loading && doneCount < steps.length;
 
   // KPIs alignés sur les statuts du suivi (mêmes couleurs que le Kanban).
   const kpis = [
@@ -121,36 +142,85 @@ const Accueil: React.FC<AccueilProps> = ({ user }) => {
       />
 
       <div className="p-5 md:p-8 max-w-6xl mx-auto space-y-6 pb-28 md:pb-10">
-      {/* Prochaine action (focale) — carte blanche pour ne pas redoubler le violet du hero */}
-      <Link
-        to={next.to}
-        className="press group relative overflow-hidden flex items-center justify-between gap-4 card-pro hover:shadow-card-hover hover:-translate-y-0.5 transition-all animate-fade-in-up"
-      >
-        <div className="relative flex items-center gap-4 min-w-0">
-          <span className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#8C6DFF] to-[#6D28D9] text-white flex items-center justify-center shrink-0 shadow-[0_6px_16px_-6px_rgba(124,92,255,0.6)]">
-            {loading ? <Loader2 size={22} className="animate-spin" /> : next.icon}
-          </span>
-          <div className="min-w-0">
-            <p className="text-[11px] uppercase tracking-wider font-semibold text-[#7D5CFF]">Prochaine étape</p>
-            <p className="font-bold text-lg truncate text-[#111827] dark:text-white">{next.title}</p>
-            <p className="text-[#6B7280] dark:text-slate-400 text-[13px] truncate">{next.desc}</p>
+      {showOnboarding ? (
+        /* Compte neuf : parcours de démarrage guidé (remplit l'écran utilement). */
+        <section className="card-pro !p-6 animate-fade-in-up">
+          <div className="flex items-start justify-between gap-4 mb-4">
+            <div>
+              <p className="text-[11px] uppercase tracking-wider font-semibold text-[#7D5CFF]">Bien démarrer</p>
+              <h2 className="text-lg font-bold text-[#111827] dark:text-white mt-0.5">Lance ta recherche en {steps.length} étapes</h2>
+              <p className="text-[13px] text-[#6B7280] dark:text-slate-400 mt-0.5">Quelques minutes pour des candidatures qui sortent du lot.</p>
+            </div>
+            <div className="text-right shrink-0">
+              <p className="text-2xl font-extrabold text-[#7D5CFF] tabular-nums leading-none">{doneCount}/{steps.length}</p>
+              <p className="text-[11px] text-[#9CA3AF] mt-1">terminées</p>
+            </div>
           </div>
-        </div>
-        <ArrowRight size={22} className="relative shrink-0 text-[#7D5CFF] group-hover:translate-x-1 transition-transform" />
-      </Link>
 
-      {/* KPIs */}
-      <section className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        {kpis.map((k, i) => (
-          <div key={k.label} className="card-pro !p-4 animate-fade-in-up" style={{ animationDelay: `${i * 50}ms` }}>
-            <span className={`w-8 h-8 rounded-lg flex items-center justify-center mb-3 ${k.tint}`}>{k.icon}</span>
-            <p className="text-2xl font-bold text-[#111827] dark:text-white tabular-nums leading-none">
-              {loading ? '–' : k.value}
-            </p>
-            <p className="text-xs text-[#6B7280] dark:text-slate-400 mt-1.5">{k.label}</p>
+          <div className="h-2 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden mb-5">
+            <div className="h-full rounded-full bg-gradient-to-r from-[#8C6DFF] to-[#7D5CFF] transition-[width] duration-500" style={{ width: `${(doneCount / steps.length) * 100}%` }} />
           </div>
-        ))}
-      </section>
+
+          <div className="grid sm:grid-cols-2 gap-3">
+            {steps.map((s, i) => (
+              <Link
+                key={i}
+                to={s.to}
+                style={{ animationDelay: `${i * 60}ms` }}
+                className={`press group flex items-center gap-3 rounded-xl border p-3.5 transition-all animate-fade-in-up ${
+                  s.done
+                    ? 'border-emerald-200 dark:border-emerald-500/20 bg-emerald-50/40 dark:bg-emerald-500/[0.06]'
+                    : 'border-[#ECEAF6] dark:border-[#1F2937] hover:border-[#7D5CFF]/40 hover:-translate-y-0.5 hover:shadow-card-hover'
+                }`}
+              >
+                <span className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${
+                  s.done ? 'bg-emerald-500 text-white' : 'surface-accent text-[#7D5CFF]'
+                }`}>
+                  {s.done ? <Check size={18} strokeWidth={3} /> : s.icon}
+                </span>
+                <div className="min-w-0 flex-1">
+                  <p className={`text-sm font-semibold truncate ${s.done ? 'text-emerald-700 dark:text-emerald-400' : 'text-[#111827] dark:text-white'}`}>{s.title}</p>
+                  <p className="text-[12px] text-[#6B7280] dark:text-slate-400 truncate">{s.done ? 'Terminé' : s.desc}</p>
+                </div>
+                {!s.done && <ArrowRight size={16} className="shrink-0 text-[#9CA3AF] group-hover:text-[#7D5CFF] group-hover:translate-x-0.5 transition-all" />}
+              </Link>
+            ))}
+          </div>
+        </section>
+      ) : (
+        /* Compte actif : prochaine action contextuelle. */
+        <Link
+          to={next.to}
+          className="press group relative overflow-hidden flex items-center justify-between gap-4 card-pro hover:shadow-card-hover hover:-translate-y-0.5 transition-all animate-fade-in-up"
+        >
+          <div className="relative flex items-center gap-4 min-w-0">
+            <span className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#8C6DFF] to-[#6D28D9] text-white flex items-center justify-center shrink-0 shadow-[0_6px_16px_-6px_rgba(124,92,255,0.6)]">
+              {loading ? <Loader2 size={22} className="animate-spin" /> : next.icon}
+            </span>
+            <div className="min-w-0">
+              <p className="text-[11px] uppercase tracking-wider font-semibold text-[#7D5CFF]">Prochaine étape</p>
+              <p className="font-bold text-lg truncate text-[#111827] dark:text-white">{next.title}</p>
+              <p className="text-[#6B7280] dark:text-slate-400 text-[13px] truncate">{next.desc}</p>
+            </div>
+          </div>
+          <ArrowRight size={22} className="relative shrink-0 text-[#7D5CFF] group-hover:translate-x-1 transition-transform" />
+        </Link>
+      )}
+
+      {/* KPIs — masqués sur un compte neuf (évite un mur de zéros) */}
+      {!showOnboarding && (
+        <section className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          {kpis.map((k, i) => (
+            <div key={k.label} className="card-pro !p-4 animate-fade-in-up" style={{ animationDelay: `${i * 50}ms` }}>
+              <span className={`w-8 h-8 rounded-lg flex items-center justify-center mb-3 ${k.tint}`}>{k.icon}</span>
+              <p className="text-2xl font-bold text-[#111827] dark:text-white tabular-nums leading-none">
+                {loading ? '–' : k.value}
+              </p>
+              <p className="text-xs text-[#6B7280] dark:text-slate-400 mt-1.5">{k.label}</p>
+            </div>
+          ))}
+        </section>
+      )}
 
       {/* Actions rapides */}
       <section className="flex flex-wrap gap-2.5">
