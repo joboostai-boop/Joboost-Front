@@ -40,7 +40,7 @@
      très légèrement (micro-interaction soft, transition CSS courte). */
   .card-pro {
     @apply bg-white border border-[#ECEAF6] rounded-2xl shadow-card p-6 overflow-hidden
-           transition-all duration-200 ease-out hover:-translate-y-0.5 hover:shadow-card-hover;
+           transition-all duration-200 ease-out hover:-translate-y-1 hover:shadow-card-hover hover:border-[#7D5CFF]/25;
   }
   .dark .card-pro {
     @apply bg-[#111827] border-[#1F2937] shadow-none;
@@ -49,7 +49,7 @@
   /* Carte « moderne » (landing, pricing, onboarding) : rayon encore plus doux. */
   .card-modern {
     @apply bg-white border border-[#ECEAF6] rounded-3xl shadow-card
-           transition-all duration-200 ease-out hover:-translate-y-0.5 hover:shadow-card-hover;
+           transition-all duration-200 ease-out hover:-translate-y-1 hover:shadow-card-hover hover:border-[#7D5CFF]/25;
   }
   .dark .card-modern {
     @apply bg-[#111827] border-[#1F2937] shadow-none;
@@ -206,6 +206,22 @@
 .animate-page {
   animation: page-in 0.42s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
+
+/* Entrée des cartes dans l'app connectée : chaque carte apparaît en fondu + montée
+   à chaque arrivée sur une page (le conteneur .animate-page se remonte à chaque
+   navigation via sa `key`), avec une cascade douce sur les premières d'un même groupe.
+   Donne du rythme et « l'envie de naviguer » sans toucher chaque page.
+   (Neutralisé automatiquement si prefers-reduced-motion — voir plus bas.) */
+.app-shell .card-pro,
+.app-shell .card-modern,
+.app-shell .surface {
+  animation: page-in 0.45s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+.app-shell .card-pro:nth-child(2), .app-shell .card-modern:nth-child(2), .app-shell .surface:nth-child(2) { animation-delay: 0.05s; }
+.app-shell .card-pro:nth-child(3), .app-shell .card-modern:nth-child(3), .app-shell .surface:nth-child(3) { animation-delay: 0.10s; }
+.app-shell .card-pro:nth-child(4), .app-shell .card-modern:nth-child(4), .app-shell .surface:nth-child(4) { animation-delay: 0.15s; }
+.app-shell .card-pro:nth-child(5), .app-shell .card-modern:nth-child(5), .app-shell .surface:nth-child(5) { animation-delay: 0.20s; }
+.app-shell .card-pro:nth-child(6), .app-shell .card-modern:nth-child(6), .app-shell .surface:nth-child(6) { animation-delay: 0.25s; }
 
 /* Accessibilité : on neutralise quasi toutes les animations si l'utilisateur
    a demandé moins de mouvement (prefers-reduced-motion). Filet de sécurité global. */

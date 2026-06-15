@@ -145,7 +145,7 @@ const App: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#F5F4FB] dark:bg-[#030712] text-slate-900 dark:text-slate-100 selection:bg-[#7D5CFF]/15 selection:text-[#4F46E5] transition-colors duration-300">
+    <div className="app-shell min-h-screen flex flex-col bg-[#F5F4FB] dark:bg-[#030712] text-slate-900 dark:text-slate-100 selection:bg-[#7D5CFF]/15 selection:text-[#4F46E5] transition-colors duration-300">
       <Toaster position="top-right" />
 
       {/* Navigation : dock flottant en haut (desktop) — barre mobile flottante en bas */}
