@@ -52,7 +52,10 @@ const Paper: React.FC<{ children: React.ReactNode; pad?: string; serif?: boolean
       if (!w) return;
       const s = w / SHEET_W;
       setScale(s);
-      setHeight(thumb ? w * 1.414 : inner.offsetHeight * s);
+      // La carte épouse la hauteur RÉELLE du CV mis à l'échelle (vignette complète,
+      // pas de grand vide blanc). En mode vignette, plafond pour les CV très longs.
+      const h = inner.offsetHeight * s;
+      setHeight(thumb ? Math.min(h, w * 1.414 * 1.6) : h);
     };
     update();
     const ro = new ResizeObserver(update);

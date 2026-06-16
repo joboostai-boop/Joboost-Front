@@ -79,7 +79,7 @@ const Templates: React.FC = () => {
 
       {/* Grille de modèles (showcase) — vignettes (mode thumb), re-montée à chaque bascule pour rejouer l'entrée */}
       <PreviewModeContext.Provider value="thumb">
-      <div key={`${kind}-${filter}`} className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 xl:grid-cols-6 gap-3">
+      <div key={`${kind}-${filter}`} className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 xl:grid-cols-6 gap-3 items-start">
         {items.map((it, i) => (
           <div
             key={it.id}

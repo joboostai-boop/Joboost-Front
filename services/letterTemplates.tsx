@@ -34,7 +34,9 @@ const Paper: React.FC<{ children: React.ReactNode; pad?: string; serif?: boolean
       if (!w) return;
       const s = w / SHEET_W;
       setScale(s);
-      setHeight(thumb ? w * 1.414 : inner.offsetHeight * s);
+      // Carte = hauteur réelle de la lettre (vignette complète), plafonnée en mode vignette.
+      const h = inner.offsetHeight * s;
+      setHeight(thumb ? Math.min(h, w * 1.414 * 1.6) : h);
     };
     update();
     const ro = new ResizeObserver(update);
