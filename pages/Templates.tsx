@@ -4,6 +4,7 @@ import { ShieldCheck, Sparkles, ArrowRight, Check } from 'lucide-react';
 import { CV_TEMPLATES } from '../services/cvTemplates';
 import { LETTER_TEMPLATES } from '../services/letterTemplates';
 import { CV_EXAMPLES } from '../services/cvExamples';
+import { PreviewModeContext } from '../services/previewMode';
 
 type Kind = 'cv' | 'letter';
 type Filter = 'all' | 'ats' | 'creative';
@@ -76,8 +77,9 @@ const Templates: React.FC = () => {
         {items.length} modèle{items.length > 1 ? 's' : ''} · aperçu rempli avec un exemple. Choisis-en un pour ouvrir l'éditeur — tu pourras le changer à tout moment.
       </p>
 
-      {/* Grille de modèles (showcase) — re-montée à chaque bascule pour rejouer l'entrée en cascade */}
-      <div key={`${kind}-${filter}`} className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-5">
+      {/* Grille de modèles (showcase) — vignettes (mode thumb), re-montée à chaque bascule pour rejouer l'entrée */}
+      <PreviewModeContext.Provider value="thumb">
+      <div key={`${kind}-${filter}`} className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
         {items.map((it, i) => (
           <div
             key={it.id}
@@ -109,6 +111,7 @@ const Templates: React.FC = () => {
           </div>
         ))}
       </div>
+      </PreviewModeContext.Provider>
     </div>
   );
 };

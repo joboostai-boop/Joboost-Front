@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { X, Search, FileText } from 'lucide-react';
 import { CV_EXAMPLES, CV_EXAMPLE_CATEGORIES, CvExample } from '../services/cvExamples';
 import { getCvTemplate } from '../services/cvTemplates';
+import { PreviewModeContext } from '../services/previewMode';
 
 interface Props {
   open: boolean;
@@ -85,6 +86,7 @@ const CvExamplesModal: React.FC<Props> = ({ open, onClose, onPick }) => {
               <p className="text-sm font-medium">Aucun exemple ne correspond à ta recherche.</p>
             </div>
           ) : (
+            <PreviewModeContext.Provider value="thumb">
             <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
               {list.map((ex) => (
                 <button key={ex.id} onClick={() => { onPick(ex); onClose(); }} className="press group text-left">
@@ -99,6 +101,7 @@ const CvExamplesModal: React.FC<Props> = ({ open, onClose, onPick }) => {
                 </button>
               ))}
             </div>
+            </PreviewModeContext.Provider>
           )}
         </div>
       </div>

@@ -1,5 +1,6 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight, Check, ShieldCheck, Sparkles, LayoutGrid, GalleryHorizontal } from 'lucide-react';
+import { PreviewModeContext } from '../services/previewMode';
 
 export interface GalleryItem {
   id: string;
@@ -72,6 +73,7 @@ const TemplateGallery: React.FC<Props> = ({ items, selectedId, onSelect }) => {
   );
 
   return (
+    <PreviewModeContext.Provider value="thumb">
     <div className="space-y-4">
       {/* Barre d'outils : filtres + bascule de vue */}
       <div className="flex items-center justify-between gap-2">
@@ -158,6 +160,7 @@ const TemplateGallery: React.FC<Props> = ({ items, selectedId, onSelect }) => {
         </>
       )}
     </div>
+    </PreviewModeContext.Provider>
   );
 };
 

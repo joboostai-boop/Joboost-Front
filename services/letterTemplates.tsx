@@ -1,4 +1,5 @@
-import React, { useLayoutEffect, useRef, useState } from 'react';
+import React, { useContext, useLayoutEffect, useRef, useState } from 'react';
+import { PreviewModeContext } from './previewMode';
 
 export interface LetterData {
   name?: string;
@@ -18,28 +19,38 @@ const contacts = (d: LetterData) => [d.email, d.phone, d.city].filter(Boolean);
 const SHEET_W = 760;
 
 const Paper: React.FC<{ children: React.ReactNode; pad?: string; serif?: boolean }> = ({ children, pad = 'p-10', serif }) => {
-  const ref = useRef<HTMLDivElement>(null);
+  const mode = useContext(PreviewModeContext);
+  const thumb = mode === 'thumb';
+  const outerRef = useRef<HTMLDivElement>(null);
+  const innerRef = useRef<HTMLDivElement>(null);
   const [scale, setScale] = useState(0);
+  const [height, setHeight] = useState(0);
 
   useLayoutEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    const update = () => { if (el.clientWidth) setScale(el.clientWidth / SHEET_W); };
+    const outer = outerRef.current, inner = innerRef.current;
+    if (!outer || !inner) return;
+    const update = () => {
+      const w = outer.clientWidth;
+      if (!w) return;
+      const s = w / SHEET_W;
+      setScale(s);
+      setHeight(thumb ? w * 1.414 : inner.offsetHeight * s);
+    };
     update();
     const ro = new ResizeObserver(update);
-    ro.observe(el);
+    ro.observe(outer);
+    ro.observe(inner);
     return () => ro.disconnect();
-  }, []);
+  }, [thumb]);
 
   return (
-    <div ref={ref} className="w-full aspect-[1/1.414] overflow-hidden bg-white">
+    <div ref={outerRef} className="relative w-full overflow-hidden bg-white" style={{ height: height || undefined }}>
       <div
+        ref={innerRef}
         className={serif ? 'font-serif' : 'font-sans'}
-        style={{ width: SHEET_W, transform: `scale(${scale})`, transformOrigin: 'top left', fontSize: 13, lineHeight: 1.5 }}
+        style={{ position: 'absolute', top: 0, left: 0, width: SHEET_W, transform: `scale(${scale})`, transformOrigin: 'top left', fontSize: 13, lineHeight: 1.5 }}
       >
-        <div className={`aspect-[1/1.414] overflow-hidden bg-white text-slate-800 ${pad}`}>
-          {children}
-        </div>
+        <div className={`bg-white text-slate-800 ${pad}`}>{children}</div>
       </div>
     </div>
   );
