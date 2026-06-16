@@ -1,8 +1,8 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useRef, useState } from 'react';
 import {
   User as UserIcon, Briefcase, GraduationCap, Sparkles, Languages as LanguagesIcon,
   Settings2, Link2, FolderGit2, Heart, Target, Plus, X, Trash2, ChevronDown,
-  Linkedin, Wand2, RefreshCw, Check, Save
+  Linkedin, Wand2, RefreshCw, Check, Save, Upload
 } from 'lucide-react';
 import { User as UserType } from '../types';
 import toast from 'react-hot-toast';
@@ -133,6 +133,8 @@ const Profile: React.FC<ProfileProps> = ({ user }) => {
   const [saving, setSaving] = useState(false);
   const [loadingAI, setLoadingAI] = useState(false);
   const [aiExpId, setAiExpId] = useState<string | null>(null);
+  const [importing, setImporting] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const toggle = (id: string) => setOpen((o) => (o === id ? null : id));
 
   const initialName = { first: user.firstName || user.name?.split(' ')[0] || '', last: user.lastName || user.name?.split(' ').slice(1).join(' ') || '' };
@@ -249,6 +251,67 @@ const Profile: React.FC<ProfileProps> = ({ user }) => {
     } finally { setAiExpId(null); }
   };
 
+  // Import d'un CV (PDF/Word) : extraction via l'IA puis remplissage NON destructif
+  // du profil (on ne remplit que les champs vides, on fusionne les compétences et
+  // on ajoute les expériences absentes). Rien n'est enregistré tant que l'utilisateur
+  // n'a pas cliqué « Enregistrer mon profil ».
+  const handleImportCv = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (fileInputRef.current) fileInputRef.current.value = '';
+    if (!file) return;
+    if (!/\.(pdf|docx?)$/i.test(file.name)) {
+      toast.error('Formats acceptés : PDF ou Word (.doc, .docx).');
+      return;
+    }
+    setImporting(true);
+    const toastId = toast.loading('Analyse de ton CV…');
+    try {
+      const fd = new FormData();
+      fd.append('file', file);
+      const res = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/ai/parse-cv`, {
+        method: 'POST', credentials: 'include', headers: { ...authHeaders() }, body: fd,
+      });
+      const data = await res.json();
+      if (!data.success || !data.data) {
+        toast.error(data.error || "On n'a pas pu lire ce CV. Réessaie avec un autre fichier ou saisis tes infos.", { id: toastId });
+        return;
+      }
+      const d = data.data;
+      const [first, ...rest] = (d.name || '').trim().split(/\s+/);
+      const importedExps = (Array.isArray(d.experiences) ? d.experiences : [])
+        .map((xp: any) => ({
+          id: uid(), role: xp.role || '', company: xp.company || '', city: '',
+          startDate: '', endDate: xp.period || [xp.startDate, xp.endDate].filter(Boolean).join(' – ') || '',
+          current: false, contractType: '', missions: xp.desc || xp.missions || '', achievements: '', link: '',
+        }))
+        .filter((xp: any) => xp.role || xp.company || xp.missions);
+
+      setF((prev) => {
+        const k = (r: string, c: string) => `${r}|${c}`.trim().toLowerCase();
+        const existing = new Set(prev.experiences.map((xp) => k(xp.role, xp.company)));
+        const newExps = importedExps.filter((xp: any) => !existing.has(k(xp.role, xp.company)));
+        const mergedSkills = Array.from(new Set([...(prev.skills || []), ...(Array.isArray(d.skills) ? d.skills : [])])).filter(Boolean);
+        return {
+          ...prev,
+          firstName: prev.firstName || first || '',
+          lastName: prev.lastName || rest.join(' '),
+          email: prev.email || d.email || '',
+          phone: prev.phone || d.phone || '',
+          title: prev.title || d.title || '',
+          summary: prev.summary || d.summary || '',
+          skills: mergedSkills,
+          experiences: [...prev.experiences, ...newExps],
+        };
+      });
+      setOpen('exp');
+      toast.success('CV importé — vérifie, complète, puis clique « Enregistrer ».', { id: toastId });
+    } catch {
+      toast.error("Erreur réseau pendant l'import.", { id: toastId });
+    } finally {
+      setImporting(false);
+    }
+  };
+
   const handleSave = async () => {
     setSaving(true);
     try {
@@ -319,9 +382,16 @@ const Profile: React.FC<ProfileProps> = ({ user }) => {
               <p className="text-sm text-[#6B7280] dark:text-slate-400">{f.title || 'Plus ton profil est complet, meilleurs sont tes CV et lettres.'}</p>
             </div>
           </div>
-          <button onClick={connectLinkedIn} className="btn btn-secondary !border-[#0A66C2] !text-[#0A66C2] hover:!bg-[#0A66C2]/5 hidden sm:flex">
-            <Linkedin size={16} /> LinkedIn
-          </button>
+          <div className="flex items-center gap-2 shrink-0">
+            <input type="file" ref={fileInputRef} accept=".pdf,.doc,.docx" className="hidden" onChange={handleImportCv} />
+            <button onClick={() => fileInputRef.current?.click()} disabled={importing} className="press btn btn-secondary text-[#7D5CFF] disabled:opacity-60">
+              {importing ? <RefreshCw size={16} className="animate-spin" /> : <Upload size={16} />}
+              <span className="hidden sm:inline">Importer mon CV</span>
+            </button>
+            <button onClick={connectLinkedIn} className="btn btn-secondary !border-[#0A66C2] !text-[#0A66C2] hover:!bg-[#0A66C2]/5 hidden sm:flex">
+              <Linkedin size={16} /> LinkedIn
+            </button>
+          </div>
         </div>
         <div className="space-y-1.5">
           <div className="flex justify-between text-xs font-semibold">

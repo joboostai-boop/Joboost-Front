@@ -1,12 +1,16 @@
 
-import React, { useState, useEffect } from 'react';
-import { Printer, FileDown, Wand2, RefreshCw, Layout, Save, Clock, Loader2, Plus, Trash2, X } from 'lucide-react';
+import React, { useState, useEffect, useMemo } from 'react';
+import { Printer, FileDown, Wand2, RefreshCw, Layout, Save, Clock, Loader2, Plus, Trash2, X, Files } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { generateCVSummary } from '../services/gemini';
 import { exportCvPdf, exportCvDocx } from '../services/atsExport';
 import { authHeaders } from '../services/authToken';
 import TemplateGallery from '../components/TemplateGallery';
 import { CV_TEMPLATES, getCvTemplate } from '../services/cvTemplates';
+import { computeAtsScore } from '../services/atsScore';
+import AtsScoreCard from '../components/AtsScoreCard';
+import CvExamplesModal from '../components/CvExamplesModal';
+import { CvExample } from '../services/cvExamples';
 
 const uid = () => Math.random().toString(36).slice(2, 10);
 
@@ -50,6 +54,7 @@ const CVGenerator: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [cvs, setCvs] = useState<any[]>([]);
   const [currentCvId, setCurrentCvId] = useState<string | null>(null);
+  const [showExamples, setShowExamples] = useState(false);
 
   const [formData, setFormData] = useState({
     name: '',
@@ -185,6 +190,19 @@ const CVGenerator: React.FC = () => {
     toast.success("CV rechargé");
   };
 
+  // Charge un exemple pré-rempli : on régénère les identifiants (lignes éditables)
+  // et on conserve le modèle déjà choisi. C'est un point de départ à personnaliser.
+  const loadExample = (ex: CvExample) => {
+    setFormData((prev) => ({
+      ...prev,
+      ...ex.data,
+      experiences: normalizeExperiences(ex.data.experiences.map(({ id, ...e }) => e)),
+      education: normalizeEducation(ex.data.education.map(({ id, ...e }) => e)),
+    }));
+    setCurrentCvId(null); // exemple = nouveau document non encore sauvegardé
+    toast.success(`Exemple « ${ex.role} » chargé — personnalise-le avec tes infos.`);
+  };
+
   const [exporting, setExporting] = useState(false);
 
   // L'export ATS attend `period` pour les formations (l'aperçu utilise `date`/`city`).
@@ -217,6 +235,7 @@ const CVGenerator: React.FC = () => {
   };
 
   const SelectedPreview = getCvTemplate(formData.template).Preview;
+  const atsResult = useMemo(() => computeAtsScore(formData), [formData]);
 
   return (
     <div className="p-5 md:p-8 max-w-6xl mx-auto flex flex-col lg:flex-row gap-8">
@@ -226,9 +245,14 @@ const CVGenerator: React.FC = () => {
             <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-500" />
             Modifie chaque section ici — l'aperçu et l'export se mettent à jour en direct.
           </p>
-          <button onClick={handleSaveCV} className="press btn btn-secondary text-[#7D5CFF]">
-            <Save size={16} /> Sauvegarder
-          </button>
+          <div className="flex items-center gap-2 shrink-0">
+            <button onClick={() => setShowExamples(true)} className="press btn btn-secondary">
+              <Files size={16} /> Partir d'un exemple
+            </button>
+            <button onClick={handleSaveCV} className="press btn btn-secondary text-[#7D5CFF]">
+              <Save size={16} /> Sauvegarder
+            </button>
+          </div>
         </header>
 
         {cvs.length > 0 && (
@@ -362,11 +386,16 @@ const CVGenerator: React.FC = () => {
           </button>
         </div>
 
+        {/* Score ATS indicatif (calculé en direct depuis le contenu édité) */}
+        <AtsScoreCard result={atsResult} />
+
         {/* Aperçu du modèle sélectionné (grand format) */}
         <div id="cv-preview" className="rounded-xl overflow-hidden shadow-pop ring-1 ring-slate-200 dark:ring-slate-700">
           <SelectedPreview data={formData} />
         </div>
       </div>
+
+      <CvExamplesModal open={showExamples} onClose={() => setShowExamples(false)} onPick={loadExample} />
     </div>
   );
 };
