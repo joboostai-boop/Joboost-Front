@@ -3,19 +3,40 @@ import { useNavigate } from 'react-router-dom';
 import { ShieldCheck, Sparkles, ArrowRight, Check } from 'lucide-react';
 import { CV_TEMPLATES } from '../services/cvTemplates';
 import { LETTER_TEMPLATES } from '../services/letterTemplates';
-import { CV_EXAMPLES } from '../services/cvExamples';
 import { PreviewModeContext } from '../services/previewMode';
 
 type Kind = 'cv' | 'letter';
 type Filter = 'all' | 'ats' | 'creative';
 
-// Données d'exemple pour des aperçus REMPLIS et attrayants (comme la sample library Rezi).
-const CV_SAMPLE = CV_EXAMPLES.find((e) => e.id === 'commercial')?.data || CV_EXAMPLES[0].data;
+// Exemple d'aperçu — volontairement riche (~1 page A4) pour que chaque vignette
+// ressemble à un vrai CV rempli, sans grande zone blanche.
+const CV_SAMPLE = {
+  name: 'Léa Dubois',
+  title: 'Chargée de clientèle',
+  email: 'lea.dubois@email.com',
+  phone: '06 34 56 78 90',
+  city: 'Nantes',
+  summary:
+    "Commerciale orientée résultats avec 6 ans d'expérience en B2B, à l'aise en prospection comme en fidélisation. Sens de l'écoute, de la négociation et suivi rigoureux des objectifs commerciaux.",
+  skills: ['Prospection', 'Négociation', 'Relation client', 'CRM (Salesforce)', 'Vente B2B', 'Reporting', 'Fidélisation', 'Gestion de portefeuille'],
+  experiences: [
+    { role: 'Chargée de clientèle', company: 'Atlas Distribution', city: 'Nantes', period: "2021 – Aujourd'hui",
+      desc: "Gestion d'un portefeuille de 120 clients B2B.\n+18 % de chiffre d'affaires sur la zone en 2 ans.\nNégociation des contrats annuels et relances.\nSuivi de la satisfaction et fidélisation client." },
+    { role: 'Conseillère de vente', company: 'Boutique Horizon', city: 'Nantes', period: '2019 – 2021',
+      desc: "Accueil et conseil client en boutique.\nMise en avant des produits et merchandising.\nAtteinte régulière des objectifs mensuels." },
+    { role: 'Vendeuse (saisonnier)', company: 'Maison Léa', city: 'Nantes', period: '2018 – 2019',
+      desc: "Vente et encaissement.\nGestion des stocks et réassort des rayons." },
+  ],
+  education: [
+    { degree: 'BTS NDRC (Négociation et Digitalisation de la Relation Client)', school: 'Lycée La Colinière', city: 'Nantes', date: '2019' },
+    { degree: 'Baccalauréat STMG', school: 'Lycée Nelson Mandela', city: 'Nantes', date: '2017' },
+  ],
+};
 const LETTER_SAMPLE = {
   name: 'Léa Dubois', email: 'lea.dubois@email.com', phone: '06 34 56 78 90', city: 'Nantes',
   company: 'Atlas Distribution', jobTitle: 'Chargée de clientèle',
   body:
-    "Madame, Monsieur,\n\nVivement intéressée par le poste de Chargée de clientèle au sein d'Atlas Distribution, je vous adresse ma candidature. Mon expérience en relation client et en négociation m'a permis de développer un portefeuille fidèle et d'atteindre régulièrement mes objectifs.\n\nJe serais ravie d'échanger avec vous sur la façon dont je pourrais contribuer à votre équipe.",
+    "Madame, Monsieur,\n\nVivement intéressée par le poste de Chargée de clientèle au sein d'Atlas Distribution, je vous adresse ma candidature. Mon expérience de six ans en relation client et en négociation m'a permis de développer un portefeuille fidèle et d'atteindre régulièrement mes objectifs commerciaux.\n\nAu cours de mes précédentes fonctions, j'ai appris à conjuguer écoute, rigueur et sens du résultat. Votre entreprise, reconnue pour la qualité de sa relation client, correspond pleinement au cadre dans lequel je souhaite m'investir durablement.\n\nJe serais ravie d'échanger avec vous sur la façon dont je pourrais contribuer au développement de votre clientèle.\n\nDans l'attente de votre retour, je vous prie d'agréer, Madame, Monsieur, l'expression de mes salutations distinguées.",
 };
 
 const Templates: React.FC = () => {
@@ -79,7 +100,7 @@ const Templates: React.FC = () => {
 
       {/* Grille de modèles (showcase) — vignettes (mode thumb), re-montée à chaque bascule pour rejouer l'entrée */}
       <PreviewModeContext.Provider value="thumb">
-      <div key={`${kind}-${filter}`} className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 gap-4 items-start">
+      <div key={`${kind}-${filter}`} className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-5 items-start">
         {items.map((it, i) => (
           <div
             key={it.id}
