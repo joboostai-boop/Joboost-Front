@@ -12,6 +12,7 @@ import { computeAtsScore } from '../services/atsScore';
 import AtsScoreCard from '../components/AtsScoreCard';
 import CvExamplesModal from '../components/CvExamplesModal';
 import Tilt from '../components/Tilt';
+import Collapsible, { CountBadge } from '../components/Collapsible';
 import { CvExample } from '../services/cvExamples';
 
 const uid = () => Math.random().toString(36).slice(2, 10);
@@ -275,22 +276,17 @@ const CVGenerator: React.FC = () => {
            </section>
         )}
 
-        {/* Choix du modèle (carrousel un par un) */}
-        <section className="space-y-3">
-          <div className="flex items-center gap-2 mb-1">
-            <Layout size={18} className="text-[#7D5CFF]" />
-            <h3 className="text-xs font-semibold uppercase tracking-wider text-[#9CA3AF]">Choisis ton modèle</h3>
-          </div>
+        {/* Choix du modèle */}
+        <Collapsible title="Modèle de CV" icon={<Layout size={16} />} subtitle={`Sélectionné : ${getCvTemplate(formData.template).name}`}>
           <TemplateGallery
             items={CV_TEMPLATES.map((t) => ({ id: t.id, name: t.name, ats: t.ats, node: <t.Preview data={formData} /> }))}
             selectedId={formData.template}
             onSelect={(id) => setFormData({ ...formData, template: id })}
           />
-        </section>
+        </Collapsible>
 
-        {/* Coordonnées */}
-        <div className="surface p-5 md:p-6 space-y-5">
-          <h3 className="text-xs font-semibold uppercase tracking-wider text-[#9CA3AF]">Coordonnées</h3>
+        {/* Coordonnées + résumé */}
+        <Collapsible step={1} title="Coordonnées & résumé" defaultOpen bodyClassName="px-4 md:px-5 pb-5 space-y-5">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="input-label">Nom complet</label>
@@ -324,20 +320,15 @@ const CVGenerator: React.FC = () => {
             </div>
             <textarea value={formData.summary} onChange={(e) => setFormData({...formData, summary: e.target.value})} className="textarea-pro" placeholder="2-3 phrases qui résument ton profil et ce que tu cherches." />
           </div>
-        </div>
+        </Collapsible>
 
         {/* Compétences */}
-        <div className="surface p-5 md:p-6 space-y-4">
-          <h3 className="text-xs font-semibold uppercase tracking-wider text-[#9CA3AF]">Compétences</h3>
+        <Collapsible step={2} title="Compétences" badge={<CountBadge n={formData.skills.length} />}>
           <SkillsEditor value={formData.skills} onChange={(skills) => setFormData({ ...formData, skills })} />
-        </div>
+        </Collapsible>
 
         {/* Expériences */}
-        <div className="surface p-5 md:p-6 space-y-4">
-          <div className="flex items-center justify-between">
-            <h3 className="text-xs font-semibold uppercase tracking-wider text-[#9CA3AF]">Expériences</h3>
-            <span className="text-[11px] text-[#9CA3AF]">{formData.experiences.length}</span>
-          </div>
+        <Collapsible step={3} title="Expériences" badge={<CountBadge n={formData.experiences.length} />} bodyClassName="px-4 md:px-5 pb-5 space-y-4">
           {formData.experiences.map((exp) => (
             <div key={exp.id} className="rounded-2xl border border-slate-200 dark:border-slate-700 p-4 space-y-3">
               <div className="flex justify-between items-center">
@@ -353,14 +344,10 @@ const CVGenerator: React.FC = () => {
             </div>
           ))}
           <button onClick={addExperience} className="press btn btn-secondary w-full"><Plus size={16} /> Ajouter une expérience</button>
-        </div>
+        </Collapsible>
 
         {/* Formations */}
-        <div className="surface p-5 md:p-6 space-y-4">
-          <div className="flex items-center justify-between">
-            <h3 className="text-xs font-semibold uppercase tracking-wider text-[#9CA3AF]">Formations</h3>
-            <span className="text-[11px] text-[#9CA3AF]">{formData.education.length}</span>
-          </div>
+        <Collapsible step={4} title="Formations" badge={<CountBadge n={formData.education.length} />} bodyClassName="px-4 md:px-5 pb-5 space-y-4">
           {formData.education.map((ed) => (
             <div key={ed.id} className="rounded-2xl border border-slate-200 dark:border-slate-700 p-4 space-y-3">
               <div className="flex justify-between items-center">
@@ -376,7 +363,7 @@ const CVGenerator: React.FC = () => {
             </div>
           ))}
           <button onClick={addEducation} className="press btn btn-secondary w-full"><Plus size={16} /> Ajouter une formation</button>
-        </div>
+        </Collapsible>
       </div>
 
       <div className="w-full lg:w-[450px] space-y-4 lg:sticky lg:top-[88px] lg:self-start">

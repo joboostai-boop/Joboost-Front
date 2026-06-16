@@ -5,6 +5,7 @@ import toast from 'react-hot-toast';
 import { exportLetterPdf, exportLetterDocx } from '../services/atsExport';
 import { authHeaders } from '../services/authToken';
 import TemplateGallery from '../components/TemplateGallery';
+import Collapsible from '../components/Collapsible';
 import { LETTER_TEMPLATES, getLetterTemplate } from '../services/letterTemplates';
 
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -258,12 +259,14 @@ const LetterGenerator: React.FC = () => {
             </button>
           </div>
 
-          {/* Choix du modèle (carrousel un par un) — toujours visible */}
-          <TemplateGallery
-            items={LETTER_TEMPLATES.map((t) => ({ id: t.id, name: t.name, ats: t.ats, node: <t.Preview data={previewData} /> }))}
-            selectedId={letterTemplate}
-            onSelect={setLetterTemplate}
-          />
+          {/* Choix du modèle (replié par défaut pour alléger le flux) */}
+          <Collapsible title="Modèle de lettre" subtitle={`Sélectionné : ${getLetterTemplate(letterTemplate).name}`}>
+            <TemplateGallery
+              items={LETTER_TEMPLATES.map((t) => ({ id: t.id, name: t.name, ats: t.ats, node: <t.Preview data={previewData} /> }))}
+              selectedId={letterTemplate}
+              onSelect={setLetterTemplate}
+            />
+          </Collapsible>
 
           {/* Édition du texte */}
           <div>
