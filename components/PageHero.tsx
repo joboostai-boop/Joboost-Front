@@ -35,6 +35,8 @@ export interface PageHeroProps {
   actions?: React.ReactNode;
   /** Barre d'onglets / contenu rendu sous le titre (segmented control). */
   tabs?: React.ReactNode;
+  /** Décor de fond (ex. <HeroDecor/>) rendu derrière le contenu, non cliquable. */
+  decor?: React.ReactNode;
   /** Largeur max du contenu interne. */
   maxWidth?: string;
   className?: string;
@@ -48,11 +50,13 @@ const PageHero: React.FC<PageHeroProps> = ({
   tone = 'violet',
   actions,
   tabs,
+  decor,
   maxWidth = 'max-w-6xl',
   className = '',
 }) => (
-  <div className={`${maxWidth} mx-auto px-5 md:px-8 pt-8 md:pt-10 pb-4 animate-fade-in-up ${className}`}>
-    <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-5">
+  <div className={`relative ${maxWidth} mx-auto px-5 md:px-8 pt-8 md:pt-10 pb-4 animate-fade-in-up ${className}`}>
+    {decor}
+    <div className="relative z-10 flex flex-col md:flex-row md:items-center md:justify-between gap-5">
       <div className="flex items-start gap-3.5 min-w-0">
         {icon && (
           <span className={`hidden sm:flex w-11 h-11 rounded-2xl items-center justify-center shrink-0 ${ACCENT[tone]}`}>
@@ -73,7 +77,7 @@ const PageHero: React.FC<PageHeroProps> = ({
     </div>
 
     {tabs && (
-      <div className="mt-6 flex gap-1 p-1 rounded-xl bg-white dark:bg-[#111827] border border-[#ECEAF6] dark:border-[#1F2937] shadow-xs w-fit max-w-full overflow-x-auto scrollbar-none">
+      <div className="relative z-10 mt-6 flex gap-1 p-1 rounded-xl bg-white dark:bg-[#111827] border border-[#ECEAF6] dark:border-[#1F2937] shadow-xs w-fit max-w-full overflow-x-auto scrollbar-none">
         {tabs}
       </div>
     )}

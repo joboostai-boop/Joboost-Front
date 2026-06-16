@@ -3,6 +3,8 @@ import { Link } from 'react-router-dom';
 import { User } from '../types';
 import { authHeaders } from '../services/authToken';
 import PageHero from '../components/PageHero';
+import HeroDecor from '../components/HeroDecor';
+import Tilt from '../components/Tilt';
 import {
   UserRound, Send, LineChart, Plus, ArrowRight,
   FileText, Search, Bell, Loader2, Clock, CalendarCheck, Award, PenLine, Sparkles, Check
@@ -127,6 +129,7 @@ const Accueil: React.FC<AccueilProps> = ({ user }) => {
         tone="violet"
         eyebrow="Accueil"
         icon={<Sparkles size={22} />}
+        decor={<HeroDecor variant="accueil" />}
         title={`Bonjour ${firstName}`}
         subtitle="Voici l'état de votre recherche aujourd'hui."
         actions={
@@ -189,9 +192,10 @@ const Accueil: React.FC<AccueilProps> = ({ user }) => {
         </section>
       ) : (
         /* Compte actif : prochaine action contextuelle. */
+        <Tilt glare className="animate-fade-in-up" max={5}>
         <Link
           to={next.to}
-          className="press group relative overflow-hidden flex items-center justify-between gap-4 card-pro hover:shadow-card-hover hover:-translate-y-0.5 transition-all animate-fade-in-up"
+          className="press group relative overflow-hidden flex items-center justify-between gap-4 card-pro hover:shadow-card-hover hover:-translate-y-0.5 transition-all"
         >
           <div className="relative flex items-center gap-4 min-w-0">
             <span className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#8C6DFF] to-[#6D28D9] text-white flex items-center justify-center shrink-0 shadow-[0_6px_16px_-6px_rgba(124,92,255,0.6)]">
@@ -205,19 +209,22 @@ const Accueil: React.FC<AccueilProps> = ({ user }) => {
           </div>
           <ArrowRight size={22} className="relative shrink-0 text-[#7D5CFF] group-hover:translate-x-1 transition-transform" />
         </Link>
+        </Tilt>
       )}
 
       {/* KPIs — masqués sur un compte neuf (évite un mur de zéros) */}
       {!showOnboarding && (
         <section className="grid grid-cols-2 lg:grid-cols-4 gap-3">
           {kpis.map((k, i) => (
-            <div key={k.label} className="card-pro !p-4 animate-fade-in-up" style={{ animationDelay: `${i * 50}ms` }}>
-              <span className={`w-8 h-8 rounded-lg flex items-center justify-center mb-3 ${k.tint}`}>{k.icon}</span>
-              <p className="text-2xl font-bold text-[#111827] dark:text-white tabular-nums leading-none">
-                {loading ? '–' : k.value}
-              </p>
-              <p className="text-xs text-[#6B7280] dark:text-slate-400 mt-1.5">{k.label}</p>
-            </div>
+            <Tilt key={k.label} className="h-full" max={9}>
+              <div className="card-pro !p-4 h-full animate-fade-in-up" style={{ animationDelay: `${i * 50}ms` }}>
+                <span className={`w-8 h-8 rounded-lg flex items-center justify-center mb-3 ${k.tint}`}>{k.icon}</span>
+                <p className="text-2xl font-bold text-[#111827] dark:text-white tabular-nums leading-none">
+                  {loading ? '–' : k.value}
+                </p>
+                <p className="text-xs text-[#6B7280] dark:text-slate-400 mt-1.5">{k.label}</p>
+              </div>
+            </Tilt>
           ))}
         </section>
       )}
@@ -229,11 +236,11 @@ const Accueil: React.FC<AccueilProps> = ({ user }) => {
           <h2 className="text-xs font-semibold uppercase tracking-wider text-[#9CA3AF]">Mon parcours</h2>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             {spaces.map((s, i) => (
+              <Tilt key={s.to} glare className="h-full" max={8}>
               <Link
-                key={s.to}
                 to={s.to}
                 style={{ animationDelay: `${i * 60}ms` }}
-                className="press card-pro group hover:border-[#7D5CFF]/40 hover:shadow-card-hover hover:-translate-y-0.5 transition-all flex flex-col gap-3 animate-fade-in-up"
+                className="press card-pro h-full group hover:border-[#7D5CFF]/40 hover:shadow-card-hover hover:-translate-y-0.5 transition-all flex flex-col gap-3 animate-fade-in-up"
               >
                 <span className="w-10 h-10 rounded-lg surface-accent text-[#7D5CFF] flex items-center justify-center">
                   {s.icon}
@@ -246,6 +253,7 @@ const Accueil: React.FC<AccueilProps> = ({ user }) => {
                   <p className="text-xs text-[#6B7280] dark:text-slate-400 leading-relaxed">{s.desc}</p>
                 </div>
               </Link>
+              </Tilt>
             ))}
           </div>
         </section>

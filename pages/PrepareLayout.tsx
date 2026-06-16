@@ -2,6 +2,7 @@ import React from 'react';
 import { Outlet, NavLink } from 'react-router-dom';
 import { UserRound, Contact, PenLine, Sparkles, LayoutGrid } from 'lucide-react';
 import PageHero, { heroTab } from '../components/PageHero';
+import HeroDecor from '../components/HeroDecor';
 
 const PrepareLayout: React.FC = () => {
   const tabs = [
@@ -17,6 +18,7 @@ const PrepareLayout: React.FC = () => {
         tone="violet"
         eyebrow="Étape 1 · Préparer"
         icon={<Sparkles size={22} />}
+        decor={<HeroDecor variant="prepare" />}
         title="Préparer ma candidature"
         subtitle="Ton profil, ton CV et ta lettre type — la base d'une candidature qui décroche des entretiens."
         tabs={tabs.map((tab) => (

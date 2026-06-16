@@ -223,6 +223,93 @@
 .app-shell .card-pro:nth-child(5), .app-shell .card-modern:nth-child(5), .app-shell .surface:nth-child(5) { animation-delay: 0.20s; }
 .app-shell .card-pro:nth-child(6), .app-shell .card-modern:nth-child(6), .app-shell .surface:nth-child(6) { animation-delay: 0.25s; }
 
+/* ================== 3D · TILT · PARALLAXE (Phase 4) ==================
+   Relief « premium » : inclinaison 3D au survol (suivi du pointeur), décor
+   flottant en perspective dans les héros, parallaxe douce au scroll. Les
+   valeurs dynamiques (rotation, parallaxe) sont posées en variables CSS par
+   les composants Tilt / HeroDecor. Tout est entièrement neutralisé par le
+   bloc prefers-reduced-motion ci-dessous + un garde matchMedia côté JS. */
+
+/* ---- Inclinaison 3D au survol ----
+   Le conteneur pose la perspective ; la couche interne porte la rotation
+   (--rx / --ry en degrés, écrites par le composant Tilt). Aucune classe de
+   la carte enfant n'est touchée → zéro conflit avec ses propres transitions. */
+.tilt { perspective: 1000px; }
+.tilt-layer {
+  height: 100%;
+  transform: rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg)) translateZ(0);
+  transform-style: preserve-3d;
+  transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: transform;
+}
+/* Pendant le survol actif, on colle au pointeur (réponse vive). */
+.tilt[data-active='true'] .tilt-layer { transition: transform 0.08s linear; }
+
+/* Reflet doux qui suit le pointeur sur la carte inclinée. */
+.tilt-glare {
+  position: absolute; inset: 0; z-index: 20; border-radius: 1rem;
+  pointer-events: none; opacity: 0; transition: opacity 0.3s ease;
+  background: radial-gradient(circle at var(--gx, 50%) var(--gy, 0%), rgba(255, 255, 255, 0.28), transparent 55%);
+}
+.tilt[data-active='true'] .tilt-glare { opacity: 1; }
+.dark .tilt-glare {
+  background: radial-gradient(circle at var(--gx, 50%) var(--gy, 0%), rgba(255, 255, 255, 0.10), transparent 55%);
+}
+
+/* ---- Décor 3D des héros : panneaux & orbes en lévitation ---- */
+.hero-decor {
+  position: absolute; inset: 0; z-index: 0;
+  pointer-events: none; overflow: hidden;
+  perspective: 1100px;
+}
+/* Chaque couche porte la parallaxe : translateY piloté par --par (px, scroll). */
+.hero-layer {
+  position: absolute; inset: 0;
+  transform: translate3d(0, var(--par, 0px), 0);
+  will-change: transform;
+}
+/* Orbe lumineux flou (halo violet marque). */
+.hero-orb {
+  position: absolute; border-radius: 9999px; filter: blur(8px);
+  background: radial-gradient(circle at 30% 30%, rgba(155, 123, 255, 0.55), rgba(125, 92, 255, 0.18) 60%, transparent 72%);
+}
+/* Panneau « carte » incliné dans l'espace (vrai relief 3D). */
+.hero-panel {
+  position: absolute; border-radius: 18px;
+  border: 1px solid rgba(125, 92, 255, 0.18);
+  background: linear-gradient(150deg, rgba(255, 255, 255, 0.85), rgba(243, 240, 255, 0.55));
+  box-shadow: 0 18px 40px -18px rgba(125, 92, 255, 0.45);
+  backdrop-filter: blur(2px);
+  transform-style: preserve-3d;
+}
+.dark .hero-panel {
+  border-color: rgba(125, 92, 255, 0.28);
+  background: linear-gradient(150deg, rgba(31, 41, 55, 0.78), rgba(17, 24, 39, 0.55));
+}
+/* Anneau fin (orbite). */
+.hero-ring {
+  position: absolute; border-radius: 9999px;
+  border: 1.5px solid rgba(125, 92, 255, 0.22);
+}
+
+/* Lévitation lente + légère rotation 3D — appliquée à un ENFANT de la couche
+   parallaxe pour que les deux transforms ne se marchent pas dessus. */
+@keyframes hero-float {
+  0%, 100% { transform: translateY(0) rotateX(8deg) rotateY(-14deg); }
+  50%      { transform: translateY(-16px) rotateX(3deg) rotateY(-6deg); }
+}
+@keyframes hero-float-soft {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-22px); }
+}
+@keyframes hero-spin-slow {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+.hero-anim-float { animation: hero-float 9s ease-in-out infinite; }
+.hero-anim-soft  { animation: hero-float-soft 11s ease-in-out infinite; }
+.hero-anim-spin  { animation: hero-spin-slow 40s linear infinite; }
+
 /* Accessibilité : on neutralise quasi toutes les animations si l'utilisateur
    a demandé moins de mouvement (prefers-reduced-motion). Filet de sécurité global. */
 @media (prefers-reduced-motion: reduce) {
