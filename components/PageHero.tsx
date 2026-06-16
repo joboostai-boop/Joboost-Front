@@ -89,7 +89,7 @@ const PageHero: React.FC<PageHeroProps> = ({
 export const heroTab = (isActive: boolean) =>
   `press flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold whitespace-nowrap outline-none transition-all shrink-0 ${
     isActive
-      ? 'bg-gradient-to-b from-[#8C6DFF] to-[#7D5CFF] text-white shadow-[0_4px_14px_-3px_rgba(124,92,255,0.6)]'
+      ? 'tab-shine bg-gradient-to-b from-[#8C6DFF] to-[#7D5CFF] text-white shadow-[0_4px_14px_-3px_rgba(124,92,255,0.6)]'
       : 'text-slate-500 dark:text-slate-400 hover:text-[#7D5CFF] hover:bg-[#F5F4FB] dark:hover:bg-[#1F2937]'
   }`;
 

@@ -11,6 +11,7 @@ import { CV_TEMPLATES, getCvTemplate } from '../services/cvTemplates';
 import { computeAtsScore } from '../services/atsScore';
 import AtsScoreCard from '../components/AtsScoreCard';
 import CvExamplesModal from '../components/CvExamplesModal';
+import Tilt from '../components/Tilt';
 import { CvExample } from '../services/cvExamples';
 
 const uid = () => Math.random().toString(36).slice(2, 10);
@@ -392,7 +393,9 @@ const CVGenerator: React.FC = () => {
         </div>
 
         {/* Score ATS indicatif (calculé en direct depuis le contenu édité) */}
-        <AtsScoreCard result={atsResult} />
+        <Tilt max={6} glare>
+          <AtsScoreCard result={atsResult} />
+        </Tilt>
 
         {/* Aperçu du modèle sélectionné (grand format) */}
         <div id="cv-preview" className="rounded-xl overflow-hidden shadow-pop ring-1 ring-slate-200 dark:ring-slate-700">

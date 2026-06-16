@@ -5,6 +5,7 @@ import { authHeaders } from '../services/authToken';
 import PageHero from '../components/PageHero';
 import HeroDecor from '../components/HeroDecor';
 import Tilt from '../components/Tilt';
+import CountUp from '../components/CountUp';
 import {
   UserRound, Send, LineChart, Plus, ArrowRight,
   FileText, Search, Bell, Loader2, Clock, CalendarCheck, Award, PenLine, Sparkles, Check
@@ -161,7 +162,7 @@ const Accueil: React.FC<AccueilProps> = ({ user }) => {
           </div>
 
           <div className="h-2 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden mb-5">
-            <div className="h-full rounded-full bg-gradient-to-r from-[#8C6DFF] to-[#7D5CFF] transition-[width] duration-500" style={{ width: `${(doneCount / steps.length) * 100}%` }} />
+            <div className="bar-shine h-full rounded-full bg-gradient-to-r from-[#8C6DFF] to-[#7D5CFF] transition-[width] duration-500" style={{ width: `${(doneCount / steps.length) * 100}%` }} />
           </div>
 
           <div className="grid sm:grid-cols-2 gap-3">
@@ -198,7 +199,7 @@ const Accueil: React.FC<AccueilProps> = ({ user }) => {
           className="press group relative overflow-hidden flex items-center justify-between gap-4 card-pro hover:shadow-card-hover hover:-translate-y-0.5 transition-all"
         >
           <div className="relative flex items-center gap-4 min-w-0">
-            <span className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#8C6DFF] to-[#6D28D9] text-white flex items-center justify-center shrink-0 shadow-[0_6px_16px_-6px_rgba(124,92,255,0.6)]">
+            <span className="icon-shine w-12 h-12 rounded-xl bg-gradient-to-br from-[#8C6DFF] to-[#6D28D9] text-white flex items-center justify-center shrink-0 shadow-[0_6px_16px_-6px_rgba(124,92,255,0.6)]">
               {loading ? <Loader2 size={22} className="animate-spin" /> : next.icon}
             </span>
             <div className="min-w-0">
@@ -220,7 +221,7 @@ const Accueil: React.FC<AccueilProps> = ({ user }) => {
               <div className="card-pro !p-4 h-full animate-fade-in-up" style={{ animationDelay: `${i * 50}ms` }}>
                 <span className={`w-8 h-8 rounded-lg flex items-center justify-center mb-3 ${k.tint}`}>{k.icon}</span>
                 <p className="text-2xl font-bold text-[#111827] dark:text-white tabular-nums leading-none">
-                  {loading ? '–' : k.value}
+                  {loading ? '–' : <CountUp value={k.value} />}
                 </p>
                 <p className="text-xs text-[#6B7280] dark:text-slate-400 mt-1.5">{k.label}</p>
               </div>
@@ -260,6 +261,7 @@ const Accueil: React.FC<AccueilProps> = ({ user }) => {
 
         {/* Rail latéral : actions rapides + astuce */}
         <aside className="space-y-4">
+          <Tilt max={6}>
           <div className="card-pro !p-5">
             <h2 className="text-xs font-semibold uppercase tracking-wider text-[#9CA3AF] mb-3">Actions rapides</h2>
             <div className="space-y-1">
@@ -272,7 +274,9 @@ const Accueil: React.FC<AccueilProps> = ({ user }) => {
               ))}
             </div>
           </div>
+          </Tilt>
 
+          <Tilt max={6}>
           <div className="card-pro !p-5">
             <div className="flex items-center gap-2 mb-2">
               <span className="w-7 h-7 rounded-lg surface-accent text-[#7D5CFF] flex items-center justify-center shrink-0"><PenLine size={15} /></span>
@@ -281,6 +285,7 @@ const Accueil: React.FC<AccueilProps> = ({ user }) => {
             <p className="text-sm text-[#374151] dark:text-slate-300 leading-relaxed">Une lettre adaptée à chaque offre fait vraiment la différence. JobBoost la rédige à partir de l'offre — tu n'as plus qu'à relire.</p>
             <Link to="/prepare/letter" className="press inline-flex items-center gap-1.5 text-sm font-semibold text-[#7D5CFF] mt-3 hover:gap-2.5 transition-all">Rédiger une lettre <ArrowRight size={15} /></Link>
           </div>
+          </Tilt>
         </aside>
       </div>
       </div>
