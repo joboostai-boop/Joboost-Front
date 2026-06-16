@@ -5,9 +5,10 @@ import { geminiService } from '../services/gemini.service';
 import { usageService } from '../services/usage.service';
 import { scraperService } from '../services/scraper.service';
 
-// pdf-parse n'a pas de types officiels → require pour éviter l'erreur de déclaration.
+// pdf-parse v2 expose une API par classe (`PDFParse`) — l'ancien appel
+// `pdfParse(buffer)` (v1) provoquait « pdfParse is not a function ».
 // eslint-disable-next-line @typescript-eslint/no-var-requires
-const pdfParse = require('pdf-parse');
+const { PDFParse } = require('pdf-parse');
 
 const router = Router();
 
@@ -26,8 +27,14 @@ const extractCvText = async (file: Express.Multer.File): Promise<string> => {
     name.endsWith('.docx');
 
   if (isPdf) {
-    const data = await pdfParse(file.buffer);
-    return data.text || '';
+    // Copie en Uint8Array : pdf.js peut « détacher » l'ArrayBuffer source pendant le parsing.
+    const parser = new PDFParse({ data: new Uint8Array(file.buffer) });
+    try {
+      const result = await parser.getText();
+      return result.text || '';
+    } finally {
+      await parser.destroy();
+    }
   }
   if (isDocx) {
     const result = await mammoth.extractRawText({ buffer: file.buffer });
