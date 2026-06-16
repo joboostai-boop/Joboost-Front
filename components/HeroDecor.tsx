@@ -93,31 +93,32 @@ const HeroDecor: React.FC<HeroDecorProps> = ({ variant = 'accueil', className = 
 
   return (
     <div ref={root} className={`hero-decor ${className}`} aria-hidden="true">
-      {/* Couche arrière (lente) : grand halo violet en haut à droite. */}
+      {/* Couche arrière (lente) : grand halo principal ANCRÉ HORS-CADRE en haut
+          à droite → seule sa frange entre dans le hero (aucun contour fermé). */}
       <div className="hero-layer" data-speed="0.12" data-depth="-12">
         <span
           className="hero-aurora hero-aurora-a"
-          style={{ top: '-120px', right: prepare ? '2%' : '6%', width: 380, height: 380, background: glow('rgba(155,123,255,0.9)') }}
+          style={{ top: '-260px', right: prepare ? '-140px' : '-90px', width: 720, height: 560, background: glow('rgba(140,108,255,0.85)', 62) }}
         />
       </div>
 
-      {/* Couche médiane : halo marque, centre-droite. */}
+      {/* Couche médiane : second halo marque, débordant par le haut. */}
       <div className="hero-layer" data-speed="-0.07" data-depth="20">
         <span
           className="hero-aurora hero-aurora-b"
-          style={{ top: '-40px', right: prepare ? '18%' : '24%', width: 300, height: 300, background: glow('rgba(125,92,255,0.85)') }}
+          style={{ top: '-200px', right: prepare ? '14%' : '20%', width: 520, height: 460, background: glow('rgba(125,92,255,0.8)', 60) }}
         />
       </div>
 
-      {/* Couche avant (rapide) : halo clair plus bas, + lueur derrière l'icône. */}
+      {/* Couche avant (rapide) : frange claire à droite (hors-cadre) + lueur d'icône. */}
       <div className="hero-layer" data-speed="0.05" data-depth="34">
         <span
           className="hero-aurora hero-aurora-c"
-          style={{ top: '60px', right: '-30px', width: 240, height: 240, background: glow('rgba(196,176,255,0.85)') }}
+          style={{ top: '-40px', right: '-180px', width: 420, height: 420, background: glow('rgba(196,176,255,0.8)', 60) }}
         />
         <span
           className="hero-aurora hero-icon-glow hidden sm:block"
-          style={{ top: '24px', left: '2px', width: 110, height: 110, filter: 'blur(34px)', background: glow('rgba(140,109,255,0.85)', 65) }}
+          style={{ top: '20px', left: '-10px', width: 130, height: 130, filter: 'blur(40px)', background: glow('rgba(140,109,255,0.8)', 60) }}
         />
       </div>
     </div>

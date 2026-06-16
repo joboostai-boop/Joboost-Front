@@ -263,10 +263,11 @@
 .hero-decor {
   position: absolute; inset: 0; z-index: 0;
   pointer-events: none; overflow: hidden;
-  /* Feather radial : l'aurore se dissout vers les bords → plus aucune
-     délimitation rectangulaire, fondu doux dans le fond de page. */
-  -webkit-mask-image: radial-gradient(125% 115% at 70% 4%, #000 44%, transparent 100%);
-  mask-image: radial-gradient(125% 115% at 70% 4%, #000 44%, transparent 100%);
+  /* Fondu vers le bas uniquement : les halos sont ancrés hors-cadre (haut/droite)
+     et débordent des bords → aucun contour fermé visible. Le dégradé efface la
+     limite basse pour un raccord invisible avec le fond de page. */
+  -webkit-mask-image: linear-gradient(to bottom, #000 28%, transparent 86%);
+  mask-image: linear-gradient(to bottom, #000 28%, transparent 86%);
 }
 /* Chaque couche combine : parallaxe au scroll (--par) + parallaxe 3D à la
    souris (--mx/--my, profondeur différente par couche → effet de relief). */
