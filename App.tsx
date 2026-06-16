@@ -18,6 +18,7 @@ const Legal = React.lazy(() => import('./pages/Legal'));
 const Dashboard = React.lazy(() => import('./pages/Dashboard'));
 const CVGenerator = React.lazy(() => import('./pages/CVGenerator'));
 const LetterGenerator = React.lazy(() => import('./pages/LetterGenerator'));
+const Templates = React.lazy(() => import('./pages/Templates'));
 const Applications = React.lazy(() => import('./pages/Applications'));
 const PersonalizedOffers = React.lazy(() => import('./pages/PersonalizedOffers'));
 const SavedOffers = React.lazy(() => import('./pages/SavedOffers'));
@@ -168,6 +169,7 @@ const App: React.FC = () => {
                <Route path="profile" element={<Profile user={user} />} />
                <Route path="cv" element={<CVGenerator />} />
                <Route path="letter" element={<LetterGenerator />} />
+               <Route path="templates" element={<Templates />} />
             </Route>
 
             {/* 2. Cibler & Générer */}

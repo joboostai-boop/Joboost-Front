@@ -1,5 +1,6 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
+import { useLocation } from 'react-router-dom';
 import { Printer, FileDown, Wand2, RefreshCw, Layout, Save, Clock, Loader2, Plus, Trash2, X, Files } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { generateCVSummary } from '../services/gemini';
@@ -50,6 +51,10 @@ const SkillsEditor: React.FC<{ value: string[]; onChange: (v: string[]) => void 
 };
 
 const CVGenerator: React.FC = () => {
+  const location = useLocation();
+  // Modèle pré-sélectionné depuis la page « Modèles » (navigation avec state).
+  const incomingTemplate = (location.state as any)?.template as string | undefined;
+
   const [loadingSummary, setLoadingSummary] = useState(false);
   const [loading, setLoading] = useState(true);
   const [cvs, setCvs] = useState<any[]>([]);
@@ -63,7 +68,7 @@ const CVGenerator: React.FC = () => {
     phone: '',
     city: '',
     summary: '',
-    template: 'vertex',
+    template: incomingTemplate || 'vertex',
     skills: [] as string[],
     experiences: [] as ExperienceItem[],
     education: [] as EducationItem[],

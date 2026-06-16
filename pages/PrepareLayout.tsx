@@ -1,6 +1,6 @@
 import React from 'react';
 import { Outlet, NavLink } from 'react-router-dom';
-import { UserRound, Contact, PenLine, Sparkles } from 'lucide-react';
+import { UserRound, Contact, PenLine, Sparkles, LayoutGrid } from 'lucide-react';
 import PageHero, { heroTab } from '../components/PageHero';
 
 const PrepareLayout: React.FC = () => {
@@ -8,6 +8,7 @@ const PrepareLayout: React.FC = () => {
     { name: 'Mon profil', path: '/prepare/profile', icon: <UserRound size={18} /> },
     { name: 'Mon CV', path: '/prepare/cv', icon: <Contact size={18} /> },
     { name: 'Ma lettre type', path: '/prepare/letter', icon: <PenLine size={18} /> },
+    { name: 'Modèles', path: '/prepare/templates', icon: <LayoutGrid size={18} /> },
   ];
 
   return (

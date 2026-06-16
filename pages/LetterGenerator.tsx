@@ -30,7 +30,7 @@ const LetterGenerator: React.FC = () => {
   const [userProfile, setUserProfile] = useState<any>(null);
   const [letters, setLetters] = useState<any[]>([]);
   const [currentLetterId, setCurrentLetterId] = useState<string | null>(null);
-  const [letterTemplate, setLetterTemplate] = useState<string>('moderne');
+  const [letterTemplate, setLetterTemplate] = useState<string>(state?.template || 'moderne');
   const [exporting, setExporting] = useState(false);
 
   useEffect(() => {
