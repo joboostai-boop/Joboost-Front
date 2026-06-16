@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useLayoutEffect, useRef, useState } from 'react';
 
 // Données minimales nécessaires au rendu d'un modèle de CV.
 export interface CvData {
@@ -19,15 +19,38 @@ const desc = (e: any) => e?.desc || e?.missions || '';
 const contacts = (d: CvData) => [d.email, d.phone, d.city].filter(Boolean);
 const initials = (n?: string) => (n || '?').split(' ').map((x) => x[0]).slice(0, 2).join('').toUpperCase();
 
-/* Conteneur "feuille" : ratio A4, fond blanc, typo qui s'adapte à la largeur dispo. */
-const Paper: React.FC<{ children: React.ReactNode; pad?: string; serif?: boolean }> = ({ children, pad = 'p-8', serif }) => (
-  <div
-    className={`bg-white text-[#1f2430] w-full aspect-[1/1.414] overflow-hidden ${pad} ${serif ? 'font-serif' : 'font-sans'}`}
-    style={{ fontSize: 'clamp(7px, 1.5vw, 12px)', lineHeight: 1.45 }}
-  >
-    {children}
-  </div>
-);
+/* Largeur de référence d'une feuille A4 (~96 dpi). Le modèle est TOUJOURS rendu
+   à cette largeur puis réduit par transform:scale pour remplir exactement la
+   carte qui le contient → vraie vignette nette, à n'importe quelle taille. */
+const SHEET_W = 760;
+
+const Paper: React.FC<{ children: React.ReactNode; pad?: string; serif?: boolean }> = ({ children, pad = 'p-10', serif }) => {
+  const ref = useRef<HTMLDivElement>(null);
+  const [scale, setScale] = useState(0);
+
+  useLayoutEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const update = () => { if (el.clientWidth) setScale(el.clientWidth / SHEET_W); };
+    update();
+    const ro = new ResizeObserver(update);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
+  return (
+    <div ref={ref} className="w-full aspect-[1/1.414] overflow-hidden bg-white">
+      <div
+        className={serif ? 'font-serif' : 'font-sans'}
+        style={{ width: SHEET_W, transform: `scale(${scale})`, transformOrigin: 'top left', fontSize: 13, lineHeight: 1.45 }}
+      >
+        <div className={`aspect-[1/1.414] overflow-hidden bg-white text-[#1f2430] ${pad}`}>
+          {children}
+        </div>
+      </div>
+    </div>
+  );
+};
 
 /* Titre de section : libellé en petites capitales espacées + filet d'accent.
    Donne du rythme et une hiérarchie nette (le point faible des anciens modèles). */

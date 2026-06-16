@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useLayoutEffect, useRef, useState } from 'react';
 
 export interface LetterData {
   name?: string;
@@ -13,11 +13,37 @@ export interface LetterData {
 const today = () => new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
 const contacts = (d: LetterData) => [d.email, d.phone, d.city].filter(Boolean);
 
-const Paper: React.FC<{ children: React.ReactNode; pad?: string; serif?: boolean }> = ({ children, pad = 'p-10', serif }) => (
-  <div className={`bg-white text-slate-800 w-full aspect-[1/1.414] overflow-hidden ${pad} ${serif ? 'font-serif' : 'font-sans'}`} style={{ fontSize: 'clamp(7px, 1.5vw, 12px)' }}>
-    {children}
-  </div>
-);
+// Largeur de référence A4 — la lettre est rendue à cette largeur puis réduite
+// par transform:scale pour remplir sa carte (vraie vignette nette, comme le CV).
+const SHEET_W = 760;
+
+const Paper: React.FC<{ children: React.ReactNode; pad?: string; serif?: boolean }> = ({ children, pad = 'p-10', serif }) => {
+  const ref = useRef<HTMLDivElement>(null);
+  const [scale, setScale] = useState(0);
+
+  useLayoutEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const update = () => { if (el.clientWidth) setScale(el.clientWidth / SHEET_W); };
+    update();
+    const ro = new ResizeObserver(update);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
+  return (
+    <div ref={ref} className="w-full aspect-[1/1.414] overflow-hidden bg-white">
+      <div
+        className={serif ? 'font-serif' : 'font-sans'}
+        style={{ width: SHEET_W, transform: `scale(${scale})`, transformOrigin: 'top left', fontSize: 13, lineHeight: 1.5 }}
+      >
+        <div className={`aspect-[1/1.414] overflow-hidden bg-white text-slate-800 ${pad}`}>
+          {children}
+        </div>
+      </div>
+    </div>
+  );
+};
 
 const Body: React.FC<{ d: LetterData }> = ({ d }) => (
   <>
