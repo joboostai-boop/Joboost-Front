@@ -263,11 +263,17 @@
 .hero-decor {
   position: absolute; inset: 0; z-index: 0;
   pointer-events: none; overflow: hidden;
+  /* Feather radial : l'aurore se dissout vers les bords → plus aucune
+     délimitation rectangulaire, fondu doux dans le fond de page. */
+  -webkit-mask-image: radial-gradient(125% 115% at 70% 4%, #000 44%, transparent 100%);
+  mask-image: radial-gradient(125% 115% at 70% 4%, #000 44%, transparent 100%);
 }
-/* Chaque couche porte la parallaxe : translateY piloté par --par (px, scroll). */
+/* Chaque couche combine : parallaxe au scroll (--par) + parallaxe 3D à la
+   souris (--mx/--my, profondeur différente par couche → effet de relief). */
 .hero-layer {
   position: absolute; inset: 0;
-  transform: translate3d(0, var(--par, 0px), 0);
+  transform: translate3d(var(--mx, 0px), calc(var(--par, 0px) + var(--my, 0px)), 0);
+  transition: transform 0.18s ease-out;
   will-change: transform;
 }
 /* Halo lumineux flou (aurore). La couleur/position viennent du style inline ;

@@ -398,9 +398,11 @@ const CVGenerator: React.FC = () => {
         </Tilt>
 
         {/* Aperçu du modèle sélectionné (grand format) */}
+        <Tilt max={4}>
         <div id="cv-preview" className="rounded-xl overflow-hidden shadow-pop ring-1 ring-slate-200 dark:ring-slate-700">
           <SelectedPreview data={formData} />
         </div>
+        </Tilt>
       </div>
 
       <CvExamplesModal open={showExamples} onClose={() => setShowExamples(false)} onPick={loadExample} />

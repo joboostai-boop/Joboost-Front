@@ -99,8 +99,8 @@ const TemplateGallery: React.FC<Props> = ({ items, selectedId, onSelect }) => {
                 onClick={() => onSelect(it.id)}
                 className="press group text-left"
               >
-                <div className={`relative rounded-xl overflow-hidden ring-2 transition-all ${sel ? 'ring-[#7D5CFF] shadow-xl' : 'ring-slate-200 dark:ring-slate-700 shadow-sm group-hover:ring-[#7D5CFF]/50 group-hover:shadow-md'}`}>
-                  {it.node}
+                <div className={`relative aspect-[210/297] bg-white rounded-xl overflow-hidden ring-2 transition-all ${sel ? 'ring-[#7D5CFF] shadow-xl' : 'ring-slate-200 dark:ring-slate-700 shadow-sm group-hover:ring-[#7D5CFF]/50 group-hover:shadow-md'}`}>
+                  <div className="absolute inset-x-0 top-0">{it.node}</div>
                   <span className="absolute top-2 left-2"><AtsBadge ats={it.ats} /></span>
                   {sel && (
                     <span className="absolute top-2 right-2 w-6 h-6 rounded-full bg-[#7D5CFF] text-white flex items-center justify-center shadow"><Check size={14} /></span>

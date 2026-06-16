@@ -108,8 +108,8 @@ const Templates: React.FC = () => {
             className="group rounded-xl border border-[#ECEAF6] dark:border-[#1F2937] bg-white dark:bg-[#111827] shadow-card p-2.5 animate-fade-in-up hover:shadow-card-hover hover:-translate-y-1 transition-all duration-200"
           >
             <button onClick={() => use(it.id)} className="press block w-full text-left" aria-label={`Utiliser le modèle ${it.name}`}>
-              <div className="relative rounded-lg overflow-hidden ring-1 ring-slate-200 dark:ring-slate-700 group-hover:ring-[#7D5CFF]/50 transition-all">
-                {it.node}
+              <div className="relative aspect-[210/297] bg-white rounded-lg overflow-hidden ring-1 ring-slate-200 dark:ring-slate-700 group-hover:ring-[#7D5CFF]/50 transition-all">
+                <div className="absolute inset-x-0 top-0">{it.node}</div>
                 <span className={`absolute top-2 left-2 inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider shadow ${
                   it.ats ? 'bg-emerald-500 text-white' : 'bg-[#7D5CFF] text-white'
                 }`}>
