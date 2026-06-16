@@ -79,12 +79,12 @@ const Templates: React.FC = () => {
 
       {/* Grille de modèles (showcase) — vignettes (mode thumb), re-montée à chaque bascule pour rejouer l'entrée */}
       <PreviewModeContext.Provider value="thumb">
-      <div key={`${kind}-${filter}`} className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 xl:grid-cols-6 gap-3 items-start">
+      <div key={`${kind}-${filter}`} className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 gap-4 items-start">
         {items.map((it, i) => (
           <div
             key={it.id}
             style={{ animationDelay: `${Math.min(i, 8) * 40}ms` }}
-            className="group rounded-xl border border-[#ECEAF6] dark:border-[#1F2937] bg-white dark:bg-[#111827] shadow-card p-2 animate-fade-in-up hover:shadow-card-hover hover:-translate-y-1 transition-all duration-200"
+            className="group rounded-xl border border-[#ECEAF6] dark:border-[#1F2937] bg-white dark:bg-[#111827] shadow-card p-2.5 animate-fade-in-up hover:shadow-card-hover hover:-translate-y-1 transition-all duration-200"
           >
             <button onClick={() => use(it.id)} className="press block w-full text-left" aria-label={`Utiliser le modèle ${it.name}`}>
               <div className="relative rounded-lg overflow-hidden ring-1 ring-slate-200 dark:ring-slate-700 group-hover:ring-[#7D5CFF]/50 transition-all">
