@@ -10,15 +10,18 @@ interface HeroDecorProps {
   className?: string;
 }
 
+const glow = (color: string, stop = 70) =>
+  `radial-gradient(circle at 50% 50%, ${color}, transparent ${stop}%)`;
+
 /**
- * Décor 3D flottant placé en fond de héros : orbes lumineux, panneaux inclinés
- * dans l'espace et anneaux, le tout en lévitation lente avec une parallaxe douce
- * au scroll (chaque couche se déplace à une vitesse différente).
+ * Décor « aurore » de fond de héros : halos violets flous qui dérivent et
+ * respirent lentement, avec une parallaxe douce au scroll (chaque couche se
+ * déplace à une vitesse différente). Direction Linear/Stripe — lumière ambiante
+ * plutôt que formes nettes.
  *
- * Purement décoratif (aria-hidden, pointer-events:none → ne bloque ni les boutons
- * ni les onglets) et intégralement neutralisé si prefers-reduced-motion.
- * S'appuie sur les classes .hero-decor / .hero-layer / .hero-orb / .hero-panel
- * / .hero-ring / .hero-anim-* de index.css.
+ * Purement décoratif (aria-hidden, pointer-events:none → ne bloque rien) et
+ * intégralement neutralisé si prefers-reduced-motion. S'appuie sur les classes
+ * .hero-decor / .hero-layer / .hero-aurora* / .hero-icon-glow de index.css.
  */
 const HeroDecor: React.FC<HeroDecorProps> = ({ variant = 'accueil', className = '' }) => {
   const root = useRef<HTMLDivElement | null>(null);
@@ -53,39 +56,31 @@ const HeroDecor: React.FC<HeroDecorProps> = ({ variant = 'accueil', className = 
 
   return (
     <div ref={root} className={`hero-decor ${className}`} aria-hidden="true">
-      {/* Couche arrière (lente) : grand halo violet. */}
+      {/* Couche arrière (lente) : grand halo violet en haut à droite. */}
       <div className="hero-layer" data-speed="0.12">
         <span
-          className="hero-orb hero-anim-soft"
-          style={{ top: prepare ? '-70px' : '-90px', right: prepare ? '4%' : '8%', width: 280, height: 280, opacity: 0.7 }}
-        />
-        <span
-          className="hero-ring hero-anim-spin"
-          style={{ top: '10px', right: prepare ? '20%' : '26%', width: 180, height: 180, opacity: 0.5 }}
+          className="hero-aurora hero-aurora-a"
+          style={{ top: '-120px', right: prepare ? '2%' : '6%', width: 380, height: 380, background: glow('rgba(155,123,255,0.9)') }}
         />
       </div>
 
-      {/* Couche médiane : panneau principal incliné dans l'espace. */}
-      <div className="hero-layer" data-speed="-0.06">
+      {/* Couche médiane : halo marque, centre-droite. */}
+      <div className="hero-layer" data-speed="-0.07">
         <span
-          className="hero-panel hero-anim-float"
-          style={{ top: prepare ? '4px' : '-6px', right: prepare ? '7%' : '12%', width: 132, height: 168 }}
-        />
-        <span
-          className="hero-orb hero-anim-float"
-          style={{ top: '120px', right: '3%', width: 70, height: 70, opacity: 0.8 }}
+          className="hero-aurora hero-aurora-b"
+          style={{ top: '-40px', right: prepare ? '18%' : '24%', width: 300, height: 300, background: glow('rgba(125,92,255,0.85)') }}
         />
       </div>
 
-      {/* Couche avant (rapide) : petit panneau + orbe proche. */}
-      <div className="hero-layer" data-speed="-0.14">
+      {/* Couche avant (rapide) : halo clair plus bas, + lueur derrière l'icône. */}
+      <div className="hero-layer" data-speed="0.05">
         <span
-          className="hero-panel hero-anim-soft"
-          style={{ top: prepare ? '92px' : '78px', right: prepare ? '24%' : '30%', width: 92, height: 64, borderRadius: 14, opacity: 0.95 }}
+          className="hero-aurora hero-aurora-c"
+          style={{ top: '60px', right: '-30px', width: 240, height: 240, background: glow('rgba(196,176,255,0.85)') }}
         />
         <span
-          className="hero-orb hero-anim-soft"
-          style={{ top: '-30px', right: '2%', width: 44, height: 44, opacity: 0.9 }}
+          className="hero-aurora hero-icon-glow hidden sm:block"
+          style={{ top: '24px', left: '2px', width: 110, height: 110, filter: 'blur(34px)', background: glow('rgba(140,109,255,0.85)', 65) }}
         />
       </div>
     </div>

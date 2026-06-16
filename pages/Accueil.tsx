@@ -192,7 +192,7 @@ const Accueil: React.FC<AccueilProps> = ({ user }) => {
         </section>
       ) : (
         /* Compte actif : prochaine action contextuelle. */
-        <Tilt glare className="animate-fade-in-up" max={5}>
+        <Tilt glare className="animate-fade-in-up" max={8}>
         <Link
           to={next.to}
           className="press group relative overflow-hidden flex items-center justify-between gap-4 card-pro hover:shadow-card-hover hover:-translate-y-0.5 transition-all"
