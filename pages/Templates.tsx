@@ -76,10 +76,14 @@ const Templates: React.FC = () => {
         {items.length} modèle{items.length > 1 ? 's' : ''} · aperçu rempli avec un exemple. Choisis-en un pour ouvrir l'éditeur — tu pourras le changer à tout moment.
       </p>
 
-      {/* Grille de modèles (showcase) */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-5">
-        {items.map((it) => (
-          <div key={it.id} className="surface p-3 group hover:shadow-card-hover hover:-translate-y-0.5 transition-all">
+      {/* Grille de modèles (showcase) — re-montée à chaque bascule pour rejouer l'entrée en cascade */}
+      <div key={`${kind}-${filter}`} className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-5">
+        {items.map((it, i) => (
+          <div
+            key={it.id}
+            style={{ animationDelay: `${Math.min(i, 8) * 45}ms` }}
+            className="group rounded-2xl border border-[#ECEAF6] dark:border-[#1F2937] bg-white dark:bg-[#111827] shadow-card p-3 animate-fade-in-up hover:shadow-card-hover hover:-translate-y-1 transition-all duration-200"
+          >
             <button onClick={() => use(it.id)} className="press block w-full text-left" aria-label={`Utiliser le modèle ${it.name}`}>
               <div className="relative rounded-lg overflow-hidden ring-1 ring-slate-200 dark:ring-slate-700 group-hover:ring-[#7D5CFF]/50 transition-all">
                 {it.node}

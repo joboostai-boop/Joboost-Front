@@ -19,159 +19,231 @@ const desc = (e: any) => e?.desc || e?.missions || '';
 const contacts = (d: CvData) => [d.email, d.phone, d.city].filter(Boolean);
 const initials = (n?: string) => (n || '?').split(' ').map((x) => x[0]).slice(0, 2).join('').toUpperCase();
 
-/* Conteneur "feuille" : ratio A4, fond blanc, contenu qui s'adapte à la largeur dispo. */
+/* Conteneur "feuille" : ratio A4, fond blanc, typo qui s'adapte à la largeur dispo. */
 const Paper: React.FC<{ children: React.ReactNode; pad?: string; serif?: boolean }> = ({ children, pad = 'p-8', serif }) => (
-  <div className={`bg-white text-slate-800 w-full aspect-[1/1.414] overflow-hidden shadow-sm ${pad} ${serif ? 'font-serif' : 'font-sans'}`} style={{ fontSize: 'clamp(7px, 1.45vw, 12px)' }}>
+  <div
+    className={`bg-white text-[#1f2430] w-full aspect-[1/1.414] overflow-hidden ${pad} ${serif ? 'font-serif' : 'font-sans'}`}
+    style={{ fontSize: 'clamp(7px, 1.5vw, 12px)', lineHeight: 1.45 }}
+  >
     {children}
   </div>
 );
 
+/* Titre de section : libellé en petites capitales espacées + filet d'accent.
+   Donne du rythme et une hiérarchie nette (le point faible des anciens modèles). */
+const SectionHead: React.FC<{ children: React.ReactNode; accent: string; variant?: 'rule' | 'bar' | 'full' | 'plain' }> = ({ children, accent, variant = 'rule' }) => {
+  if (variant === 'bar')
+    return (
+      <div className="flex items-center gap-1.5 mb-1.5">
+        <span className="inline-block w-[0.45em] h-[0.95em] rounded-[1px]" style={{ background: accent }} />
+        <span className="font-bold uppercase tracking-[0.16em] text-[0.82em]" style={{ color: accent }}>{children}</span>
+      </div>
+    );
+  if (variant === 'full')
+    return (
+      <div className="font-bold uppercase tracking-[0.18em] text-[0.78em] text-white px-2 py-0.5 mb-1.5 rounded-[2px]" style={{ background: accent }}>{children}</div>
+    );
+  if (variant === 'plain')
+    return <div className="font-bold uppercase tracking-[0.22em] text-[0.75em] text-[#9aa1ad] mb-1.5">{children}</div>;
+  // 'rule' : libellé + trait fin sous le texte
+  return (
+    <div className="mb-1.5">
+      <span className="font-bold uppercase tracking-[0.16em] text-[0.82em]" style={{ color: accent }}>{children}</span>
+      <div className="h-px mt-0.5 w-full" style={{ background: `${accent}33` }} />
+    </div>
+  );
+};
+
+const ContactRow: React.FC<{ d: CvData; className?: string }> = ({ d, className }) => (
+  <div className={`flex flex-wrap gap-x-2.5 gap-y-0.5 text-[0.82em] text-[#5b6270] ${className || ''}`}>
+    {contacts(d).map((c, i) => (
+      <span key={c} className="flex items-center gap-2.5">
+        {i > 0 && <span className="text-[#c7ccd4]">•</span>}{c}
+      </span>
+    ))}
+  </div>
+);
+
 const Exp: React.FC<{ d: CvData; accent?: string }> = ({ d, accent }) => (
-  <>
+  <div className="space-y-2">
     {(d.experiences || []).slice(0, 4).map((e, i) => (
-      <div key={i} className="mb-2">
+      <div key={i}>
         <div className="flex justify-between items-baseline gap-2">
-          <span className="font-bold">{e.role || 'Poste'}</span>
-          <span className="text-[0.85em] text-slate-500 shrink-0">{period(e)}</span>
+          <span className="font-bold text-[1.02em]">{e.role || 'Poste'}</span>
+          <span className="text-[0.82em] text-[#8a909c] shrink-0 tabular-nums">{period(e)}</span>
         </div>
-        <div className="font-semibold italic" style={accent ? { color: accent } : undefined}>{e.company}</div>
-        {desc(e) && <div className="text-slate-600 leading-snug whitespace-pre-line">{desc(e)}</div>}
+        {e.company && <div className="font-semibold text-[0.95em]" style={accent ? { color: accent } : undefined}>{e.company}</div>}
+        {desc(e) && <div className="text-[#4a505c] leading-snug whitespace-pre-line mt-0.5">{desc(e)}</div>}
       </div>
     ))}
-  </>
+  </div>
 );
 
-const Edu: React.FC<{ d: CvData }> = ({ d }) => (
-  <>
+const Edu: React.FC<{ d: CvData; accent?: string }> = ({ d, accent }) => (
+  <div className="space-y-1.5">
     {(d.education || []).slice(0, 4).map((e, i) => (
-      <div key={i} className="mb-1.5">
-        <div className="flex justify-between gap-2">
+      <div key={i}>
+        <div className="flex justify-between items-baseline gap-2">
           <span className="font-bold">{e.degree || e.level || 'Diplôme'}</span>
-          <span className="text-[0.85em] text-slate-500 shrink-0">{e.date}</span>
+          <span className="text-[0.82em] text-[#8a909c] shrink-0 tabular-nums">{e.date}</span>
         </div>
-        <div className="text-slate-600">{[e.school, e.city].filter(Boolean).join(' · ')}</div>
+        <div className="text-[#5b6270] text-[0.92em]" style={accent ? { color: accent } : undefined}>{[e.school, e.city].filter(Boolean).join(' · ')}</div>
       </div>
     ))}
-  </>
+  </div>
 );
 
-const H: React.FC<{ children: React.ReactNode; accent?: string; line?: boolean }> = ({ children, accent, line }) => (
-  <div className={`font-black uppercase tracking-widest text-[0.8em] mb-1 ${line ? 'border-b pb-0.5' : ''}`} style={accent ? { color: accent } : undefined}>{children}</div>
+const SkillChips: React.FC<{ d: CvData; accent: string; tone?: 'soft' | 'solid' | 'outline' }> = ({ d, accent, tone = 'soft' }) => (
+  <div className="flex flex-wrap gap-1">
+    {(d.skills || []).map((s) =>
+      tone === 'solid' ? (
+        <span key={s} className="px-1.5 py-0.5 rounded text-white text-[0.9em] font-medium" style={{ background: accent }}>{s}</span>
+      ) : tone === 'outline' ? (
+        <span key={s} className="px-1.5 py-0.5 rounded text-[0.9em] font-medium border" style={{ borderColor: `${accent}66`, color: accent }}>{s}</span>
+      ) : (
+        <span key={s} className="px-1.5 py-0.5 rounded text-[0.9em] font-medium" style={{ background: `${accent}14`, color: accent }}>{s}</span>
+      )
+    )}
+  </div>
 );
 
 /* ───────────────────── LAYOUTS ───────────────────── */
 
-// Classique : sérif, en-tête centré, filets pleine largeur (très ATS).
-const Classic: React.FC<{ d: CvData; accent: string }> = ({ d, accent }) => (
+// Classique : sérif, en-tête centré, filets — élégant et très ATS.
+const ClassicSerif: React.FC<{ d: CvData; accent: string }> = ({ d, accent }) => (
   <Paper pad="p-10" serif>
-    <div className="text-center border-b-2 border-slate-800 pb-2 mb-3">
-      <div className="text-[1.9em] font-bold tracking-tight">{d.name}</div>
-      <div className="text-[1.05em]" style={{ color: accent }}>{d.title}</div>
-      <div className="text-[0.85em] text-slate-500 mt-1">{contacts(d).join('  ·  ')}</div>
+    <div className="text-center pb-2.5 mb-3 border-b-2" style={{ borderColor: accent }}>
+      <div className="text-[2em] font-bold tracking-tight leading-none">{d.name}</div>
+      <div className="text-[1.05em] mt-1 tracking-wide" style={{ color: accent }}>{d.title}</div>
+      <ContactRow d={d} className="justify-center mt-1.5" />
     </div>
-    {d.summary && <div className="mb-3"><H line>Résumé</H><p className="leading-snug">{d.summary}</p></div>}
-    <div className="mb-3"><H line>Expérience</H><Exp d={d} accent={accent} /></div>
-    {(d.education || []).length > 0 && <div className="mb-3"><H line>Formation</H><Edu d={d} /></div>}
-    {(d.skills || []).length > 0 && <div><H line>Compétences</H><p>{(d.skills || []).join(' · ')}</p></div>}
+    {d.summary && <div className="mb-3"><SectionHead accent={accent} variant="rule">Profil</SectionHead><p className="leading-snug text-[#4a505c]">{d.summary}</p></div>}
+    <div className="mb-3"><SectionHead accent={accent} variant="rule">Expérience</SectionHead><Exp d={d} accent={accent} /></div>
+    {(d.education || []).length > 0 && <div className="mb-3"><SectionHead accent={accent} variant="rule">Formation</SectionHead><Edu d={d} accent={accent} /></div>}
+    {(d.skills || []).length > 0 && <div><SectionHead accent={accent} variant="rule">Compétences</SectionHead><p className="text-[#4a505c]">{(d.skills || []).join('  ·  ')}</p></div>}
   </Paper>
 );
 
-// Moderne : sans-serif, titre coloré, alignement gauche, sobre (ATS).
-const Modern: React.FC<{ d: CvData; accent: string }> = ({ d, accent }) => (
-  <Paper pad="p-10">
-    <div className="mb-3">
-      <div className="text-[2em] font-black tracking-tight">{d.name}</div>
-      <div className="text-[1.1em] font-bold" style={{ color: accent }}>{d.title}</div>
-      <div className="text-[0.85em] text-slate-500 mt-0.5">{contacts(d).join('   ')}</div>
-    </div>
-    <div className="h-[3px] w-full mb-3" style={{ background: accent }} />
-    {d.summary && <div className="mb-3"><H accent={accent}>Profil</H><p className="leading-snug">{d.summary}</p></div>}
-    <div className="mb-3"><H accent={accent}>Expérience</H><Exp d={d} accent={accent} /></div>
-    {(d.education || []).length > 0 && <div className="mb-3"><H accent={accent}>Formation</H><Edu d={d} /></div>}
-    {(d.skills || []).length > 0 && (
-      <div><H accent={accent}>Compétences</H>
-        <div className="flex flex-wrap gap-1">{(d.skills || []).map((s) => <span key={s} className="px-1.5 py-0.5 rounded bg-slate-100 font-semibold">{s}</span>)}</div>
+// Moderne : sans-serif, nom fort, filet d'accent par section (sobre, ATS).
+const ModernRule: React.FC<{ d: CvData; accent: string }> = ({ d, accent }) => (
+  <Paper pad="p-9">
+    <div className="flex items-end justify-between gap-3 mb-1">
+      <div>
+        <div className="text-[2.1em] font-extrabold tracking-tight leading-none">{d.name}</div>
+        <div className="text-[1.1em] font-semibold mt-1" style={{ color: accent }}>{d.title}</div>
       </div>
-    )}
+    </div>
+    <ContactRow d={d} className="mb-3" />
+    <div className="h-[2.5px] w-full mb-3 rounded-full" style={{ background: accent }} />
+    {d.summary && <div className="mb-3"><SectionHead accent={accent} variant="bar">Profil</SectionHead><p className="leading-snug text-[#4a505c]">{d.summary}</p></div>}
+    <div className="mb-3"><SectionHead accent={accent} variant="bar">Expérience</SectionHead><Exp d={d} accent={accent} /></div>
+    {(d.education || []).length > 0 && <div className="mb-3"><SectionHead accent={accent} variant="bar">Formation</SectionHead><Edu d={d} accent={accent} /></div>}
+    {(d.skills || []).length > 0 && <div><SectionHead accent={accent} variant="bar">Compétences</SectionHead><SkillChips d={d} accent={accent} tone="soft" /></div>}
   </Paper>
 );
 
-// Minimaliste : aéré, fines majuscules, aucune fioriture (ultra ATS).
-const Minimal: React.FC<{ d: CvData; accent: string }> = ({ d, accent }) => (
+// Minimaliste : très aéré, fines capitales, zéro fioriture (ultra ATS).
+const MinimalClean: React.FC<{ d: CvData; accent: string }> = ({ d, accent }) => (
   <Paper pad="p-12">
-    <div className="text-[2.1em] font-light tracking-tight">{d.name}</div>
-    <div className="text-[1em] uppercase tracking-[0.25em] text-slate-500 mb-1">{d.title}</div>
-    <div className="text-[0.85em] text-slate-500 mb-4">{contacts(d).join('  /  ')}</div>
-    {d.summary && <p className="leading-relaxed mb-4">{d.summary}</p>}
-    <div className="mb-4"><div className="uppercase tracking-[0.25em] text-[0.8em] text-slate-400 mb-1">Expérience</div><Exp d={d} accent={accent} /></div>
-    {(d.education || []).length > 0 && <div className="mb-4"><div className="uppercase tracking-[0.25em] text-[0.8em] text-slate-400 mb-1">Formation</div><Edu d={d} /></div>}
-    {(d.skills || []).length > 0 && <div><div className="uppercase tracking-[0.25em] text-[0.8em] text-slate-400 mb-1">Compétences</div><p>{(d.skills || []).join(' · ')}</p></div>}
+    <div className="text-[2.2em] font-light tracking-tight leading-none">{d.name}</div>
+    <div className="text-[0.95em] uppercase tracking-[0.28em] text-[#8a909c] mt-1.5">{d.title}</div>
+    <ContactRow d={d} className="mt-1.5 mb-5" />
+    {d.summary && <p className="leading-relaxed text-[#4a505c] mb-5">{d.summary}</p>}
+    <div className="mb-5"><SectionHead accent={accent} variant="plain">Expérience</SectionHead><Exp d={d} accent={accent} /></div>
+    {(d.education || []).length > 0 && <div className="mb-5"><SectionHead accent={accent} variant="plain">Formation</SectionHead><Edu d={d} accent={accent} /></div>}
+    {(d.skills || []).length > 0 && <div><SectionHead accent={accent} variant="plain">Compétences</SectionHead><p className="text-[#4a505c]">{(d.skills || []).join('   ·   ')}</p></div>}
   </Paper>
 );
 
-// Barre latérale colorée (créatif, non-ATS).
+// Deux colonnes : sidebar claire à gauche (compétences/formation), expérience à droite.
+const TwoColumn: React.FC<{ d: CvData; accent: string }> = ({ d, accent }) => (
+  <Paper pad="p-0">
+    <div className="px-8 pt-7 pb-3">
+      <div className="text-[2em] font-extrabold tracking-tight leading-none">{d.name}</div>
+      <div className="text-[1.05em] font-semibold mt-1" style={{ color: accent }}>{d.title}</div>
+    </div>
+    <div className="grid grid-cols-[1fr_1.8fr]">
+      <div className="px-8 pb-8 pt-2 space-y-3" style={{ background: `${accent}0f` }}>
+        <div><SectionHead accent={accent} variant="bar">Contact</SectionHead>
+          <div className="space-y-0.5 text-[0.9em] text-[#4a505c] break-words">{contacts(d).map((c) => <div key={c}>{c}</div>)}</div>
+        </div>
+        {(d.skills || []).length > 0 && <div><SectionHead accent={accent} variant="bar">Compétences</SectionHead><div className="space-y-0.5 text-[0.92em] text-[#4a505c]">{(d.skills || []).map((s) => <div key={s}>{s}</div>)}</div></div>}
+        {(d.education || []).length > 0 && <div><SectionHead accent={accent} variant="bar">Formation</SectionHead><Edu d={d} accent={accent} /></div>}
+      </div>
+      <div className="px-8 pb-8 pt-2 space-y-3">
+        {d.summary && <div><SectionHead accent={accent} variant="bar">Profil</SectionHead><p className="leading-snug text-[#4a505c]">{d.summary}</p></div>}
+        <div><SectionHead accent={accent} variant="bar">Expérience</SectionHead><Exp d={d} accent={accent} /></div>
+      </div>
+    </div>
+  </Paper>
+);
+
+// Sidebar colorée : bandeau latéral plein (créatif mais lisible).
 const Sidebar: React.FC<{ d: CvData; accent: string }> = ({ d, accent }) => (
   <Paper pad="p-0">
     <div className="flex h-full">
-      <div className="w-[34%] text-white p-4 flex flex-col gap-3" style={{ background: accent }}>
-        <div className="w-12 h-12 rounded-full bg-white/25 flex items-center justify-center text-[1.3em] font-black overflow-hidden">
+      <div className="w-[35%] text-white p-5 flex flex-col gap-3.5" style={{ background: accent }}>
+        <div className="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center text-[1.3em] font-black overflow-hidden ring-2 ring-white/30">
           {d.photoUrl ? <img src={d.photoUrl} className="w-full h-full object-cover" referrerPolicy="no-referrer" /> : initials(d.name)}
         </div>
         <div>
-          <div className="font-black leading-tight text-[1.15em]">{d.name}</div>
-          <div className="opacity-90">{d.title}</div>
+          <div className="font-black leading-tight text-[1.2em]">{d.name}</div>
+          <div className="opacity-90 mt-0.5">{d.title}</div>
         </div>
         <div className="text-[0.85em] opacity-90 space-y-0.5 break-words">{contacts(d).map((c) => <div key={c}>{c}</div>)}</div>
         {(d.skills || []).length > 0 && (
-          <div><div className="font-bold uppercase tracking-wider text-[0.8em] mb-1 opacity-90">Compétences</div>
-            <div className="space-y-0.5 text-[0.9em]">{(d.skills || []).map((s) => <div key={s}>{s}</div>)}</div>
+          <div><div className="font-bold uppercase tracking-[0.14em] text-[0.78em] mb-1 opacity-95">Compétences</div>
+            <div className="space-y-0.5 text-[0.9em] opacity-95">{(d.skills || []).map((s) => <div key={s}>{s}</div>)}</div>
           </div>
         )}
       </div>
-      <div className="flex-1 p-5">
-        {d.summary && <div className="mb-3"><H accent={accent}>Profil</H><p className="leading-snug">{d.summary}</p></div>}
-        <div className="mb-3"><H accent={accent}>Expérience</H><Exp d={d} accent={accent} /></div>
-        {(d.education || []).length > 0 && <div><H accent={accent}>Formation</H><Edu d={d} /></div>}
+      <div className="flex-1 p-6 space-y-3">
+        {d.summary && <div><SectionHead accent={accent} variant="bar">Profil</SectionHead><p className="leading-snug text-[#4a505c]">{d.summary}</p></div>}
+        <div><SectionHead accent={accent} variant="bar">Expérience</SectionHead><Exp d={d} accent={accent} /></div>
+        {(d.education || []).length > 0 && <div><SectionHead accent={accent} variant="bar">Formation</SectionHead><Edu d={d} accent={accent} /></div>}
       </div>
     </div>
   </Paper>
 );
 
-// Bandeau coloré en tête (créatif, non-ATS).
-const Band: React.FC<{ d: CvData; accent: string }> = ({ d, accent }) => (
+// Avec photo : en-tête à photo ronde + accent (proche du modèle « avec photo »).
+const PhotoHeader: React.FC<{ d: CvData; accent: string }> = ({ d, accent }) => (
+  <Paper pad="p-0">
+    <div className="flex items-center gap-4 p-6" style={{ background: `${accent}12` }}>
+      <div className="w-16 h-16 rounded-full flex items-center justify-center text-[1.4em] font-black text-white overflow-hidden shrink-0" style={{ background: accent }}>
+        {d.photoUrl ? <img src={d.photoUrl} className="w-full h-full object-cover" referrerPolicy="no-referrer" /> : initials(d.name)}
+      </div>
+      <div className="min-w-0">
+        <div className="text-[1.9em] font-extrabold tracking-tight leading-none">{d.name}</div>
+        <div className="text-[1.05em] font-semibold mt-1" style={{ color: accent }}>{d.title}</div>
+        <ContactRow d={d} className="mt-1" />
+      </div>
+    </div>
+    <div className="p-7 pt-4 space-y-3">
+      {d.summary && <div><SectionHead accent={accent} variant="bar">Profil</SectionHead><p className="leading-snug text-[#4a505c]">{d.summary}</p></div>}
+      <div><SectionHead accent={accent} variant="bar">Expérience</SectionHead><Exp d={d} accent={accent} /></div>
+      <div className="grid grid-cols-2 gap-4">
+        {(d.education || []).length > 0 && <div><SectionHead accent={accent} variant="bar">Formation</SectionHead><Edu d={d} accent={accent} /></div>}
+        {(d.skills || []).length > 0 && <div><SectionHead accent={accent} variant="bar">Compétences</SectionHead><SkillChips d={d} accent={accent} tone="soft" /></div>}
+      </div>
+    </div>
+  </Paper>
+);
+
+// Bandeau plein en tête (créatif assumé).
+const BandHeader: React.FC<{ d: CvData; accent: string }> = ({ d, accent }) => (
   <Paper pad="p-0">
     <div className="text-white p-6" style={{ background: accent }}>
-      <div className="text-[2em] font-black tracking-tight">{d.name}</div>
-      <div className="opacity-90 text-[1.05em]">{d.title}</div>
-      <div className="opacity-80 text-[0.85em] mt-1">{contacts(d).join('   ·   ')}</div>
+      <div className="text-[2.1em] font-black tracking-tight leading-none">{d.name}</div>
+      <div className="opacity-90 text-[1.05em] mt-1">{d.title}</div>
+      <ContactRow d={d} className="!text-white/85 mt-1.5" />
     </div>
-    <div className="p-6">
-      {d.summary && <div className="mb-3"><H accent={accent}>Profil</H><p className="leading-snug">{d.summary}</p></div>}
-      <div className="mb-3"><H accent={accent}>Expérience</H><Exp d={d} accent={accent} /></div>
+    <div className="p-7 space-y-3">
+      {d.summary && <div><SectionHead accent={accent} variant="bar">Profil</SectionHead><p className="leading-snug text-[#4a505c]">{d.summary}</p></div>}
+      <div><SectionHead accent={accent} variant="bar">Expérience</SectionHead><Exp d={d} accent={accent} /></div>
       <div className="grid grid-cols-2 gap-4">
-        {(d.education || []).length > 0 && <div><H accent={accent}>Formation</H><Edu d={d} /></div>}
-        {(d.skills || []).length > 0 && <div><H accent={accent}>Compétences</H><div className="flex flex-wrap gap-1">{(d.skills || []).map((s) => <span key={s} className="px-1.5 py-0.5 rounded text-white text-[0.9em]" style={{ background: accent }}>{s}</span>)}</div></div>}
-      </div>
-    </div>
-  </Paper>
-);
-
-// Deux colonnes (semi-créatif).
-const TwoCol: React.FC<{ d: CvData; accent: string }> = ({ d, accent }) => (
-  <Paper pad="p-8">
-    <div className="border-b-2 pb-2 mb-3" style={{ borderColor: accent }}>
-      <div className="text-[2em] font-black">{d.name}</div>
-      <div className="font-bold" style={{ color: accent }}>{d.title}</div>
-      <div className="text-[0.85em] text-slate-500">{contacts(d).join('  ·  ')}</div>
-    </div>
-    <div className="grid grid-cols-[1.6fr_1fr] gap-5">
-      <div>
-        {d.summary && <div className="mb-3"><H accent={accent}>Profil</H><p className="leading-snug">{d.summary}</p></div>}
-        <H accent={accent}>Expérience</H><Exp d={d} accent={accent} />
-      </div>
-      <div>
-        {(d.skills || []).length > 0 && <div className="mb-3"><H accent={accent}>Compétences</H><div className="space-y-0.5">{(d.skills || []).map((s) => <div key={s}>{s}</div>)}</div></div>}
-        {(d.education || []).length > 0 && <div><H accent={accent}>Formation</H><Edu d={d} /></div>}
+        {(d.education || []).length > 0 && <div><SectionHead accent={accent} variant="bar">Formation</SectionHead><Edu d={d} accent={accent} /></div>}
+        {(d.skills || []).length > 0 && <div><SectionHead accent={accent} variant="bar">Compétences</SectionHead><SkillChips d={d} accent={accent} tone="solid" /></div>}
       </div>
     </div>
   </Paper>
@@ -188,18 +260,19 @@ const make = (id: string, name: string, ats: boolean, L: React.FC<{ d: CvData; a
   id, name, ats, Preview: ({ data }) => <L d={data} accent={accent} />,
 });
 
-// 10 modèles : 6 ATS (sobres) + 4 créatifs (non-ATS).
+/* 10 modèles inspirés des références fournies (couleurs reprises des modèles ATS) :
+   IDs conservés pour ne pas casser les CV déjà sauvegardés. */
 export const CV_TEMPLATES: CvTemplate[] = [
-  make('lustre', 'Lustre', true, Classic, '#334155'),
-  make('quill', 'Quill', true, Classic, '#4F46E5'),
-  make('vertex', 'Vertex', true, Modern, '#4F46E5'),
-  make('cobalt', 'Cobalt', true, Modern, '#2563EB'),
-  make('bare', 'Bare', true, Minimal, '#111827'),
-  make('aero', 'Aero', true, Minimal, '#059669'),
-  make('nimbus', 'Nimbus', false, Sidebar, '#4F46E5'),
-  make('onyx', 'Onyx', false, Sidebar, '#0F172A'),
-  make('crest', 'Crest', false, Band, '#7C3AED'),
-  make('mosaic', 'Mosaic', false, TwoCol, '#E11D48'),
+  make('vertex', 'Bleu', true, ModernRule, '#1D6FF2'),        // « bleu »
+  make('cobalt', 'Azur', true, PhotoHeader, '#0A66C2'),        // « avec photo » bleu
+  make('lustre', 'Classique', true, ClassicSerif, '#463A4F'),  // « classique » prune
+  make('quill', 'Élégant', true, ClassicSerif, '#1F2937'),     // sobre charbon
+  make('bare', 'Simple', true, MinimalClean, '#111827'),       // « simple »
+  make('aero', 'Émeraude', true, MinimalClean, '#047857'),     // variante verte
+  make('nimbus', 'Deux colonnes', true, TwoColumn, '#B7902E'), // « deux colonnes » or
+  make('onyx', 'Ardoise', true, TwoColumn, '#222A44'),         // « gris » navy
+  make('crest', 'Beige', false, BandHeader, '#8A7361'),        // « beige » taupe
+  make('mosaic', 'Sidebar', false, Sidebar, '#1D6FF2'),        // créatif colonne
 ];
 
 export const getCvTemplate = (id?: string) => CV_TEMPLATES.find((t) => t.id === id) || CV_TEMPLATES[0];

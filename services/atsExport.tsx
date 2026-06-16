@@ -45,17 +45,17 @@ export interface LetterData {
 // en une seule colonne (100% ATS, texte réel sélectionnable) ; seuls la couleur
 // d'accent et le choix serif / sans-serif varient selon le modèle sélectionné.
 const TEMPLATE_THEME: Record<string, { accent: string; serif?: boolean }> = {
-  // Modèles de CV
-  lustre: { accent: '#334155', serif: true },
-  quill: { accent: '#4F46E5', serif: true },
-  vertex: { accent: '#4F46E5' },
-  cobalt: { accent: '#2563EB' },
+  // Modèles de CV (accents alignés sur cvTemplates.tsx)
+  vertex: { accent: '#1D6FF2' },
+  cobalt: { accent: '#0A66C2' },
+  lustre: { accent: '#463A4F', serif: true },
+  quill: { accent: '#1F2937', serif: true },
   bare: { accent: '#111827' },
-  aero: { accent: '#059669' },
-  nimbus: { accent: '#4F46E5' },
-  onyx: { accent: '#0F172A' },
-  crest: { accent: '#7C3AED' },
-  mosaic: { accent: '#E11D48' },
+  aero: { accent: '#047857' },
+  nimbus: { accent: '#B7902E' },
+  onyx: { accent: '#222A44' },
+  crest: { accent: '#8A7361' },
+  mosaic: { accent: '#1D6FF2' },
   // Modèles de lettres
   sobre: { accent: '#334155', serif: true },
   classique: { accent: '#4F46E5', serif: true },
