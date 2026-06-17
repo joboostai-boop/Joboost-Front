@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { BusinessStats, StatsQuery, StatsPeriod, BusinessJobseeker } from '../types';
 import { businessStatsApi, businessJobseekerApi } from '../services/business';
+import ActionMenu from '../components/ActionMenu';
 import toast from 'react-hot-toast';
 import {
   Users, UserPlus, Target, Briefcase, TrendingUp, TrendingDown,
@@ -251,15 +252,14 @@ const BusinessStatsPage: React.FC = () => {
           >
             <Filter size={16} /> Filtres{hasActiveFilters ? ' (actifs)' : ''}
           </button>
-          <button onClick={() => setShowCustomize(true)} className="btn btn-secondary min-h-[44px]">
-            <SlidersHorizontal size={16} /> Personnaliser
-          </button>
-          <button onClick={handleExportCSV} className="btn btn-secondary min-h-[44px]">
-            <FileSpreadsheet size={16} /> CSV
-          </button>
-          <button onClick={handleExportPDF} className="btn btn-secondary min-h-[44px]">
-            <Download size={16} /> PDF
-          </button>
+          <ActionMenu
+            label="Actions"
+            items={[
+              { label: 'Personnaliser l’affichage', icon: <SlidersHorizontal size={16} />, onClick: () => setShowCustomize(true) },
+              { label: 'Exporter en CSV', icon: <FileSpreadsheet size={16} />, onClick: handleExportCSV },
+              { label: 'Exporter en PDF', icon: <Download size={16} />, onClick: handleExportPDF },
+            ]}
+          />
         </div>
 
         {/* Mobile actions toggle */}
