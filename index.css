@@ -266,8 +266,8 @@
   /* Fondu vers le bas uniquement : les halos sont ancrés hors-cadre (haut/droite)
      et débordent des bords → aucun contour fermé visible. Le dégradé efface la
      limite basse pour un raccord invisible avec le fond de page. */
-  -webkit-mask-image: linear-gradient(to bottom, #000 28%, transparent 86%);
-  mask-image: linear-gradient(to bottom, #000 28%, transparent 86%);
+  -webkit-mask-image: linear-gradient(to bottom, #000 10%, transparent 60%);
+  mask-image: linear-gradient(to bottom, #000 10%, transparent 60%);
 }
 /* Chaque couche combine : parallaxe au scroll (--par) + parallaxe 3D à la
    souris (--mx/--my, profondeur différente par couche → effet de relief). */
@@ -284,16 +284,16 @@
   filter: blur(50px); will-change: transform, opacity;
 }
 @keyframes aurora-a {
-  0%, 100% { transform: translate(0, 0) scale(1);    opacity: 0.55; }
-  50%      { transform: translate(-26px, 18px) scale(1.18); opacity: 0.85; }
+  0%, 100% { transform: translate(0, 0) scale(1);    opacity: 0.32; }
+  50%      { transform: translate(-26px, 18px) scale(1.18); opacity: 0.5; }
 }
 @keyframes aurora-b {
-  0%, 100% { transform: translate(0, 0) scale(1.05); opacity: 0.5; }
-  50%      { transform: translate(30px, -16px) scale(0.9); opacity: 0.72; }
+  0%, 100% { transform: translate(0, 0) scale(1.05); opacity: 0.28; }
+  50%      { transform: translate(30px, -16px) scale(0.9); opacity: 0.44; }
 }
 @keyframes aurora-c {
-  0%, 100% { transform: translate(0, 0) scale(0.95); opacity: 0.4; }
-  50%      { transform: translate(-18px, -22px) scale(1.14); opacity: 0.6; }
+  0%, 100% { transform: translate(0, 0) scale(0.95); opacity: 0.22; }
+  50%      { transform: translate(-18px, -22px) scale(1.14); opacity: 0.4; }
 }
 .hero-aurora-a { animation: aurora-a 16s ease-in-out infinite; }
 .hero-aurora-b { animation: aurora-b 20s ease-in-out infinite; }
