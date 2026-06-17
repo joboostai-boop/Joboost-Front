@@ -245,8 +245,8 @@ const CVGenerator: React.FC = () => {
   const atsResult = useMemo(() => computeAtsScore(formData), [formData]);
 
   return (
-    <div className="p-5 md:p-8 max-w-6xl mx-auto flex flex-col lg:flex-row gap-8">
-      <div className="flex-1 space-y-6">
+    <div className="p-5 md:p-8 max-w-6xl mx-auto flex flex-col lg:flex-row gap-10 lg:gap-14">
+      <div className="flex-1 space-y-10">
         <header className="flex flex-col md:flex-row justify-between md:items-center gap-4">
           <p className="text-sm text-[#6B7280] dark:text-slate-400 flex items-center gap-1.5">
             <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-500" />
@@ -286,7 +286,7 @@ const CVGenerator: React.FC = () => {
         </Collapsible>
 
         {/* Coordonnées + résumé */}
-        <Collapsible collapsible={false} step={1} title="Coordonnées & résumé" bodyClassName="px-4 md:px-5 pb-5 space-y-5">
+        <Collapsible collapsible={false} step={1} title="Coordonnées & résumé" bodyClassName="space-y-5">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="input-label">Nom complet</label>
@@ -328,7 +328,7 @@ const CVGenerator: React.FC = () => {
         </Collapsible>
 
         {/* Expériences */}
-        <Collapsible collapsible={false} step={3} title="Expériences" badge={<CountBadge n={formData.experiences.length} />} bodyClassName="px-4 md:px-5 pb-5 space-y-4">
+        <Collapsible collapsible={false} step={3} title="Expériences" badge={<CountBadge n={formData.experiences.length} />} bodyClassName="space-y-4">
           {formData.experiences.map((exp) => (
             <div key={exp.id} className="rounded-2xl border border-slate-200 dark:border-slate-700 p-4 space-y-3">
               <div className="flex justify-between items-center">
@@ -347,7 +347,7 @@ const CVGenerator: React.FC = () => {
         </Collapsible>
 
         {/* Formations */}
-        <Collapsible collapsible={false} step={4} title="Formations" badge={<CountBadge n={formData.education.length} />} bodyClassName="px-4 md:px-5 pb-5 space-y-4">
+        <Collapsible collapsible={false} step={4} title="Formations" badge={<CountBadge n={formData.education.length} />} bodyClassName="space-y-4">
           {formData.education.map((ed) => (
             <div key={ed.id} className="rounded-2xl border border-slate-200 dark:border-slate-700 p-4 space-y-3">
               <div className="flex justify-between items-center">
@@ -366,7 +366,7 @@ const CVGenerator: React.FC = () => {
         </Collapsible>
       </div>
 
-      <div className="w-full lg:w-[450px] space-y-4 lg:sticky lg:top-[88px] lg:self-start">
+      <div className="w-full lg:w-[450px] space-y-5 lg:sticky lg:top-[88px] lg:self-start">
         <div className="flex gap-2">
           <button onClick={handleExportPDF} disabled={exporting} className="press btn btn-primary flex-1 disabled:opacity-60">
             {exporting ? <Loader2 size={16} className="animate-spin" /> : <FileDown size={16} />} PDF ATS

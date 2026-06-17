@@ -34,7 +34,7 @@ const Collapsible: React.FC<CollapsibleProps> = ({
   badge,
   defaultOpen = false,
   collapsible = true,
-  bodyClassName = 'px-4 md:px-5 pb-5',
+  bodyClassName,
   className = '',
   children,
 }) => {
@@ -57,13 +57,15 @@ const Collapsible: React.FC<CollapsibleProps> = ({
     </>
   );
 
-  // Mode statique : section toujours ouverte, en-tête non cliquable.
+  // Mode statique « épuré » : section TOUJOURS visible, SANS carte.
+  // En-tête léger numéroté + contenu directement sur la page → moins de « blocs »,
+  // beaucoup plus d'air (direction Linear/Notion). Aucune donnée n'est masquée.
   if (!collapsible) {
     return (
-      <div className={`surface overflow-hidden ${className}`}>
-        <div className="flex items-center gap-3 px-4 md:px-5 pt-4 md:pt-5 pb-3">{Heading}</div>
+      <section className={`space-y-4 ${className}`}>
+        <div className="flex items-center gap-3">{Heading}</div>
         <div className={bodyClassName}>{children}</div>
-      </div>
+      </section>
     );
   }
 
@@ -87,7 +89,7 @@ const Collapsible: React.FC<CollapsibleProps> = ({
         style={{ gridTemplateRows: open ? '1fr' : '0fr' }}
       >
         <div className="overflow-hidden">
-          <div className={bodyClassName}>{children}</div>
+          <div className={bodyClassName ?? 'px-4 md:px-5 pb-5'}>{children}</div>
         </div>
       </div>
     </div>
