@@ -176,8 +176,17 @@ const BusinessOffers: React.FC = () => {
       {/* Content */}
       <div className="card-pro overflow-hidden">
         {loading ? (
-          <div className="flex items-center justify-center py-20">
-            <Loader2 className="animate-spin text-[#7D5CFF]" size={32} />
+          <div className="divide-y divide-slate-100 dark:divide-slate-800">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <div key={i} className="flex items-center gap-4 p-4">
+                <div className="flex-1 space-y-2">
+                  <div className="skeleton h-4 w-1/3 rounded" />
+                  <div className="skeleton h-3 w-20 rounded" />
+                </div>
+                <div className="skeleton h-6 w-20 rounded-full hidden md:block" />
+                <div className="skeleton h-9 w-28 rounded-lg" />
+              </div>
+            ))}
           </div>
         ) : offers.length === 0 ? (
           <div className="text-center py-16 md:py-20 px-4">

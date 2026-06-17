@@ -239,8 +239,23 @@ const BusinessJobseekers: React.FC = () => {
 
       {/* Grid */}
       {loading ? (
-        <div className="flex items-center justify-center py-20">
-          <Loader2 className="animate-spin text-[#7D5CFF]" size={32} />
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3 md:gap-4">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div key={i} className="card-pro p-4 space-y-3">
+              <div className="flex items-start gap-3">
+                <div className="skeleton w-10 md:w-12 h-10 md:h-12 rounded-full shrink-0" />
+                <div className="flex-1 space-y-2">
+                  <div className="skeleton h-4 w-2/3 rounded" />
+                  <div className="skeleton h-3 w-1/2 rounded" />
+                </div>
+              </div>
+              <div className="flex gap-1">
+                <div className="skeleton h-5 w-14 rounded" />
+                <div className="skeleton h-5 w-14 rounded" />
+              </div>
+              <div className="skeleton h-3 w-20 rounded" />
+            </div>
+          ))}
         </div>
       ) : jobseekers.length === 0 ? (
         <div className="card-pro text-center py-20 px-4">

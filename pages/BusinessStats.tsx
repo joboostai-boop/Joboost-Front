@@ -6,7 +6,7 @@ import toast from 'react-hot-toast';
 import {
   Users, UserPlus, Target, Briefcase, TrendingUp, TrendingDown,
   Download, Loader2, BarChart3, Award, MoreVertical, SlidersHorizontal,
-  X, FileSpreadsheet, ArrowUp, ArrowDown, Eye, EyeOff, Filter, ChevronRight,
+  X, FileSpreadsheet, ArrowUp, ArrowDown, Eye, EyeOff, Filter, ChevronRight, RefreshCw,
 } from 'lucide-react';
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip,
@@ -228,9 +228,12 @@ const BusinessStatsPage: React.FC = () => {
 
   if (!stats) {
     return (
-      <div className="card-pro text-center py-20">
+      <div className="card-pro text-center py-20 px-4">
         <BarChart3 className="mx-auto text-slate-300 dark:text-slate-600 mb-4" size={48} />
         <p className="text-slate-500 text-sm">Impossible de charger les statistiques.</p>
+        <button onClick={() => fetchStats()} className="press btn btn-primary mt-5">
+          <RefreshCw size={16} /> Réessayer
+        </button>
       </div>
     );
   }
