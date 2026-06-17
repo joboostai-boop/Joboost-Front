@@ -13,6 +13,7 @@ import AtsScoreCard from '../components/AtsScoreCard';
 import CvExamplesModal from '../components/CvExamplesModal';
 import Tilt from '../components/Tilt';
 import Collapsible, { CountBadge } from '../components/Collapsible';
+import ActionMenu from '../components/ActionMenu';
 import { CvExample } from '../services/cvExamples';
 
 const uid = () => Math.random().toString(36).slice(2, 10);
@@ -252,14 +253,15 @@ const CVGenerator: React.FC = () => {
             <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-500" />
             Modifie chaque section ici — l'aperçu et l'export se mettent à jour en direct.
           </p>
-          <div className="flex items-center gap-2 shrink-0">
-            <button onClick={() => setShowExamples(true)} className="press btn btn-secondary">
-              <Files size={16} /> Partir d'un exemple
-            </button>
-            <button onClick={handleSaveCV} className="press btn btn-secondary text-[#7D5CFF]">
-              <Save size={16} /> Sauvegarder
-            </button>
-          </div>
+          <ActionMenu
+            label="Actions"
+            className="shrink-0"
+            items={[
+              { label: "Partir d'un exemple", icon: <Files size={16} />, onClick: () => setShowExamples(true) },
+              { label: 'Sauvegarder le CV', icon: <Save size={16} />, onClick: handleSaveCV },
+              { label: 'Imprimer', icon: <Printer size={16} />, onClick: () => window.print() },
+            ]}
+          />
         </header>
 
         {cvs.length > 0 && (
@@ -373,9 +375,6 @@ const CVGenerator: React.FC = () => {
           </button>
           <button onClick={handleExportDocx} disabled={exporting} className="press btn btn-secondary flex-1 text-[#7D5CFF] disabled:opacity-60">
             {exporting ? <Loader2 size={16} className="animate-spin" /> : <FileDown size={16} />} Word .docx
-          </button>
-          <button onClick={() => window.print()} className="press btn btn-secondary px-3" title="Imprimer">
-            <Printer size={18} />
           </button>
         </div>
 

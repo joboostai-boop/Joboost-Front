@@ -6,6 +6,7 @@ import { exportLetterPdf, exportLetterDocx } from '../services/atsExport';
 import { authHeaders } from '../services/authToken';
 import TemplateGallery from '../components/TemplateGallery';
 import Collapsible from '../components/Collapsible';
+import ActionMenu from '../components/ActionMenu';
 import { LETTER_TEMPLATES, getLetterTemplate } from '../services/letterTemplates';
 
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -173,9 +174,14 @@ const LetterGenerator: React.FC = () => {
     <div className="p-6 md:p-10 max-w-6xl mx-auto space-y-10">
       <header className="flex flex-col md:flex-row justify-between md:items-center gap-4">
         <p className="text-sm text-[#6B7280] dark:text-slate-400">Des lettres de motivation ciblées, écrites à partir de votre profil et de l'offre.</p>
-        <button onClick={handleSaveLetter} disabled={!generatedText} className="press btn btn-secondary text-[#7D5CFF] disabled:opacity-50">
-          <Save size={16} /> Sauvegarder
-        </button>
+        <ActionMenu
+          label="Actions"
+          className="shrink-0"
+          items={[
+            { label: 'Sauvegarder la lettre', icon: <Save size={16} />, onClick: handleSaveLetter, disabled: !generatedText },
+            { label: 'Imprimer', icon: <Printer size={16} />, onClick: () => window.print(), disabled: !generatedText },
+          ]}
+        />
       </header>
 
       {letters.length > 0 && (
@@ -253,9 +259,6 @@ const LetterGenerator: React.FC = () => {
             </button>
             <button onClick={handleExportDocx} disabled={exporting || !generatedText} className="press btn btn-secondary text-[#7D5CFF] disabled:opacity-50">
               {exporting ? <RefreshCw size={14} className="animate-spin" /> : <FileDown size={14} />} Word
-            </button>
-            <button onClick={() => window.print()} disabled={!generatedText} className="press btn btn-secondary px-3 disabled:opacity-50" title="Imprimer">
-              <Printer size={14} />
             </button>
           </div>
 
