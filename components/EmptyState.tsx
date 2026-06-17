@@ -23,10 +23,10 @@ const MiniCard: React.FC<{ children?: React.ReactNode; rotate?: number }> = ({ c
   </g>
 );
 
-const Art: React.FC<{ variant: Variant }> = ({ variant }) => (
+const Art: React.FC<{ variant: Variant; small?: boolean }> = ({ variant, small }) => (
   <div className="relative">
     <span aria-hidden className="pointer-events-none absolute inset-0 -z-10 m-auto h-24 w-24 rounded-full bg-[#7D5CFF]/15 blur-2xl" />
-    <svg viewBox="0 0 136 130" className="w-36 h-32" role="img" aria-hidden="true">
+    <svg viewBox="0 0 136 130" className={small ? 'w-28 h-24' : 'w-36 h-32'} role="img" aria-hidden="true">
       <ellipse cx="68" cy="74" rx="58" ry="46" fill={BRAND} opacity="0.06" />
 
       {variant === 'applications' && (
@@ -100,12 +100,16 @@ export interface EmptyStateProps {
   description?: string;
   /** CTA(s) — généralement un <button>/<Link> aux styles .btn existants. */
   action?: React.ReactNode;
+  /** Version dense (intégrée dans une carte) : illustration + paddings réduits. */
+  compact?: boolean;
+  /** Retire la surface/bordure (quand déjà posé dans une carte parente). */
+  bare?: boolean;
   className?: string;
 }
 
-const EmptyState: React.FC<EmptyStateProps> = ({ variant = 'generic', title, description, action, className = '' }) => (
-  <div className={`surface flex flex-col items-center text-center gap-3 px-6 py-12 animate-fade-in-up ${className}`}>
-    <Art variant={variant} />
+const EmptyState: React.FC<EmptyStateProps> = ({ variant = 'generic', title, description, action, compact = false, bare = false, className = '' }) => (
+  <div className={`${bare ? '' : 'surface'} flex flex-col items-center text-center animate-fade-in-up ${compact ? 'gap-2 px-5 py-8' : 'gap-3 px-6 py-12'} ${className}`}>
+    <Art variant={variant} small={compact} />
     <div>
       <h3 className="text-base font-bold text-[#111827] dark:text-white">{title}</h3>
       {description && <p className="text-sm text-[#6B7280] dark:text-slate-400 mt-1.5 max-w-md mx-auto leading-relaxed">{description}</p>}

@@ -235,6 +235,8 @@ const Dashboard: React.FC = () => {
               </div>
             ) : (
               <EmptyState
+                bare
+                compact
                 variant="applications"
                 title="Pas encore de candidature"
                 description="Dès que vous suivrez vos premières candidatures, leur répartition s'affichera ici."

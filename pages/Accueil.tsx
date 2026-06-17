@@ -6,6 +6,7 @@ import PageHero from '../components/PageHero';
 import HeroDecor from '../components/HeroDecor';
 import Tilt from '../components/Tilt';
 import CountUp from '../components/CountUp';
+import StatCard, { StatTone } from '../components/StatCard';
 import {
   UserRound, Send, LineChart, Plus, ArrowRight,
   FileText, Search, Bell, Loader2, Clock, CalendarCheck, Award, PenLine, Sparkles, Check
@@ -115,11 +116,12 @@ const Accueil: React.FC<AccueilProps> = ({ user }) => {
   const showOnboarding = !loading && doneCount < steps.length;
 
   // KPIs alignés sur les statuts du suivi (mêmes couleurs que le Kanban).
-  const kpis = [
-    { label: 'Candidatures', value: stats?.applications.total ?? 0, icon: <Send size={16} />, tint: 'text-[#7D5CFF] bg-[#7D5CFF]/10' },
-    { label: 'En attente', value: stats?.applications.pending ?? 0, icon: <Clock size={16} />, tint: 'text-blue-600 bg-blue-50 dark:bg-blue-500/10' },
-    { label: 'Entretiens', value: stats?.applications.interview ?? 0, icon: <CalendarCheck size={16} />, tint: 'text-amber-600 bg-amber-50 dark:bg-amber-500/10' },
-    { label: 'Offres', value: stats?.applications.offer ?? 0, icon: <Award size={16} />, tint: 'text-emerald-600 bg-emerald-50 dark:bg-emerald-500/10' },
+  // Même composant StatCard que le Dashboard → cohérence visuelle inter-pages.
+  const kpis: { label: string; value: number; icon: React.ReactNode; tone: StatTone }[] = [
+    { label: 'Candidatures', value: stats?.applications.total ?? 0, icon: <Send size={20} strokeWidth={2.4} />, tone: 'violet' },
+    { label: 'En attente', value: stats?.applications.pending ?? 0, icon: <Clock size={20} strokeWidth={2.4} />, tone: 'blue' },
+    { label: 'Entretiens', value: stats?.applications.interview ?? 0, icon: <CalendarCheck size={20} strokeWidth={2.4} />, tone: 'amber' },
+    { label: 'Offres', value: stats?.applications.offer ?? 0, icon: <Award size={20} strokeWidth={2.4} />, tone: 'emerald' },
   ];
 
   const pct = stats?.profileCompletion ?? 0;
@@ -215,16 +217,16 @@ const Accueil: React.FC<AccueilProps> = ({ user }) => {
 
       {/* KPIs — masqués sur un compte neuf (évite un mur de zéros) */}
       {!showOnboarding && (
-        <section className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-          {kpis.map((k, i) => (
+        <section className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
+          {kpis.map((k) => (
             <Tilt key={k.label} className="h-full" max={9}>
-              <div className="card-pro !p-4 h-full animate-fade-in-up" style={{ animationDelay: `${i * 50}ms` }}>
-                <span className={`w-8 h-8 rounded-lg flex items-center justify-center mb-3 ${k.tint}`}>{k.icon}</span>
-                <p className="text-2xl font-bold text-[#111827] dark:text-white tabular-nums leading-none">
-                  {loading ? '–' : <CountUp value={k.value} />}
-                </p>
-                <p className="text-xs text-[#6B7280] dark:text-slate-400 mt-1.5">{k.label}</p>
-              </div>
+              <StatCard
+                className="h-full"
+                label={k.label}
+                value={loading ? '–' : <CountUp value={k.value} />}
+                icon={k.icon}
+                tone={k.tone}
+              />
             </Tilt>
           ))}
         </section>
