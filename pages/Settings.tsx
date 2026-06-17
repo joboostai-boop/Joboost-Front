@@ -148,6 +148,7 @@ const Settings: React.FC<SettingsProps> = ({ user, isDarkMode, toggleDarkMode })
         icon={<SlidersHorizontal size={22} />}
         title="Paramètres"
         subtitle="Gère ton compte, tes préférences et tes notifications."
+        maxWidth="max-w-5xl"
       />
       <div className="p-5 md:p-8 max-w-5xl mx-auto space-y-6 pb-16">
 

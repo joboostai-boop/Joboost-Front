@@ -188,7 +188,7 @@ const Spontaneous: React.FC = () => {
   const visible = filter === 'ALL' ? companies : companies.filter((c) => c.autoLevel === filter);
 
   return (
-    <div className="p-5 md:p-8 max-w-5xl mx-auto space-y-6">
+    <div className="p-5 md:p-8 max-w-6xl mx-auto space-y-6">
       <form onSubmit={handleSearch} className="surface p-5 md:p-6">
         <h3 className="text-sm font-semibold text-[#111827] dark:text-white mb-4">Critères de ciblage</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

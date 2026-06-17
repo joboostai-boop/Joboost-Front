@@ -147,7 +147,7 @@ const Applications: React.FC = () => {
   );
 
   return (
-    <div className="p-5 md:p-8 max-w-[1500px] mx-auto space-y-6">
+    <div className="p-5 md:p-8 max-w-6xl mx-auto space-y-6">
       {/* Barre d'outils (le titre est porté par le hero du layout) */}
       <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="flex items-center gap-2 text-sm text-[#6B7280] dark:text-slate-400">

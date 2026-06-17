@@ -69,7 +69,7 @@ const SavedOffers: React.FC = () => {
   };
 
   return (
-    <div className="p-5 md:p-8 max-w-5xl mx-auto space-y-6">
+    <div className="p-5 md:p-8 max-w-6xl mx-auto space-y-6">
       <header className="flex items-center gap-2 text-sm text-[#6B7280] dark:text-slate-400">
         <span className="inline-flex items-center justify-center min-w-7 h-7 px-2 rounded-lg bg-[#7D5CFF]/10 text-[#7D5CFF] font-bold tabular-nums">{loading ? '–' : savedOffers.length}</span>
         opportunité{savedOffers.length > 1 ? 's' : ''} mise{savedOffers.length > 1 ? 's' : ''} de côté

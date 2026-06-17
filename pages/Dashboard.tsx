@@ -1,22 +1,27 @@
-import React, { useState, useEffect } from 'react';
-import { 
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer 
+import React, { useState, useEffect, useCallback } from 'react';
+import {
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer
 } from 'recharts';
-import { 
-  TrendingUp, Download, FileJson, 
-  Layers, Target, Cpu, Gauge, Zap, FileSpreadsheet, PlusCircle, CheckCircle2
+import {
+  TrendingUp, Download, FileJson, Layers, Target, Cpu, Gauge,
+  FileText, PenLine, CheckCircle2, RefreshCw, ArrowRight
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
 import { authHeaders } from '../services/authToken';
+import EmptyState from '../components/EmptyState';
+import StatCard, { StatTone } from '../components/StatCard';
+import SectionCard from '../components/SectionCard';
+import CountUp from '../components/CountUp';
 
+/* Tooltip du graphe — identité conservée (encre + violet marque). */
 const CustomTooltip = ({ active, payload, label }: any) => {
   if (active && payload && payload.length) {
     return (
       <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-3 rounded-xl shadow-xl">
         <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">{label}</p>
         <p className="text-sm font-extrabold text-[#7D5CFF]">
-          {payload[0].value} <span className="text-slate-500 font-medium">actions</span>
+          {payload[0].value} <span className="text-slate-500 font-medium">candidature(s)</span>
         </p>
       </div>
     );
@@ -24,9 +29,49 @@ const CustomTooltip = ({ active, payload, label }: any) => {
   return null;
 };
 
+/* Skeleton calqué sur la mise en page réelle (pas de spinner plein écran). */
+const DashboardSkeleton: React.FC = () => (
+  <div className="p-5 md:p-8 max-w-6xl mx-auto space-y-6">
+    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+      <div className="skeleton h-5 w-56" />
+      <div className="flex gap-2">
+        <div className="skeleton h-[42px] w-24 rounded-xl" />
+        <div className="skeleton h-[42px] w-28 rounded-xl" />
+      </div>
+    </div>
+    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      {Array.from({ length: 4 }).map((_, i) => (
+        <div key={i} className="surface p-4 md:p-5 flex flex-col gap-4">
+          <div className="skeleton h-10 w-10 rounded-xl" />
+          <div className="space-y-2">
+            <div className="skeleton h-7 w-16" />
+            <div className="skeleton h-3 w-24" />
+          </div>
+        </div>
+      ))}
+    </div>
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="lg:col-span-2 space-y-6">
+        <div className="surface p-6"><div className="skeleton h-64 w-full" /></div>
+        <div className="grid grid-cols-2 gap-4">
+          <div className="skeleton h-28 rounded-2xl" />
+          <div className="skeleton h-28 rounded-2xl" />
+        </div>
+      </div>
+      <div className="space-y-6">
+        <div className="surface p-6"><div className="skeleton h-32 w-full" /></div>
+        <div className="surface p-6"><div className="skeleton h-40 w-full" /></div>
+      </div>
+    </div>
+  </div>
+);
+
 const Dashboard: React.FC = () => {
-  const [isDark, setIsDark] = useState(() => document.documentElement.classList.contains('dark'));
   const navigate = useNavigate();
+  const [isDark, setIsDark] = useState(() => document.documentElement.classList.contains('dark'));
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
+  const [statsData, setStatsData] = useState<any>(null);
 
   useEffect(() => {
     const observer = new MutationObserver(() => {
@@ -35,240 +80,210 @@ const Dashboard: React.FC = () => {
     observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
     return () => observer.disconnect();
   }, []);
-  
-  const [loading, setLoading] = useState(true);
-  const [statsData, setStatsData] = useState<any>(null);
 
-  useEffect(() => {
-    const fetchStats = async () => {
-      try {
-        const res = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/dashboard/stats`, { credentials: 'include', headers: { ...authHeaders() } });
-        const data = await res.json();
-        if (data.success) {
-           setStatsData(data.stats);
-        }
-      } catch (err) {
-        toast.error("Impossible de charger les statistiques.");
-      } finally {
-        setLoading(false);
+  const fetchStats = useCallback(async () => {
+    setLoading(true);
+    setError(false);
+    try {
+      const res = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/dashboard/stats`, {
+        credentials: 'include',
+        headers: { ...authHeaders() },
+      });
+      const data = await res.json();
+      if (data.success) {
+        setStatsData(data.stats);
+      } else {
+        setError(true);
       }
-    };
-    fetchStats();
+    } catch (err) {
+      setError(true);
+      toast.error('Impossible de charger les statistiques.');
+    } finally {
+      setLoading(false);
+    }
   }, []);
+
+  useEffect(() => { fetchStats(); }, [fetchStats]);
 
   const handleExport = (format: 'json' | 'csv') => {
     if (!statsData) return;
-    
-    const data = {
-      summary: statsData,
-      timestamp: new Date().toISOString()
-    };
-
+    const data = { summary: statsData, timestamp: new Date().toISOString() };
     const blob = new Blob(
-      [format === 'json' ? JSON.stringify(data, null, 2) : `Metric,Value\nProfile Completion,${statsData.profileCompletion}\nCVs,${statsData.cvCount}\nLetters,${statsData.letterCount}\nSaved Offers,${statsData.savedCount}`],
+      [format === 'json'
+        ? JSON.stringify(data, null, 2)
+        : `Metric,Value\nProfile Completion,${statsData.profileCompletion}\nCVs,${statsData.cvCount}\nLetters,${statsData.letterCount}\nSaved Offers,${statsData.savedCount}`],
       { type: format === 'json' ? 'application/json' : 'text/csv' }
     );
-    
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
     a.download = `joboost-report-${new Date().toLocaleDateString()}.${format}`;
     a.click();
     URL.revokeObjectURL(url);
-    
     toast.success(`Rapport ${format.toUpperCase()} généré avec succès !`);
   };
 
-  if (loading) {
-     return (
-        <div className="h-screen flex flex-col items-center justify-center gap-3">
-          <div className="w-8 h-8 border-4 border-slate-200 border-t-[#7D5CFF] rounded-full animate-spin" />
-          <p className="text-sm font-medium text-slate-500">Chargement de votre cockpit...</p>
-        </div>
-     );
+  if (loading) return <DashboardSkeleton />;
+
+  /* État d'erreur explicite (plus de page blanche). */
+  if (error || !statsData) {
+    return (
+      <div className="p-5 md:p-8 max-w-6xl mx-auto">
+        <EmptyState
+          variant="generic"
+          title="Statistiques indisponibles"
+          description="Nous n'avons pas pu récupérer vos données pour le moment. Vérifiez votre connexion puis réessayez."
+          action={
+            <button onClick={fetchStats} className="press btn btn-primary">
+              <RefreshCw size={16} /> Réessayer
+            </button>
+          }
+        />
+      </div>
+    );
   }
 
-  if (!statsData) return null;
+  const totalDocs = (statsData.cvCount || 0) + (statsData.letterCount || 0);
+  const totalOffers = (statsData.recommendedCount || 0) + (statsData.savedCount || 0);
+  const totalApplications = statsData.applications?.total || 0;
+  const profileComplete = statsData.profileCompletion === 100;
 
-  const totalDocs = statsData.cvCount + statsData.letterCount;
-  const totalOffers = statsData.recommendedCount + statsData.savedCount;
-
-  const stats = [
-    { 
-      label: 'Candidatures Total', 
-      value: statsData.applications?.total || '0', 
-      icon: <Layers size={22} strokeWidth={2.5} />,
-      color: 'text-[#7D5CFF]',
-      bg: 'bg-[#F3F0FF] dark:bg-[#7D5CFF]/10',
-      border: 'border-[#7D5CFF]/15 dark:border-[#7D5CFF]/20'
-    },
-    { 
-      label: 'Offres Liées (Reco + Sauvé)', 
-      value: totalOffers.toString(), 
-      icon: <Target size={22} strokeWidth={2.5} />, 
-      color: 'text-blue-600', 
-      bg: 'bg-blue-50 dark:bg-blue-500/10',
-      border: 'border-blue-100 dark:border-blue-500/20'
-    },
-    { 
-      label: 'Documents (CV + Lettres)', 
-      value: totalDocs.toString(), 
-      icon: <Cpu size={22} strokeWidth={2.5} />, 
-      color: 'text-emerald-600', 
-      bg: 'bg-emerald-50 dark:bg-emerald-500/10',
-      border: 'border-emerald-100 dark:border-emerald-500/20'
-    },
-    { 
-      label: 'Complétion Profil', 
-      value: `${statsData.profileCompletion}%`, 
-      icon: <Gauge size={22} strokeWidth={2.5} />, 
-      color: 'text-amber-500', 
-      bg: 'bg-amber-50 dark:bg-amber-500/10',
-      border: 'border-amber-100 dark:border-amber-500/20'
-    },
+  const stats: { label: string; value: number; suffix?: string; icon: React.ReactNode; tone: StatTone }[] = [
+    { label: 'Candidatures totales', value: totalApplications, icon: <Layers size={20} strokeWidth={2.4} />, tone: 'violet' },
+    { label: 'Offres liées (reco + sauvées)', value: totalOffers, icon: <Target size={20} strokeWidth={2.4} />, tone: 'blue' },
+    { label: 'Documents IA (CV + lettres)', value: totalDocs, icon: <Cpu size={20} strokeWidth={2.4} />, tone: 'emerald' },
+    { label: 'Profil complété', value: statsData.profileCompletion || 0, suffix: '%', icon: <Gauge size={20} strokeWidth={2.4} />, tone: 'amber' },
   ];
 
   const appStatusData = [
-    { name: 'En Attente', value: statsData.applications?.pending || 0 },
+    { name: 'En attente', value: statsData.applications?.pending || 0 },
     { name: 'Envoyées', value: statsData.applications?.sent || 0 },
     { name: 'Entretiens', value: statsData.applications?.interview || 0 },
     { name: 'Offres', value: statsData.applications?.offer || 0 },
   ];
 
   return (
-    <div className="p-5 md:p-8 max-w-6xl mx-auto space-y-8 pb-20">
-      {/* Barre d'outils (le titre est porté par le hero du layout) */}
-      <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <p className="text-sm text-[#6B7280] dark:text-slate-400">Statistiques calculées à partir de votre activité réelle.</p>
-        <div className="flex flex-wrap items-center gap-3">
-          <div className={`flex items-center gap-2 px-3 py-1 rounded-full border ${
-            statsData.profileCompletion === 100
-              ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
-              : 'bg-amber-50 text-amber-700 border-amber-200'
+    <div className="p-5 md:p-8 max-w-6xl mx-auto space-y-6">
+      {/* Toolbar — le titre est porté par le hero du layout. */}
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex items-center gap-2.5">
+          <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-[11px] font-semibold ${
+            profileComplete
+              ? 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/25'
+              : 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/25'
           }`}>
-            <div className={`w-1.5 h-1.5 rounded-full ${statsData.profileCompletion === 100 ? 'bg-emerald-500' : 'bg-amber-500'}`} />
-            <span className="text-[11px] font-medium">
-               {statsData.profileCompletion === 100 ? 'Profil complet' : 'Profil à compléter'}
-            </span>
-          </div>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => handleExport('json')}
-              className="press btn btn-secondary px-3 py-2"
-              title="Exporter JSON"
-            >
-              <FileJson size={16} />
-            </button>
-            <button
-              onClick={() => handleExport('csv')}
-              className="press btn btn-primary"
-            >
-              <Download size={15} /> Rapport CSV
-            </button>
-          </div>
+            <span className={`w-1.5 h-1.5 rounded-full ${profileComplete ? 'bg-emerald-500' : 'bg-amber-500'}`} />
+            {profileComplete ? 'Profil complet' : 'Profil à compléter'}
+          </span>
+          <span className="hidden sm:inline text-sm text-slate-500 dark:text-slate-400">
+            Données calculées à partir de votre activité réelle.
+          </span>
         </div>
-      </header>
+        <div className="flex items-center gap-2">
+          <button onClick={() => handleExport('json')} className="press btn btn-secondary" aria-label="Exporter en JSON">
+            <FileJson size={16} /> JSON
+          </button>
+          <button onClick={() => handleExport('csv')} className="press btn btn-secondary" aria-label="Exporter en CSV">
+            <Download size={16} /> Export CSV
+          </button>
+        </div>
+      </div>
 
-      {/* Statistiques d'Activité */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-6">
-        {stats.map((stat, i) => (
-          <div
-            key={i}
-            style={{ animationDelay: `${i * 60}ms` }}
-            className="card-pro p-4 md:p-6 flex flex-col justify-between group overflow-hidden hover:-translate-y-0.5 hover:shadow-md transition-all animate-fade-in-up"
-          >
-            <div className="flex justify-between items-start mb-3 md:mb-6">
-              <div className={`w-10 h-10 md:w-12 md:h-12 rounded-lg flex items-center justify-center border ${stat.border} ${stat.bg} ${stat.color} transition-colors`}>
-                {React.cloneElement(stat.icon as React.ReactElement, { size: 18 })}
-              </div>
-            </div>
-            <div className="relative z-10">
-              <p className="text-2xl md:text-3xl font-bold text-[#111827] dark:text-white leading-none tracking-tight">{stat.value}</p>
-              <p className="text-[9px] md:text-[10px] font-semibold text-[#6B7280] uppercase tracking-[0.15em] mt-2 md:mt-3">{stat.label}</p>
-            </div>
-          </div>
+      {/* KPIs */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        {stats.map((s) => (
+          <StatCard
+            key={s.label}
+            label={s.label}
+            value={<><CountUp value={s.value} />{s.suffix}</>}
+            icon={s.icon}
+            tone={s.tone}
+          />
         ))}
       </div>
 
+      {/* Contenu principal */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-6">
-          <div className="card-pro p-5 md:p-8">
-            <div className="flex items-center justify-between mb-6 md:mb-8">
-              <div>
-                <h3 className="text-base font-semibold text-[#111827] dark:text-white">Répartition de vos candidatures</h3>
-                <div className="flex items-center gap-2 text-[10px] md:text-xs font-semibold text-emerald-600 mt-1">
-                  <TrendingUp size={14} /> Sur {statsData.applications?.total || 0} trackées
-                </div>
+          <SectionCard
+            title="Répartition de vos candidatures"
+            caption={
+              totalApplications > 0 ? (
+                <span className="inline-flex items-center gap-1.5 font-semibold text-emerald-600 dark:text-emerald-400">
+                  <TrendingUp size={14} /> Sur {totalApplications} trackée(s)
+                </span>
+              ) : 'Aucune candidature suivie pour le moment.'
+            }
+          >
+            {totalApplications > 0 ? (
+              <div className="h-64">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={appStatusData} margin={{ top: 0, right: 0, left: -20, bottom: 0 }}>
+                    <defs>
+                      <linearGradient id="barGradient" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="#7D5CFF" stopOpacity={1} />
+                        <stop offset="100%" stopColor="#B9A3FF" stopOpacity={0.85} />
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="4 4" vertical={false} stroke={isDark ? '#1F2937' : '#F1F5F9'} />
+                    <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#94A3B8', fontSize: 11, fontWeight: 700 }} dy={10} />
+                    <YAxis axisLine={false} tickLine={false} allowDecimals={false} tick={{ fill: '#94A3B8', fontSize: 11, fontWeight: 700 }} />
+                    <Tooltip content={<CustomTooltip />} cursor={{ fill: isDark ? '#1F2937' : '#F8FAFC', radius: 8 }} />
+                    <Bar dataKey="value" radius={[6, 6, 0, 0]} barSize={32} fill="url(#barGradient)" />
+                  </BarChart>
+                </ResponsiveContainer>
               </div>
-            </div>
-            <div className="h-64">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={appStatusData} margin={{ top: 0, right: 0, left: -20, bottom: 0 }}>
-                  <defs>
-                    <linearGradient id="barGradient" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="#7D5CFF" stopOpacity={1} />
-                      <stop offset="100%" stopColor="#B9A3FF" stopOpacity={0.85} />
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="4 4" vertical={false} stroke={isDark ? "#1F2937" : "#F1F5F9"} />
-                  <XAxis 
-                    dataKey="name" 
-                    axisLine={false} 
-                    tickLine={false} 
-                    tick={{ fill: '#94A3B8', fontSize: 11, fontWeight: 700 }} 
-                    dy={10} 
-                  />
-                  <YAxis 
-                    axisLine={false} 
-                    tickLine={false} 
-                    allowDecimals={false}
-                    tick={{ fill: '#94A3B8', fontSize: 11, fontWeight: 700 }} 
-                  />
-                  <Tooltip 
-                    content={<CustomTooltip />} 
-                    cursor={{ fill: isDark ? '#1F2937' : '#F8FAFC', radius: 8 }}
-                  />
-                  <Bar 
-                    dataKey="value" 
-                    radius={[6, 6, 0, 0]} 
-                    barSize={32}
-                    fill="url(#barGradient)"
-                  />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          </div>
+            ) : (
+              <EmptyState
+                variant="applications"
+                title="Pas encore de candidature"
+                description="Dès que vous suivrez vos premières candidatures, leur répartition s'affichera ici."
+                action={
+                  <button onClick={() => navigate('/track/applications')} className="press btn btn-primary">
+                    Suivre une candidature <ArrowRight size={16} />
+                  </button>
+                }
+              />
+            )}
+          </SectionCard>
 
+          {/* Actions rapides */}
           <div className="grid grid-cols-2 gap-4">
-             <button onClick={() => navigate('/prepare/cv')} className="press surface p-6 flex flex-col items-center justify-center gap-3 hover:shadow-card-hover hover:-translate-y-0.5 transition-all duration-200 group outline-none">
-                <div className="w-12 h-12 surface-accent rounded-xl flex items-center justify-center text-[#7D5CFF] group-hover:scale-110 transition-transform">
-                   <PlusCircle size={24} />
-                </div>
-                <span className="font-semibold text-[#111827] dark:text-white">Générer un CV</span>
-             </button>
-             <button onClick={() => navigate('/prepare/letter')} className="press surface p-6 flex flex-col items-center justify-center gap-3 hover:shadow-card-hover hover:-translate-y-0.5 transition-all duration-200 group outline-none">
-                <div className="w-12 h-12 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
-                   <PlusCircle size={24} />
-                </div>
-                <span className="font-semibold text-[#111827] dark:text-white">Générer une Lettre</span>
-             </button>
+            <button
+              onClick={() => navigate('/prepare/cv')}
+              className="press surface p-5 flex flex-col items-center justify-center text-center gap-3 hover:shadow-card-hover hover:-translate-y-0.5 transition-all duration-200 group outline-none focus-visible:ring-2 focus-visible:ring-[#7D5CFF]/45 focus-visible:ring-offset-2"
+            >
+              <span className="w-12 h-12 surface-accent rounded-xl flex items-center justify-center text-[#7D5CFF] group-hover:scale-105 transition-transform">
+                <FileText size={22} />
+              </span>
+              <span className="font-semibold text-[#111827] dark:text-white">Générer un CV</span>
+            </button>
+            <button
+              onClick={() => navigate('/prepare/letter')}
+              className="press surface p-5 flex flex-col items-center justify-center text-center gap-3 hover:shadow-card-hover hover:-translate-y-0.5 transition-all duration-200 group outline-none focus-visible:ring-2 focus-visible:ring-[#7D5CFF]/45 focus-visible:ring-offset-2"
+            >
+              <span className="w-12 h-12 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 rounded-xl flex items-center justify-center group-hover:scale-105 transition-transform">
+                <PenLine size={22} />
+              </span>
+              <span className="font-semibold text-[#111827] dark:text-white">Générer une lettre</span>
+            </button>
           </div>
         </div>
 
+        {/* Colonne latérale */}
         <div className="space-y-6">
-          <div className="card-pro p-6">
-            <div className="flex items-center gap-3 mb-4">
-              <span className="w-10 h-10 rounded-lg surface-accent text-[#7D5CFF] flex items-center justify-center shrink-0">
+          <SectionCard
+            title="Complétez votre profil"
+            caption="Un profil complet améliore le ciblage de l'IA."
+            action={
+              <span className="w-10 h-10 rounded-lg surface-accent text-[#7D5CFF] flex items-center justify-center">
                 <CheckCircle2 size={20} />
               </span>
-              <div className="min-w-0">
-                <h3 className="text-base font-semibold text-[#111827] dark:text-white">Complétez votre profil</h3>
-                <p className="text-xs text-[#6B7280]">Un profil complet améliore le ciblage de l'IA.</p>
-              </div>
-            </div>
+            }
+          >
             <div className="space-y-1.5 mb-5">
               <div className="flex justify-between text-xs font-medium">
-                <span className="text-[#6B7280]">Progression</span>
+                <span className="text-slate-500 dark:text-slate-400">Progression</span>
                 <span className="text-[#7D5CFF] tabular-nums">{statsData.profileCompletion}%</span>
               </div>
               <div className="h-2 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
@@ -276,33 +291,34 @@ const Dashboard: React.FC = () => {
               </div>
             </div>
             <button onClick={() => navigate('/prepare/profile')} className="press btn btn-primary w-full">
-              Compléter mon profil
+              {profileComplete ? 'Voir mon profil' : 'Compléter mon profil'}
             </button>
-          </div>
+          </SectionCard>
 
-          <div className="card-pro p-6 space-y-6">
-            <h3 className="text-base font-semibold text-[#111827] dark:text-white">Activité récente</h3>
-            <div className="space-y-4">
+          <SectionCard title="Activité récente">
+            <div className="space-y-3.5">
               {[
-                 { label: 'Offres Sauvegardées en attente', val: statsData.savedCount, color: 'bg-[#7D5CFF]' },
-                 { label: 'CV originaux', val: statsData.cvCount, color: 'bg-emerald-500' },
-                 { label: 'Lettres rédigées', val: statsData.letterCount, color: 'bg-amber-400' }
-              ].map((item, i) => (
-                <div key={i} className="flex items-center gap-3">
-                  <div className={`w-2 h-2 ${item.color} rounded-sm`} />
-                  <p className="text-sm text-[#111827] dark:text-white"><strong>{item.val}</strong> {item.label}</p>
+                { label: 'Offres sauvegardées en attente', val: statsData.savedCount || 0, color: 'bg-[#7D5CFF]' },
+                { label: 'CV originaux', val: statsData.cvCount || 0, color: 'bg-emerald-500' },
+                { label: 'Lettres rédigées', val: statsData.letterCount || 0, color: 'bg-amber-400' },
+              ].map((item) => (
+                <div key={item.label} className="flex items-center gap-3">
+                  <span className={`w-2 h-2 ${item.color} rounded-sm shrink-0`} />
+                  <p className="text-sm text-[#111827] dark:text-white">
+                    <strong className="tabular-nums">{item.val}</strong> {item.label}
+                  </p>
                 </div>
               ))}
             </div>
-            <div className="grid grid-cols-2 gap-2 mt-4">
-               <button onClick={() => navigate('/target/offers')} className="press btn btn-secondary w-full text-xs py-2 bg-white flex justify-center">
-                 Voir Offres
-               </button>
-               <button onClick={() => navigate('/track/applications')} className="press btn btn-secondary w-full text-xs py-2 bg-white flex justify-center">
-                 Suivi
-               </button>
+            <div className="grid grid-cols-2 gap-2 mt-5">
+              <button onClick={() => navigate('/target/offers')} className="press btn btn-secondary w-full text-sm">
+                Voir offres
+              </button>
+              <button onClick={() => navigate('/track/applications')} className="press btn btn-secondary w-full text-sm">
+                Suivi
+              </button>
             </div>
-          </div>
+          </SectionCard>
         </div>
       </div>
     </div>
