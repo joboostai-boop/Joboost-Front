@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { authHeaders } from '../services/authToken';
 import MatchRing from '../components/MatchRing';
 import EmptyState from '../components/EmptyState';
+import { formatSalary } from '../services/format';
 
 export interface JobOffer {
   id?: string;
@@ -196,7 +197,7 @@ const PersonalizedOffers: React.FC = () => {
                 {/* Méta en ligne */}
                 <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 mt-4 text-xs font-medium text-[#6B7280] dark:text-slate-400">
                   {offer.location && <span className="flex items-center gap-1.5"><MapPin size={13} className="text-[#9CA3AF]" /> {offer.location}</span>}
-                  {offer.salary && <span className="flex items-center gap-1.5"><Euro size={13} className="text-[#9CA3AF]" /> {offer.salary}</span>}
+                  {offer.salary && <span className="flex items-center gap-1.5"><Euro size={13} className="text-[#9CA3AF]" /> {formatSalary(offer.salary)}</span>}
                   {offer.type && <span className="flex items-center gap-1.5"><Briefcase size={13} className="text-[#9CA3AF]" /> {offer.type}</span>}
                   {offer.postedDate && <span className="flex items-center gap-1.5"><Clock size={13} className="text-[#9CA3AF]" /> {offer.postedDate}</span>}
                 </div>

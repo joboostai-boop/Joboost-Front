@@ -41,7 +41,7 @@ const TopNav: React.FC<TopNavProps> = ({ user, currentPath }) => {
       <div className="max-w-6xl mx-auto h-16 rounded-2xl bg-white/90 dark:bg-[#111827]/90 backdrop-blur border border-[#ECEAF6] dark:border-[#1F2937] shadow-card px-3 flex items-center justify-between gap-3">
         {/* Marque — badge « Espace recruteur » pour bien distinguer le portail business */}
         <div className="flex items-center gap-2.5 shrink-0">
-          <Link to={homeLink} className="flex items-center pl-1" aria-label="Accueil JobBoost">
+          <Link to={homeLink} className="flex items-center pl-1" aria-label="Accueil JoBoost">
             <Logo variant="full" className="h-7" />
           </Link>
           {isBusiness && (
