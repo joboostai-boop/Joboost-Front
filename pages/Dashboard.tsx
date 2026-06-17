@@ -190,12 +190,12 @@ const Dashboard: React.FC = () => {
         ))}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-6">
           <div className="card-pro p-5 md:p-8">
             <div className="flex items-center justify-between mb-6 md:mb-8">
               <div>
-                <h3>Répartition de vos candidatures</h3>
+                <h3 className="text-base font-semibold text-[#111827] dark:text-white">Répartition de vos candidatures</h3>
                 <div className="flex items-center gap-2 text-[10px] md:text-xs font-semibold text-emerald-600 mt-1">
                   <TrendingUp size={14} /> Sur {statsData.applications?.total || 0} trackées
                 </div>
@@ -281,7 +281,7 @@ const Dashboard: React.FC = () => {
           </div>
 
           <div className="card-pro p-6 space-y-6">
-            <h3 className="text-sm font-semibold text-[#111827] dark:text-white">Activité récente</h3>
+            <h3 className="text-base font-semibold text-[#111827] dark:text-white">Activité récente</h3>
             <div className="space-y-4">
               {[
                  { label: 'Offres Sauvegardées en attente', val: statsData.savedCount, color: 'bg-[#7D5CFF]' },

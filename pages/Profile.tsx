@@ -407,6 +407,7 @@ const Profile: React.FC<ProfileProps> = ({ user }) => {
       {/* Sections du profil — colonne unique : tout aligné verticalement (lisible,
           régulier), au lieu d'une mosaïque 2 colonnes aux hauteurs irrégulières. */}
       <div className="space-y-4">
+      <h2 className="text-xs font-semibold uppercase tracking-wider text-[#9CA3AF] px-1">Informations essentielles</h2>
       {/* 1. Identité & contact */}
       <Section id="identity" title="Identité & contact" icon={<UserIcon size={18} />} badge="Essentiel"
         open={open === 'identity'} onToggle={() => toggle('identity')}
@@ -533,6 +534,7 @@ const Profile: React.FC<ProfileProps> = ({ user }) => {
         <button onClick={() => addItem('languages', { id: uid(), language: '', level: 'Courant', certification: '' })} className="btn btn-secondary w-full"><Plus size={16} /> Ajouter une langue</button>
       </Section>
 
+      <h2 className="text-xs font-semibold uppercase tracking-wider text-[#9CA3AF] px-1 pt-3">Pour aller plus loin <span className="text-[#C4C0D6] dark:text-slate-600 normal-case tracking-normal font-medium">· facultatif</span></h2>
       {/* Résumé pro (bonus, avec IA) */}
       <Section id="summary" title="Résumé professionnel" icon={<Wand2 size={18} />} badge="Bonus"
         open={open === 'summary'} onToggle={() => toggle('summary')} done={!!f.summary}>

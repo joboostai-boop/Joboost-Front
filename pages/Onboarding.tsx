@@ -229,56 +229,56 @@ const Onboarding: React.FC<OnboardingProps> = ({ user, onComplete, onSkip }) => 
               </h3>
               <div className="space-y-4">
                 <div className="space-y-1.5">
-                  <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-1">Nom complet *</label>
+                  <label className="input-label">Nom complet *</label>
                   <input
                     required
                     type="text"
                     placeholder="Jean Dupont"
-                    className="w-full px-5 py-3.5 bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-2xl outline-none focus:ring-2 focus:ring-[#7D5CFF] transition-all font-bold text-sm"
+                    className="input-pro"
                     value={formData.name}
                     onChange={e => setFormData({...formData, name: e.target.value})}
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-1">Email *</label>
+                  <label className="input-label">Email *</label>
                   <input
                     required
                     type="email"
                     placeholder="jean@exemple.com"
-                    className="w-full px-5 py-3.5 bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-2xl outline-none focus:ring-2 focus:ring-[#7D5CFF] transition-all font-bold text-sm"
+                    className="input-pro"
                     value={formData.email}
                     onChange={e => setFormData({...formData, email: e.target.value})}
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-1">Poste recherché *</label>
+                  <label className="input-label">Poste recherché *</label>
                   <input
                     required
                     type="text"
                     placeholder="Développeur Fullstack"
-                    className="w-full px-5 py-3.5 bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-2xl outline-none focus:ring-2 focus:ring-[#7D5CFF] transition-all font-bold text-sm"
+                    className="input-pro"
                     value={formData.title}
                     onChange={e => setFormData({...formData, title: e.target.value})}
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-1">Compétences</label>
+                  <label className="input-label">Compétences</label>
                   <input
                     type="text"
                     placeholder="React, gestion de projet, anglais..."
-                    className="w-full px-5 py-3.5 bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-2xl outline-none focus:ring-2 focus:ring-[#7D5CFF] transition-all font-bold text-sm"
+                    className="input-pro"
                     value={formData.skills}
                     onChange={e => setFormData({...formData, skills: e.target.value})}
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-1">LinkedIn</label>
+                  <label className="input-label">LinkedIn</label>
                   <div className="relative">
                     <Linkedin className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
                     <input
                       type="url"
                       placeholder="linkedin.com/in/..."
-                      className="w-full pl-12 pr-5 py-3.5 bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-2xl outline-none focus:ring-2 focus:ring-[#7D5CFF] transition-all font-bold text-sm"
+                      className="input-pro pl-12"
                       value={formData.linkedin}
                       onChange={e => setFormData({...formData, linkedin: e.target.value})}
                     />
@@ -296,19 +296,19 @@ const Onboarding: React.FC<OnboardingProps> = ({ user, onComplete, onSkip }) => 
               <div className="space-y-6">
                 {formData.experiences.map((exp, idx) => (
                   <div key={idx} className="space-y-2.5 border-b border-slate-100 dark:border-slate-800 pb-5 last:border-0 last:pb-0">
-                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-1">Expérience #{idx + 1}</label>
+                    <label className="input-label">Expérience #{idx + 1}</label>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                       <input
                         type="text"
                         placeholder="Poste (ex : Développeur)"
-                        className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-2xl outline-none focus:ring-2 focus:ring-[#7D5CFF] transition-all font-bold text-sm"
+                        className="input-pro"
                         value={exp.role}
                         onChange={e => updateExperience(idx, { role: e.target.value })}
                       />
                       <input
                         type="text"
                         placeholder="Entreprise"
-                        className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-2xl outline-none focus:ring-2 focus:ring-[#7D5CFF] transition-all font-bold text-sm"
+                        className="input-pro"
                         value={exp.company}
                         onChange={e => updateExperience(idx, { company: e.target.value })}
                       />
@@ -316,14 +316,14 @@ const Onboarding: React.FC<OnboardingProps> = ({ user, onComplete, onSkip }) => 
                     <input
                       type="text"
                       placeholder="Période (ex : 2021 – 2024)"
-                      className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-2xl outline-none focus:ring-2 focus:ring-[#7D5CFF] transition-all font-medium text-sm"
+                      className="input-pro"
                       value={exp.period}
                       onChange={e => updateExperience(idx, { period: e.target.value })}
                     />
                     <textarea
                       rows={2}
                       placeholder="Ce que tu y as accompli (missions, résultats)..."
-                      className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-2xl outline-none focus:ring-2 focus:ring-[#7D5CFF] transition-all font-medium text-sm resize-none"
+                      className="textarea-pro"
                       value={exp.missions}
                       onChange={e => updateExperience(idx, { missions: e.target.value })}
                     />
