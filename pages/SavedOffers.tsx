@@ -108,14 +108,14 @@ const SavedOffers: React.FC = () => {
                 {offer.matchScore ? <MatchRing score={offer.matchScore} /> : null}
               </div>
 
-              <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 mt-4 text-xs font-medium text-[#6B7280] dark:text-slate-400">
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 mt-3 text-xs font-medium text-[#6B7280] dark:text-slate-400">
                 {offer.location && <span className="flex items-center gap-1.5"><MapPin size={13} className="text-[#9CA3AF]" /> {offer.location}</span>}
                 {offer.salary && <span className="flex items-center gap-1.5"><Euro size={13} className="text-[#9CA3AF]" /> {formatSalary(offer.salary)}</span>}
                 {offer.postedDate && <span className="flex items-center gap-1.5"><Clock size={13} className="text-[#9CA3AF]" /> {offer.postedDate}</span>}
               </div>
 
               {offer.aiInsight && (
-                <div className="mt-4 surface-accent rounded-lg p-3">
+                <div className="mt-3 surface-accent rounded-lg p-3">
                   <p className="flex items-center gap-1.5 text-[11px] font-semibold text-[#7D5CFF] uppercase tracking-wide mb-1">
                     <Sparkles size={12} /> Pourquoi ça matche
                   </p>
@@ -123,7 +123,7 @@ const SavedOffers: React.FC = () => {
                 </div>
               )}
 
-              <div className="flex items-center gap-2 mt-5 pt-4 border-t border-slate-100 dark:border-slate-800">
+              <div className="flex items-center gap-2 mt-4 pt-3.5 border-t border-slate-100 dark:border-slate-800">
                 <button
                   onClick={() => navigate('/target/letter', { state: { jobTitle: offer.title, company: offer.company, targetContext: offer.aiInsight } })}
                   className="press btn btn-primary flex-1 sm:flex-none"

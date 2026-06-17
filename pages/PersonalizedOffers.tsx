@@ -195,7 +195,7 @@ const PersonalizedOffers: React.FC = () => {
                 </div>
 
                 {/* Méta en ligne */}
-                <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 mt-4 text-xs font-medium text-[#6B7280] dark:text-slate-400">
+                <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 mt-3 text-xs font-medium text-[#6B7280] dark:text-slate-400">
                   {offer.location && <span className="flex items-center gap-1.5"><MapPin size={13} className="text-[#9CA3AF]" /> {offer.location}</span>}
                   {offer.salary && <span className="flex items-center gap-1.5"><Euro size={13} className="text-[#9CA3AF]" /> {formatSalary(offer.salary)}</span>}
                   {offer.type && <span className="flex items-center gap-1.5"><Briefcase size={13} className="text-[#9CA3AF]" /> {offer.type}</span>}
@@ -204,7 +204,7 @@ const PersonalizedOffers: React.FC = () => {
 
                 {/* Encart IA */}
                 {offer.aiInsight && (
-                  <div className="mt-4 surface-accent rounded-lg p-3">
+                  <div className="mt-3 surface-accent rounded-lg p-3">
                     <p className="flex items-center gap-1.5 text-[11px] font-semibold text-[#7D5CFF] uppercase tracking-wide mb-1">
                       <Sparkles size={12} /> Pourquoi ça matche
                     </p>
@@ -214,7 +214,7 @@ const PersonalizedOffers: React.FC = () => {
 
                 {/* Tags */}
                 {offer.tags?.length > 0 && (
-                  <div className="flex flex-wrap gap-1.5 mt-4">
+                  <div className="flex flex-wrap gap-1.5 mt-3">
                     {offer.tags.map(t => (
                       <span key={t} className="px-2 py-0.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-[11px] text-[#6B7280] dark:text-slate-300 rounded-md font-medium">{t}</span>
                     ))}
@@ -222,7 +222,7 @@ const PersonalizedOffers: React.FC = () => {
                 )}
 
                 {/* Actions */}
-                <div className="flex items-center gap-2 mt-5 pt-4 border-t border-slate-100 dark:border-slate-800">
+                <div className="flex items-center gap-2 mt-4 pt-3.5 border-t border-slate-100 dark:border-slate-800">
                   <button onClick={() => navigate('/target/letter', { state: { jobTitle: offer.title, company: offer.company, targetContext: offer.aiInsight } })} className="press btn btn-primary flex-1 sm:flex-none">
                     <Edit3 size={15} /> Créer la lettre
                   </button>
