@@ -173,7 +173,7 @@ const LetterGenerator: React.FC = () => {
   };
 
   return (
-    <div className="p-6 md:p-10 max-w-6xl mx-auto space-y-10">
+    <div className="p-5 md:p-8 max-w-6xl mx-auto space-y-6">
       <header className="flex flex-col md:flex-row justify-between md:items-center gap-4">
         <p className="text-sm text-[#6B7280] dark:text-slate-400">Des lettres de motivation ciblées, écrites à partir de votre profil et de l'offre.</p>
         <ActionMenu

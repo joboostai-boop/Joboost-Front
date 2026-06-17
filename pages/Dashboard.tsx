@@ -136,7 +136,7 @@ const Dashboard: React.FC = () => {
   ];
 
   return (
-    <div className="p-6 md:p-10 max-w-6xl mx-auto space-y-8 pb-20">
+    <div className="p-5 md:p-8 max-w-6xl mx-auto space-y-8 pb-20">
       {/* Barre d'outils (le titre est porté par le hero du layout) */}
       <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <p className="text-sm text-[#6B7280] dark:text-slate-400">Statistiques calculées à partir de votre activité réelle.</p>

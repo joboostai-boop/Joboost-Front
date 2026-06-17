@@ -369,7 +369,7 @@ const Profile: React.FC<ProfileProps> = ({ user }) => {
   };
 
   return (
-    <div className="p-5 md:p-10 max-w-5xl mx-auto pb-10 space-y-5">
+    <div className="p-5 md:p-8 max-w-5xl mx-auto pb-10 space-y-5">
       {/* En-tête + progression */}
       <header className="space-y-4">
         <div className="flex items-center justify-between gap-4">

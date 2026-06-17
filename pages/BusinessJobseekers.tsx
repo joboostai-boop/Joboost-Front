@@ -184,7 +184,7 @@ const BusinessJobseekers: React.FC = () => {
             <form onSubmit={handleSearchSubmit} className="relative flex-1">
               <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
               <input
-                className="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl pl-10 pr-4 py-2.5 text-sm font-medium focus:ring-2 focus:ring-[#7D5CFF] min-h-[44px]"
+                className="input-pro pl-10 w-full"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Rechercher..."

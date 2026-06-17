@@ -149,7 +149,7 @@ const Settings: React.FC<SettingsProps> = ({ user, isDarkMode, toggleDarkMode })
         title="Paramètres"
         subtitle="Gère ton compte, tes préférences et tes notifications."
       />
-      <div className="p-5 md:p-10 max-w-5xl mx-auto space-y-6 pb-16">
+      <div className="p-5 md:p-8 max-w-5xl mx-auto space-y-6 pb-16">
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
         {/* ───────── Colonne gauche ───────── */}
