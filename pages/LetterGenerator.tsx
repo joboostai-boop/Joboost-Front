@@ -263,7 +263,7 @@ const LetterGenerator: React.FC = () => {
           </div>
 
           {/* Choix du modèle (replié par défaut pour alléger le flux) */}
-          <Collapsible collapsible={false} title="Modèle de lettre" subtitle={`Sélectionné : ${getLetterTemplate(letterTemplate).name}`}>
+          <Collapsible title="Modèle de lettre" subtitle={`Sélectionné : ${getLetterTemplate(letterTemplate).name}`}>
             <TemplateGallery
               items={LETTER_TEMPLATES.map((t) => ({ id: t.id, name: t.name, ats: t.ats, node: <t.Preview data={previewData} /> }))}
               selectedId={letterTemplate}
