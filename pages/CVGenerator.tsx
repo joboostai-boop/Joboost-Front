@@ -277,7 +277,7 @@ const CVGenerator: React.FC = () => {
         )}
 
         {/* Choix du modèle */}
-        <Collapsible title="Modèle de CV" icon={<Layout size={16} />} subtitle={`Sélectionné : ${getCvTemplate(formData.template).name}`}>
+        <Collapsible collapsible={false} title="Modèle de CV" icon={<Layout size={16} />} subtitle={`Sélectionné : ${getCvTemplate(formData.template).name}`}>
           <TemplateGallery
             items={CV_TEMPLATES.map((t) => ({ id: t.id, name: t.name, ats: t.ats, node: <t.Preview data={formData} /> }))}
             selectedId={formData.template}
@@ -286,7 +286,7 @@ const CVGenerator: React.FC = () => {
         </Collapsible>
 
         {/* Coordonnées + résumé */}
-        <Collapsible step={1} title="Coordonnées & résumé" defaultOpen bodyClassName="px-4 md:px-5 pb-5 space-y-5">
+        <Collapsible collapsible={false} step={1} title="Coordonnées & résumé" bodyClassName="px-4 md:px-5 pb-5 space-y-5">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="input-label">Nom complet</label>
@@ -323,12 +323,12 @@ const CVGenerator: React.FC = () => {
         </Collapsible>
 
         {/* Compétences */}
-        <Collapsible step={2} title="Compétences" badge={<CountBadge n={formData.skills.length} />}>
+        <Collapsible collapsible={false} step={2} title="Compétences" badge={<CountBadge n={formData.skills.length} />}>
           <SkillsEditor value={formData.skills} onChange={(skills) => setFormData({ ...formData, skills })} />
         </Collapsible>
 
         {/* Expériences */}
-        <Collapsible step={3} title="Expériences" badge={<CountBadge n={formData.experiences.length} />} bodyClassName="px-4 md:px-5 pb-5 space-y-4">
+        <Collapsible collapsible={false} step={3} title="Expériences" badge={<CountBadge n={formData.experiences.length} />} bodyClassName="px-4 md:px-5 pb-5 space-y-4">
           {formData.experiences.map((exp) => (
             <div key={exp.id} className="rounded-2xl border border-slate-200 dark:border-slate-700 p-4 space-y-3">
               <div className="flex justify-between items-center">
@@ -347,7 +347,7 @@ const CVGenerator: React.FC = () => {
         </Collapsible>
 
         {/* Formations */}
-        <Collapsible step={4} title="Formations" badge={<CountBadge n={formData.education.length} />} bodyClassName="px-4 md:px-5 pb-5 space-y-4">
+        <Collapsible collapsible={false} step={4} title="Formations" badge={<CountBadge n={formData.education.length} />} bodyClassName="px-4 md:px-5 pb-5 space-y-4">
           {formData.education.map((ed) => (
             <div key={ed.id} className="rounded-2xl border border-slate-200 dark:border-slate-700 p-4 space-y-3">
               <div className="flex justify-between items-center">

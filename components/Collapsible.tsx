@@ -12,6 +12,8 @@ interface CollapsibleProps {
   /** Pastille à droite (ex. compteur d'éléments). */
   badge?: React.ReactNode;
   defaultOpen?: boolean;
+  /** Si false : section TOUJOURS visible (pas de repli, pas de chevron). */
+  collapsible?: boolean;
   /** Padding du contenu (surchargeable). */
   bodyClassName?: string;
   className?: string;
@@ -31,11 +33,39 @@ const Collapsible: React.FC<CollapsibleProps> = ({
   subtitle,
   badge,
   defaultOpen = false,
+  collapsible = true,
   bodyClassName = 'px-4 md:px-5 pb-5',
   className = '',
   children,
 }) => {
   const [open, setOpen] = useState(defaultOpen);
+
+  const Pill = (step !== undefined || icon) ? (
+    <span className="shrink-0 w-8 h-8 rounded-lg surface-accent text-[#7D5CFF] flex items-center justify-center text-sm font-bold">
+      {icon ?? step}
+    </span>
+  ) : null;
+
+  const Heading = (
+    <>
+      {Pill}
+      <span className="flex-1 min-w-0">
+        <span className="block text-sm font-semibold text-[#111827] dark:text-white truncate">{title}</span>
+        {subtitle && <span className="block text-xs text-[#9CA3AF] truncate mt-0.5">{subtitle}</span>}
+      </span>
+      {badge}
+    </>
+  );
+
+  // Mode statique : section toujours ouverte, en-tête non cliquable.
+  if (!collapsible) {
+    return (
+      <div className={`surface overflow-hidden ${className}`}>
+        <div className="flex items-center gap-3 px-4 md:px-5 pt-4 md:pt-5 pb-3">{Heading}</div>
+        <div className={bodyClassName}>{children}</div>
+      </div>
+    );
+  }
 
   return (
     <div className={`surface overflow-hidden ${className}`}>
@@ -45,16 +75,7 @@ const Collapsible: React.FC<CollapsibleProps> = ({
         aria-expanded={open}
         className="press w-full flex items-center gap-3 p-4 md:p-5 text-left outline-none focus-visible:ring-2 focus-visible:ring-[#7D5CFF]/40"
       >
-        {(step !== undefined || icon) && (
-          <span className="shrink-0 w-8 h-8 rounded-lg surface-accent text-[#7D5CFF] flex items-center justify-center text-sm font-bold">
-            {icon ?? step}
-          </span>
-        )}
-        <span className="flex-1 min-w-0">
-          <span className="block text-sm font-semibold text-[#111827] dark:text-white truncate">{title}</span>
-          {subtitle && <span className="block text-xs text-[#9CA3AF] truncate mt-0.5">{subtitle}</span>}
-        </span>
-        {badge}
+        {Heading}
         <ChevronDown
           size={18}
           className={`shrink-0 text-[#9CA3AF] transition-transform duration-300 ${open ? 'rotate-180' : ''}`}
