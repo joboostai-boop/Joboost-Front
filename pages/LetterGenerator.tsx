@@ -149,24 +149,26 @@ const LetterGenerator: React.FC = () => {
   const SelectedLetterPreview = getLetterTemplate(letterTemplate).Preview;
 
   const handleExportPDF = async () => {
+    if (!generatedText.trim()) { toast.error("Ta lettre est vide : génère-la ou écris-la d'abord."); return; }
     setExporting(true);
     try {
       await exportLetterPdf(letterData());
       toast.success("Lettre PDF (ATS) téléchargée !");
-    } catch (e) {
-      console.error(e);
-      toast.error("Erreur lors de l'export PDF.");
+    } catch (e: any) {
+      console.error('Export PDF lettre:', e);
+      toast.error(`Erreur export PDF : ${e?.message || e}`);
     } finally { setExporting(false); }
   };
 
   const handleExportDocx = async () => {
+    if (!generatedText.trim()) { toast.error("Ta lettre est vide : génère-la ou écris-la d'abord."); return; }
     setExporting(true);
     try {
       await exportLetterDocx(letterData());
       toast.success("Lettre Word (.docx) téléchargée !");
-    } catch (e) {
-      console.error(e);
-      toast.error("Erreur lors de l'export Word.");
+    } catch (e: any) {
+      console.error('Export Word lettre:', e);
+      toast.error(`Erreur export Word : ${e?.message || e}`);
     } finally { setExporting(false); }
   };
 
@@ -254,10 +256,10 @@ const LetterGenerator: React.FC = () => {
         <div className="lg:col-span-8 space-y-5">
           {/* Actions (export quand une lettre existe) */}
           <div className="flex flex-wrap justify-end gap-2">
-            <button onClick={handleExportPDF} disabled={exporting || !generatedText} className="press btn btn-primary disabled:opacity-50">
+            <button onClick={handleExportPDF} disabled={exporting} className="press btn btn-primary disabled:opacity-50">
               {exporting ? <RefreshCw size={14} className="animate-spin" /> : <FileDown size={14} />} PDF
             </button>
-            <button onClick={handleExportDocx} disabled={exporting || !generatedText} className="press btn btn-secondary text-[#7D5CFF] disabled:opacity-50">
+            <button onClick={handleExportDocx} disabled={exporting} className="press btn btn-secondary text-[#7D5CFF] disabled:opacity-50">
               {exporting ? <RefreshCw size={14} className="animate-spin" /> : <FileDown size={14} />} Word
             </button>
           </div>

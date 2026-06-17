@@ -404,8 +404,9 @@ const Profile: React.FC<ProfileProps> = ({ user }) => {
         </div>
       </header>
 
-      {/* Sections du profil — masonry 2 colonnes sur PC pour exploiter la largeur */}
-      <div className="lg:columns-2 lg:gap-5 [&>*]:mb-5 [&>*]:break-inside-avoid">
+      {/* Sections du profil — colonne unique : tout aligné verticalement (lisible,
+          régulier), au lieu d'une mosaïque 2 colonnes aux hauteurs irrégulières. */}
+      <div className="space-y-4">
       {/* 1. Identité & contact */}
       <Section id="identity" title="Identité & contact" icon={<UserIcon size={18} />} badge="Essentiel"
         open={open === 'identity'} onToggle={() => toggle('identity')}
