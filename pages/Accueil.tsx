@@ -9,7 +9,7 @@ import CountUp from '../components/CountUp';
 import StatCard, { StatTone } from '../components/StatCard';
 import {
   UserRound, Send, LineChart, Plus, ArrowRight,
-  FileText, Search, Bell, Loader2, Clock, CalendarCheck, Award, PenLine, Sparkles, Check
+  FileText, Search, Bell, Loader2, Clock, CalendarCheck, Award, PenLine, Sparkles
 } from 'lucide-react';
 
 interface AccueilProps {
@@ -68,21 +68,6 @@ const getNextAction = (stats: DashboardStats | null) => {
   return { to: '/target/offers', icon: <Plus size={22} strokeWidth={2.5} />, title: 'Trouve de nouvelles offres', desc: 'Continue sur ta lancée, vise plus large.' };
 };
 
-// Étapes de démarrage (onboarding du nouveau compte) — chaque étape est « faite »
-// dès que la donnée réelle correspondante existe. Donne un cap à un compte vide.
-const getStartupSteps = (stats: DashboardStats | null) => {
-  const profileDone = (stats?.profileCompletion ?? 0) >= 60;
-  const cvDone = (stats?.cvCount ?? 0) > 0;
-  const offersDone = (stats?.savedCount ?? 0) > 0 || (stats?.applications.total ?? 0) > 0;
-  const applyDone = (stats?.applications.total ?? 0) > 0;
-  return [
-    { to: '/prepare/profile', icon: <UserRound size={18} />, title: 'Complète ton profil', desc: 'La base de tous tes documents.', done: profileDone },
-    { to: '/prepare/cv', icon: <FileText size={18} />, title: 'Génère ton premier CV', desc: 'Un CV optimisé ATS en un clic.', done: cvDone },
-    { to: '/target/offers', icon: <Search size={18} />, title: 'Trouve des offres', desc: 'Des offres ciblées sur ton profil.', done: offersDone },
-    { to: '/target/offers', icon: <Send size={18} />, title: 'Postule à ta première offre', desc: "L'IA prépare ta candidature.", done: applyDone },
-  ];
-};
-
 const Accueil: React.FC<AccueilProps> = ({ user }) => {
   const firstName = user?.name?.split(' ')[0] || 'à toi';
   const [stats, setStats] = useState<DashboardStats | null>(null);
@@ -108,13 +93,7 @@ const Accueil: React.FC<AccueilProps> = ({ user }) => {
   }, []);
 
   const next = getNextAction(stats);
-
-  // Onboarding : tant que toutes les étapes ne sont pas faites, on met en avant
-  // la checklist de démarrage (et on masque les KPIs à zéro) plutôt qu'un dashboard vide.
-  const steps = getStartupSteps(stats);
-  const doneCount = steps.filter((s) => s.done).length;
-  const showOnboarding = !loading && doneCount < steps.length;
-  const onboardingPct = Math.round((doneCount / steps.length) * 100);
+  const pct = stats?.profileCompletion ?? 0;
 
   // KPIs alignés sur les statuts du suivi (mêmes couleurs que le Kanban).
   // Même composant StatCard que le Dashboard → cohérence visuelle inter-pages.
@@ -124,14 +103,6 @@ const Accueil: React.FC<AccueilProps> = ({ user }) => {
     { label: 'Entretiens', value: stats?.applications.interview ?? 0, icon: <CalendarCheck size={20} strokeWidth={2.4} />, tone: 'amber' },
     { label: 'Offres', value: stats?.applications.offer ?? 0, icon: <Award size={20} strokeWidth={2.4} />, tone: 'emerald' },
   ];
-
-  const pct = stats?.profileCompletion ?? 0;
-  // L'anneau latéral montre la progression la plus parlante selon l'état du compte :
-  // l'avancée de l'onboarding pour un compte neuf, la complétion du profil ensuite.
-  const ringPct = showOnboarding ? onboardingPct : pct;
-  const ringTo = showOnboarding ? next.to : '/prepare/profile';
-  const ringTitle = showOnboarding ? 'Démarrage' : 'Profil complété';
-  const ringSub = showOnboarding ? `${doneCount}/${steps.length} étapes faites` : (pct >= 100 ? 'Profil complet' : 'Continue à le remplir');
 
   return (
     <>
@@ -145,8 +116,7 @@ const Accueil: React.FC<AccueilProps> = ({ user }) => {
       />
 
       <div className="p-5 md:p-8 max-w-6xl mx-auto space-y-6 pb-28 md:pb-10">
-        {/* Bloc focal — toujours présent : grande carte « prochaine étape » + anneau de progression.
-            C'est le point d'accroche commun aux comptes neufs et actifs. */}
+        {/* Bloc focal : grande carte « prochaine étape » + anneau de profil. */}
         <div className="grid lg:grid-cols-3 gap-4 items-stretch">
           <Tilt glare className="lg:col-span-2 h-full" max={6}>
             <Link
@@ -172,72 +142,39 @@ const Accueil: React.FC<AccueilProps> = ({ user }) => {
 
           <Tilt max={6} className="h-full">
             <Link
-              to={ringTo}
+              to="/prepare/profile"
               className="press card-pro h-full flex flex-col items-center justify-center text-center gap-3 hover:-translate-y-0.5 animate-fade-in-up"
             >
               <div
                 className="relative w-[84px] h-[84px] rounded-full grid place-items-center"
-                style={{ background: `conic-gradient(#7D5CFF ${ringPct * 3.6}deg, rgba(125,92,255,0.15) ${ringPct * 3.6}deg)` }}
+                style={{ background: `conic-gradient(#7D5CFF ${pct * 3.6}deg, rgba(125,92,255,0.15) ${pct * 3.6}deg)` }}
               >
                 <div className="w-[64px] h-[64px] rounded-full bg-white dark:bg-[#111827] grid place-items-center text-lg font-bold text-[#111827] dark:text-white tabular-nums">
-                  {loading ? '–' : `${ringPct}%`}
+                  {loading ? '–' : `${pct}%`}
                 </div>
               </div>
               <div>
-                <p className="text-sm font-semibold text-[#111827] dark:text-white">{ringTitle}</p>
-                <p className="text-xs text-[#9CA3AF]">{ringSub}</p>
+                <p className="text-sm font-semibold text-[#111827] dark:text-white">Profil complété</p>
+                <p className="text-xs text-[#9CA3AF]">{pct >= 100 ? 'Profil complet' : 'Continue à le remplir'}</p>
               </div>
             </Link>
           </Tilt>
         </div>
 
-        {showOnboarding ? (
-          /* Compte neuf : les 4 étapes de démarrage (la progression est portée par l'anneau ci-dessus). */
-          <section className="card-pro !p-5 md:!p-6 animate-fade-in-up">
-            <p className="text-[11px] uppercase tracking-wider font-semibold text-[#7D5CFF] mb-1">Bien démarrer</p>
-            <h2 className="text-lg font-bold text-[#111827] dark:text-white mb-4">Lance ta recherche en {steps.length} étapes</h2>
-            <div className="grid sm:grid-cols-2 gap-3">
-              {steps.map((s, i) => (
-                <Link
-                  key={i}
-                  to={s.to}
-                  style={{ animationDelay: `${i * 60}ms` }}
-                  className={`press group flex items-center gap-3 rounded-xl border p-3.5 transition-all animate-fade-in-up ${
-                    s.done
-                      ? 'border-emerald-200 dark:border-emerald-500/20 bg-emerald-50/40 dark:bg-emerald-500/[0.06]'
-                      : 'border-[#ECEAF6] dark:border-[#1F2937] hover:border-[#7D5CFF]/40 hover:-translate-y-0.5 hover:shadow-card-hover'
-                  }`}
-                >
-                  <span className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${
-                    s.done ? 'bg-emerald-500 text-white' : 'surface-accent text-[#7D5CFF]'
-                  }`}>
-                    {s.done ? <Check size={18} strokeWidth={3} /> : s.icon}
-                  </span>
-                  <div className="min-w-0 flex-1">
-                    <p className={`text-sm font-semibold truncate ${s.done ? 'text-emerald-700 dark:text-emerald-400' : 'text-[#111827] dark:text-white'}`}>{s.title}</p>
-                    <p className="text-[12px] text-[#6B7280] dark:text-slate-400 truncate">{s.done ? 'Terminé' : s.desc}</p>
-                  </div>
-                  {!s.done && <ArrowRight size={16} className="shrink-0 text-[#9CA3AF] group-hover:text-[#7D5CFF] group-hover:translate-x-0.5 transition-all" />}
-                </Link>
-              ))}
-            </div>
-          </section>
-        ) : (
-          /* Compte actif : KPIs de suivi. */
-          <section className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
-            {kpis.map((k) => (
-              <Tilt key={k.label} className="h-full" max={9}>
-                <StatCard
-                  className="h-full"
-                  label={k.label}
-                  value={loading ? '–' : <CountUp value={k.value} />}
-                  icon={k.icon}
-                  tone={k.tone}
-                />
-              </Tilt>
-            ))}
-          </section>
-        )}
+        {/* KPIs de suivi */}
+        <section className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
+          {kpis.map((k) => (
+            <Tilt key={k.label} className="h-full" max={9}>
+              <StatCard
+                className="h-full"
+                label={k.label}
+                value={loading ? '–' : <CountUp value={k.value} />}
+                icon={k.icon}
+                tone={k.tone}
+              />
+            </Tilt>
+          ))}
+        </section>
 
         {/* Bento bas : parcours (large) + colonne actions rapides / astuce */}
         <div className="grid lg:grid-cols-3 gap-4 items-start">
