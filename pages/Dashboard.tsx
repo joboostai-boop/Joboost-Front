@@ -4,7 +4,7 @@ import {
 } from 'recharts';
 import {
   TrendingUp, Download, FileJson, Layers, Target, Cpu, Gauge,
-  FileText, PenLine, CheckCircle2, RefreshCw, ArrowRight
+  FileText, PenLine, RefreshCw, ArrowRight
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
@@ -277,19 +277,19 @@ const Dashboard: React.FC = () => {
           <SectionCard
             title="Complétez votre profil"
             caption="Un profil complet améliore le ciblage de l'IA."
-            action={
-              <span className="w-10 h-10 rounded-lg surface-accent text-[#7D5CFF] flex items-center justify-center">
-                <CheckCircle2 size={20} />
-              </span>
-            }
           >
-            <div className="space-y-1.5 mb-5">
-              <div className="flex justify-between text-xs font-medium">
-                <span className="text-slate-500 dark:text-slate-400">Progression</span>
-                <span className="text-[#7D5CFF] tabular-nums">{statsData.profileCompletion}%</span>
+            <div className="flex items-center gap-4 mb-5">
+              <div
+                className="relative w-16 h-16 rounded-full grid place-items-center shrink-0"
+                style={{ background: `conic-gradient(#7D5CFF ${(statsData.profileCompletion || 0) * 3.6}deg, rgba(125,92,255,0.15) ${(statsData.profileCompletion || 0) * 3.6}deg)` }}
+              >
+                <div className="w-[52px] h-[52px] rounded-full bg-white dark:bg-[#111827] grid place-items-center text-sm font-bold text-[#111827] dark:text-white tabular-nums">
+                  {statsData.profileCompletion}%
+                </div>
               </div>
-              <div className="h-2 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
-                <div className="h-full bg-[#7D5CFF] rounded-full transition-[width] duration-500" style={{ width: `${statsData.profileCompletion}%` }} />
+              <div className="min-w-0">
+                <p className="text-sm font-semibold text-[#111827] dark:text-white">{profileComplete ? 'Profil complet' : 'Profil à compléter'}</p>
+                <p className="text-xs text-slate-500 dark:text-slate-400">{profileComplete ? 'Bravo, tout est rempli !' : 'Améliore le ciblage de l\'IA.'}</p>
               </div>
             </div>
             <button onClick={() => navigate('/prepare/profile')} className="press btn btn-primary w-full">
