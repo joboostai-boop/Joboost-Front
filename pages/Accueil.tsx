@@ -121,7 +121,7 @@ const Accueil: React.FC<AccueilProps> = ({ user }) => {
           <Tilt glare className="lg:col-span-2 h-full" max={6}>
             <Link
               to={next.to}
-              className="press group relative overflow-hidden h-full min-h-[160px] flex flex-col justify-between gap-5 rounded-2xl p-6 bg-gradient-to-br from-[#8C6DFF] to-[#6D28D9] text-white shadow-card hover:shadow-card-hover hover:-translate-y-0.5 transition-all animate-fade-in-up"
+              className="press group relative overflow-hidden h-full min-h-[160px] flex flex-col justify-between gap-5 rounded-2xl p-6 bg-gradient-to-br from-[#9B7BFF] to-[#7D5CFF] text-white shadow-card hover:shadow-card-hover hover:-translate-y-0.5 transition-all animate-fade-in-up"
             >
               <span aria-hidden className="pointer-events-none absolute -right-8 -bottom-12 w-44 h-44 rounded-full bg-white/10" />
               <div className="relative flex items-start gap-4 min-w-0">
