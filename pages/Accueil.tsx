@@ -114,6 +114,7 @@ const Accueil: React.FC<AccueilProps> = ({ user }) => {
   const steps = getStartupSteps(stats);
   const doneCount = steps.filter((s) => s.done).length;
   const showOnboarding = !loading && doneCount < steps.length;
+  const onboardingPct = Math.round((doneCount / steps.length) * 100);
 
   // KPIs alignés sur les statuts du suivi (mêmes couleurs que le Kanban).
   // Même composant StatCard que le Dashboard → cohérence visuelle inter-pages.
@@ -125,6 +126,12 @@ const Accueil: React.FC<AccueilProps> = ({ user }) => {
   ];
 
   const pct = stats?.profileCompletion ?? 0;
+  // L'anneau latéral montre la progression la plus parlante selon l'état du compte :
+  // l'avancée de l'onboarding pour un compte neuf, la complétion du profil ensuite.
+  const ringPct = showOnboarding ? onboardingPct : pct;
+  const ringTo = showOnboarding ? next.to : '/prepare/profile';
+  const ringTitle = showOnboarding ? 'Démarrage' : 'Profil complété';
+  const ringSub = showOnboarding ? `${doneCount}/${steps.length} étapes faites` : (pct >= 100 ? 'Profil complet' : 'Continue à le remplir');
 
   return (
     <>
@@ -138,25 +145,57 @@ const Accueil: React.FC<AccueilProps> = ({ user }) => {
       />
 
       <div className="p-5 md:p-8 max-w-6xl mx-auto space-y-6 pb-28 md:pb-10">
-        {showOnboarding ? (
-          /* Compte neuf : parcours de démarrage guidé (remplit l'écran utilement). */
-          <section className="card-pro !p-6 animate-fade-in-up">
-            <div className="flex items-start justify-between gap-4 mb-4">
+        {/* Bloc focal — toujours présent : grande carte « prochaine étape » + anneau de progression.
+            C'est le point d'accroche commun aux comptes neufs et actifs. */}
+        <div className="grid lg:grid-cols-3 gap-4 items-stretch">
+          <Tilt glare className="lg:col-span-2 h-full" max={6}>
+            <Link
+              to={next.to}
+              className="press group relative overflow-hidden h-full min-h-[160px] flex flex-col justify-between gap-5 rounded-2xl p-6 bg-gradient-to-br from-[#8C6DFF] to-[#6D28D9] text-white shadow-card hover:shadow-card-hover hover:-translate-y-0.5 transition-all animate-fade-in-up"
+            >
+              <span aria-hidden className="pointer-events-none absolute -right-8 -bottom-12 w-44 h-44 rounded-full bg-white/10" />
+              <div className="relative flex items-start gap-4 min-w-0">
+                <span className="icon-shine w-12 h-12 rounded-xl bg-white/15 flex items-center justify-center shrink-0">
+                  {loading ? <Loader2 size={22} className="animate-spin" /> : next.icon}
+                </span>
+                <div className="min-w-0">
+                  <p className="text-[11px] uppercase tracking-wider font-semibold text-white/75">Prochaine étape</p>
+                  <p className="font-bold text-lg md:text-xl leading-snug mt-0.5">{next.title}</p>
+                  <p className="text-white/80 text-sm mt-1 max-w-md leading-relaxed">{next.desc}</p>
+                </div>
+              </div>
+              <span className="relative self-start inline-flex items-center gap-2 bg-white text-[#6D28D9] font-semibold text-sm rounded-xl px-4 py-2.5 group-hover:gap-3 transition-all">
+                Continuer <ArrowRight size={16} />
+              </span>
+            </Link>
+          </Tilt>
+
+          <Tilt max={6} className="h-full">
+            <Link
+              to={ringTo}
+              className="press card-pro h-full flex flex-col items-center justify-center text-center gap-3 hover:-translate-y-0.5 animate-fade-in-up"
+            >
+              <div
+                className="relative w-[84px] h-[84px] rounded-full grid place-items-center"
+                style={{ background: `conic-gradient(#7D5CFF ${ringPct * 3.6}deg, rgba(125,92,255,0.15) ${ringPct * 3.6}deg)` }}
+              >
+                <div className="w-[64px] h-[64px] rounded-full bg-white dark:bg-[#111827] grid place-items-center text-lg font-bold text-[#111827] dark:text-white tabular-nums">
+                  {loading ? '–' : `${ringPct}%`}
+                </div>
+              </div>
               <div>
-                <p className="text-[11px] uppercase tracking-wider font-semibold text-[#7D5CFF]">Bien démarrer</p>
-                <h2 className="text-lg font-bold text-[#111827] dark:text-white mt-0.5">Lance ta recherche en {steps.length} étapes</h2>
-                <p className="text-[13px] text-[#6B7280] dark:text-slate-400 mt-0.5">Quelques minutes pour des candidatures qui sortent du lot.</p>
+                <p className="text-sm font-semibold text-[#111827] dark:text-white">{ringTitle}</p>
+                <p className="text-xs text-[#9CA3AF]">{ringSub}</p>
               </div>
-              <div className="text-right shrink-0">
-                <p className="text-2xl font-extrabold text-[#7D5CFF] tabular-nums leading-none">{doneCount}/{steps.length}</p>
-                <p className="text-[11px] text-[#9CA3AF] mt-1">terminées</p>
-              </div>
-            </div>
+            </Link>
+          </Tilt>
+        </div>
 
-            <div className="h-2 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden mb-5">
-              <div className="bar-shine h-full rounded-full bg-gradient-to-r from-[#8C6DFF] to-[#7D5CFF] transition-[width] duration-500" style={{ width: `${(doneCount / steps.length) * 100}%` }} />
-            </div>
-
+        {showOnboarding ? (
+          /* Compte neuf : les 4 étapes de démarrage (la progression est portée par l'anneau ci-dessus). */
+          <section className="card-pro !p-5 md:!p-6 animate-fade-in-up">
+            <p className="text-[11px] uppercase tracking-wider font-semibold text-[#7D5CFF] mb-1">Bien démarrer</p>
+            <h2 className="text-lg font-bold text-[#111827] dark:text-white mb-4">Lance ta recherche en {steps.length} étapes</h2>
             <div className="grid sm:grid-cols-2 gap-3">
               {steps.map((s, i) => (
                 <Link
@@ -184,67 +223,20 @@ const Accueil: React.FC<AccueilProps> = ({ user }) => {
             </div>
           </section>
         ) : (
-          <>
-            {/* Bloc focal : prochaine action (grande carte) + profil (anneau) */}
-            <div className="grid lg:grid-cols-3 gap-4 items-stretch">
-              <Tilt glare className="lg:col-span-2 h-full" max={6}>
-                <Link
-                  to={next.to}
-                  className="press group relative overflow-hidden h-full min-h-[160px] flex flex-col justify-between gap-5 rounded-2xl p-6 bg-gradient-to-br from-[#8C6DFF] to-[#6D28D9] text-white shadow-card hover:shadow-card-hover hover:-translate-y-0.5 transition-all animate-fade-in-up"
-                >
-                  <span aria-hidden className="pointer-events-none absolute -right-8 -bottom-12 w-44 h-44 rounded-full bg-white/10" />
-                  <div className="relative flex items-start gap-4 min-w-0">
-                    <span className="icon-shine w-12 h-12 rounded-xl bg-white/15 flex items-center justify-center shrink-0">
-                      {loading ? <Loader2 size={22} className="animate-spin" /> : next.icon}
-                    </span>
-                    <div className="min-w-0">
-                      <p className="text-[11px] uppercase tracking-wider font-semibold text-white/75">Prochaine étape</p>
-                      <p className="font-bold text-lg md:text-xl leading-snug mt-0.5">{next.title}</p>
-                      <p className="text-white/80 text-sm mt-1 max-w-md leading-relaxed">{next.desc}</p>
-                    </div>
-                  </div>
-                  <span className="relative self-start inline-flex items-center gap-2 bg-white text-[#6D28D9] font-semibold text-sm rounded-xl px-4 py-2.5 group-hover:gap-3 transition-all">
-                    Continuer <ArrowRight size={16} />
-                  </span>
-                </Link>
+          /* Compte actif : KPIs de suivi. */
+          <section className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
+            {kpis.map((k) => (
+              <Tilt key={k.label} className="h-full" max={9}>
+                <StatCard
+                  className="h-full"
+                  label={k.label}
+                  value={loading ? '–' : <CountUp value={k.value} />}
+                  icon={k.icon}
+                  tone={k.tone}
+                />
               </Tilt>
-
-              <Tilt max={6} className="h-full">
-                <Link
-                  to="/prepare/profile"
-                  className="press card-pro h-full flex flex-col items-center justify-center text-center gap-3 hover:-translate-y-0.5 animate-fade-in-up"
-                >
-                  <div
-                    className="relative w-[84px] h-[84px] rounded-full grid place-items-center"
-                    style={{ background: `conic-gradient(#7D5CFF ${pct * 3.6}deg, rgba(125,92,255,0.15) ${pct * 3.6}deg)` }}
-                  >
-                    <div className="w-[64px] h-[64px] rounded-full bg-white dark:bg-[#111827] grid place-items-center text-lg font-bold text-[#111827] dark:text-white tabular-nums">
-                      {loading ? '–' : `${pct}%`}
-                    </div>
-                  </div>
-                  <div>
-                    <p className="text-sm font-semibold text-[#111827] dark:text-white">Profil complété</p>
-                    <p className="text-xs text-[#9CA3AF]">{pct >= 100 ? 'Profil complet' : 'Continue à le remplir'}</p>
-                  </div>
-                </Link>
-              </Tilt>
-            </div>
-
-            {/* KPIs — masqués sur un compte neuf (évite un mur de zéros) */}
-            <section className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
-              {kpis.map((k) => (
-                <Tilt key={k.label} className="h-full" max={9}>
-                  <StatCard
-                    className="h-full"
-                    label={k.label}
-                    value={loading ? '–' : <CountUp value={k.value} />}
-                    icon={k.icon}
-                    tone={k.tone}
-                  />
-                </Tilt>
-              ))}
-            </section>
-          </>
+            ))}
+          </section>
         )}
 
         {/* Bento bas : parcours (large) + colonne actions rapides / astuce */}
