@@ -112,19 +112,77 @@ const extractDomain = (url?: string): string | undefined => {
   }
 };
 
+// ====================================================================
+//  Géolocalisation précise — résout une localisation libre en code commune
+//  INSEE (via l'API Géo gouv, gratuite et sans clé), pour filtrer les offres
+//  France Travail par COMMUNE + RAYON au lieu du département entier.
+//  Dégradation propre : commune → département → aucun filtre.
+// ====================================================================
+const GEO_API = 'https://geo.api.gouv.fr/communes';
+
+interface ResolvedLocation { commune?: string; departement?: string }
+
+const resolveLocation = async (location: string): Promise<ResolvedLocation> => {
+  const loc = (location || '').trim();
+  if (!loc) return {};
+  const depFallback = extractDepartement(loc);
+  try {
+    // 1. Code postal explicite (5 chiffres) → commune précise
+    const cp = loc.match(/\b(\d{5})\b/);
+    if (cp) {
+      const res = await fetch(`${GEO_API}?codePostal=${cp[1]}&fields=code,nom,codeDepartement&format=json`);
+      if (res.ok) {
+        const arr: any[] = await res.json();
+        if (Array.isArray(arr) && arr.length) {
+          // Plusieurs communes peuvent partager un code postal : on privilégie celle dont
+          // le nom correspond au texte fourni, sinon la première.
+          const cityName = loc.replace(/\d/g, '').trim().toLowerCase();
+          const hit = cityName ? arr.find((c) => (c.nom || '').toLowerCase() === cityName) : undefined;
+          const chosen = hit || arr[0];
+          return { commune: chosen.code, departement: chosen.codeDepartement || depFallback };
+        }
+      }
+    }
+    // 2. Sinon, nom de ville → commune la plus peuplée portant ce nom
+    const cityName = loc.replace(/\d+/g, '').trim();
+    if (cityName.length >= 2 && cityName.toLowerCase() !== 'france') {
+      const res = await fetch(`${GEO_API}?nom=${encodeURIComponent(cityName)}&fields=code,codeDepartement&boost=population&limit=1&format=json`);
+      if (res.ok) {
+        const arr: any[] = await res.json();
+        if (Array.isArray(arr) && arr.length) {
+          return { commune: arr[0].code, departement: arr[0].codeDepartement || depFallback };
+        }
+      }
+    }
+  } catch (e: any) {
+    console.error('Résolution commune (geo.api.gouv.fr) échouée, repli département :', e?.message || e);
+  }
+  return { departement: depFallback };
+};
+
+// Applique le meilleur filtre géographique disponible aux paramètres de recherche FT.
+const applyGeoParams = async (params: URLSearchParams, location: string, distanceKm = 30): Promise<void> => {
+  const { commune, departement } = await resolveLocation(location);
+  if (commune) {
+    params.set('commune', commune);
+    params.set('distance', String(distanceKm)); // rayon en km autour de la commune
+  } else if (departement) {
+    params.set('departement', departement);
+  }
+};
+
 export const franceTravailService = {
   /**
    * Recherche de vraies offres et regroupement par entreprise recruteuse.
    * Renvoie des "cartes entreprise" pour la candidature spontanée.
    */
-  searchCompanies: async (jobTitle: string, location: string, max = 15): Promise<FtCompany[]> => {
+  searchCompanies: async (jobTitle: string, location: string, max = 15, distanceKm = 30): Promise<FtCompany[]> => {
     const token = await getFtToken();
 
     const params = new URLSearchParams();
     if (jobTitle) params.set('motsCles', jobTitle);
-    const dep = extractDepartement(location);
-    if (dep) params.set('departement', dep);
-    params.set('range', `0-${Math.max(0, max - 1)}`);
+    await applyGeoParams(params, location, distanceKm);
+    params.set('range',`0-${Math.max(0, max - 1)}`);
 
     const res = await fetch(`${SEARCH_URL}?${params.toString()}`, {
       headers: { Authorization: `Bearer ${token}`, Accept: 'application/json' },
@@ -182,14 +240,13 @@ export const franceTravailService = {
    * Recherche de vraies offres d'emploi (alimente "Offres pour moi").
    * Renvoie chaque offre individuellement, mappée au format attendu par le front.
    */
-  searchOffers: async (jobTitle: string, location: string, max = 15): Promise<FtOffer[]> => {
+  searchOffers: async (jobTitle: string, location: string, max = 15, distanceKm = 30): Promise<FtOffer[]> => {
     const token = await getFtToken();
 
     const params = new URLSearchParams();
     if (jobTitle) params.set('motsCles', jobTitle);
-    const dep = extractDepartement(location);
-    if (dep) params.set('departement', dep);
-    params.set('range', `0-${Math.max(0, max - 1)}`);
+    await applyGeoParams(params, location, distanceKm);
+    params.set('range',`0-${Math.max(0, max - 1)}`);
 
     const res = await fetch(`${SEARCH_URL}?${params.toString()}`, {
       headers: { Authorization: `Bearer ${token}`, Accept: 'application/json' },
@@ -223,8 +280,9 @@ export const franceTravailService = {
         location: o?.lieuTravail?.libelle || location || 'France',
         salary: o?.salaire?.libelle?.trim() || 'Salaire non précisé',
         type: o?.typeContratLibelle || o?.natureContrat || 'Contrat à préciser',
-        // FT renvoie les résultats par pertinence : on dérive un score décroissant 96 → 70.
-        matchScore: Math.max(70, 96 - index * 3),
+        // FT renvoie les résultats par pertinence : on dérive un score décroissant et étalé
+        // (96 → ~62) pour rester lisible même avec beaucoup d'offres.
+        matchScore: Math.round(Math.max(62, 96 - index * 1.1)),
         postedDate: relativeDate(o?.dateCreation),
         source: 'France Travail',
         url: o?.origineOffre?.urlOrigine || '',
@@ -238,13 +296,12 @@ export const franceTravailService = {
    * Résout le code ROME dominant pour un métier + lieu via l'API Offres (déjà autorisée).
    * Sert d'entrée à La Bonne Boîte (qui exige un code ROME, pas du texte libre).
    */
-  resolveRomeCode: async (jobTitle: string, location: string): Promise<string | undefined> => {
+  resolveRomeCode: async (jobTitle: string, location: string, distanceKm = 30): Promise<string | undefined> => {
     const token = await getFtToken();
     const params = new URLSearchParams();
     if (jobTitle) params.set('motsCles', jobTitle);
-    const dep = extractDepartement(location);
-    if (dep) params.set('departement', dep);
-    params.set('range', '0-24');
+    await applyGeoParams(params, location, distanceKm);
+    params.set('range','0-24');
 
     const res = await fetch(`${SEARCH_URL}?${params.toString()}`, {
       headers: { Authorization: `Bearer ${token}`, Accept: 'application/json' },

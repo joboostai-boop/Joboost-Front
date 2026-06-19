@@ -12,11 +12,15 @@ export const opportunityController = {
 
       const title = user.title || 'Développeur';
       const city = user.city || 'Paris';
+      // Localisation précise = ville + code postal du profil (évite de filtrer tout un département).
+      const location = [user.city, (user as any).postalCode].filter(Boolean).join(' ').trim() || city;
+      // Rayon de recherche en km (paramétrable depuis l'UI ; défaut 30).
+      const distance = Math.min(150, Math.max(5, parseInt(req.query.distance as string) || 30));
 
       // 1. Vraies offres France Travail si les identifiants sont configurés.
       if (isFranceTravailConfigured()) {
         try {
-          const real = await franceTravailService.searchOffers(title, city);
+          const real = await franceTravailService.searchOffers(title, location, 50, distance);
           if (real.length > 0) {
             return res.json({ success: true, source: 'francetravail', recommendations: real });
           }

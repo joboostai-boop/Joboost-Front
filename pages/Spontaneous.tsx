@@ -62,6 +62,7 @@ const Spontaneous: React.FC = () => {
   const { user } = useAuth();
   const [jobTitle, setJobTitle] = useState('');
   const [location, setLocation] = useState('');
+  const [radius, setRadius] = useState(30); // rayon de recherche en km
   const [loading, setLoading] = useState(false);
   const [loadingInit, setLoadingInit] = useState(true);
   const [companies, setCompanies] = useState<CompanyResult[]>([]);
@@ -74,7 +75,8 @@ const Spontaneous: React.FC = () => {
   useEffect(() => {
     if (user) {
       setJobTitle(user.title || '');
-      setLocation(user.city || '');
+      // Ville fixe : reprend automatiquement ville + code postal du profil (plus besoin de retaper).
+      setLocation([user.city, (user as any).postalCode].filter(Boolean).join(' ') || '');
       setLoadingInit(false);
     }
   }, [user]);
@@ -87,7 +89,7 @@ const Spontaneous: React.FC = () => {
     }
     setLoading(true);
     try {
-      const res = await fetch(`${API}/api/lbb/search?jobTitle=${encodeURIComponent(jobTitle)}&location=${encodeURIComponent(location)}`, { credentials: 'include', headers: { ...authHeaders() } });
+      const res = await fetch(`${API}/api/lbb/search?jobTitle=${encodeURIComponent(jobTitle)}&location=${encodeURIComponent(location)}&distance=${radius}`, { credentials: 'include', headers: { ...authHeaders() } });
       const data = await res.json();
       if (data.success) {
         const results: CompanyResult[] = data.results;
@@ -191,19 +193,30 @@ const Spontaneous: React.FC = () => {
     <div className="p-5 md:p-8 max-w-6xl mx-auto space-y-6">
       <form onSubmit={handleSearch} className="surface p-5 md:p-6">
         <h3 className="text-sm font-semibold text-[#111827] dark:text-white mb-4">Critères de ciblage</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
-            <label className="input-label">Métier Ciblé</label>
+            <label className="input-label">Métier ciblé</label>
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-[#9CA3AF]" size={16} />
               <input type="text" value={jobTitle} onChange={(e) => setJobTitle(e.target.value)} disabled={loadingInit} className="input-pro pl-10" placeholder="Ex: Développeur React" />
             </div>
           </div>
           <div>
-            <label className="input-label">Localisation ciblée</label>
+            <label className="input-label">Localisation <span className="font-normal text-[#9CA3AF]">· depuis ton profil</span></label>
             <div className="relative">
               <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 text-[#9CA3AF]" size={16} />
-              <input type="text" value={location} onChange={(e) => setLocation(e.target.value)} disabled={loadingInit} className="input-pro pl-10" placeholder="Ex: Paris 75" />
+              <input type="text" value={location} onChange={(e) => setLocation(e.target.value)} disabled={loadingInit} className="input-pro pl-10" placeholder="Ex: Magnanville 78200" />
+            </div>
+          </div>
+          <div>
+            <label className="input-label">Rayon de recherche</label>
+            <div className="relative">
+              <Navigation className="absolute left-3 top-1/2 -translate-y-1/2 text-[#9CA3AF]" size={16} />
+              <select value={radius} onChange={(e) => setRadius(Number(e.target.value))} disabled={loadingInit} className="input-pro pl-10 appearance-none cursor-pointer">
+                {[10, 20, 30, 50, 100].map((km) => (
+                  <option key={km} value={km}>{km} km autour de la ville</option>
+                ))}
+              </select>
             </div>
           </div>
         </div>

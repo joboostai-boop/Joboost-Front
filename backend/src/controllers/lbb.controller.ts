@@ -87,6 +87,8 @@ export const lbbController = {
   searchCompanies: async (req: Request, res: Response) => {
     const targetTitle = (req.query.jobTitle as string) || 'Développeur';
     const targetLocation = (req.query.location as string) || 'Paris';
+    // Rayon de recherche en km (paramétrable depuis l'UI ; défaut 30, borné 5–150).
+    const distanceKm = Math.min(150, Math.max(5, parseInt(req.query.distance as string) || 30));
 
     try {
       if (isFranceTravailConfigured()) {
@@ -98,7 +100,7 @@ export const lbbController = {
             geocodeLocation(targetLocation),
           ]);
           if (romeCode && geo) {
-            const lbb = await laBonneBoiteService.searchHiringCompanies(romeCode, geo, targetTitle);
+            const lbb = await laBonneBoiteService.searchHiringCompanies(romeCode, geo, targetTitle, distanceKm);
             if (lbb.length > 0) {
               const results = await enrichWithScoring(req.userId!, lbb, 'francetravail');
               return res.json({ success: true, source: 'labonneboite', results });
@@ -111,7 +113,7 @@ export const lbbController = {
 
         // 2. Repli : entreprises déduites des offres France Travail (regroupées par recruteur).
         try {
-          const real = await franceTravailService.searchCompanies(targetTitle, targetLocation);
+          const real = await franceTravailService.searchCompanies(targetTitle, targetLocation, 15, distanceKm);
           if (real.length > 0) {
             const results = await enrichWithScoring(req.userId!, real, 'francetravail');
             return res.json({ success: true, source: 'francetravail', results });

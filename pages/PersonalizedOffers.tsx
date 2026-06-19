@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search, MapPin, Bookmark, Clock, Edit3, ExternalLink, Briefcase, Euro, Sparkles, Inbox } from 'lucide-react';
+import { Search, MapPin, Bookmark, Clock, Edit3, ExternalLink, Briefcase, Euro, Sparkles, Inbox, Navigation } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
 import { authHeaders } from '../services/authToken';
@@ -50,12 +50,14 @@ const PersonalizedOffers: React.FC = () => {
   const [savedOffers, setSavedOffers] = useState<any[]>([]);
   const [source, setSource] = useState<'francetravail' | 'demo' | null>(null);
   const [query, setQuery] = useState('');
+  const [radius, setRadius] = useState(30); // rayon de recherche en km
 
   useEffect(() => {
     const fetchData = async () => {
+      setLoading(true);
       try {
         const [recRes, savedRes] = await Promise.all([
-          fetch(`${import.meta.env.VITE_API_URL || ''}/api/opportunities/recommendations`, { credentials: 'include', headers: { ...authHeaders() } }),
+          fetch(`${import.meta.env.VITE_API_URL || ''}/api/opportunities/recommendations?distance=${radius}`, { credentials: 'include', headers: { ...authHeaders() } }),
           fetch(`${import.meta.env.VITE_API_URL || ''}/api/opportunities/saved`, { credentials: 'include', headers: { ...authHeaders() } })
         ]);
 
@@ -77,7 +79,7 @@ const PersonalizedOffers: React.FC = () => {
       }
     };
     fetchData();
-  }, []);
+  }, [radius]);
 
   const getSavedId = (offer: JobOffer) => {
     const found = savedOffers.find(s => s.title === offer.title && s.company === offer.company);
@@ -145,15 +147,30 @@ const PersonalizedOffers: React.FC = () => {
               : `${offers.length} offres réelles France Travail, sourcées selon votre profil.`}
         </p>
 
-        <div className="relative w-full md:w-72">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-[#9CA3AF]" size={16} />
-          <input
-            type="text"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Rechercher par métier, ville…"
-            className="input-pro pl-10 w-full"
-          />
+        <div className="flex flex-col sm:flex-row items-stretch gap-2 w-full md:w-auto">
+          <div className="relative shrink-0">
+            <Navigation className="absolute left-3 top-1/2 -translate-y-1/2 text-[#9CA3AF]" size={16} />
+            <select
+              value={radius}
+              onChange={(e) => setRadius(Number(e.target.value))}
+              title="Rayon de recherche autour de ta ville"
+              className="input-pro pl-9 pr-8 appearance-none cursor-pointer w-full sm:w-auto"
+            >
+              {[10, 20, 30, 50, 100].map((km) => (
+                <option key={km} value={km}>{km} km</option>
+              ))}
+            </select>
+          </div>
+          <div className="relative w-full sm:w-64">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-[#9CA3AF]" size={16} />
+            <input
+              type="text"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Rechercher par métier, ville…"
+              className="input-pro pl-10 w-full"
+            />
+          </div>
         </div>
       </header>
 
