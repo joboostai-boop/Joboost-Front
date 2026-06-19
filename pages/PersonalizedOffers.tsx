@@ -195,8 +195,13 @@ const PersonalizedOffers: React.FC = () => {
               <article
                 key={offer.id || index}
                 style={{ animationDelay: `${Math.min(index, 6) * 50}ms` }}
-                className="surface p-5 hover:shadow-card-hover hover:-translate-y-0.5 transition-all duration-200 animate-fade-in-up"
+                className={`surface p-5 hover:shadow-card-hover hover:-translate-y-0.5 transition-all duration-200 animate-fade-in-up ${index === 0 ? 'ring-2 ring-[#7D5CFF]/25' : ''}`}
               >
+                {index === 0 && (
+                  <div className="inline-flex items-center gap-1.5 mb-3 px-2.5 py-1 rounded-full bg-[#F3F0FF] dark:bg-[#7D5CFF]/10 text-[#7D5CFF] text-[11px] font-bold uppercase tracking-wide border border-[#7D5CFF]/20">
+                    <Sparkles size={12} /> Meilleur match
+                  </div>
+                )}
                 {/* Tête : entreprise + titre + jauge */}
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex items-start gap-3 min-w-0">
