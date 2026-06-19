@@ -370,37 +370,40 @@ const Profile: React.FC<ProfileProps> = ({ user }) => {
 
   return (
     <div className="p-5 md:p-8 max-w-5xl mx-auto pb-10 space-y-5">
-      {/* En-tête : avatar entouré de l'anneau de complétion (cohérent Accueil/Dashboard) */}
-      <header className="flex items-center justify-between gap-4">
-        <div className="flex items-center gap-4 min-w-0">
-          <div
-            className="relative w-16 h-16 rounded-full grid place-items-center shrink-0"
-            style={{ background: `conic-gradient(#7D5CFF ${completion * 3.6}deg, rgba(125,92,255,0.15) ${completion * 3.6}deg)` }}
-            title={`Profil complété à ${completion}%`}
-          >
-            <div className="w-14 h-14 rounded-full bg-[#F3F4F6] dark:bg-[#1F2937] flex items-center justify-center text-xl font-bold text-[#7D5CFF] overflow-hidden border-2 border-white dark:border-[#111827] shadow-sm">
-              {user.photoUrl ? <img src={user.photoUrl} alt={user.name} className="w-full h-full object-cover" referrerPolicy="no-referrer" /> : <span>{(f.firstName || '?').charAt(0).toUpperCase()}</span>}
+      {/* En-tête focal : carte avec avatar entouré de l'anneau de complétion (cohérent Accueil/Dashboard) */}
+      <section className="card-pro !p-5 md:!p-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="flex items-center gap-4 min-w-0">
+            <div
+              className="relative w-20 h-20 rounded-full grid place-items-center shrink-0"
+              style={{ background: `conic-gradient(#7D5CFF ${completion * 3.6}deg, rgba(125,92,255,0.15) ${completion * 3.6}deg)` }}
+              title={`Profil complété à ${completion}%`}
+            >
+              <div className="w-[68px] h-[68px] rounded-full bg-[#F3F4F6] dark:bg-[#1F2937] flex items-center justify-center text-2xl font-bold text-[#7D5CFF] overflow-hidden border-2 border-white dark:border-[#111827] shadow-sm">
+                {user.photoUrl ? <img src={user.photoUrl} alt={user.name} className="w-full h-full object-cover" referrerPolicy="no-referrer" /> : <span>{(f.firstName || '?').charAt(0).toUpperCase()}</span>}
+              </div>
+            </div>
+            <div className="min-w-0">
+              <h2 className="text-xl font-bold tracking-tight text-[#111827] dark:text-white truncate">{[f.firstName, f.lastName].filter(Boolean).join(' ') || 'Mon profil'}</h2>
+              <p className="text-sm text-[#6B7280] dark:text-slate-400 truncate">{f.title || 'Plus ton profil est complet, meilleurs sont tes CV et lettres.'}</p>
+              <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 mt-1.5 text-xs font-semibold">
+                <span className="text-[#7D5CFF] tabular-nums">Profil complété à {completion}%</span>
+                {completion < 100 && <span className="text-[#9CA3AF] font-medium">· termine-le pour de meilleurs CV &amp; lettres</span>}
+              </div>
             </div>
           </div>
-          <div className="min-w-0">
-            <h2 className="text-xl font-bold tracking-tight text-[#111827] dark:text-white truncate">{[f.firstName, f.lastName].filter(Boolean).join(' ') || 'Mon profil'}</h2>
-            <p className="text-sm text-[#6B7280] dark:text-slate-400 truncate">{f.title || 'Plus ton profil est complet, meilleurs sont tes CV et lettres.'}</p>
-            <p className="text-xs font-semibold mt-0.5">
-              <span className="text-[#6B7280] dark:text-slate-400">Profil complété</span> <span className="text-[#7D5CFF] tabular-nums">{completion}%</span>
-            </p>
+          <div className="flex items-center gap-2 shrink-0">
+            <input type="file" ref={fileInputRef} accept=".pdf,.doc,.docx" className="hidden" onChange={handleImportCv} />
+            <button onClick={() => fileInputRef.current?.click()} disabled={importing} className="press btn btn-secondary text-[#7D5CFF] disabled:opacity-60 flex-1 sm:flex-none">
+              {importing ? <RefreshCw size={16} className="animate-spin" /> : <Upload size={16} />}
+              <span>Importer mon CV</span>
+            </button>
+            <button onClick={connectLinkedIn} className="btn btn-secondary !border-[#0A66C2] !text-[#0A66C2] hover:!bg-[#0A66C2]/5 flex-1 sm:flex-none">
+              <Linkedin size={16} /> LinkedIn
+            </button>
           </div>
         </div>
-        <div className="flex items-center gap-2 shrink-0">
-          <input type="file" ref={fileInputRef} accept=".pdf,.doc,.docx" className="hidden" onChange={handleImportCv} />
-          <button onClick={() => fileInputRef.current?.click()} disabled={importing} className="press btn btn-secondary text-[#7D5CFF] disabled:opacity-60">
-            {importing ? <RefreshCw size={16} className="animate-spin" /> : <Upload size={16} />}
-            <span className="hidden sm:inline">Importer mon CV</span>
-          </button>
-          <button onClick={connectLinkedIn} className="btn btn-secondary !border-[#0A66C2] !text-[#0A66C2] hover:!bg-[#0A66C2]/5 hidden sm:flex">
-            <Linkedin size={16} /> LinkedIn
-          </button>
-        </div>
-      </header>
+      </section>
 
       {/* Sections du profil — colonne unique : tout aligné verticalement (lisible,
           régulier), au lieu d'une mosaïque 2 colonnes aux hauteurs irrégulières. */}
