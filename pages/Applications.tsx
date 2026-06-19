@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Building2, Calendar, Search, RefreshCw, Inbox, ArrowRight, Navigation } from 'lucide-react';
+import { Building2, Calendar, Search, RefreshCw, Inbox, ArrowRight, Navigation, Briefcase, Send, CalendarCheck, Award } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
 import { authHeaders } from '../services/authToken';
 import EmptyState from '../components/EmptyState';
+import StatCard from '../components/StatCard';
 
 interface Application {
   id: string;
@@ -164,6 +165,16 @@ const Applications: React.FC = () => {
           </button>
         </div>
       </header>
+
+      {/* Synthèse — funnel des candidatures (cohérent avec l'Accueil / Dashboard) */}
+      {(loading || total > 0) && (
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
+          <StatCard label="Candidatures" value={loading ? '–' : total} icon={<Briefcase size={20} strokeWidth={2.4} />} tone="violet" />
+          <StatCard label="Envoyées" value={loading ? '–' : applications.filter((a) => a.status === 'SENT').length} icon={<Send size={20} strokeWidth={2.4} />} tone="blue" />
+          <StatCard label="Entretiens" value={loading ? '–' : applications.filter((a) => a.status === 'INTERVIEW').length} icon={<CalendarCheck size={20} strokeWidth={2.4} />} tone="amber" />
+          <StatCard label="Offres" value={loading ? '–' : applications.filter((a) => a.status === 'OFFER').length} icon={<Award size={20} strokeWidth={2.4} />} tone="emerald" />
+        </div>
+      )}
 
       {/* Tableau Kanban — masqué tant qu'aucune candidature (l'état vide illustré prend le relais) */}
       {(loading || total > 0) && (
