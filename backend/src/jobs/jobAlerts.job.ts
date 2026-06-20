@@ -21,9 +21,13 @@ export interface JobAlertReport {
   candidates: number;
   due: number;
   sent: number;
+  nothingNew: number;
   skipped: number;
   failed: number;
 }
+
+// On ne garde qu'un historique borné d'ids d'offres déjà envoyées (évite une croissance infinie).
+const MAX_SEEN_IDS = 300;
 
 // Fréquence respectée : on tolère une petite marge pour ne pas rater un passage.
 const isDue = (frequency: string | null, lastSentAt: Date | null): boolean => {
@@ -45,7 +49,7 @@ const dedupe = (offers: FtOffer[]): FtOffer[] => {
 };
 
 export const runJobAlertsJob = async (): Promise<JobAlertReport> => {
-  const report: JobAlertReport = { candidates: 0, due: 0, sent: 0, skipped: 0, failed: 0 };
+  const report: JobAlertReport = { candidates: 0, due: 0, sent: 0, nothingNew: 0, skipped: 0, failed: 0 };
 
   if (!isEmailConfigured() || (!isFranceTravailConfigured() && !isAdzunaConfigured())) {
     return report; // rien à faire sans email ni source d'offres
@@ -75,15 +79,21 @@ export const runJobAlertsJob = async (): Promise<JobAlertReport> => {
         tasks.push(adzunaService.searchOffers(title, location, 15, 30).catch(() => [] as FtOffer[]));
       }
       const merged = dedupe((await Promise.all(tasks)).flat())
-        .sort((a, b) => b.matchScore - a.matchScore)
-        .slice(0, 8);
+        .sort((a, b) => b.matchScore - a.matchScore);
 
-      if (merged.length === 0) {
-        report.skipped++;
+      // V2 : on ne garde QUE les offres jamais envoyées à cet utilisateur.
+      const seen = new Set(user.jobAlertSeenIds || []);
+      const fresh = merged.filter((o) => o.id && !seen.has(o.id)).slice(0, 8);
+
+      // On marque ce passage comme traité dans tous les cas → respecte la fréquence
+      // (pas de nouvelle interrogation avant le prochain créneau quotidien/hebdo).
+      if (fresh.length === 0) {
+        await prisma.user.update({ where: { id: user.id }, data: { jobAlertLastSentAt: new Date() } });
+        report.nothingNew++;
         continue;
       }
 
-      const offers: JobAlertOffer[] = merged.map((o) => ({
+      const offers: JobAlertOffer[] = fresh.map((o) => ({
         title: o.title, company: o.company, location: o.location, salary: o.salary, type: o.type, url: o.url,
       }));
 
@@ -99,9 +109,11 @@ export const runJobAlertsJob = async (): Promise<JobAlertReport> => {
         continue; // on retentera au prochain passage (jobAlertLastSentAt inchangé)
       }
 
+      // Ajoute les offres envoyées à l'historique (borné aux MAX_SEEN_IDS plus récentes).
+      const updatedSeen = [...fresh.map((o) => o.id), ...(user.jobAlertSeenIds || [])].slice(0, MAX_SEEN_IDS);
       await prisma.user.update({
         where: { id: user.id },
-        data: { jobAlertLastSentAt: new Date() },
+        data: { jobAlertLastSentAt: new Date(), jobAlertSeenIds: updatedSeen },
       });
       report.sent++;
     } catch (e: any) {

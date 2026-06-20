@@ -139,12 +139,12 @@ export const emailService = {
       </td></tr>`;
     }).join('');
 
-    const freqLabel = params.frequency === 'weekly' ? 'cette semaine' : "aujourd'hui";
+    const n = params.offers.length;
     const html = `<!doctype html><html><body style="font-family:Arial,Helvetica,sans-serif;background:#F8FAFC;padding:16px;">
       <div style="max-width:560px;margin:0 auto;background:#fff;border-radius:16px;padding:24px;">
         <div style="font-size:20px;font-weight:800;color:#111827;margin-bottom:4px;">Jo<span style="color:#7D5CFF;">Boost</span></div>
         <p style="color:#111827;font-size:15px;">Bonjour ${params.name.split(' ')[0] || ''},</p>
-        <p style="color:#4B5563;font-size:14px;line-height:1.5;">Voici une sélection d'offres qui correspondent à votre profil ${freqLabel} :</p>
+        <p style="color:#4B5563;font-size:14px;line-height:1.5;">${n > 1 ? `${n} nouvelles offres correspondent` : 'Une nouvelle offre correspond'} à votre profil :</p>
         <table role="presentation" style="width:100%;border-collapse:separate;">${cards}</table>
         <a href="${APP_URL}/target/lbb" style="display:inline-block;margin-top:8px;background:#7D5CFF;color:#fff;padding:10px 18px;border-radius:10px;text-decoration:none;font-weight:bold;font-size:14px;">Voir toutes les offres</a>
         <hr style="border:none;border-top:1px solid #E5E7EB;margin:20px 0;"/>
@@ -152,7 +152,7 @@ export const emailService = {
       </div>
     </body></html>`;
 
-    const subject = `${params.offers.length} offre${params.offers.length > 1 ? 's' : ''} pour vous — JobBoost`;
+    const subject = `${params.offers.length} nouvelle${params.offers.length > 1 ? 's' : ''} offre${params.offers.length > 1 ? 's' : ''} pour vous — JobBoost`;
     const payload = {
       from: `JobBoost <${EMAIL_FROM}>`,
       to: [params.to],

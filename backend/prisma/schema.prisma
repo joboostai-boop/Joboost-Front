@@ -82,7 +82,8 @@ model User {
   // Alertes emploi par email (opt-in) — voir jobs/jobAlerts.job.ts
   jobAlertOptIn      Boolean   @default(false) // l'utilisateur veut recevoir des offres par email
   jobAlertFrequency  String?   // 'daily' | 'weekly'
-  jobAlertLastSentAt DateTime? // dernier envoi d'alerte (sert à respecter la fréquence)
+  jobAlertLastSentAt DateTime? // dernier passage traité (sert à respecter la fréquence)
+  jobAlertSeenIds    String[]  @default([]) // ids d'offres déjà envoyées (évite les doublons d'une alerte à l'autre)
   
   // Utilisation de JSON pour des arrays d'objets complexes (facilite la flexibilité noSQL dans un modèle relationnel)
   experiences       Json?    @default("[]")
