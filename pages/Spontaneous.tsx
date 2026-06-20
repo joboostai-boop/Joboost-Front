@@ -6,6 +6,7 @@ import { useAuth } from '../context/AuthContext';
 import { authHeaders } from '../services/authToken';
 import MatchRing from '../components/MatchRing';
 import EmptyState from '../components/EmptyState';
+import RadiusSelect from '../components/RadiusSelect';
 
 type AutoLevel = 'AUTO_SAFE' | 'AUTO_REVIEW' | 'NO_SEND';
 
@@ -208,17 +209,7 @@ const Spontaneous: React.FC = () => {
               <input type="text" value={location} onChange={(e) => setLocation(e.target.value)} disabled={loadingInit} className="input-pro pl-10" placeholder="Ex: Magnanville 78200" />
             </div>
           </div>
-          <div>
-            <label className="input-label">Rayon de recherche</label>
-            <div className="relative">
-              <Navigation className="absolute left-3 top-1/2 -translate-y-1/2 text-[#9CA3AF]" size={16} />
-              <select value={radius} onChange={(e) => setRadius(Number(e.target.value))} disabled={loadingInit} className="input-pro pl-10 appearance-none cursor-pointer">
-                {[10, 20, 30, 50, 100].map((km) => (
-                  <option key={km} value={km}>{km} km autour de la ville</option>
-                ))}
-              </select>
-            </div>
-          </div>
+          <RadiusSelect value={radius} onChange={setRadius} disabled={loadingInit} />
         </div>
         <button type="submit" disabled={loading || loadingInit} className="btn btn-primary btn-lg w-full mt-6">
           {loading ? <Zap className="animate-spin" size={18} /> : <Target size={18} />}
