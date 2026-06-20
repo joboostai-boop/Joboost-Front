@@ -54,24 +54,20 @@ const PageHero: React.FC<PageHeroProps> = ({
   maxWidth = 'max-w-6xl',
   className = '',
 }) => (
-  <div className={`relative ${maxWidth} mx-auto px-5 md:px-8 pt-8 md:pt-10 pb-4 animate-fade-in-up ${className}`}>
+  <div className={`relative w-full ${maxWidth} mx-auto px-5 md:px-8 pt-8 md:pt-10 pb-4 animate-fade-in-up ${className}`}>
     {decor}
     <div className="relative z-10 flex flex-col md:flex-row md:items-center md:justify-between gap-5">
-      <div className="flex items-start gap-3.5 min-w-0">
-        {icon && (
-          <span className={`hidden sm:flex w-11 h-11 rounded-2xl items-center justify-center shrink-0 ${ACCENT[tone]}`}>
-            {icon}
-          </span>
+      {/* Bloc texte collé au bord gauche du conteneur : eyebrow / titre / sous-titre
+         partagent exactement la même colonne que le contenu (cartes, onglets) en
+         dessous — aucune icône ne vient décaler le texte vers la droite. */}
+      <div className="min-w-0">
+        {eyebrow && (
+          <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-400 mb-1">{eyebrow}</p>
         )}
-        <div className="min-w-0">
-          {eyebrow && (
-            <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-400 mb-1">{eyebrow}</p>
-          )}
-          <h1 className="text-[1.9rem] md:text-[2.4rem] md:leading-[1.04] font-extrabold tracking-[-0.03em] text-[#0B0B14] dark:text-white">
-            {title}
-          </h1>
-          {subtitle && <p className="text-slate-500 dark:text-slate-400 text-[15px] mt-1.5 max-w-2xl leading-relaxed">{subtitle}</p>}
-        </div>
+        <h1 className="text-[1.9rem] md:text-[2.4rem] md:leading-[1.04] font-extrabold tracking-[-0.03em] text-[#0B0B14] dark:text-white">
+          {title}
+        </h1>
+        {subtitle && <p className="text-slate-500 dark:text-slate-400 text-[15px] mt-1.5 max-w-2xl leading-relaxed">{subtitle}</p>}
       </div>
       {actions && <div className="flex items-center gap-2 shrink-0">{actions}</div>}
     </div>
