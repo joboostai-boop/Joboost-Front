@@ -10,6 +10,7 @@ const TrackLayout: React.FC = () => {
         tone="emerald"
         eyebrow="Étape 3 · Suivre"
         icon={<LineChart size={22} />}
+        maxWidth="max-w-[1500px]"
         title="Suivre mes candidatures"
         subtitle="Garde un œil sur chaque candidature, de la préparation à l'offre — et tes statistiques."
         tabs={

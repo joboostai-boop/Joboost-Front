@@ -3,7 +3,6 @@ import { Link } from 'react-router-dom';
 import { User } from '../types';
 import { authHeaders } from '../services/authToken';
 import PageHero from '../components/PageHero';
-import HeroDecor from '../components/HeroDecor';
 import Tilt from '../components/Tilt';
 import CountUp from '../components/CountUp';
 import StatCard, { StatTone } from '../components/StatCard';
@@ -110,7 +109,6 @@ const Accueil: React.FC<AccueilProps> = ({ user }) => {
         tone="violet"
         eyebrow="Accueil"
         icon={<Sparkles size={22} />}
-        decor={<HeroDecor variant="accueil" />}
         title={`Bonjour ${firstName}`}
         subtitle="Voici l'état de votre recherche aujourd'hui."
       />

@@ -22,6 +22,7 @@ const TargetLayout: React.FC = () => {
         tone="indigo"
         eyebrow="Étape 2 · Postuler"
         icon={<Send size={22} />}
+        maxWidth="max-w-5xl"
         title="Trouver & postuler"
         subtitle="Des offres choisies pour ton profil, des candidatures spontanées ciblées, et l'IA qui rédige pour toi."
         tabs={
