@@ -3,7 +3,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useLocation } from 'react-router-dom';
 import { Printer, FileDown, Wand2, RefreshCw, Layout, Save, Clock, Loader2, Plus, Trash2, X, Files } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { generateCVSummary } from '../services/gemini';
+import { generateCVSummary, detailExperience } from '../services/gemini';
 import { exportCvPdf, exportCvDocx } from '../services/atsExport';
 import { authHeaders } from '../services/authToken';
 import TemplateGallery from '../components/TemplateGallery';
@@ -59,6 +59,7 @@ const CVGenerator: React.FC = () => {
   const incomingTemplate = (location.state as any)?.template as string | undefined;
 
   const [loadingSummary, setLoadingSummary] = useState(false);
+  const [aiExpId, setAiExpId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [cvs, setCvs] = useState<any[]>([]);
   const [currentCvId, setCurrentCvId] = useState<string | null>(null);
@@ -156,6 +157,26 @@ const CVGenerator: React.FC = () => {
       }
     } catch (error) { toast.error("Erreur lors de la génération."); }
     finally { setLoadingSummary(false); }
+  };
+
+  const handleDetailExperience = async (exp: ExperienceItem) => {
+    if (!exp.role) { toast.error("Renseigne au moins l'intitulé du poste."); return; }
+    setAiExpId(exp.id);
+    try {
+      const txt = await detailExperience({
+        role: exp.role,
+        company: exp.company,
+        period: exp.period,
+        targetTitle: formData.title,
+        notes: exp.desc,
+      });
+      if (txt) {
+        updExperience(exp.id, { desc: txt });
+        toast.success("Expérience détaillée par l'IA — relis et ajuste si besoin.");
+      }
+    } catch (error: any) {
+      toast.error(error?.message || "Erreur de l'IA.");
+    } finally { setAiExpId(null); }
   };
 
   const handleSaveCV = async () => {
@@ -342,7 +363,14 @@ const CVGenerator: React.FC = () => {
                 <input className="input-pro" value={exp.company} onChange={(e) => updExperience(exp.id, { company: e.target.value })} placeholder="Entreprise" />
               </div>
               <input className="input-pro" value={exp.period} onChange={(e) => updExperience(exp.id, { period: e.target.value })} placeholder="Période (ex : 2021 – 2024)" />
-              <textarea className="textarea-pro !min-h-[80px]" value={exp.desc} onChange={(e) => updExperience(exp.id, { desc: e.target.value })} placeholder="Ce que tu y as accompli (missions, résultats)…" />
+              <div className="flex justify-between items-center">
+                <span className="text-xs font-semibold text-slate-500">Missions & résultats</span>
+                <button type="button" onClick={() => handleDetailExperience(exp)} disabled={aiExpId === exp.id}
+                  className="flex items-center gap-1 text-[#7D5CFF] text-xs font-bold hover:underline disabled:opacity-50">
+                  {aiExpId === exp.id ? <RefreshCw className="animate-spin" size={13} /> : <Wand2 size={13} />} Détailler avec l'IA
+                </button>
+              </div>
+              <textarea className="textarea-pro !min-h-[80px]" value={exp.desc} onChange={(e) => updExperience(exp.id, { desc: e.target.value })} placeholder="Décris en quelques mots, puis clique « Détailler avec l'IA » — ex : accueil clients, gestion des stocks…" />
             </div>
           ))}
           <button onClick={addExperience} className="press btn btn-secondary w-full"><Plus size={16} /> Ajouter une expérience</button>
