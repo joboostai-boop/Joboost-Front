@@ -9,6 +9,7 @@
     "build": "prisma generate && prisma db push --skip-generate && tsc",
     "test": "ts-node --transpile-only src/services/__tests__/spontaneous.scoring.test.ts",
     "job:followup": "ts-node --transpile-only src/jobs/followup.job.ts",
+    "job:alerts": "ts-node --transpile-only src/jobs/jobAlerts.job.ts",
     "db:push": "prisma db push",
     "postinstall": "prisma generate"
   },

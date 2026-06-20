@@ -67,6 +67,10 @@ export interface User {
   
   // France Travail
   ftAccessToken?: string;
+
+  // Alertes emploi par email
+  jobAlertOptIn?: boolean;
+  jobAlertFrequency?: 'daily' | 'weekly';
 }
 
 export interface Application {

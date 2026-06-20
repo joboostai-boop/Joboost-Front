@@ -52,7 +52,12 @@ const Settings: React.FC<SettingsProps> = ({ user, isDarkMode, toggleDarkMode })
   const [account, setAccount] = useState({ name: user.name || '', email: user.email || '' });
   const [savingAccount, setSavingAccount] = useState(false);
 
-  const [notifs, setNotifs] = useState({ offers: true, replies: true, weekly: false });
+  // Alertes emploi par email (réellement persistées côté serveur)
+  const [jobAlert, setJobAlert] = useState<{ optIn: boolean; frequency: 'daily' | 'weekly' }>({
+    optIn: user.jobAlertOptIn ?? false,
+    frequency: (user.jobAlertFrequency as 'daily' | 'weekly') || 'daily',
+  });
+  const [savingAlert, setSavingAlert] = useState(false);
 
   // Mot de passe
   const [showPwd, setShowPwd] = useState(false);
@@ -90,6 +95,26 @@ const Settings: React.FC<SettingsProps> = ({ user, isDarkMode, toggleDarkMode })
       else toast.error(data.error || 'Erreur lors de la mise à jour.');
     } catch { toast.error('Erreur réseau.'); }
     finally { setSavingAccount(false); }
+  };
+
+  const saveJobAlert = async (next: { optIn: boolean; frequency: 'daily' | 'weekly' }) => {
+    const prev = jobAlert;
+    setJobAlert(next);          // mise à jour optimiste (l'UI répond tout de suite)
+    setSavingAlert(true);
+    try {
+      const res = await fetch(`${API}/api/users/me`, {
+        method: 'PUT',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json', ...authHeaders() },
+        body: JSON.stringify({ jobAlertOptIn: next.optIn, jobAlertFrequency: next.frequency }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        toast.success(next.optIn ? 'Alertes emploi activées.' : 'Alertes emploi désactivées.');
+        await checkAuth();
+      } else { setJobAlert(prev); toast.error(data.error || 'Erreur lors de la mise à jour.'); }
+    } catch { setJobAlert(prev); toast.error('Erreur réseau.'); }
+    finally { setSavingAlert(false); }
   };
 
   const handleChangePassword = async () => {
@@ -184,19 +209,34 @@ const Settings: React.FC<SettingsProps> = ({ user, isDarkMode, toggleDarkMode })
 
           {/* Notifications */}
           <Card title="Notifications" icon={<Bell size={16} />}>
-            {[
-              { key: 'offers' as const, label: 'Nouvelles offres pour moi', desc: 'Quand des offres correspondent à ton profil' },
-              { key: 'replies' as const, label: 'Réponses des recruteurs', desc: 'Quand une candidature reçoit une réponse' },
-              { key: 'weekly' as const, label: 'Récap hebdomadaire', desc: 'Un résumé de ta semaine de recherche' },
-            ].map((n) => (
-              <Row key={n.key}>
-                <div>
-                  <p className="text-sm font-semibold text-[#111827] dark:text-white">{n.label}</p>
-                  <p className="text-xs text-slate-400">{n.desc}</p>
+            <Row>
+              <div>
+                <p className="text-sm font-semibold text-[#111827] dark:text-white">Alertes emploi par email</p>
+                <p className="text-xs text-slate-400">Reçois par email une sélection d'offres qui correspondent à ton profil</p>
+              </div>
+              <Toggle on={jobAlert.optIn} onChange={() => saveJobAlert({ ...jobAlert, optIn: !jobAlert.optIn })} />
+            </Row>
+            {jobAlert.optIn && (
+              <div className="px-5 py-4 border-t border-slate-100 dark:border-slate-800">
+                <p className="text-xs font-semibold text-slate-500 mb-2">Fréquence</p>
+                <div className="inline-flex rounded-lg bg-slate-100 dark:bg-slate-800 p-1">
+                  {([['daily', 'Quotidienne'], ['weekly', 'Hebdomadaire']] as const).map(([val, label]) => (
+                    <button
+                      key={val}
+                      disabled={savingAlert}
+                      onClick={() => jobAlert.frequency !== val && saveJobAlert({ ...jobAlert, frequency: val })}
+                      className={`px-3 py-1.5 rounded-md text-sm font-semibold transition-colors disabled:opacity-60 ${
+                        jobAlert.frequency === val
+                          ? 'bg-white dark:bg-slate-700 text-[#7D5CFF] shadow-sm'
+                          : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
+                      }`}
+                    >
+                      {label}
+                    </button>
+                  ))}
                 </div>
-                <Toggle on={notifs[n.key]} onChange={() => setNotifs((p) => ({ ...p, [n.key]: !p[n.key] }))} />
-              </Row>
-            ))}
+              </div>
+            )}
           </Card>
         </div>
 

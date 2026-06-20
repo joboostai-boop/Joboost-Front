@@ -95,4 +95,18 @@ app.listen(PORT, async () => {
       setInterval(tick, SIX_HOURS);    // puis toutes les 6 h
       console.log('⏰ Relances spontanées : scheduler in-process activé (toutes les 6 h).');
     }
+
+    // Alertes emploi par email : scheduler in-process optionnel.
+    // Activer avec ENABLE_JOB_ALERTS_CRON=true (sinon cron externe : `npm run job:alerts`).
+    // Le job lui-même décide, par utilisateur, si la fréquence (quotidienne/hebdo) est due.
+    if (process.env.ENABLE_JOB_ALERTS_CRON === 'true') {
+      const { runJobAlertsJob } = await import('./jobs/jobAlerts.job');
+      const THREE_HOURS = 3 * 60 * 60 * 1000;
+      const tickAlerts = () => runJobAlertsJob()
+        .then((r) => console.log('[jobAlerts] passage :', r))
+        .catch((e) => console.error('[jobAlerts] erreur :', e?.message || e));
+      setTimeout(tickAlerts, 90_000);       // premier passage ~1,5 min après le démarrage
+      setInterval(tickAlerts, THREE_HOURS); // puis toutes les 3 h (la fréquence par user est gérée dans le job)
+      console.log('📬 Alertes emploi : scheduler in-process activé (vérif toutes les 3 h).');
+    }
 });

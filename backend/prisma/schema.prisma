@@ -78,6 +78,11 @@ model User {
   // Consentements (RGPD / preuve d'acceptation)
   acceptedTermsAt   DateTime? // date d'acceptation des CGU + politique de confidentialité
   marketingOptIn    Boolean   @default(false) // consentement e-mails marketing (opt-in)
+
+  // Alertes emploi par email (opt-in) — voir jobs/jobAlerts.job.ts
+  jobAlertOptIn      Boolean   @default(false) // l'utilisateur veut recevoir des offres par email
+  jobAlertFrequency  String?   // 'daily' | 'weekly'
+  jobAlertLastSentAt DateTime? // dernier envoi d'alerte (sert à respecter la fréquence)
   
   // Utilisation de JSON pour des arrays d'objets complexes (facilite la flexibilité noSQL dans un modèle relationnel)
   experiences       Json?    @default("[]")

@@ -74,6 +74,12 @@ export const userController = {
       if (req.body.salaryMax !== undefined) mappedData.salaryMax = req.body.salaryMax === null ? null : Number(req.body.salaryMax);
       if (req.body.ownVehicle !== undefined) mappedData.ownVehicle = req.body.ownVehicle;
 
+      // Alertes emploi par email (opt-in + fréquence)
+      if (req.body.jobAlertOptIn !== undefined) mappedData.jobAlertOptIn = Boolean(req.body.jobAlertOptIn);
+      if (req.body.jobAlertFrequency !== undefined) {
+        mappedData.jobAlertFrequency = req.body.jobAlertFrequency === 'weekly' ? 'weekly' : 'daily';
+      }
+
       // Tableaux de chaînes (sélecteurs / cases à cocher)
       const arrayFields = ['targetSectors', 'targetLocations', 'contractTypes', 'softSkills', 'mobility', 'drivingLicenses', 'workSchedules'];
       for (const f of arrayFields) {
