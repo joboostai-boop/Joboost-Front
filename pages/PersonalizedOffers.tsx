@@ -48,16 +48,27 @@ const PersonalizedOffers: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [offers, setOffers] = useState<JobOffer[]>([]);
   const [savedOffers, setSavedOffers] = useState<any[]>([]);
-  const [source, setSource] = useState<'francetravail' | 'demo' | null>(null);
+  const [source, setSource] = useState<string | null>(null);
   const [query, setQuery] = useState('');
+  const [debouncedQuery, setDebouncedQuery] = useState(''); // déclenche la recherche serveur
+  const [contractType, setContractType] = useState(''); // '' = tous ; sinon CDI/CDD/MIS/SAI
   const [radius, setRadius] = useState(30); // rayon de recherche en km
+
+  // Anti-rebond : on attend ~500 ms après la dernière frappe avant de relancer la recherche.
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedQuery(query.trim()), 500);
+    return () => clearTimeout(t);
+  }, [query]);
 
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
       try {
+        const params = new URLSearchParams({ distance: String(radius) });
+        if (debouncedQuery) params.set('q', debouncedQuery);
+        if (contractType) params.set('contractType', contractType);
         const [recRes, savedRes] = await Promise.all([
-          fetch(`${import.meta.env.VITE_API_URL || ''}/api/opportunities/recommendations?distance=${radius}`, { credentials: 'include', headers: { ...authHeaders() } }),
+          fetch(`${import.meta.env.VITE_API_URL || ''}/api/opportunities/recommendations?${params.toString()}`, { credentials: 'include', headers: { ...authHeaders() } }),
           fetch(`${import.meta.env.VITE_API_URL || ''}/api/opportunities/saved`, { credentials: 'include', headers: { ...authHeaders() } })
         ]);
 
@@ -79,7 +90,7 @@ const PersonalizedOffers: React.FC = () => {
       }
     };
     fetchData();
-  }, [radius]);
+  }, [radius, debouncedQuery, contractType]);
 
   const getSavedId = (offer: JobOffer) => {
     const found = savedOffers.find(s => s.title === offer.title && s.company === offer.company);
@@ -129,10 +140,10 @@ const PersonalizedOffers: React.FC = () => {
     }
   };
 
-  const q = query.trim().toLowerCase();
-  const filtered = q
-    ? offers.filter(o => o.title.toLowerCase().includes(q) || o.company.toLowerCase().includes(q) || o.location.toLowerCase().includes(q))
-    : offers;
+  // La recherche est désormais faite côté serveur (France Travail + Adzuna) : on affiche
+  // directement les offres renvoyées. `hasQuery` sert juste aux libellés d'état vide.
+  const hasQuery = debouncedQuery.length > 0 || contractType !== '';
+  const filtered = offers;
 
   return (
     <div className="p-5 md:p-8 max-w-6xl mx-auto space-y-6">
@@ -143,11 +154,30 @@ const PersonalizedOffers: React.FC = () => {
           {loading
             ? 'Recherche des meilleures offres pour vous…'
             : source === 'demo'
-              ? `Exemples illustratifs (France Travail momentanément indisponible) · ${offers.length}`
-              : `${offers.length} offres réelles France Travail, sourcées selon votre profil.`}
+              ? `Exemples illustratifs (offres réelles momentanément indisponibles) · ${offers.length}`
+              : source === 'mixed'
+                ? `${offers.length} offres réelles (France Travail + Adzuna).`
+                : source === 'adzuna'
+                  ? `${offers.length} offres réelles via Adzuna.`
+                  : `${offers.length} offres réelles France Travail.`}
         </p>
 
         <div className="flex flex-col sm:flex-row items-stretch gap-2 w-full md:w-auto">
+          <div className="relative shrink-0">
+            <Briefcase className="absolute left-3 top-1/2 -translate-y-1/2 text-[#9CA3AF]" size={16} />
+            <select
+              value={contractType}
+              onChange={(e) => setContractType(e.target.value)}
+              title="Type de contrat"
+              className="input-pro pl-9 pr-8 appearance-none cursor-pointer w-full sm:w-auto"
+            >
+              <option value="">Tous contrats</option>
+              <option value="CDI">CDI</option>
+              <option value="CDD">CDD</option>
+              <option value="MIS">Intérim</option>
+              <option value="SAI">Saisonnier</option>
+            </select>
+          </div>
           <div className="relative shrink-0">
             <Navigation className="absolute left-3 top-1/2 -translate-y-1/2 text-[#9CA3AF]" size={16} />
             <select
@@ -167,7 +197,7 @@ const PersonalizedOffers: React.FC = () => {
               type="text"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Rechercher par métier, ville…"
+              placeholder="Rechercher un autre métier…"
               className="input-pro pl-10 w-full"
             />
           </div>
@@ -183,9 +213,9 @@ const PersonalizedOffers: React.FC = () => {
       ) : filtered.length === 0 ? (
         <EmptyState
           variant="offers"
-          title={q ? 'Aucun résultat' : 'Aucune offre pour le moment'}
-          description={q ? 'Essayez un autre métier ou une autre ville.' : 'Complétez votre profil pour que l\'IA cible des offres qui vous correspondent vraiment.'}
-          action={!q ? <button onClick={() => navigate('/prepare/profile')} className="press btn btn-secondary">Compléter mon profil</button> : undefined}
+          title={hasQuery ? 'Aucun résultat' : 'Aucune offre pour le moment'}
+          description={hasQuery ? 'Essayez un autre métier, un autre type de contrat ou un rayon plus large.' : 'Complétez votre profil pour que l\'IA cible des offres qui vous correspondent vraiment.'}
+          action={!hasQuery ? <button onClick={() => navigate('/prepare/profile')} className="press btn btn-secondary">Compléter mon profil</button> : undefined}
         />
       ) : (
         <div className="space-y-4">

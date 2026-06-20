@@ -1,31 +1,70 @@
 import { Request, Response } from 'express';
 import { prisma } from '../db';
-import { franceTravailService, isFranceTravailConfigured } from '../services/francetravail.service';
+import { franceTravailService, isFranceTravailConfigured, FtOffer } from '../services/francetravail.service';
+import { adzunaService, isAdzunaConfigured } from '../services/adzuna.service';
+
+// Déduplique des offres venant de plusieurs sources (clé = titre + entreprise normalisés).
+const dedupeOffers = (offers: FtOffer[]): FtOffer[] => {
+  const seen = new Set<string>();
+  const out: FtOffer[] = [];
+  for (const o of offers) {
+    const key = `${(o.title || '').toLowerCase().trim()}|${(o.company || '').toLowerCase().trim()}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push(o);
+  }
+  return out;
+};
 
 export const opportunityController = {
-  // Recommandations : vraies offres France Travail sourcées sur le profil,
-  // avec repli sur des exemples simulés si FT n'est pas configuré / indisponible.
+  // Recommandations : vraies offres France Travail + Adzuna sourcées sur le profil
+  // (ou sur une recherche libre), avec repli sur des exemples simulés si aucune source
+  // n'est configurée / disponible.
   getRecommendations: async (req: Request, res: Response) => {
     try {
       const user = await prisma.user.findUnique({ where: { id: req.userId! } });
       if (!user) return res.status(404).json({ success: false, error: "Utilisateur non trouvé" });
 
-      const title = user.title || 'Développeur';
+      // Mot-clé : recherche libre saisie par l'utilisateur, sinon intitulé du profil.
+      const q = (req.query.q as string || '').trim();
+      const title = q || user.title || 'Développeur';
       const city = user.city || 'Paris';
       // Localisation précise = ville + code postal du profil (évite de filtrer tout un département).
       const location = [user.city, (user as any).postalCode].filter(Boolean).join(' ').trim() || city;
       // Rayon de recherche en km (paramétrable depuis l'UI ; défaut 30).
       const distance = Math.min(150, Math.max(5, parseInt(req.query.distance as string) || 30));
+      // Filtre type de contrat (CDI / CDD / MIS / SAI). Vide = tous.
+      const allowedContracts = ['CDI', 'CDD', 'MIS', 'SAI'];
+      const contractType = allowedContracts.includes(req.query.contractType as string)
+        ? (req.query.contractType as string)
+        : undefined;
 
-      // 1. Vraies offres France Travail si les identifiants sont configurés.
+      // 1. Vraies offres : France Travail + Adzuna interrogés en parallèle (chacun protégé).
+      const sources: Promise<FtOffer[]>[] = [];
       if (isFranceTravailConfigured()) {
-        try {
-          const real = await franceTravailService.searchOffers(title, location, 50, distance);
-          if (real.length > 0) {
-            return res.json({ success: true, source: 'francetravail', recommendations: real });
-          }
-        } catch (e: any) {
-          console.error('France Travail indisponible (offres), repli sur la simulation :', e?.message || e);
+        sources.push(
+          franceTravailService.searchOffers(title, location, 40, distance, contractType)
+            .catch((e: any) => { console.error('France Travail indisponible (offres) :', e?.message || e); return [] as FtOffer[]; })
+        );
+      }
+      if (isAdzunaConfigured()) {
+        sources.push(
+          adzunaService.searchOffers(title, location, 30, distance, contractType)
+            .catch((e: any) => { console.error('Adzuna indisponible (offres) :', e?.message || e); return [] as FtOffer[]; })
+        );
+      }
+
+      if (sources.length > 0) {
+        const settled = await Promise.all(sources);
+        const merged = dedupeOffers(settled.flat()).sort((a, b) => b.matchScore - a.matchScore);
+        if (merged.length > 0) {
+          const usedSources = Array.from(new Set(merged.map((o) => o.source)));
+          return res.json({
+            success: true,
+            source: usedSources.length > 1 ? 'mixed' : (usedSources[0] === 'Adzuna' ? 'adzuna' : 'francetravail'),
+            sources: usedSources,
+            recommendations: merged.slice(0, 60),
+          });
         }
       }
 

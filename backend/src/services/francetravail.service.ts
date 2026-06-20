@@ -240,12 +240,14 @@ export const franceTravailService = {
    * Recherche de vraies offres d'emploi (alimente "Offres pour moi").
    * Renvoie chaque offre individuellement, mappée au format attendu par le front.
    */
-  searchOffers: async (jobTitle: string, location: string, max = 15, distanceKm = 30): Promise<FtOffer[]> => {
+  searchOffers: async (jobTitle: string, location: string, max = 15, distanceKm = 30, contractType?: string): Promise<FtOffer[]> => {
     const token = await getFtToken();
 
     const params = new URLSearchParams();
     if (jobTitle) params.set('motsCles', jobTitle);
     await applyGeoParams(params, location, distanceKm);
+    // Filtre type de contrat (codes France Travail : CDI, CDD, MIS=intérim, SAI=saisonnier).
+    if (contractType) params.set('typeContrat', contractType);
     params.set('range',`0-${Math.max(0, max - 1)}`);
 
     const res = await fetch(`${SEARCH_URL}?${params.toString()}`, {
