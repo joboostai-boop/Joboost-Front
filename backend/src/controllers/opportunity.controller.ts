@@ -66,9 +66,14 @@ export const opportunityController = {
             recommendations: merged.slice(0, 60),
           });
         }
+        // Des sources réelles SONT configurées mais ne renvoient rien → vrai « aucun résultat ».
+        // On NE retombe PAS sur des exemples fictifs (ce serait trompeur, surtout sur une recherche
+        // explicite). Le front affiche alors son état vide.
+        const realLabel = (isAdzunaConfigured() && !isFranceTravailConfigured()) ? 'adzuna' : 'francetravail';
+        return res.json({ success: true, source: realLabel, recommendations: [] });
       }
 
-      // 2. Repli : exemples simulés basés sur le profil.
+      // 2. Repli : exemples simulés UNIQUEMENT si aucune source réelle n'est configurée.
       let skillsArray: string[] = [];
       if (Array.isArray(user.skills)) {
          skillsArray = user.skills.map((s: any) => typeof s === 'string' ? s : s.name || s.label || '');

@@ -73,20 +73,30 @@ export const runJobAlertsJob = async (): Promise<JobAlertReport> => {
     try {
       const tasks: Promise<FtOffer[]>[] = [];
       if (isFranceTravailConfigured()) {
-        tasks.push(franceTravailService.searchOffers(title, location, 20, 30).catch(() => [] as FtOffer[]));
+        tasks.push(franceTravailService.searchOffers(title, location, 20, 30));
       }
       if (isAdzunaConfigured()) {
-        tasks.push(adzunaService.searchOffers(title, location, 15, 30).catch(() => [] as FtOffer[]));
+        tasks.push(adzunaService.searchOffers(title, location, 15, 30));
       }
-      const merged = dedupe((await Promise.all(tasks)).flat())
+      // allSettled : on distingue « source en panne » de « source a répondu 0 offre ».
+      const settled = await Promise.allSettled(tasks);
+      const anyResponded = settled.some((s) => s.status === 'fulfilled');
+      const merged = dedupe(settled.flatMap((s) => (s.status === 'fulfilled' ? s.value : [])))
         .sort((a, b) => b.matchScore - a.matchScore);
+
+      // Si AUCUNE source n'a répondu (panne passagère), on NE consomme PAS le créneau :
+      // jobAlertLastSentAt reste inchangé → nouvelle tentative au prochain passage.
+      if (!anyResponded) {
+        report.failed++;
+        continue;
+      }
 
       // V2 : on ne garde QUE les offres jamais envoyées à cet utilisateur.
       const seen = new Set(user.jobAlertSeenIds || []);
       const fresh = merged.filter((o) => o.id && !seen.has(o.id)).slice(0, 8);
 
-      // On marque ce passage comme traité dans tous les cas → respecte la fréquence
-      // (pas de nouvelle interrogation avant le prochain créneau quotidien/hebdo).
+      // Une source a répondu mais rien de nouveau → on marque le passage comme traité
+      // (respecte la fréquence : pas de nouvelle interrogation avant le prochain créneau).
       if (fresh.length === 0) {
         await prisma.user.update({ where: { id: user.id }, data: { jobAlertLastSentAt: new Date() } });
         report.nothingNew++;

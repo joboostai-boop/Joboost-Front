@@ -58,6 +58,11 @@ export interface SendJobAlertParams {
 
 const APP_URL = process.env.FRONTEND_URL || 'https://joboost.netlify.app';
 
+// Échappe les valeurs dynamiques injectées dans le HTML d'un email (titres/entreprises
+// d'offres venant d'API tierces) pour éviter qu'un caractère < > " casse la mise en page.
+const escapeHtml = (s: string = ''): string =>
+  s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+
 // Gabarit HTML sobre et professionnel
 const buildHtml = (params: SendSpontaneousParams): string => {
   const paragraphs = params.bodyText
@@ -127,13 +132,13 @@ export const emailService = {
 
     const cards = params.offers.map((o) => {
       const meta = [o.location, o.type, o.salary && o.salary !== 'Salaire non précisé' ? o.salary : null]
-        .filter(Boolean).join(' · ');
+        .filter(Boolean).map((v) => escapeHtml(String(v))).join(' · ');
       const cta = o.url
-        ? `<a href="${o.url}" style="color:#7D5CFF;font-weight:bold;text-decoration:none;">Voir l'offre →</a>`
+        ? `<a href="${escapeHtml(o.url)}" style="color:#7D5CFF;font-weight:bold;text-decoration:none;">Voir l'offre →</a>`
         : '';
       return `<tr><td style="padding:14px 16px;border:1px solid #E5E7EB;border-radius:12px;display:block;margin-bottom:10px;">
-        <div style="font-weight:bold;color:#111827;font-size:15px;">${o.title}</div>
-        <div style="color:#7D5CFF;font-size:13px;margin:2px 0 6px;">${o.company}</div>
+        <div style="font-weight:bold;color:#111827;font-size:15px;">${escapeHtml(o.title)}</div>
+        <div style="color:#7D5CFF;font-size:13px;margin:2px 0 6px;">${escapeHtml(o.company)}</div>
         <div style="color:#6B7280;font-size:12px;margin-bottom:8px;">${meta}</div>
         ${cta}
       </td></tr>`;
@@ -143,7 +148,7 @@ export const emailService = {
     const html = `<!doctype html><html><body style="font-family:Arial,Helvetica,sans-serif;background:#F8FAFC;padding:16px;">
       <div style="max-width:560px;margin:0 auto;background:#fff;border-radius:16px;padding:24px;">
         <div style="font-size:20px;font-weight:800;color:#111827;margin-bottom:4px;">Jo<span style="color:#7D5CFF;">Boost</span></div>
-        <p style="color:#111827;font-size:15px;">Bonjour ${params.name.split(' ')[0] || ''},</p>
+        <p style="color:#111827;font-size:15px;">Bonjour ${escapeHtml(params.name.split(' ')[0] || '')},</p>
         <p style="color:#4B5563;font-size:14px;line-height:1.5;">${n > 1 ? `${n} nouvelles offres correspondent` : 'Une nouvelle offre correspond'} à votre profil :</p>
         <table role="presentation" style="width:100%;border-collapse:separate;">${cards}</table>
         <a href="${APP_URL}/target/lbb" style="display:inline-block;margin-top:8px;background:#7D5CFF;color:#fff;padding:10px 18px;border-radius:10px;text-decoration:none;font-weight:bold;font-size:14px;">Voir toutes les offres</a>
