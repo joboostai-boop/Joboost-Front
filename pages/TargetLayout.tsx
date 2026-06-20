@@ -16,17 +16,13 @@ const TargetLayout: React.FC = () => {
     }
   }, [location.pathname]);
 
-  // Le hero épouse la largeur du contenu : la rédaction de lettre est en 6xl,
-  // les autres onglets (offres, spontanées, sauvegardées) en 5xl.
-  const heroWidth = location.pathname.includes('/target/letter') ? 'max-w-6xl' : 'max-w-5xl';
-
   return (
     <div className="flex flex-col min-h-full">
+      {/* maxWidth non précisé → largeur standard du produit (max-w-6xl, défaut PageHero). */}
       <PageHero
         tone="indigo"
         eyebrow="Étape 2 · Postuler"
         icon={<Send size={22} />}
-        maxWidth={heroWidth}
         title="Trouver & postuler"
         subtitle="Des offres choisies pour ton profil, des candidatures spontanées ciblées, et l'IA qui rédige pour toi."
         tabs={

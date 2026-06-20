@@ -1,10 +1,9 @@
 import React from 'react';
-import { Outlet, NavLink, useLocation } from 'react-router-dom';
+import { Outlet, NavLink } from 'react-router-dom';
 import { UserRound, Contact, PenLine, Sparkles, LayoutGrid } from 'lucide-react';
 import PageHero, { heroTab } from '../components/PageHero';
 
 const PrepareLayout: React.FC = () => {
-  const { pathname } = useLocation();
   const tabs = [
     { name: 'Mon profil', path: '/prepare/profile', icon: <UserRound size={18} /> },
     { name: 'Mon CV', path: '/prepare/cv', icon: <Contact size={18} /> },
@@ -12,17 +11,13 @@ const PrepareLayout: React.FC = () => {
     { name: 'Modèles', path: '/prepare/templates', icon: <LayoutGrid size={18} /> },
   ];
 
-  // Le hero épouse la largeur du contenu affiché dessous : Profil est en 5xl,
-  // les autres onglets (CV, lettre, modèles) en 6xl → bord gauche toujours aligné.
-  const heroWidth = pathname.endsWith('/profile') ? 'max-w-5xl' : 'max-w-6xl';
-
   return (
     <div className="flex flex-col min-h-full">
+      {/* maxWidth non précisé → largeur standard du produit (max-w-6xl, défaut PageHero). */}
       <PageHero
         tone="violet"
         eyebrow="Étape 1 · Préparer"
         icon={<Sparkles size={22} />}
-        maxWidth={heroWidth}
         title="Préparer ma candidature"
         subtitle="Ton profil, ton CV et ta lettre type — la base d'une candidature qui décroche des entretiens."
         tabs={tabs.map((tab) => (
