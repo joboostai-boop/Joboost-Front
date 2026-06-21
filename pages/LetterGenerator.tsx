@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { RefreshCw, Wand2, Zap, Printer, FileDown, Save, Clock, Link as LinkIcon, AlignLeft, Edit3 } from 'lucide-react';
 import { generateCoverLetter, extractOfferFromUrl } from '../services/gemini';
 import toast from 'react-hot-toast';
-import { exportLetterPdf, exportLetterDocx } from '../services/atsExport';
+// Import dynamique au clic (libs PDF/Word lourdes : chargées seulement à l'export).
 import { authHeaders } from '../services/authToken';
 import TemplateGallery from '../components/TemplateGallery';
 import Collapsible from '../components/Collapsible';
@@ -152,6 +152,7 @@ const LetterGenerator: React.FC = () => {
     if (!generatedText.trim()) { toast.error("Ta lettre est vide : génère-la ou écris-la d'abord."); return; }
     setExporting(true);
     try {
+      const { exportLetterPdf } = await import('../services/atsExport');
       await exportLetterPdf(letterData());
       toast.success("Lettre PDF (ATS) téléchargée !");
     } catch (e: any) {
@@ -164,6 +165,7 @@ const LetterGenerator: React.FC = () => {
     if (!generatedText.trim()) { toast.error("Ta lettre est vide : génère-la ou écris-la d'abord."); return; }
     setExporting(true);
     try {
+      const { exportLetterDocx } = await import('../services/atsExport');
       await exportLetterDocx(letterData());
       toast.success("Lettre Word (.docx) téléchargée !");
     } catch (e: any) {

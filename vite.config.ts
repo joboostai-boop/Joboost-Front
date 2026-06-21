@@ -19,6 +19,20 @@ export default defineConfig(({ mode }) => {
         alias: {
           '@': path.resolve(__dirname, '.'),
         }
+      },
+      build: {
+        rollupOptions: {
+          output: {
+            // Isole les grosses dépendances dans leurs propres chunks : meilleur cache
+            // et elles ne sont récupérées que par les pages/actions qui en ont besoin.
+            manualChunks: {
+              'react-pdf': ['@react-pdf/renderer'],
+              'docx': ['docx'],
+              'charts': ['recharts'],
+              'react-vendor': ['react', 'react-dom', 'react-router-dom'],
+            },
+          },
+        },
       }
     };
 });

@@ -4,7 +4,8 @@ import { useLocation } from 'react-router-dom';
 import { Printer, FileDown, Wand2, RefreshCw, Layout, Save, Clock, Loader2, Plus, Trash2, X, Files } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { generateCVSummary, detailExperience } from '../services/gemini';
-import { exportCvPdf, exportCvDocx } from '../services/atsExport';
+// Import dynamique au clic (les libs PDF/Word sont lourdes — ~1,8 Mo — on ne les charge
+// que lors d'un export, pas à l'ouverture de l'éditeur).
 import { authHeaders } from '../services/authToken';
 import TemplateGallery from '../components/TemplateGallery';
 import { CV_TEMPLATES, getCvTemplate } from '../services/cvTemplates';
@@ -244,6 +245,7 @@ const CVGenerator: React.FC = () => {
   const handleExportPDF = async () => {
     setExporting(true);
     try {
+      const { exportCvPdf } = await import('../services/atsExport');
       await exportCvPdf(exportData());
       toast.success("CV PDF (ATS) téléchargé !");
     } catch (e) {
@@ -255,6 +257,7 @@ const CVGenerator: React.FC = () => {
   const handleExportDocx = async () => {
     setExporting(true);
     try {
+      const { exportCvDocx } = await import('../services/atsExport');
       await exportCvDocx(exportData());
       toast.success("CV Word (.docx) téléchargé !");
     } catch (e) {
