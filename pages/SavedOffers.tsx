@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Bookmark, Trash2, ArrowRight, MapPin, Euro, Clock, Sparkles } from 'lucide-react';
+import { Bookmark, Trash2, ArrowRight, MapPin, Euro, Clock, Sparkles, Send, Check, Edit3, ExternalLink } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
 import { authHeaders } from '../services/authToken';
@@ -19,6 +19,7 @@ interface SavedOffer {
   source: string;
   tags: string[];
   aiInsight: string;
+  url?: string;
 }
 
 const SavedSkeleton: React.FC = () => (
@@ -37,7 +38,36 @@ const SavedSkeleton: React.FC = () => (
 const SavedOffers: React.FC = () => {
   const [savedOffers, setSavedOffers] = useState<SavedOffer[]>([]);
   const [loading, setLoading] = useState(true);
+  const [appliedKeys, setAppliedKeys] = useState<Set<string>>(new Set());
   const navigate = useNavigate();
+
+  const offerKey = (o: SavedOffer) => `${o.title}__${o.company}`;
+
+  // Voir le détail dans PersonalizedOffers : ouvre l'offre + ajoute la candidature au Suivi.
+  const handlePostuler = async (offer: SavedOffer) => {
+    if (offer.url) window.open(offer.url, '_blank', 'noopener,noreferrer');
+    const key = offerKey(offer);
+    if (appliedKeys.has(key)) { toast('Déjà dans ton suivi.'); return; }
+    try {
+      const res = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/applications`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json', ...authHeaders() },
+        body: JSON.stringify({
+          company: offer.company,
+          title: offer.title,
+          source: offer.source || 'Offre',
+          status: 'SENT',
+          notes: offer.url ? `Offre : ${offer.url}` : undefined,
+        }),
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setAppliedKeys((prev) => new Set(prev).add(key));
+        toast.success("Ajoutée à ton suivi (Envoyées) — finalise sur la page de l'offre.");
+      } else { toast.error(data.error || "Impossible d'ajouter au suivi."); }
+    } catch { toast.error('Erreur réseau.'); }
+  };
 
   useEffect(() => {
     const fetchSaved = async () => {
@@ -123,13 +153,31 @@ const SavedOffers: React.FC = () => {
                 </div>
               )}
 
-              <div className="flex items-center gap-2 mt-4 pt-3.5 border-t border-slate-100 dark:border-slate-800">
+              <div className="flex flex-wrap items-center gap-2 mt-4 pt-3.5 border-t border-slate-100 dark:border-slate-800">
+                {(() => {
+                  const isApplied = appliedKeys.has(offerKey(offer));
+                  return (
+                    <button
+                      onClick={() => handlePostuler(offer)}
+                      disabled={isApplied}
+                      className={`press btn flex-1 sm:flex-none ${isApplied ? 'bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-500/10 dark:border-emerald-500/30 cursor-default' : 'btn-primary'}`}
+                    >
+                      {isApplied ? <><Check size={15} /> Dans ton suivi</> : <><Send size={15} /> Postuler</>}
+                    </button>
+                  );
+                })()}
                 <button
                   onClick={() => navigate('/target/letter', { state: { jobTitle: offer.title, company: offer.company, targetContext: offer.aiInsight } })}
-                  className="press btn btn-primary flex-1 sm:flex-none"
+                  className="press btn btn-secondary"
+                  title="Créer la lettre de motivation"
                 >
-                  <ArrowRight size={15} /> Créer la lettre
+                  <Edit3 size={15} /> Lettre
                 </button>
+                {offer.url && (
+                  <a href={offer.url} target="_blank" rel="noopener noreferrer" className="press btn btn-secondary !px-3" title="Voir l'offre (sans l'ajouter au suivi)">
+                    <ExternalLink size={15} />
+                  </a>
+                )}
                 <button
                   onClick={() => removeOffer(offer.id)}
                   aria-label="Retirer des favoris"

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search, MapPin, Bookmark, Clock, Edit3, ExternalLink, Briefcase, Euro, Sparkles, Inbox, Navigation } from 'lucide-react';
+import { Search, MapPin, Bookmark, Clock, Edit3, ExternalLink, Briefcase, Euro, Sparkles, Inbox, Navigation, Send, Check } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
 import { authHeaders } from '../services/authToken';
@@ -53,6 +53,9 @@ const PersonalizedOffers: React.FC = () => {
   const [debouncedQuery, setDebouncedQuery] = useState(''); // déclenche la recherche serveur
   const [contractType, setContractType] = useState(''); // '' = tous ; sinon CDI/CDD/MIS/SAI
   const [radius, setRadius] = useState(30); // rayon de recherche en km
+  const [appliedKeys, setAppliedKeys] = useState<Set<string>>(new Set()); // offres déjà ajoutées au suivi (cette session)
+
+  const offerKey = (o: JobOffer) => `${o.title}__${o.company}`;
 
   // Anti-rebond : on attend ~500 ms après la dernière frappe avant de relancer la recherche.
   useEffect(() => {
@@ -95,6 +98,37 @@ const PersonalizedOffers: React.FC = () => {
   const getSavedId = (offer: JobOffer) => {
     const found = savedOffers.find(s => s.title === offer.title && s.company === offer.company);
     return found ? found.id : null;
+  };
+
+  // « Postuler » : on ouvre l'offre pour finaliser la candidature (l'envoi se fait sur
+  // le site de l'offre — France Travail/Adzuna ne permettent pas de soumettre via API),
+  // ET on ajoute automatiquement la candidature au Suivi (Kanban, colonne « Envoyées »).
+  const handlePostuler = async (offer: JobOffer) => {
+    // Ouvrir AVANT l'await : sinon le bloqueur de pop-up coupe la nouvelle fenêtre.
+    if (offer.url) window.open(offer.url, '_blank', 'noopener,noreferrer');
+    const key = offerKey(offer);
+    if (appliedKeys.has(key)) { toast('Déjà dans ton suivi.'); return; }
+    try {
+      const res = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/applications`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json', ...authHeaders() },
+        body: JSON.stringify({
+          company: offer.company,
+          title: offer.title,
+          source: offer.source || 'Offre',
+          status: 'SENT',
+          notes: offer.url ? `Offre : ${offer.url}` : undefined,
+        }),
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setAppliedKeys((prev) => new Set(prev).add(key));
+        toast.success("Ajoutée à ton suivi (Envoyées) — finalise sur la page de l'offre.");
+      } else {
+        toast.error(data.error || "Impossible d'ajouter au suivi.");
+      }
+    } catch { toast.error('Erreur réseau.'); }
   };
 
   const toggleSave = async (offer: JobOffer) => {
@@ -274,13 +308,25 @@ const PersonalizedOffers: React.FC = () => {
                 )}
 
                 {/* Actions */}
-                <div className="flex items-center gap-2 mt-4 pt-3.5 border-t border-slate-100 dark:border-slate-800">
-                  <button onClick={() => navigate('/target/letter', { state: { jobTitle: offer.title, company: offer.company, targetContext: offer.aiInsight } })} className="press btn btn-primary flex-1 sm:flex-none">
-                    <Edit3 size={15} /> Créer la lettre
+                <div className="flex flex-wrap items-center gap-2 mt-4 pt-3.5 border-t border-slate-100 dark:border-slate-800">
+                  {(() => {
+                    const isApplied = appliedKeys.has(offerKey(offer));
+                    return (
+                      <button
+                        onClick={() => handlePostuler(offer)}
+                        disabled={isApplied}
+                        className={`press btn flex-1 sm:flex-none ${isApplied ? 'bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-500/10 dark:border-emerald-500/30 cursor-default' : 'btn-primary'}`}
+                      >
+                        {isApplied ? <><Check size={15} /> Dans ton suivi</> : <><Send size={15} /> Postuler</>}
+                      </button>
+                    );
+                  })()}
+                  <button onClick={() => navigate('/target/letter', { state: { jobTitle: offer.title, company: offer.company, targetContext: offer.aiInsight } })} className="press btn btn-secondary" title="Créer la lettre de motivation">
+                    <Edit3 size={15} /> Lettre
                   </button>
                   {offer.url && (
-                    <a href={offer.url} target="_blank" rel="noopener noreferrer" className="press btn btn-secondary">
-                      <ExternalLink size={15} /> Voir l'offre
+                    <a href={offer.url} target="_blank" rel="noopener noreferrer" className="press btn btn-secondary !px-3" title="Voir l'offre (sans l'ajouter au suivi)">
+                      <ExternalLink size={15} />
                     </a>
                   )}
                   <button
