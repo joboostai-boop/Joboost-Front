@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search, MapPin, Bookmark, Clock, Edit3, ExternalLink, Briefcase, Euro, Sparkles, Inbox, Navigation, Send, Check } from 'lucide-react';
+import { Search, MapPin, Bookmark, Clock, Edit3, ExternalLink, Briefcase, Euro, Sparkles, Inbox, Navigation, Send, Check, ChevronLeft, ChevronRight } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
 import { authHeaders } from '../services/authToken';
@@ -53,7 +53,10 @@ const PersonalizedOffers: React.FC = () => {
   const [debouncedQuery, setDebouncedQuery] = useState(''); // déclenche la recherche serveur
   const [contractType, setContractType] = useState(''); // '' = tous ; sinon CDI/CDD/MIS/SAI
   const [radius, setRadius] = useState(30); // rayon de recherche en km
+  const [page, setPage] = useState(1); // pagination (affichage)
   const [appliedKeys, setAppliedKeys] = useState<Set<string>>(new Set()); // offres déjà ajoutées au suivi (cette session)
+
+  const PER_PAGE = 10;
 
   const offerKey = (o: JobOffer) => `${o.title}__${o.company}`;
 
@@ -62,6 +65,9 @@ const PersonalizedOffers: React.FC = () => {
     const t = setTimeout(() => setDebouncedQuery(query.trim()), 500);
     return () => clearTimeout(t);
   }, [query]);
+
+  // Toute nouvelle recherche (mot-clé, contrat, rayon) ramène à la première page.
+  useEffect(() => { setPage(1); }, [debouncedQuery, contractType, radius]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -179,6 +185,15 @@ const PersonalizedOffers: React.FC = () => {
   const hasQuery = debouncedQuery.length > 0 || contractType !== '';
   const filtered = offers;
 
+  // Pagination (côté affichage) sur les offres déjà chargées.
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PER_PAGE));
+  const currentPage = Math.min(page, totalPages);
+  const pageOffers = filtered.slice((currentPage - 1) * PER_PAGE, currentPage * PER_PAGE);
+  const goToPage = (p: number) => {
+    setPage(Math.min(Math.max(1, p), totalPages));
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   return (
     <div className="p-5 md:p-8 max-w-6xl mx-auto space-y-6">
       {/* Barre d'outils (le titre est porté par le hero du layout) */}
@@ -252,16 +267,18 @@ const PersonalizedOffers: React.FC = () => {
           action={!hasQuery ? <button onClick={() => navigate('/prepare/profile')} className="press btn btn-secondary">Compléter mon profil</button> : undefined}
         />
       ) : (
+        <>
         <div className="space-y-4">
-          {filtered.map((offer, index) => {
+          {pageOffers.map((offer, index) => {
             const isBookmarked = !!getSavedId(offer);
+            const globalIndex = (currentPage - 1) * PER_PAGE + index;
             return (
               <article
-                key={offer.id || index}
+                key={offer.id || globalIndex}
                 style={{ animationDelay: `${Math.min(index, 6) * 50}ms` }}
-                className={`surface p-5 hover:shadow-card-hover hover:-translate-y-0.5 transition-all duration-200 animate-fade-in-up ${index === 0 ? 'ring-2 ring-[#7D5CFF]/25' : ''}`}
+                className={`surface p-5 hover:shadow-card-hover hover:-translate-y-0.5 transition-all duration-200 animate-fade-in-up ${globalIndex === 0 ? 'ring-2 ring-[#7D5CFF]/25' : ''}`}
               >
-                {index === 0 && (
+                {globalIndex === 0 && (
                   <div className="inline-flex items-center gap-1.5 mb-3 px-2.5 py-1 rounded-full bg-[#F3F0FF] dark:bg-[#7D5CFF]/10 text-[#7D5CFF] text-[11px] font-bold uppercase tracking-wide border border-[#7D5CFF]/20">
                     <Sparkles size={12} /> Meilleur match
                   </div>
@@ -342,6 +359,38 @@ const PersonalizedOffers: React.FC = () => {
             );
           })}
         </div>
+
+        {totalPages > 1 && (
+          <nav className="flex items-center justify-center gap-1.5 pt-2" aria-label="Pagination des offres">
+            <button
+              onClick={() => goToPage(currentPage - 1)}
+              disabled={currentPage === 1}
+              className="press btn btn-secondary !px-3 disabled:opacity-40"
+              aria-label="Page précédente"
+            >
+              <ChevronLeft size={16} />
+            </button>
+            {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
+              <button
+                key={p}
+                onClick={() => goToPage(p)}
+                aria-current={p === currentPage ? 'page' : undefined}
+                className={`press btn !px-3.5 ${p === currentPage ? 'btn-primary' : 'btn-secondary'}`}
+              >
+                {p}
+              </button>
+            ))}
+            <button
+              onClick={() => goToPage(currentPage + 1)}
+              disabled={currentPage === totalPages}
+              className="press btn btn-secondary !px-3 disabled:opacity-40"
+              aria-label="Page suivante"
+            >
+              <ChevronRight size={16} />
+            </button>
+          </nav>
+        )}
+        </>
       )}
     </div>
   );
