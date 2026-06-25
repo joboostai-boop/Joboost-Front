@@ -1,12 +1,13 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { BusinessOffer, Pagination } from '../types';
+import { BusinessOffer, Pagination, OfferMatchesResult } from '../types';
 import { businessOfferApi } from '../services/business';
 import toast from 'react-hot-toast';
 import ConfirmDialog from '../components/ConfirmDialog';
 import { useModalBehavior } from '../hooks/useModalBehavior';
 import {
   Plus, Edit3, Trash2, Eye, EyeOff, X,
-  MapPin, Briefcase, DollarSign, Clock, ChevronLeft, ChevronRight, Loader2
+  MapPin, Briefcase, DollarSign, Clock, ChevronLeft, ChevronRight, Loader2,
+  Users, Sparkles
 } from 'lucide-react';
 
 const CONTRACT_TYPES = ['CDI', 'CDD', 'Stage', 'Alternance', 'Mission', 'Freelance'];
@@ -32,9 +33,28 @@ const BusinessOffers: React.FC = () => {
   const [submitting, setSubmitting] = useState(false);
   const [deletingOffer, setDeletingOffer] = useState<BusinessOffer | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [matchesOffer, setMatchesOffer] = useState<BusinessOffer | null>(null);
+  const [matchesData, setMatchesData] = useState<OfferMatchesResult | null>(null);
+  const [matchesLoading, setMatchesLoading] = useState(false);
 
-  // Échap pour fermer + blocage du scroll de fond sur la modale de création/édition.
+  // Échap pour fermer + blocage du scroll de fond sur les overlays.
   useModalBehavior(showModal, () => setShowModal(false));
+  useModalBehavior(!!matchesOffer, () => setMatchesOffer(null));
+
+  const openMatches = async (offer: BusinessOffer) => {
+    setMatchesOffer(offer);
+    setMatchesData(null);
+    setMatchesLoading(true);
+    try {
+      const data = await businessOfferApi.matches(offer.id);
+      setMatchesData(data);
+    } catch (err: any) {
+      toast.error(err.message);
+      setMatchesOffer(null);
+    } finally {
+      setMatchesLoading(false);
+    }
+  };
 
   const fetchOffers = useCallback(async (page = 1) => {
     try {
@@ -147,6 +167,13 @@ const BusinessOffers: React.FC = () => {
   /* ──────── Action buttons (shared between mobile card & desktop row) ──────── */
   const ActionButtons: React.FC<{ offer: BusinessOffer }> = ({ offer }) => (
     <div className="flex items-center gap-1">
+      <button
+        onClick={(e) => { e.stopPropagation(); openMatches(offer); }}
+        className="p-2.5 rounded-lg text-slate-400 hover:text-[#7D5CFF] hover:bg-[#7D5CFF]/10 transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center"
+        title="Candidats correspondants"
+      >
+        <Users size={18} />
+      </button>
       <button
         onClick={(e) => { e.stopPropagation(); handleTogglePublish(offer.id); }}
         className={`p-2.5 rounded-lg transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center ${
@@ -437,6 +464,74 @@ const BusinessOffers: React.FC = () => {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* ─── Modale Matching : candidats correspondants ─── */}
+      {matchesOffer && (
+        <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center">
+          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setMatchesOffer(null)} />
+          <div className="relative bg-white dark:bg-[#111827] w-full md:rounded-xl shadow-2xl md:max-w-lg md:mx-4 max-h-[100dvh] md:max-h-[85vh] flex flex-col border-t md:border border-slate-200 dark:border-slate-700 rounded-t-2xl md:rounded-xl">
+            <div className="shrink-0 bg-white dark:bg-[#111827] flex items-start justify-between p-4 md:p-5 border-b border-slate-200 dark:border-slate-700 rounded-t-2xl md:rounded-xl">
+              <div className="absolute top-2 left-1/2 -translate-x-1/2 w-10 h-1 bg-slate-200 dark:bg-slate-700 rounded-full md:hidden" />
+              <div className="mt-2 md:mt-0 min-w-0 pr-3">
+                <h2 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                  <Sparkles size={18} className="text-[#7D5CFF] shrink-0" /> Candidats correspondants
+                </h2>
+                <p className="text-xs text-slate-500 mt-0.5 truncate">{matchesOffer.title}</p>
+              </div>
+              <button onClick={() => setMatchesOffer(null)} className="p-2.5 rounded-lg text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center shrink-0">
+                <X size={18} />
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-4 md:p-5">
+              {matchesLoading ? (
+                <div className="flex items-center justify-center py-16"><Loader2 className="animate-spin text-[#7D5CFF]" size={28} /></div>
+              ) : !matchesData ? null : matchesData.requiredSkills.length === 0 ? (
+                <div className="text-center py-12 px-4">
+                  <Briefcase className="mx-auto text-slate-300 dark:text-slate-600 mb-3" size={40} />
+                  <p className="text-sm text-slate-500">Cette offre n'a aucune compétence requise.</p>
+                  <p className="text-xs text-slate-400 mt-1">Ajoutez des compétences à l'offre pour activer le matching avec votre vivier.</p>
+                </div>
+              ) : matchesData.matches.length === 0 ? (
+                <div className="text-center py-12 px-4">
+                  <Users className="mx-auto text-slate-300 dark:text-slate-600 mb-3" size={40} />
+                  <p className="text-sm text-slate-500">Aucun candidat de votre vivier ne correspond.</p>
+                  <p className="text-xs text-slate-400 mt-1">Ajoutez des candidats ou complétez leurs compétences.</p>
+                </div>
+              ) : (
+                <>
+                  <p className="text-xs text-slate-500 mb-3">
+                    <span className="font-bold text-slate-900 dark:text-white">{matchesData.matches.length}</span> candidat{matchesData.matches.length > 1 ? 's' : ''} sur {matchesData.totalVivier} correspond{matchesData.matches.length > 1 ? 'ent' : ''} aux compétences requises.
+                  </p>
+                  <ul className="space-y-2.5">
+                    {matchesData.matches.map((m) => (
+                      <li key={m.id} className="flex items-center gap-3 p-3 rounded-xl border border-slate-100 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-800/40">
+                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#7D5CFF] to-[#4F46E5] flex items-center justify-center text-white font-bold text-sm shrink-0">
+                          {m.name.charAt(0).toUpperCase()}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-semibold text-slate-900 dark:text-white truncate">{m.name}</p>
+                          <p className="text-xs text-slate-500 truncate">{m.title || (m.city ? m.city : '—')}</p>
+                          <div className="flex flex-wrap gap-1 mt-1">
+                            {m.matchedSkills.slice(0, 4).map((s) => (
+                              <span key={s} className="text-[10px] px-1.5 py-0.5 rounded bg-[#7D5CFF]/10 text-[#7D5CFF] font-medium">{s}</span>
+                            ))}
+                            {m.matchedSkills.length > 4 && <span className="text-[10px] text-slate-400 self-center">+{m.matchedSkills.length - 4}</span>}
+                          </div>
+                        </div>
+                        <div className="shrink-0 text-center">
+                          <div className="text-base font-black text-[#7D5CFF] leading-none">{m.matchPercent}%</div>
+                          <div className="text-[10px] text-slate-400 mt-0.5">{m.matchCount} compét.</div>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                </>
+              )}
+            </div>
           </div>
         </div>
       )}

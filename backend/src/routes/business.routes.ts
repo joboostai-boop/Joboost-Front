@@ -17,10 +17,16 @@ router.get('/offers', asyncHandler(businessController.listOffers));
 router.put('/offers/:id', asyncHandler(businessController.updateOffer));
 router.delete('/offers/:id', asyncHandler(businessController.deleteOffer));
 router.patch('/offers/:id/publish', asyncHandler(businessController.togglePublish));
+router.get('/offers/:id/matches', asyncHandler(businessController.getOfferMatches));
 
 // --- Demandeurs d'emploi ---
 router.get('/jobseekers', asyncHandler(businessController.listJobseekers));
+router.post('/jobseekers', asyncHandler(businessController.createJobseeker));
 router.get('/jobseekers/:id', asyncHandler(businessController.getJobseekerDetail));
+router.put('/jobseekers/:id', asyncHandler(businessController.updateJobseeker));
+router.patch('/jobseekers/:id/status', asyncHandler(businessController.updateJobseekerStatus));
+router.patch('/jobseekers/:id/note', asyncHandler(businessController.updateJobseekerNote));
+router.delete('/jobseekers/:id', asyncHandler(businessController.removeJobseeker));
 
 // --- Statistiques ---
 router.get('/stats', asyncHandler(businessController.getStats));

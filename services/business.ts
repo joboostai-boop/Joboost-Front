@@ -1,4 +1,4 @@
-import { BusinessOffer, BusinessJobseeker, BusinessJobseekerDetail, BusinessStats, StatsQuery, Pagination } from '../types';
+import { BusinessOffer, BusinessJobseeker, BusinessJobseekerDetail, BusinessJobseekerInput, BusinessStats, StatsQuery, Pagination, OfferMatchesResult } from '../types';
 import { authHeaders } from './authToken';
 
 const API_URL = import.meta.env.VITE_API_URL || '';
@@ -46,6 +46,11 @@ export const businessOfferApi = {
     const data = await fetchApi(`/api/business/offers/${id}/publish`, { method: 'PATCH' });
     return data.offer;
   },
+
+  matches: async (id: string): Promise<OfferMatchesResult> => {
+    const data = await fetchApi(`/api/business/offers/${id}/matches`);
+    return { matches: data.matches, requiredSkills: data.requiredSkills, totalVivier: data.totalVivier };
+  },
 };
 
 // ==================== JOBSEEKERS ====================
@@ -70,6 +75,42 @@ export const businessJobseekerApi = {
   getDetail: async (id: string): Promise<BusinessJobseekerDetail> => {
     const data = await fetchApi(`/api/business/jobseekers/${id}`);
     return data.jobseeker;
+  },
+
+  create: async (input: BusinessJobseekerInput): Promise<BusinessJobseeker> => {
+    const data = await fetchApi('/api/business/jobseekers', {
+      method: 'POST',
+      body: JSON.stringify(input),
+    });
+    return data.jobseeker;
+  },
+
+  update: async (id: string, input: Partial<BusinessJobseekerInput>): Promise<BusinessJobseeker> => {
+    const data = await fetchApi(`/api/business/jobseekers/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(input),
+    });
+    return data.jobseeker;
+  },
+
+  updateStatus: async (id: string, status: string): Promise<string> => {
+    const data = await fetchApi(`/api/business/jobseekers/${id}/status`, {
+      method: 'PATCH',
+      body: JSON.stringify({ status }),
+    });
+    return data.status;
+  },
+
+  updateNote: async (id: string, note: string): Promise<string | null> => {
+    const data = await fetchApi(`/api/business/jobseekers/${id}/note`, {
+      method: 'PATCH',
+      body: JSON.stringify({ note }),
+    });
+    return data.note;
+  },
+
+  remove: async (id: string): Promise<void> => {
+    await fetchApi(`/api/business/jobseekers/${id}`, { method: 'DELETE' });
   },
 };
 

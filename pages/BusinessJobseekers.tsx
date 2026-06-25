@@ -1,12 +1,24 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { BusinessJobseeker, BusinessJobseekerDetail, Pagination } from '../types';
+import { BusinessJobseeker, BusinessJobseekerDetail, BusinessJobseekerInput, Pagination } from '../types';
 import { businessJobseekerApi } from '../services/business';
 import { useModalBehavior } from '../hooks/useModalBehavior';
+import ConfirmDialog from '../components/ConfirmDialog';
 import toast from 'react-hot-toast';
 import {
   Search, Filter, X, ChevronLeft, ChevronRight, Loader2, Download,
-  Mail, Phone, MapPin, Briefcase, ExternalLink, FileText, User, MoreVertical
+  Mail, Phone, MapPin, Briefcase, ExternalLink, FileText, User, MoreVertical,
+  UserPlus, Edit3, Trash2, Save, StickyNote
 } from 'lucide-react';
+
+const STATUS_FORM_OPTIONS = [
+  { value: 'active', label: 'Actif' },
+  { value: 'inactive', label: 'Inactif' },
+  { value: 'suspended', label: 'Suspendu' },
+];
+
+const emptyJsForm: BusinessJobseekerInput = {
+  name: '', email: '', title: '', city: '', phone: '', summary: '', linkedin: '', skills: [],
+};
 
 const STATUS_OPTIONS = [
   { value: '', label: 'Tous les statuts' },
@@ -27,10 +39,25 @@ const BusinessJobseekers: React.FC = () => {
   const [showFiltersMobile, setShowFiltersMobile] = useState(false);
   const [showMobileActions, setShowMobileActions] = useState(false);
 
+  // Formulaire d'ajout / édition de candidat
+  const [showForm, setShowForm] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [form, setForm] = useState<BusinessJobseekerInput>(emptyJsForm);
+  const [skillInput, setSkillInput] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+
+  // CRM (statut + note) et retrait
+  const [savingStatus, setSavingStatus] = useState(false);
+  const [noteDraft, setNoteDraft] = useState('');
+  const [savingNote, setSavingNote] = useState(false);
+  const [removingId, setRemovingId] = useState<string | null>(null);
+  const [removing, setRemoving] = useState(false);
+
   // Échap pour fermer + blocage du scroll de fond sur les overlays.
   useModalBehavior(drawerOpen, () => { setDrawerOpen(false); setSelectedDetail(null); });
   useModalBehavior(showFiltersMobile, () => setShowFiltersMobile(false));
   useModalBehavior(showMobileActions, () => setShowMobileActions(false));
+  useModalBehavior(showForm, () => setShowForm(false));
 
   const fetchJobseekers = useCallback(async (page = 1) => {
     try {
@@ -58,11 +85,117 @@ const BusinessJobseekers: React.FC = () => {
     try {
       const detail = await businessJobseekerApi.getDetail(id);
       setSelectedDetail(detail);
+      setNoteDraft(detail.note || '');
     } catch (err: any) {
       toast.error(err.message);
       setDrawerOpen(false);
     } finally {
       setLoadingDetail(false);
+    }
+  };
+
+  const openCreate = () => {
+    setEditingId(null);
+    setForm(emptyJsForm);
+    setSkillInput('');
+    setShowMobileActions(false);
+    setShowForm(true);
+  };
+
+  const openEdit = (d: BusinessJobseekerDetail) => {
+    setEditingId(d.id);
+    setForm({
+      name: d.name || '',
+      email: d.email?.endsWith('@candidat.joboost.local') ? '' : (d.email || ''),
+      title: d.title || '',
+      city: d.city || '',
+      phone: d.phone || '',
+      summary: d.summary || '',
+      linkedin: d.linkedin || '',
+      skills: d.skills || [],
+    });
+    setSkillInput('');
+    setShowForm(true);
+  };
+
+  const addSkill = () => {
+    const s = skillInput.trim();
+    if (s && !(form.skills || []).includes(s)) {
+      setForm({ ...form, skills: [...(form.skills || []), s] });
+    }
+    setSkillInput('');
+  };
+  const removeSkill = (skill: string) => {
+    setForm({ ...form, skills: (form.skills || []).filter((s) => s !== skill) });
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!form.name.trim()) { toast.error('Le nom du candidat est requis.'); return; }
+    setSubmitting(true);
+    try {
+      if (editingId) {
+        await businessJobseekerApi.update(editingId, form);
+        toast.success('Candidat mis à jour !');
+        if (selectedDetail?.id === editingId) {
+          const refreshed = await businessJobseekerApi.getDetail(editingId);
+          setSelectedDetail(refreshed);
+        }
+      } else {
+        await businessJobseekerApi.create(form);
+        toast.success('Candidat ajouté au vivier !');
+      }
+      setShowForm(false);
+      fetchJobseekers(editingId ? pagination.page : 1);
+    } catch (err: any) {
+      toast.error(err.message);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleStatusChange = async (status: string) => {
+    if (!selectedDetail) return;
+    setSavingStatus(true);
+    try {
+      await businessJobseekerApi.updateStatus(selectedDetail.id, status);
+      setSelectedDetail({ ...selectedDetail, affiliationStatus: status });
+      setJobseekers((prev) => prev.map((j) => (j.id === selectedDetail.id ? { ...j, affiliationStatus: status } : j)));
+      toast.success('Statut mis à jour.');
+    } catch (err: any) {
+      toast.error(err.message);
+    } finally {
+      setSavingStatus(false);
+    }
+  };
+
+  const handleSaveNote = async () => {
+    if (!selectedDetail) return;
+    setSavingNote(true);
+    try {
+      const saved = await businessJobseekerApi.updateNote(selectedDetail.id, noteDraft);
+      setSelectedDetail({ ...selectedDetail, note: saved });
+      toast.success('Note enregistrée.');
+    } catch (err: any) {
+      toast.error(err.message);
+    } finally {
+      setSavingNote(false);
+    }
+  };
+
+  const confirmRemove = async () => {
+    if (!removingId) return;
+    setRemoving(true);
+    try {
+      await businessJobseekerApi.remove(removingId);
+      toast.success('Candidat retiré du vivier.');
+      if (selectedDetail?.id === removingId) { setDrawerOpen(false); setSelectedDetail(null); }
+      setRemovingId(null);
+      fetchJobseekers(pagination.page);
+    } catch (err: any) {
+      toast.error(err.message);
+    } finally {
+      setRemoving(false);
     }
   };
 
@@ -118,12 +251,15 @@ const BusinessJobseekers: React.FC = () => {
       {/* Barre d'outils (le titre est porté par le hero du layout) */}
       <div className="flex items-center justify-end mb-4 md:mb-6">
         {/* Desktop Actions */}
-        <div className="hidden md:flex">
+        <div className="hidden md:flex items-center gap-2">
           <button onClick={exportCSV} className="btn btn-secondary min-h-[44px]" disabled={jobseekers.length === 0}>
             <Download size={16} /> Export CSV
           </button>
+          <button onClick={openCreate} className="btn btn-primary min-h-[44px]">
+            <UserPlus size={16} /> Ajouter un candidat
+          </button>
         </div>
-        
+
         {/* Mobile Actions Toggle */}
         <button 
           onClick={() => setShowMobileActions(true)}
@@ -140,8 +276,15 @@ const BusinessJobseekers: React.FC = () => {
           <div className="relative bg-white dark:bg-[#111827] w-full rounded-t-2xl shadow-2xl p-4 border-t border-slate-200 dark:border-slate-700">
             <div className="w-10 h-1 bg-slate-200 dark:bg-slate-700 rounded-full mx-auto mb-4" />
             <h3 className="font-bold text-slate-900 dark:text-white mb-4">Actions</h3>
-            <button 
-              onClick={exportCSV} 
+            <button
+              onClick={openCreate}
+              className="w-full flex items-center gap-3 p-4 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 text-left min-h-[44px]"
+            >
+              <UserPlus size={20} className="text-[#7D5CFF]" />
+              <span className="font-medium text-slate-900 dark:text-white">Ajouter un candidat</span>
+            </button>
+            <button
+              onClick={exportCSV}
               disabled={jobseekers.length === 0}
               className="w-full flex items-center gap-3 p-4 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 text-left min-h-[44px]"
             >
@@ -264,9 +407,16 @@ const BusinessJobseekers: React.FC = () => {
           ))}
         </div>
       ) : jobseekers.length === 0 ? (
-        <div className="card-pro text-center py-20 px-4">
+        <div className="card-pro text-center py-16 md:py-20 px-4">
           <User className="mx-auto text-slate-300 dark:text-slate-600 mb-4" size={48} />
-          <p className="text-slate-500 dark:text-slate-400 text-sm">Aucun demandeur d'emploi trouvé.</p>
+          <p className="text-slate-500 dark:text-slate-400 text-sm">
+            {search || statusFilter ? 'Aucun candidat ne correspond à votre recherche.' : 'Votre vivier est vide pour le moment.'}
+          </p>
+          {!search && !statusFilter && (
+            <button onClick={openCreate} className="btn btn-primary mt-4 min-h-[44px]">
+              <UserPlus size={16} /> Ajouter votre premier candidat
+            </button>
+          )}
         </div>
       ) : (
         <>
@@ -364,6 +514,79 @@ const BusinessJobseekers: React.FC = () => {
                       <h3 className="text-xl font-bold text-slate-900 dark:text-white leading-tight">{selectedDetail.name}</h3>
                       {selectedDetail.title && <p className="text-sm font-medium text-slate-500 mt-1">{selectedDetail.title}</p>}
                     </div>
+                  </div>
+
+                  {/* ── Gestion (CRM) ── */}
+                  <div className="rounded-xl border border-slate-200 dark:border-slate-700 p-4 space-y-4">
+                    {/* Statut */}
+                    <div>
+                      <label className="text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-2 flex items-center gap-1.5">
+                        Statut {savingStatus && <Loader2 size={11} className="animate-spin" />}
+                      </label>
+                      <div className="flex items-center gap-1.5">
+                        {STATUS_FORM_OPTIONS.map((o) => {
+                          const isActive = selectedDetail.affiliationStatus === o.value;
+                          return (
+                            <button
+                              key={o.value}
+                              onClick={() => handleStatusChange(o.value)}
+                              disabled={savingStatus || isActive}
+                              className={`flex-1 px-2 py-2 rounded-lg text-xs font-bold border transition-colors min-h-[40px] disabled:cursor-default ${
+                                isActive
+                                  ? getStatusColor(o.value)
+                                  : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-700'
+                              }`}
+                            >
+                              {o.label}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    {/* Note privée */}
+                    <div>
+                      <label className="text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-2 flex items-center gap-1.5">
+                        <StickyNote size={12} /> Note privée
+                      </label>
+                      <textarea
+                        className="textarea-pro text-sm"
+                        rows={3}
+                        value={noteDraft}
+                        onChange={(e) => setNoteDraft(e.target.value)}
+                        placeholder="Vos remarques sur ce candidat (visibles par vous seul)…"
+                      />
+                      <div className="flex justify-end mt-2">
+                        <button
+                          onClick={handleSaveNote}
+                          disabled={savingNote || noteDraft === (selectedDetail.note || '')}
+                          className="btn btn-secondary min-h-[40px] text-sm disabled:opacity-50"
+                        >
+                          {savingNote ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />}
+                          Enregistrer la note
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Actions fiche */}
+                    <div className="flex items-center gap-2 pt-1">
+                      {selectedDetail.managed && (
+                        <button onClick={() => openEdit(selectedDetail)} className="btn btn-secondary min-h-[40px] text-sm flex-1">
+                          <Edit3 size={14} /> Modifier la fiche
+                        </button>
+                      )}
+                      <button
+                        onClick={() => setRemovingId(selectedDetail.id)}
+                        className="min-h-[40px] text-sm flex-1 inline-flex items-center justify-center gap-2 rounded-xl border border-red-200 dark:border-red-900/40 text-red-600 dark:text-red-400 font-semibold hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors px-3"
+                      >
+                        <Trash2 size={14} /> Retirer du vivier
+                      </button>
+                    </div>
+                    {!selectedDetail.managed && (
+                      <p className="text-[11px] text-slate-400 leading-snug">
+                        Ce candidat possède un compte Joboost : sa fiche n'est pas modifiable ici.
+                      </p>
+                    )}
                   </div>
 
                   {/* Contact Grid */}
@@ -469,6 +692,109 @@ const BusinessJobseekers: React.FC = () => {
           </div>
         </>
       )}
+
+      {/* ─── Modale Ajout / Édition de candidat ─── */}
+      {showForm && (
+        <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center">
+          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setShowForm(false)} />
+          <div className="relative bg-white dark:bg-[#111827] w-full md:rounded-xl shadow-2xl md:max-w-xl md:mx-4 max-h-[100dvh] md:max-h-[90vh] overflow-y-auto border-t md:border border-slate-200 dark:border-slate-700 rounded-t-2xl md:rounded-xl">
+            <div className="sticky top-0 bg-white dark:bg-[#111827] flex items-center justify-between p-4 md:p-5 border-b border-slate-200 dark:border-slate-700 z-10">
+              <div className="absolute top-2 left-1/2 -translate-x-1/2 w-10 h-1 bg-slate-200 dark:bg-slate-700 rounded-full md:hidden" />
+              <h2 className="text-lg font-bold text-slate-900 dark:text-white mt-2 md:mt-0">
+                {editingId ? 'Modifier le candidat' : 'Ajouter un candidat'}
+              </h2>
+              <button onClick={() => setShowForm(false)} className="p-2.5 rounded-lg text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center">
+                <X size={18} />
+              </button>
+            </div>
+
+            <form onSubmit={handleSubmit} className="p-4 md:p-5 space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="input-label">Nom complet *</label>
+                  <input className="input-pro" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="Ex : Camille Durand" required />
+                </div>
+                <div>
+                  <label className="input-label">Intitulé / métier</label>
+                  <input className="input-pro" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} placeholder="Ex : Développeuse web" />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="input-label">E-mail</label>
+                  <input className="input-pro" type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} placeholder="(facultatif)" />
+                </div>
+                <div>
+                  <label className="input-label">Téléphone</label>
+                  <input className="input-pro" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} placeholder="(facultatif)" />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="input-label">Ville</label>
+                  <input className="input-pro" value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} placeholder="Ex : Lyon" />
+                </div>
+                <div>
+                  <label className="input-label">LinkedIn</label>
+                  <input className="input-pro" value={form.linkedin} onChange={(e) => setForm({ ...form, linkedin: e.target.value })} placeholder="URL du profil (facultatif)" />
+                </div>
+              </div>
+
+              <div>
+                <label className="input-label">Résumé / notes profil</label>
+                <textarea className="textarea-pro" rows={3} value={form.summary} onChange={(e) => setForm({ ...form, summary: e.target.value })} placeholder="Parcours, points forts…" />
+              </div>
+
+              <div>
+                <label className="input-label">Compétences</label>
+                <div className="flex gap-2">
+                  <input
+                    className="input-pro flex-1"
+                    value={skillInput}
+                    onChange={(e) => setSkillInput(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addSkill(); } }}
+                    placeholder="Ajouter une compétence…"
+                  />
+                  <button type="button" onClick={addSkill} className="btn btn-secondary min-h-[44px] min-w-[44px]">+</button>
+                </div>
+                {(form.skills || []).length > 0 && (
+                  <div className="flex flex-wrap gap-1.5 mt-2">
+                    {(form.skills || []).map((skill) => (
+                      <span key={skill} className="badge-ai flex items-center gap-1">
+                        {skill}
+                        <button type="button" onClick={() => removeSkill(skill)} className="hover:text-red-500 transition-colors p-0.5"><X size={12} /></button>
+                      </span>
+                    ))}
+                  </div>
+                )}
+                <p className="text-[11px] text-slate-400 mt-2">Les compétences alimentent le matching avec vos offres d'emploi.</p>
+              </div>
+
+              <div className="flex flex-col-reverse sm:flex-row justify-end gap-3 pt-4 border-t border-slate-200 dark:border-slate-700">
+                <button type="button" onClick={() => setShowForm(false)} className="btn btn-secondary min-h-[44px] w-full sm:w-auto">Annuler</button>
+                <button type="submit" disabled={submitting} className="btn btn-primary min-h-[44px] w-full sm:w-auto">
+                  {submitting ? <Loader2 size={16} className="animate-spin" /> : null}
+                  {editingId ? 'Enregistrer' : 'Ajouter au vivier'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Confirmation de retrait */}
+      <ConfirmDialog
+        open={!!removingId}
+        title="Retirer ce candidat ?"
+        message="Le candidat sera retiré de votre vivier. S'il a été saisi par vous, sa fiche sera définitivement supprimée."
+        confirmLabel="Retirer"
+        variant="danger"
+        loading={removing}
+        onConfirm={confirmRemove}
+        onCancel={() => setRemovingId(null)}
+      />
     </div>
   );
 };

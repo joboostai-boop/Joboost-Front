@@ -115,8 +115,13 @@ model User {
   businessAffiliationsOwned BusinessAffiliation[] @relation("BusinessOwner")
   businessAffiliationsAsJobseeker BusinessAffiliation[] @relation("AffiliatedJobseeker")
 
+  // Candidat saisi par un recruteur dans SON vivier (n'est pas un vrai compte Joboost).
+  // Permet une suppression propre et d'autoriser l'édition de sa fiche par ce recruteur uniquement.
+  managedByBusinessId String?
+
   @@index([role])
   @@index([organizationId])
+  @@index([managedByBusinessId])
 }
 
 enum ApplicationStatus {
@@ -341,7 +346,8 @@ model BusinessAffiliation {
   
   affiliatedAt DateTime @default(now())
   status       String   @default("active") // active, inactive, suspended
-  
+  note         String?  // note privée du recruteur sur ce candidat (mini-CRM)
+
   @@unique([businessId, jobseekerId])
 
   @@index([businessId])

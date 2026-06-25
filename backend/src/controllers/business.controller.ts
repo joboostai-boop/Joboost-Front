@@ -1,4 +1,5 @@
 import { Request, Response } from 'express';
+import { randomUUID } from 'crypto';
 import { prisma } from '../db';
 
 export const businessController = {
@@ -147,6 +148,69 @@ export const businessController = {
     }
   },
 
+  // Matching : candidats du vivier dont les compétences recoupent celles requises par l'offre.
+  getOfferMatches: async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+
+      const offer = await prisma.businessOffer.findFirst({
+        where: { id, businessId: req.userId! },
+      });
+      if (!offer) {
+        return res.status(404).json({ success: false, error: 'Offre non trouvée.' });
+      }
+
+      const required = (offer.requiredSkills || [])
+        .map((s) => s.trim().toLowerCase())
+        .filter(Boolean);
+
+      // Pas de compétences requises → matching impossible (on le signale honnêtement).
+      if (required.length === 0) {
+        return res.json({ success: true, matches: [], requiredSkills: [], totalVivier: 0 });
+      }
+
+      const affiliations = await prisma.businessAffiliation.findMany({
+        where: { businessId: req.userId! },
+        include: {
+          jobseeker: {
+            select: { id: true, name: true, email: true, title: true, city: true, skills: true },
+          },
+        },
+      });
+
+      const requiredSet = new Set(required);
+
+      const matches = affiliations
+        .map((a) => {
+          const skills = a.jobseeker.skills || [];
+          const matchedSkills = skills.filter((s) => requiredSet.has(s.trim().toLowerCase()));
+          return {
+            id: a.jobseeker.id,
+            name: a.jobseeker.name,
+            title: a.jobseeker.title,
+            city: a.jobseeker.city,
+            skills,
+            affiliationStatus: a.status,
+            matchCount: matchedSkills.length,
+            matchedSkills,
+            matchPercent: Math.round((matchedSkills.length / requiredSet.size) * 100),
+          };
+        })
+        .filter((m) => m.matchCount > 0)
+        .sort((a, b) => b.matchCount - a.matchCount);
+
+      res.json({
+        success: true,
+        matches,
+        requiredSkills: offer.requiredSkills || [],
+        totalVivier: affiliations.length,
+      });
+    } catch (error: any) {
+      console.error('Business getOfferMatches error:', error);
+      res.status(500).json({ success: false, error: 'Erreur lors du calcul des correspondances.' });
+    }
+  },
+
   // ==================== JOBSEEKERS ====================
 
   listJobseekers: async (req: Request, res: Response) => {
@@ -261,6 +325,7 @@ export const businessController = {
           experiences: true,
           education: true,
           updatedAt: true,
+          managedByBusinessId: true,
           applications: {
             orderBy: { appliedAt: 'desc' },
             take: 10,
@@ -276,17 +341,242 @@ export const businessController = {
         return res.status(404).json({ success: false, error: 'Demandeur non trouvé.' });
       }
 
+      const { managedByBusinessId, ...rest } = jobseeker;
       res.json({
         success: true,
         jobseeker: {
-          ...jobseeker,
+          ...rest,
           affiliationStatus: affiliation.status,
           affiliatedAt: affiliation.affiliatedAt,
+          note: affiliation.note,
+          managed: managedByBusinessId === req.userId!, // true = fiche éditable par ce recruteur
         },
       });
     } catch (error: any) {
       console.error('Business getJobseekerDetail error:', error);
       res.status(500).json({ success: false, error: 'Erreur lors de la récupération du profil.' });
+    }
+  },
+
+  // Ajoute un candidat AU VIVIER du recruteur (saisie manuelle : l'entreprise gère sa propre base).
+  // Crée un profil candidat « géré » (pas un compte connectable) puis l'affilie.
+  createJobseeker: async (req: Request, res: Response) => {
+    try {
+      const businessId = req.userId!;
+      const { name, email, title, city, phone, summary, skills, linkedin } = req.body;
+
+      if (!name || !String(name).trim()) {
+        return res.status(400).json({ success: false, error: 'Le nom du candidat est requis.' });
+      }
+
+      const cleanSkills = Array.isArray(skills)
+        ? skills.map((s: string) => String(s).trim()).filter(Boolean)
+        : [];
+
+      // Email : si fourni, on refuse les doublons (un compte existe déjà avec cet email).
+      // Sinon on synthétise une adresse interne unique (le candidat n'a pas de compte).
+      let finalEmail: string;
+      const provided = email ? String(email).trim().toLowerCase() : '';
+      if (provided) {
+        const existing = await prisma.user.findUnique({ where: { email: provided } });
+        if (existing) {
+          return res.status(409).json({
+            success: false,
+            error: 'Un profil avec cet e-mail existe déjà. Utilisez un autre e-mail ou laissez le champ vide.',
+          });
+        }
+        finalEmail = provided;
+      } else {
+        finalEmail = `vivier-${randomUUID()}@candidat.joboost.local`;
+      }
+
+      const candidate = await prisma.user.create({
+        data: {
+          name: String(name).trim(),
+          email: finalEmail,
+          role: 'CANDIDATE',
+          managedByBusinessId: businessId,
+          title: title ? String(title).trim() : null,
+          city: city ? String(city).trim() : null,
+          phone: phone ? String(phone).trim() : null,
+          summary: summary ? String(summary).trim() : null,
+          linkedin: linkedin ? String(linkedin).trim() : null,
+          skills: cleanSkills,
+        },
+      });
+
+      const affiliation = await prisma.businessAffiliation.create({
+        data: { businessId, jobseekerId: candidate.id, status: 'active' },
+      });
+
+      res.status(201).json({
+        success: true,
+        jobseeker: {
+          affiliationId: affiliation.id,
+          affiliationStatus: affiliation.status,
+          affiliatedAt: affiliation.affiliatedAt,
+          id: candidate.id,
+          name: candidate.name,
+          email: candidate.email,
+          title: candidate.title,
+          skills: candidate.skills,
+          city: candidate.city,
+          phone: candidate.phone,
+          updatedAt: candidate.updatedAt,
+        },
+      });
+    } catch (error: any) {
+      console.error('Business createJobseeker error:', error);
+      res.status(500).json({ success: false, error: "Erreur lors de l'ajout du candidat." });
+    }
+  },
+
+  // Édite la fiche d'un candidat — UNIQUEMENT s'il a été créé par ce recruteur (managed).
+  // On ne modifie jamais le profil d'un vrai utilisateur Joboost.
+  updateJobseeker: async (req: Request, res: Response) => {
+    try {
+      const businessId = req.userId!;
+      const { id } = req.params;
+
+      const affiliation = await prisma.businessAffiliation.findFirst({
+        where: { businessId, jobseekerId: id },
+      });
+      if (!affiliation) {
+        return res.status(404).json({ success: false, error: 'Candidat non trouvé dans votre vivier.' });
+      }
+
+      const candidate = await prisma.user.findUnique({ where: { id } });
+      if (!candidate || candidate.managedByBusinessId !== businessId) {
+        return res.status(403).json({
+          success: false,
+          error: "Ce profil appartient à un utilisateur Joboost et ne peut pas être modifié ici.",
+        });
+      }
+
+      const { name, email, title, city, phone, summary, skills, linkedin } = req.body;
+      const data: any = {};
+      if (name !== undefined) data.name = String(name).trim();
+      if (title !== undefined) data.title = title ? String(title).trim() : null;
+      if (city !== undefined) data.city = city ? String(city).trim() : null;
+      if (phone !== undefined) data.phone = phone ? String(phone).trim() : null;
+      if (summary !== undefined) data.summary = summary ? String(summary).trim() : null;
+      if (linkedin !== undefined) data.linkedin = linkedin ? String(linkedin).trim() : null;
+      if (skills !== undefined) {
+        data.skills = Array.isArray(skills) ? skills.map((s: string) => String(s).trim()).filter(Boolean) : [];
+      }
+      if (email !== undefined && String(email).trim()) {
+        const provided = String(email).trim().toLowerCase();
+        if (provided !== candidate.email) {
+          const clash = await prisma.user.findUnique({ where: { email: provided } });
+          if (clash) {
+            return res.status(409).json({ success: false, error: 'Un profil avec cet e-mail existe déjà.' });
+          }
+          data.email = provided;
+        }
+      }
+
+      const updated = await prisma.user.update({ where: { id }, data });
+      res.json({
+        success: true,
+        jobseeker: {
+          affiliationId: affiliation.id,
+          affiliationStatus: affiliation.status,
+          affiliatedAt: affiliation.affiliatedAt,
+          id: updated.id,
+          name: updated.name,
+          email: updated.email,
+          title: updated.title,
+          skills: updated.skills,
+          city: updated.city,
+          phone: updated.phone,
+          updatedAt: updated.updatedAt,
+        },
+      });
+    } catch (error: any) {
+      console.error('Business updateJobseeker error:', error);
+      res.status(500).json({ success: false, error: 'Erreur lors de la modification du candidat.' });
+    }
+  },
+
+  // Change le statut d'affiliation (active / inactive / suspended).
+  updateJobseekerStatus: async (req: Request, res: Response) => {
+    try {
+      const businessId = req.userId!;
+      const { id } = req.params;
+      const { status } = req.body;
+
+      const ALLOWED = ['active', 'inactive', 'suspended'];
+      if (!ALLOWED.includes(status)) {
+        return res.status(400).json({ success: false, error: 'Statut invalide.' });
+      }
+
+      const affiliation = await prisma.businessAffiliation.findFirst({
+        where: { businessId, jobseekerId: id },
+      });
+      if (!affiliation) {
+        return res.status(404).json({ success: false, error: 'Candidat non trouvé dans votre vivier.' });
+      }
+
+      await prisma.businessAffiliation.update({ where: { id: affiliation.id }, data: { status } });
+      res.json({ success: true, status });
+    } catch (error: any) {
+      console.error('Business updateJobseekerStatus error:', error);
+      res.status(500).json({ success: false, error: 'Erreur lors du changement de statut.' });
+    }
+  },
+
+  // Enregistre la note privée du recruteur sur un candidat (mini-CRM).
+  updateJobseekerNote: async (req: Request, res: Response) => {
+    try {
+      const businessId = req.userId!;
+      const { id } = req.params;
+      const { note } = req.body;
+
+      const affiliation = await prisma.businessAffiliation.findFirst({
+        where: { businessId, jobseekerId: id },
+      });
+      if (!affiliation) {
+        return res.status(404).json({ success: false, error: 'Candidat non trouvé dans votre vivier.' });
+      }
+
+      const clean = note ? String(note) : null;
+      await prisma.businessAffiliation.update({ where: { id: affiliation.id }, data: { note: clean } });
+      res.json({ success: true, note: clean });
+    } catch (error: any) {
+      console.error('Business updateJobseekerNote error:', error);
+      res.status(500).json({ success: false, error: "Erreur lors de l'enregistrement de la note." });
+    }
+  },
+
+  // Retire un candidat du vivier. Si c'est un candidat « géré » (créé par ce recruteur),
+  // on supprime aussi sa fiche (cascade) ; sinon on retire seulement l'affiliation.
+  removeJobseeker: async (req: Request, res: Response) => {
+    try {
+      const businessId = req.userId!;
+      const { id } = req.params;
+
+      const affiliation = await prisma.businessAffiliation.findFirst({
+        where: { businessId, jobseekerId: id },
+      });
+      if (!affiliation) {
+        return res.status(404).json({ success: false, error: 'Candidat non trouvé dans votre vivier.' });
+      }
+
+      const candidate = await prisma.user.findUnique({
+        where: { id },
+        select: { managedByBusinessId: true },
+      });
+
+      if (candidate?.managedByBusinessId === businessId) {
+        await prisma.user.delete({ where: { id } }); // cascade : supprime l'affiliation
+      } else {
+        await prisma.businessAffiliation.delete({ where: { id: affiliation.id } });
+      }
+
+      res.json({ success: true, message: 'Candidat retiré du vivier.' });
+    } catch (error: any) {
+      console.error('Business removeJobseeker error:', error);
+      res.status(500).json({ success: false, error: 'Erreur lors du retrait du candidat.' });
     }
   },
 

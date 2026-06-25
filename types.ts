@@ -150,6 +150,8 @@ export interface BusinessJobseekerDetail extends BusinessJobseeker {
   languages?: string[];
   portfolio?: string;
   github?: string;
+  note?: string | null;       // note privée du recruteur (mini-CRM)
+  managed?: boolean;          // true = candidat saisi par le recruteur (fiche éditable)
   applications?: {
     id: string;
     company: string;
@@ -162,6 +164,37 @@ export interface BusinessJobseekerDetail extends BusinessJobseeker {
     title: string;
     updatedAt: string;
   }[];
+}
+
+// Saisie / édition d'un candidat dans le vivier (par le recruteur)
+export interface BusinessJobseekerInput {
+  name: string;
+  email?: string;
+  title?: string;
+  city?: string;
+  phone?: string;
+  summary?: string;
+  linkedin?: string;
+  skills?: string[];
+}
+
+// Matching offre → candidats du vivier
+export interface OfferMatch {
+  id: string;
+  name: string;
+  title?: string | null;
+  city?: string | null;
+  skills: string[];
+  affiliationStatus: string;
+  matchCount: number;
+  matchedSkills: string[];
+  matchPercent: number;
+}
+
+export interface OfferMatchesResult {
+  matches: OfferMatch[];
+  requiredSkills: string[];
+  totalVivier: number;
 }
 
 export type StatsPeriod = '7d' | '30d' | '3m' | '6m' | '12m' | 'custom';
