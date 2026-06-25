@@ -2,6 +2,8 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { BusinessOffer, Pagination } from '../types';
 import { businessOfferApi } from '../services/business';
 import toast from 'react-hot-toast';
+import ConfirmDialog from '../components/ConfirmDialog';
+import { useModalBehavior } from '../hooks/useModalBehavior';
 import {
   Plus, Edit3, Trash2, Eye, EyeOff, X,
   MapPin, Briefcase, DollarSign, Clock, ChevronLeft, ChevronRight, Loader2
@@ -28,6 +30,11 @@ const BusinessOffers: React.FC = () => {
   const [form, setForm] = useState(emptyOffer);
   const [skillInput, setSkillInput] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [deletingOffer, setDeletingOffer] = useState<BusinessOffer | null>(null);
+  const [deleting, setDeleting] = useState(false);
+
+  // Échap pour fermer + blocage du scroll de fond sur la modale de création/édition.
+  useModalBehavior(showModal, () => setShowModal(false));
 
   const fetchOffers = useCallback(async (page = 1) => {
     try {
@@ -90,14 +97,18 @@ const BusinessOffers: React.FC = () => {
     }
   };
 
-  const handleDelete = async (id: string) => {
-    if (!confirm('Supprimer cette offre ?')) return;
+  const confirmDelete = async () => {
+    if (!deletingOffer) return;
+    setDeleting(true);
     try {
-      await businessOfferApi.delete(id);
+      await businessOfferApi.delete(deletingOffer.id);
       toast.success('Offre supprimée.');
+      setDeletingOffer(null);
       fetchOffers(pagination.page);
     } catch (err: any) {
       toast.error(err.message);
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -155,7 +166,7 @@ const BusinessOffers: React.FC = () => {
         <Edit3 size={18} />
       </button>
       <button
-        onClick={(e) => { e.stopPropagation(); handleDelete(offer.id); }}
+        onClick={(e) => { e.stopPropagation(); setDeletingOffer(offer); }}
         className="p-2.5 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center"
         title="Supprimer"
       >
@@ -429,6 +440,18 @@ const BusinessOffers: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* Confirmation de suppression (remplace le confirm() natif) */}
+      <ConfirmDialog
+        open={!!deletingOffer}
+        title="Supprimer cette offre ?"
+        message={deletingOffer ? `« ${deletingOffer.title} » sera définitivement supprimée. Cette action est irréversible.` : ''}
+        confirmLabel="Supprimer"
+        variant="danger"
+        loading={deleting}
+        onConfirm={confirmDelete}
+        onCancel={() => setDeletingOffer(null)}
+      />
     </div>
   );
 };

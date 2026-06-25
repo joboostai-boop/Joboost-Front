@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { BusinessStats, StatsQuery, StatsPeriod, BusinessJobseeker } from '../types';
 import { businessStatsApi, businessJobseekerApi } from '../services/business';
 import ActionMenu from '../components/ActionMenu';
+import { useModalBehavior } from '../hooks/useModalBehavior';
 import toast from 'react-hot-toast';
 import {
   Users, UserPlus, Target, Briefcase, TrendingUp, TrendingDown,
@@ -96,6 +97,11 @@ const BusinessStatsPage: React.FC = () => {
 
   // Drill-down
   const [drill, setDrill] = useState<{ type: 'skill' | 'status'; value: string; label: string } | null>(null);
+
+  // Échap pour fermer + blocage du scroll de fond sur les overlays.
+  useModalBehavior(showCustomize, () => setShowCustomize(false));
+  useModalBehavior(showMobileActions, () => setShowMobileActions(false));
+  useModalBehavior(!!drill, () => setDrill(null));
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768);
@@ -404,8 +410,8 @@ const BusinessStatsPage: React.FC = () => {
               <div className="h-[220px] md:h-[300px]">
                 <ResponsiveContainer width="100%" height="100%">
                   <LineChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" vertical={false} />
-                    <XAxis dataKey="label" tick={{ fontSize: 11, fill: '#9CA3AF' }} axisLine={{ stroke: '#E5E7EB' }} tickLine={false} dy={10} interval="preserveStartEnd" minTickGap={20} />
+                    <CartesianGrid strokeDasharray="3 3" stroke="#94A3B8" strokeOpacity={0.2} vertical={false} />
+                    <XAxis dataKey="label" tick={{ fontSize: 11, fill: '#9CA3AF' }} axisLine={{ stroke: '#94A3B8', strokeOpacity: 0.3 }} tickLine={false} dy={10} interval="preserveStartEnd" minTickGap={20} />
                     <YAxis tick={{ fontSize: 11, fill: '#9CA3AF' }} axisLine={false} tickLine={false} allowDecimals={false} />
                     <Tooltip
                       contentStyle={{ backgroundColor: '#111827', border: '1px solid #374151', borderRadius: '8px', color: '#F9FAFB', fontSize: '12px', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}

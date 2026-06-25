@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { BusinessJobseeker, BusinessJobseekerDetail, Pagination } from '../types';
 import { businessJobseekerApi } from '../services/business';
+import { useModalBehavior } from '../hooks/useModalBehavior';
 import toast from 'react-hot-toast';
 import {
   Search, Filter, X, ChevronLeft, ChevronRight, Loader2, Download,
@@ -25,6 +26,11 @@ const BusinessJobseekers: React.FC = () => {
   const [loadingDetail, setLoadingDetail] = useState(false);
   const [showFiltersMobile, setShowFiltersMobile] = useState(false);
   const [showMobileActions, setShowMobileActions] = useState(false);
+
+  // Échap pour fermer + blocage du scroll de fond sur les overlays.
+  useModalBehavior(drawerOpen, () => { setDrawerOpen(false); setSelectedDetail(null); });
+  useModalBehavior(showFiltersMobile, () => setShowFiltersMobile(false));
+  useModalBehavior(showMobileActions, () => setShowMobileActions(false));
 
   const fetchJobseekers = useCallback(async (page = 1) => {
     try {
