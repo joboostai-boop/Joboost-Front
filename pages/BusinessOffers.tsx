@@ -509,7 +509,7 @@ const BusinessOffers: React.FC = () => {
                   <ul className="space-y-2.5">
                     {matchesData.matches.map((m) => (
                       <li key={m.id} className="flex items-center gap-3 p-3 rounded-xl border border-slate-100 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-800/40">
-                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#7D5CFF] to-[#4F46E5] flex items-center justify-center text-white font-bold text-sm shrink-0">
+                        <div className="w-10 h-10 rounded-full bg-[#EFEBFF] dark:bg-[#7D5CFF]/15 text-[#5B3FD6] dark:text-[#B9A7FF] flex items-center justify-center font-bold text-sm shrink-0">
                           {m.name.charAt(0).toUpperCase()}
                         </div>
                         <div className="flex-1 min-w-0">

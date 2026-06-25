@@ -428,7 +428,7 @@ const BusinessJobseekers: React.FC = () => {
                 className="card-pro p-4 hover:shadow-md hover:border-[#7D5CFF]/30 cursor-pointer transition-all duration-200 group"
               >
                 <div className="flex items-start gap-3">
-                  <div className="w-10 md:w-12 h-10 md:h-12 rounded-full bg-gradient-to-br from-[#7D5CFF] to-[#4F46E5] flex items-center justify-center text-white font-bold text-sm md:text-base shrink-0">
+                  <div className="w-10 md:w-12 h-10 md:h-12 rounded-full bg-[#EFEBFF] dark:bg-[#7D5CFF]/15 text-[#5B3FD6] dark:text-[#B9A7FF] flex items-center justify-center font-bold text-sm md:text-base shrink-0">
                     {js.name.charAt(0).toUpperCase()}
                   </div>
                   <div className="flex-1 min-w-0">
@@ -507,7 +507,7 @@ const BusinessJobseekers: React.FC = () => {
                 <div className="p-4 md:p-6 space-y-6 md:space-y-8">
                   {/* Header Info */}
                   <div className="flex items-center gap-4">
-                    <div className="w-16 h-16 md:w-20 md:h-20 rounded-full bg-gradient-to-br from-[#7D5CFF] to-[#4F46E5] flex items-center justify-center text-white font-bold text-2xl md:text-3xl shrink-0">
+                    <div className="w-16 h-16 md:w-20 md:h-20 rounded-full bg-[#EFEBFF] dark:bg-[#7D5CFF]/15 text-[#5B3FD6] dark:text-[#B9A7FF] flex items-center justify-center font-bold text-2xl md:text-3xl shrink-0">
                       {selectedDetail.name.charAt(0).toUpperCase()}
                     </div>
                     <div className="flex-1">
