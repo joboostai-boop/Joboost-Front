@@ -4,12 +4,15 @@ import { googleAuthController } from '../controllers/google-auth.controller';
 import { linkedinAuthController } from '../controllers/linkedin-auth.controller';
 import { appleAuthController } from '../controllers/apple-auth.controller';
 import { requireAuth } from '../middleware/auth.middleware';
+import { authLimiter } from '../middleware/rateLimit.middleware';
 
 const router = Router();
 
-router.post('/register', authController.register);
-router.post('/login', authController.login);
-router.post('/business-login', authController.businessLogin);
+// Rate-limit uniquement sur les routes sensibles (anti brute-force).
+// On n'applique PAS le limiteur à /me ni aux callbacks OAuth (appelés à chaque chargement).
+router.post('/register', authLimiter, authController.register);
+router.post('/login', authLimiter, authController.login);
+router.post('/business-login', authLimiter, authController.businessLogin);
 router.post('/logout', authController.logout);
 router.get('/me', requireAuth, authController.me);
 

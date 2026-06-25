@@ -1,10 +1,12 @@
 import express from 'express';
 import cors from 'cors';
+import helmet from 'helmet';
 import dotenv from 'dotenv';
 import cookieParser from 'cookie-parser';
 import compression from 'compression';
 import { checkDbConnection } from './db';
 import { requireAuth } from './middleware/auth.middleware';
+import { aiLimiter } from './middleware/rateLimit.middleware';
 import authRoutes from './routes/auth.routes';
 import ftRoutes from './routes/ft.routes';
 import aiRoutes from './routes/ai.routes';
@@ -25,6 +27,18 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 4000;
 
+// Render (et la plupart des PaaS) place l'app derrière un proxy : on fait confiance
+// au 1er hop pour que req.ip = vraie IP client (X-Forwarded-For) — requis par le rate-limiting.
+app.set('trust proxy', 1);
+
+// En-têtes de sécurité HTTP. API JSON pure (aucune page HTML servie ici) :
+// - CSP désactivée (inutile pour du JSON, et seul vecteur de casse).
+// - CORP en 'cross-origin' : le front (autre origine) doit pouvoir lire les réponses.
+app.use(helmet({
+  contentSecurityPolicy: false,
+  crossOriginResourcePolicy: { policy: 'cross-origin' },
+}));
+
 app.use(cors({
   origin: process.env.FRONTEND_URL || 'http://localhost:3000',
   credentials: true
@@ -43,8 +57,8 @@ app.use(cookieParser());
 // Initialize Auth Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/auth/ft', ftRoutes);
-// Initialize AI Routes
-app.use('/api/ai', requireAuth, aiRoutes);
+// Initialize AI Routes (rate-limité : borne le coût Gemini par utilisateur)
+app.use('/api/ai', requireAuth, aiLimiter, aiRoutes);
 // Initialize User Routes
 app.use('/api/users', requireAuth, userRoutes);
 // Initialize Application Routes
@@ -73,10 +87,21 @@ app.get('/api/health', (req, res) => {
     res.json({ status: 'ok', message: 'JobBoost Backend is running 😎' });
 });
 
-// Global Error Handler to guarantee JSON responses
+// 404 JSON pour toute route /api inconnue (au lieu du HTML par défaut d'Express).
+app.use('/api', (req, res) => {
+  res.status(404).json({ success: false, error: 'Ressource introuvable.' });
+});
+
+// Global Error Handler to guarantee JSON responses.
+// En production on ne renvoie PAS le message interne au client (fuite d'info) ;
+// il reste loggé côté serveur. En dev, on le renvoie pour faciliter le debug.
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
   console.error("🔥 GLOBAL EXPRESS ERROR:", err);
-  res.status(500).json({ success: false, error: err.message || "Erreur Interne au Serveur" });
+  const isDev = process.env.NODE_ENV !== 'production';
+  res.status(err?.status || 500).json({
+    success: false,
+    error: isDev ? (err?.message || "Erreur Interne au Serveur") : "Une erreur interne est survenue.",
+  });
 });
 
 app.listen(PORT, async () => {
