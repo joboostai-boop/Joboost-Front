@@ -391,10 +391,10 @@ const BusinessStatsPage: React.FC = () => {
         if (w.id === 'kpis') {
           return (
             <div key="kpis" className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 mb-6">
-              <KPICard icon={<Users size={18} />} label="Adhérents actifs" value={stats.kpis.totalActive} />
-              <KPICard icon={<UserPlus size={18} />} label="Nouveaux (période)" value={stats.kpis.newInPeriod} delta={stats.kpis.newInPeriodDelta} />
-              <KPICard icon={<Target size={18} />} label="Complétion profil" value={`${stats.kpis.avgProfileCompletion}%`} />
-              <KPICard icon={<Briefcase size={18} />} label="Candidatures (période)" value={stats.kpis.applicationCount} delta={stats.kpis.applicationCountDelta} />
+              <KPICard icon={<Users size={18} />} label="Adhérents actifs" value={stats.kpis.totalActive} tone="violet" />
+              <KPICard icon={<UserPlus size={18} />} label="Nouveaux (période)" value={stats.kpis.newInPeriod} delta={stats.kpis.newInPeriodDelta} tone="emerald" />
+              <KPICard icon={<Target size={18} />} label="Complétion profil" value={`${stats.kpis.avgProfileCompletion}%`} tone="blue" />
+              <KPICard icon={<Briefcase size={18} />} label="Candidatures (période)" value={stats.kpis.applicationCount} delta={stats.kpis.applicationCountDelta} tone="amber" />
             </div>
           );
         }
@@ -478,9 +478,9 @@ const BusinessStatsPage: React.FC = () => {
                 <h3 className="text-sm font-bold text-slate-900 dark:text-white">Offres d'emploi</h3>
               </div>
               <div className="grid grid-cols-2 gap-3 md:gap-4">
-                <div className="p-4 md:p-6 bg-slate-50 dark:bg-slate-800/50 rounded-xl text-center">
-                  <p className="font-black text-slate-900 dark:text-white" style={{ fontSize: 'clamp(1.5rem, 4vw, 2.5rem)' }}>{stats.totalOffers}</p>
-                  <p className="text-xs font-medium uppercase tracking-wider text-slate-500 mt-2">Total des offres</p>
+                <div className="p-4 md:p-6 bg-[#7D5CFF]/5 dark:bg-[#7D5CFF]/10 rounded-xl text-center">
+                  <p className="font-black text-[#7D5CFF] dark:text-[#B9A7FF]" style={{ fontSize: 'clamp(1.5rem, 4vw, 2.5rem)' }}>{stats.totalOffers}</p>
+                  <p className="text-xs font-medium uppercase tracking-wider text-[#7D5CFF]/70 dark:text-[#B9A7FF]/80 mt-2">Total des offres</p>
                 </div>
                 <div className="p-4 md:p-6 bg-emerald-50 dark:bg-emerald-900/10 rounded-xl text-center">
                   <p className="font-black text-emerald-600 dark:text-emerald-400" style={{ fontSize: 'clamp(1.5rem, 4vw, 2.5rem)' }}>{stats.publishedOffers}</p>
@@ -572,27 +572,38 @@ const BusinessStatsPage: React.FC = () => {
   );
 };
 
-// --- KPI Card avec delta (style corporate : liseré violet, pastille plate) ---
-const KPICard: React.FC<{ icon: React.ReactNode; label: string; value: number | string; delta?: number | null }> = ({ icon, label, value, delta }) => (
-  <div className="bg-white dark:bg-[#111827] border border-slate-200 dark:border-slate-800 border-l-[3px] border-l-[#7D5CFF] rounded-lg p-4 md:p-5 hover:border-slate-300 dark:hover:border-slate-700 transition-colors">
-    <div className="flex items-center justify-between mb-3 md:mb-4">
-      <div className="w-9 h-9 rounded-lg bg-[#7D5CFF]/10 text-[#7D5CFF] flex items-center justify-center">
-        {icon}
+// --- KPI Card avec delta (style corporate coloré : liseré + pastille par indicateur) ---
+type KpiTone = 'violet' | 'emerald' | 'blue' | 'amber';
+const KPI_TONES: Record<KpiTone, { border: string; chip: string; ring: string }> = {
+  violet:  { border: 'border-l-[#7D5CFF]',  chip: 'bg-[#7D5CFF]/15 text-[#7D5CFF] dark:text-[#B9A7FF]', ring: 'dark:bg-[#7D5CFF]/[0.06]' },
+  emerald: { border: 'border-l-emerald-500', chip: 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400', ring: 'dark:bg-emerald-500/[0.06]' },
+  blue:    { border: 'border-l-blue-500',    chip: 'bg-blue-500/15 text-blue-600 dark:text-blue-400', ring: 'dark:bg-blue-500/[0.06]' },
+  amber:   { border: 'border-l-amber-500',   chip: 'bg-amber-500/15 text-amber-600 dark:text-amber-400', ring: 'dark:bg-amber-500/[0.06]' },
+};
+
+const KPICard: React.FC<{ icon: React.ReactNode; label: string; value: number | string; tone: KpiTone; delta?: number | null }> = ({ icon, label, value, tone, delta }) => {
+  const t = KPI_TONES[tone];
+  return (
+    <div className={`bg-white dark:bg-[#111827] ${t.ring} border border-slate-200 dark:border-slate-800 border-l-[3px] ${t.border} rounded-lg p-4 md:p-5 hover:shadow-sm dark:hover:border-slate-700 transition-all`}>
+      <div className="flex items-center justify-between mb-3 md:mb-4">
+        <div className={`w-9 h-9 rounded-lg flex items-center justify-center ${t.chip}`}>
+          {icon}
+        </div>
+        {delta !== undefined && delta !== null && (
+          <span className={`flex items-center gap-0.5 text-[11px] font-bold ${delta >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-500'}`}>
+            {delta >= 0 ? <TrendingUp size={12} /> : <TrendingDown size={12} />}
+            {Math.abs(delta)}%
+          </span>
+        )}
       </div>
+      <p className="font-extrabold text-slate-900 dark:text-white leading-none tracking-tight" style={{ fontSize: 'clamp(1.5rem, 4vw, 2.3rem)' }}>{value}</p>
+      <p className="text-[11px] md:text-xs font-semibold text-slate-500 mt-2 uppercase tracking-wider">{label}</p>
       {delta !== undefined && delta !== null && (
-        <span className={`flex items-center gap-0.5 text-[11px] font-bold ${delta >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-500'}`}>
-          {delta >= 0 ? <TrendingUp size={12} /> : <TrendingDown size={12} />}
-          {Math.abs(delta)}%
-        </span>
+        <p className="text-[10px] text-slate-400 mt-0.5">vs période précédente</p>
       )}
     </div>
-    <p className="font-extrabold text-slate-900 dark:text-white leading-none tracking-tight" style={{ fontSize: 'clamp(1.5rem, 4vw, 2.3rem)' }}>{value}</p>
-    <p className="text-[11px] md:text-xs font-semibold text-slate-500 mt-2 uppercase tracking-wider">{label}</p>
-    {delta !== undefined && delta !== null && (
-      <p className="text-[10px] text-slate-400 mt-0.5">vs période précédente</p>
-    )}
-  </div>
-);
+  );
+};
 
 // --- Modale de drill-down : liste des candidats derrière un chiffre ---
 const DrillDownModal: React.FC<{ drill: { type: 'skill' | 'status'; value: string; label: string }; onClose: () => void }> = ({ drill, onClose }) => {
