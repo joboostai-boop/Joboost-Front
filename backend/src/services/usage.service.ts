@@ -125,9 +125,14 @@ export const usageService = {
   getUsage: async (userId: string) => {
     const user = await prisma.user.findUnique({
       where: { id: userId },
-      select: { email: true, subscriptionStatus: true, credits: true, monthlyUsage: true, usageMonth: true },
+      select: {
+        email: true, subscriptionStatus: true, subscriptionEndsAt: true,
+        credits: true, monthlyUsage: true, usageMonth: true,
+      },
     });
     if (!user) return null;
+
+    const isSubscribed = user.subscriptionStatus === 'active';
 
     // Compte propriétaire : illimité.
     if (isOwnerEmail(user.email)) {
@@ -137,6 +142,10 @@ export const usageService = {
         remainingQuota: Number.MAX_SAFE_INTEGER,
         credits: user.credits,
         unlimited: true,
+        isSubscribed,
+        planLabel: 'Accès illimité',
+        subscriptionStatus: user.subscriptionStatus,
+        subscriptionEndsAt: user.subscriptionEndsAt,
       };
     }
 
@@ -149,6 +158,11 @@ export const usageService = {
       remainingQuota: Math.max(0, allowance - usedThisMonth),
       credits: user.credits,
       unlimited: false,
+      isSubscribed,
+      // Libellé affiché côté front : « Élite » si abonnement actif, sinon « Gratuit ».
+      planLabel: isSubscribed ? 'Élite' : 'Gratuit',
+      subscriptionStatus: user.subscriptionStatus,
+      subscriptionEndsAt: user.subscriptionEndsAt,
     };
   },
 };

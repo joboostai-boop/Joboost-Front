@@ -4,6 +4,7 @@ import { userController } from '../controllers/user.controller';
 const router = Router();
 
 router.get('/me', userController.getCurrentUser);
+router.get('/usage', userController.getUsage);
 router.put('/me', userController.updateCurrentUser);
 router.put('/me/password', userController.changePassword);
 

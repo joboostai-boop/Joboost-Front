@@ -1,8 +1,23 @@
 import { Request, Response } from 'express';
 import bcrypt from 'bcryptjs';
 import { prisma } from '../db';
+import { usageService } from '../services/usage.service';
 
 export const userController = {
+  // Solde de crédits + quota mensuel + abonnement courant (pour l'affichage du profil).
+  getUsage: async (req: Request, res: Response) => {
+    try {
+      const usage = await usageService.getUsage(req.userId!);
+      if (!usage) {
+        return res.status(404).json({ success: false, error: "Utilisateur non trouvé." });
+      }
+      res.json({ success: true, usage });
+    } catch (error: any) {
+      console.error('getUsage error:', error);
+      res.status(500).json({ success: false, error: "Erreur lors de la récupération de l'usage." });
+    }
+  },
+
   // Mode strict temporaire: On ramène toujours l'unique premier utilisateur créé en base
   getCurrentUser: async (req: Request, res: Response) => {
     try {

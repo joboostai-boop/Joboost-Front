@@ -1,14 +1,26 @@
-import React, { useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   User as UserIcon, Briefcase, GraduationCap, Sparkles, Languages as LanguagesIcon,
   Settings2, Link2, FolderGit2, Heart, Target, Plus, X, Trash2, ChevronDown,
-  Linkedin, Wand2, RefreshCw, Check, Save, Upload
+  Linkedin, Wand2, RefreshCw, Check, Save, Upload, Crown, Zap, Coins, ArrowRight
 } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { User as UserType } from '../types';
 import toast from 'react-hot-toast';
 import { useAuth } from '../context/AuthContext';
 import { authHeaders } from '../services/authToken';
 import { rewriteSection, detailExperience } from '../services/gemini';
+
+/* ─────────── Abonnement & crédits (lecture seule, depuis /api/users/usage) ─────────── */
+interface UsageInfo {
+  allowance: number;
+  remainingQuota: number;
+  credits: number;
+  unlimited: boolean;
+  isSubscribed: boolean;
+  planLabel: string;
+  subscriptionEndsAt: string | null;
+}
 
 interface ProfileProps { user: UserType; }
 
@@ -136,6 +148,20 @@ const Profile: React.FC<ProfileProps> = ({ user }) => {
   const [importing, setImporting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const toggle = (id: string) => setOpen((o) => (o === id ? null : id));
+
+  // Abonnement + solde de crédits (affichage seul). Chargé une fois au montage.
+  const [usage, setUsage] = useState<UsageInfo | null>(null);
+  useEffect(() => {
+    let active = true;
+    fetch(`${import.meta.env.VITE_API_URL || ''}/api/users/usage`, {
+      credentials: 'include',
+      headers: { ...authHeaders() },
+    })
+      .then((r) => r.json())
+      .then((d) => { if (active && d.success) setUsage(d.usage); })
+      .catch(() => { /* silencieux : la carte affiche un état de chargement */ });
+    return () => { active = false; };
+  }, []);
 
   const initialName = { first: user.firstName || user.name?.split(' ')[0] || '', last: user.lastName || user.name?.split(' ').slice(1).join(' ') || '' };
 
@@ -401,6 +427,64 @@ const Profile: React.FC<ProfileProps> = ({ user }) => {
             <button onClick={connectLinkedIn} className="btn btn-secondary !border-[#0A66C2] !text-[#0A66C2] hover:!bg-[#0A66C2]/5 flex-1 sm:flex-none">
               <Linkedin size={16} /> LinkedIn
             </button>
+          </div>
+        </div>
+      </section>
+
+      {/* Abonnement & crédits — solde visible en permanence (achats packs + plan). */}
+      <section className="card-pro !p-5 md:!p-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="flex items-center gap-4 min-w-0">
+            <span className="w-12 h-12 rounded-2xl bg-[#F3F0FF] dark:bg-[#7D5CFF]/10 text-[#7D5CFF] flex items-center justify-center shrink-0">
+              {usage?.isSubscribed || usage?.unlimited ? <Crown size={22} /> : <Zap size={22} />}
+            </span>
+            <div className="min-w-0">
+              <div className="flex items-center gap-2 flex-wrap">
+                <h3 className="text-base font-bold text-[#111827] dark:text-white">Mon abonnement</h3>
+                <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-[#7D5CFF]/10 text-[#7D5CFF]">
+                  {usage ? usage.planLabel : '…'}
+                </span>
+              </div>
+              <p className="text-sm text-[#6B7280] dark:text-slate-400 mt-0.5">
+                {!usage
+                  ? 'Chargement…'
+                  : usage.unlimited
+                    ? 'Accès illimité (compte interne).'
+                    : usage.isSubscribed
+                      ? `Abonnement Élite actif${usage.subscriptionEndsAt ? ` · renouvellement le ${new Date(usage.subscriptionEndsAt).toLocaleDateString('fr-FR')}` : ''}.`
+                      : 'Plan Gratuit · 1 candidature IA / mois.'}
+              </p>
+            </div>
+          </div>
+          {usage && !usage.isSubscribed && !usage.unlimited && (
+            <Link to="/pricing" className="press btn btn-primary shrink-0">
+              Passer à Élite <ArrowRight size={16} />
+            </Link>
+          )}
+        </div>
+
+        {/* Compteurs : candidatures du mois + crédits achetés */}
+        <div className="grid grid-cols-2 gap-3 mt-5">
+          <div className="rounded-2xl border border-slate-200 dark:border-slate-700 p-4">
+            <div className="flex items-center gap-2 text-[#6B7280] dark:text-slate-400 text-xs font-semibold uppercase tracking-wider">
+              <Sparkles size={14} className="text-[#7D5CFF]" /> Ce mois-ci
+            </div>
+            <p className="mt-1.5 text-2xl font-bold text-[#111827] dark:text-white tabular-nums">
+              {!usage ? '—' : usage.unlimited ? '∞' : usage.remainingQuota}
+              {usage && !usage.unlimited && (
+                <span className="text-sm font-medium text-[#9CA3AF]"> / {usage.allowance}</span>
+              )}
+            </p>
+            <p className="text-xs text-[#9CA3AF]">candidatures IA restantes</p>
+          </div>
+          <div className="rounded-2xl border border-slate-200 dark:border-slate-700 p-4">
+            <div className="flex items-center gap-2 text-[#6B7280] dark:text-slate-400 text-xs font-semibold uppercase tracking-wider">
+              <Coins size={14} className="text-[#7D5CFF]" /> Crédits
+            </div>
+            <p className="mt-1.5 text-2xl font-bold text-[#111827] dark:text-white tabular-nums">
+              {!usage ? '—' : usage.credits}
+            </p>
+            <p className="text-xs text-[#9CA3AF]">crédits achetés (sans expiration)</p>
           </div>
         </div>
       </section>
