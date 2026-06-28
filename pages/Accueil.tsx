@@ -159,20 +159,38 @@ const Accueil: React.FC<AccueilProps> = ({ user }) => {
           </Tilt>
         </div>
 
-        {/* KPIs de suivi */}
-        <section className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
-          {kpis.map((k) => (
-            <Tilt key={k.label} className="h-full" max={9}>
-              <StatCard
-                className="h-full"
-                label={k.label}
-                value={loading ? '–' : <CountUp value={k.value} />}
-                icon={k.icon}
-                tone={k.tone}
-              />
-            </Tilt>
-          ))}
-        </section>
+        {/* KPIs de suivi — ou état vide encourageant tant qu'aucune candidature n'existe
+            (évite l'écran « 0 · 0 · 0 · 0 » qui paraît mort au tout premier lancement). */}
+        {!loading && stats && stats.applications.total === 0 ? (
+          <section className="card-pro !p-6 flex flex-col sm:flex-row items-center gap-5 text-center sm:text-left animate-fade-in-up">
+            <span className="w-14 h-14 rounded-2xl surface-accent text-[#7D5CFF] flex items-center justify-center shrink-0">
+              <Send size={26} strokeWidth={2.2} />
+            </span>
+            <div className="min-w-0 flex-1">
+              <p className="font-bold text-[#111827] dark:text-white">Ton tableau de bord t'attend</p>
+              <p className="text-sm text-[#6B7280] dark:text-slate-400 mt-0.5">
+                Candidatures, entretiens, offres… tes statistiques s'animeront ici dès ta première candidature. 🚀
+              </p>
+            </div>
+            <Link to="/target/offers" className="press btn btn-primary shrink-0 w-full sm:w-auto">
+              Postuler maintenant <ArrowRight size={16} />
+            </Link>
+          </section>
+        ) : (
+          <section className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
+            {kpis.map((k) => (
+              <Tilt key={k.label} className="h-full" max={9}>
+                <StatCard
+                  className="h-full"
+                  label={k.label}
+                  value={loading ? '–' : <CountUp value={k.value} />}
+                  icon={k.icon}
+                  tone={k.tone}
+                />
+              </Tilt>
+            ))}
+          </section>
+        )}
 
         {/* Bento bas : parcours (large) + colonne actions rapides / astuce */}
         <div className="grid lg:grid-cols-3 gap-4 items-start">

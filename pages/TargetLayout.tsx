@@ -30,11 +30,16 @@ const TargetLayout: React.FC = () => {
             <NavLink to="/target/offers" className={({ isActive }) => heroTab(isActive)}>
               <Target size={18} /> Offres pour moi
             </NavLink>
+            {/* Libellés raccourcis sur mobile pour que les 3 onglets tiennent sans être coupés. */}
             <NavLink to="/target/lbb" className={({ isActive }) => heroTab(isActive)}>
-              <Navigation size={18} /> Candidatures spontanées
+              <Navigation size={18} />
+              <span className="sm:hidden">Spontanées</span>
+              <span className="hidden sm:inline">Candidatures spontanées</span>
             </NavLink>
             <NavLink to="/target/saved" className={({ isActive }) => heroTab(isActive)}>
-              <Bookmark size={18} /> Offres sauvegardées
+              <Bookmark size={18} />
+              <span className="sm:hidden">Sauvegardées</span>
+              <span className="hidden sm:inline">Offres sauvegardées</span>
             </NavLink>
             {/* L'onglet de rédaction dynamique n'apparait que quand on initie une rédaction contextuelle */}
             {showLetterTab && (
