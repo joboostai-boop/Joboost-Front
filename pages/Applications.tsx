@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Building2, Calendar, Search, RefreshCw, Inbox, ArrowRight, Navigation, Briefcase, Send, CalendarCheck, Award } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Building2, Calendar, Search, RefreshCw, Inbox, ArrowRight, Navigation, Briefcase, Send, CalendarCheck, Award, ChevronDown, Check } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
 import { authHeaders } from '../services/authToken';
@@ -19,13 +19,18 @@ interface Application {
 
 type StatusId = Application['status'];
 
-const COLUMNS: { id: StatusId; label: string; dot: string; ring: string; soft: string; text: string }[] = [
-  { id: 'PENDING', label: 'À préparer', dot: 'bg-slate-400', ring: 'ring-slate-200 dark:ring-slate-700', soft: 'bg-slate-50 dark:bg-slate-900/40', text: 'text-slate-600 dark:text-slate-300' },
-  { id: 'SENT', label: 'Envoyées', dot: 'bg-blue-500', ring: 'ring-blue-200 dark:ring-blue-900/50', soft: 'bg-blue-50/60 dark:bg-blue-900/10', text: 'text-blue-600 dark:text-blue-400' },
-  { id: 'INTERVIEW', label: 'Entretiens', dot: 'bg-amber-500', ring: 'ring-amber-200 dark:ring-amber-900/50', soft: 'bg-amber-50/60 dark:bg-amber-900/10', text: 'text-amber-600 dark:text-amber-400' },
-  { id: 'OFFER', label: 'Offres', dot: 'bg-emerald-500', ring: 'ring-emerald-200 dark:ring-emerald-900/50', soft: 'bg-emerald-50/60 dark:bg-emerald-900/10', text: 'text-emerald-600 dark:text-emerald-400' },
-  { id: 'REJECTED', label: 'Refusées', dot: 'bg-red-400', ring: 'ring-red-200 dark:ring-red-900/50', soft: 'bg-red-50/60 dark:bg-red-900/10', text: 'text-red-500 dark:text-red-400' },
+/* Métadonnées de statut : libellé + pastille + style de badge (pilule colorée). */
+const STATUS: { id: StatusId; label: string; dot: string; badge: string }[] = [
+  { id: 'PENDING', label: 'À préparer', dot: 'bg-slate-400', badge: 'bg-slate-100 text-slate-600 border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700' },
+  { id: 'SENT', label: 'Envoyées', dot: 'bg-blue-500', badge: 'bg-blue-50 text-blue-600 border-blue-200 dark:bg-blue-900/20 dark:text-blue-300 dark:border-blue-900/50' },
+  { id: 'INTERVIEW', label: 'Entretiens', dot: 'bg-amber-500', badge: 'bg-amber-50 text-amber-600 border-amber-200 dark:bg-amber-900/20 dark:text-amber-300 dark:border-amber-900/50' },
+  { id: 'OFFER', label: 'Offres', dot: 'bg-emerald-500', badge: 'bg-emerald-50 text-emerald-600 border-emerald-200 dark:bg-emerald-900/20 dark:text-emerald-300 dark:border-emerald-900/50' },
+  { id: 'REJECTED', label: 'Refusées', dot: 'bg-red-400', badge: 'bg-red-50 text-red-500 border-red-200 dark:bg-red-900/20 dark:text-red-300 dark:border-red-900/50' },
 ];
+const statusMeta = (id: StatusId) => STATUS.find((s) => s.id === id)!;
+
+const formatDate = (iso: string) =>
+  new Date(iso).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' });
 
 const API = import.meta.env.VITE_API_URL || '';
 
@@ -33,9 +38,7 @@ const Applications: React.FC = () => {
   const [applications, setApplications] = useState<Application[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
-  const [mobileTab, setMobileTab] = useState<StatusId>('SENT');
-  const [dragId, setDragId] = useState<string | null>(null);
-  const [dragOver, setDragOver] = useState<StatusId | null>(null);
+  const [statusFilter, setStatusFilter] = useState<StatusId | 'ALL'>('ALL');
   const navigate = useNavigate();
 
   const fetchApplications = async () => {
@@ -67,6 +70,7 @@ const Applications: React.FC = () => {
       });
       const data = await res.json();
       if (!data.success) { toast.error('Échec de la mise à jour.'); fetchApplications(); }
+      else toast.success(`Déplacée vers « ${statusMeta(newStatus).label} »`);
     } catch {
       toast.error('Hors ligne.'); fetchApplications();
     }
@@ -79,77 +83,143 @@ const Applications: React.FC = () => {
   const byStatus = (s: StatusId) => filtered.filter((a) => a.status === s);
   const total = applications.length;
 
-  const Card: React.FC<{ app: Application; col: typeof COLUMNS[number] }> = ({ app, col }) => (
-    <div
-      draggable
-      onDragStart={() => setDragId(app.id)}
-      onDragEnd={() => { setDragId(null); setDragOver(null); }}
-      className={`group surface p-3.5 hover:shadow-card-hover hover:-translate-y-0.5 transition-all duration-200 cursor-grab active:cursor-grabbing ${dragId === app.id ? 'opacity-40 scale-95' : ''}`}
-    >
-      <div className="flex items-start gap-2.5">
-        <span className="w-9 h-9 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 flex items-center justify-center font-semibold text-sm shrink-0">
+  // Liste visible : filtre par statut puis tri par date décroissante (plus récent en premier).
+  const visible = [...filtered]
+    .filter((a) => statusFilter === 'ALL' || a.status === statusFilter)
+    .sort((a, b) => new Date(b.appliedAt).getTime() - new Date(a.appliedAt).getTime());
+
+  /* Sélecteur de statut par ligne — pilule colorée + menu déroulant à la charte. */
+  const StatusSelect: React.FC<{ app: Application }> = ({ app }) => {
+    const [open, setOpen] = useState(false);
+    const ref = useRef<HTMLDivElement>(null);
+    const meta = statusMeta(app.status);
+
+    useEffect(() => {
+      if (!open) return;
+      const onDoc = (e: MouseEvent) => { if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false); };
+      const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setOpen(false); };
+      document.addEventListener('mousedown', onDoc);
+      document.addEventListener('keydown', onKey);
+      return () => { document.removeEventListener('mousedown', onDoc); document.removeEventListener('keydown', onKey); };
+    }, [open]);
+
+    return (
+      <div ref={ref} className="relative shrink-0">
+        <button
+          type="button"
+          onClick={() => setOpen((v) => !v)}
+          aria-haspopup="listbox"
+          aria-expanded={open}
+          aria-label="Changer le statut"
+          className={`press inline-flex items-center gap-1.5 pl-2.5 pr-1.5 py-1 rounded-full text-xs font-semibold border transition-colors ${meta.badge}`}
+        >
+          <span className={`w-1.5 h-1.5 rounded-full ${meta.dot}`} />
+          {meta.label}
+          <ChevronDown size={13} className={`transition-transform duration-200 ${open ? 'rotate-180' : ''}`} />
+        </button>
+
+        {open && (
+          <div role="listbox" className="absolute right-0 z-50 mt-2 w-44 rounded-2xl bg-white dark:bg-[#111827] border border-[#ECEAF6] dark:border-[#1F2937] shadow-pop p-1.5 animate-scale-in origin-top-right">
+            {STATUS.map((o) => {
+              const active = o.id === app.status;
+              return (
+                <button
+                  key={o.id}
+                  type="button"
+                  role="option"
+                  aria-selected={active}
+                  onClick={() => { setOpen(false); moveTo(app.id, o.id); }}
+                  className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-semibold text-left transition-colors ${
+                    active ? 'bg-[#7D5CFF]/10 text-[#7D5CFF]' : 'text-slate-600 dark:text-slate-300 hover:bg-[#F5F4FB] dark:hover:bg-[#1F2937] hover:text-[#7D5CFF]'
+                  }`}
+                >
+                  <span className={`w-2 h-2 rounded-full shrink-0 ${o.dot}`} />
+                  <span className="flex-1 truncate">{o.label}</span>
+                  {active && <Check size={15} className="shrink-0 text-[#7D5CFF]" />}
+                </button>
+              );
+            })}
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  /* Ligne de candidature (liste). */
+  const Row: React.FC<{ app: Application }> = ({ app }) => (
+    <div className="surface p-3.5 md:p-4 hover:shadow-card-hover hover:-translate-y-0.5 transition-all duration-200">
+      <div className="flex items-start gap-3 md:gap-3.5">
+        <span className="w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 flex items-center justify-center font-bold text-sm shrink-0">
           {app.company?.charAt(0)?.toUpperCase() || '?'}
         </span>
         <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-1.5">
-            <p className="font-semibold text-sm text-[#111827] dark:text-white leading-tight truncate">{app.title}</p>
-            {app.isSpontaneous && (
-              <span className="shrink-0 inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-[#F3F0FF] text-[#7D5CFF] border border-[#7D5CFF]/30" title="Candidature spontanée">
-                <Navigation size={9} /> Spontanée
-              </span>
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0">
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <p className="font-semibold text-sm md:text-[15px] text-[#111827] dark:text-white leading-tight truncate">{app.title}</p>
+                {app.isSpontaneous && (
+                  <span className="shrink-0 inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-[#F3F0FF] text-[#7D5CFF] border border-[#7D5CFF]/30" title="Candidature spontanée">
+                    <Navigation size={9} /> Spontanée
+                  </span>
+                )}
+              </div>
+              <p className="flex items-center gap-1.5 text-xs text-[#6B7280] dark:text-slate-400 mt-0.5">
+                <Building2 size={13} className="shrink-0" /> <span className="truncate">{app.company}</span>
+              </p>
+            </div>
+            <StatusSelect app={app} />
+          </div>
+
+          <div className="flex items-center gap-2.5 mt-2 text-[11px] text-slate-400 dark:text-slate-500">
+            <span className="inline-flex items-center gap-1 shrink-0">
+              <Calendar size={12} /> {formatDate(app.appliedAt)}
+            </span>
+            {app.notes && (
+              <>
+                <span className="text-slate-300 dark:text-slate-600">·</span>
+                <span className="truncate italic">{app.notes}</span>
+              </>
             )}
           </div>
-          <p className="flex items-center gap-1.5 text-xs text-[#6B7280] mt-1">
-            <Building2 size={13} className="shrink-0" /> <span className="truncate">{app.company}</span>
-          </p>
         </div>
       </div>
+    </div>
+  );
 
-      {app.notes && (
-        <p className="mt-2.5 text-xs text-[#6B7280] dark:text-slate-400 italic line-clamp-2 bg-slate-50 dark:bg-slate-800/50 rounded-lg p-2">{app.notes}</p>
-      )}
-
-      <div className="flex items-center justify-between mt-3 pt-2.5 border-t border-slate-100 dark:border-slate-800">
-        <span className="flex items-center gap-1 text-[10px] font-medium text-slate-400 uppercase tracking-wide">
-          <Calendar size={11} /> {new Date(app.appliedAt).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' })}
-        </span>
-        <select
-          value={app.status}
-          onChange={(e) => moveTo(app.id, e.target.value as StatusId)}
-          className={`text-[11px] font-semibold bg-transparent border-0 outline-none cursor-pointer ${col.text} text-right`}
-          aria-label="Déplacer la candidature"
-        >
-          {COLUMNS.map((o) => (
-            <option key={o.id} value={o.id} className="text-[#111827] dark:text-gray-200 bg-white dark:bg-[#111827]">{o.label}</option>
-          ))}
-        </select>
+  const RowSkeleton: React.FC = () => (
+    <div className="surface p-3.5 md:p-4 flex items-center gap-3.5">
+      <div className="skeleton w-10 h-10 rounded-xl shrink-0" />
+      <div className="flex-1 space-y-2">
+        <div className="skeleton h-3.5 w-1/2 rounded" />
+        <div className="skeleton h-3 w-1/3 rounded" />
       </div>
+      <div className="skeleton h-6 w-20 rounded-full shrink-0" />
     </div>
   );
 
-  const EmptyCol: React.FC = () => (
-    <div className="flex flex-col items-center justify-center text-center gap-1.5 py-8 text-slate-300 dark:text-slate-600">
-      <Inbox size={22} />
-      <span className="text-xs font-medium text-slate-400 dark:text-slate-500">Aucune candidature ici</span>
-    </div>
-  );
-
-  const CardSkeleton: React.FC = () => (
-    <div className="surface p-3.5 space-y-3">
-      <div className="flex items-start gap-2.5">
-        <div className="skeleton w-9 h-9 rounded-lg shrink-0" />
-        <div className="flex-1 space-y-2">
-          <div className="skeleton h-3.5 w-3/4 rounded" />
-          <div className="skeleton h-3 w-1/2 rounded" />
-        </div>
-      </div>
-      <div className="skeleton h-3 w-2/3 rounded" />
-    </div>
-  );
+  /* Pilule de filtre par statut (incl. « Toutes »). */
+  const FilterPill: React.FC<{ id: StatusId | 'ALL'; label: string; count: number; dot?: string }> = ({ id, label, count, dot }) => {
+    const active = statusFilter === id;
+    return (
+      <button
+        type="button"
+        onClick={() => setStatusFilter(id)}
+        className={`press shrink-0 inline-flex items-center gap-2 pl-3 pr-2.5 py-1.5 rounded-full text-[13px] font-semibold border transition-colors ${
+          active
+            ? 'bg-[#7D5CFF] text-white border-[#7D5CFF] shadow-[0_4px_14px_-3px_rgba(124,92,255,0.6)]'
+            : 'bg-white dark:bg-[#111827] border-[#E2E0EF] dark:border-[#374151] text-slate-600 dark:text-slate-300 hover:border-[#7D5CFF]/45 hover:text-[#7D5CFF]'
+        }`}
+      >
+        {dot && <span className={`w-1.5 h-1.5 rounded-full ${active ? 'bg-white/80' : dot}`} />}
+        {label}
+        <span className={`text-xs tabular-nums ${active ? 'text-white/80' : 'text-slate-400'}`}>{count}</span>
+      </button>
+    );
+  };
 
   return (
     <div className="p-5 md:p-8 max-w-6xl mx-auto space-y-6">
-      {/* Barre d'outils (le titre est porté par le hero du layout) */}
+      {/* Barre d'outils (le titre est porté par la nav de section) */}
       <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="flex items-center gap-2 text-sm text-[#6B7280] dark:text-slate-400">
           <span className="inline-flex items-center justify-center min-w-7 h-7 px-2 rounded-lg bg-[#7D5CFF]/10 text-[#7D5CFF] font-bold tabular-nums">{loading ? '–' : total}</span>
@@ -176,81 +246,35 @@ const Applications: React.FC = () => {
         </div>
       )}
 
-      {/* Tableau Kanban — masqué tant qu'aucune candidature (l'état vide illustré prend le relais) */}
+      {/* Liste des candidatures (filtre par statut + tri date décroissante) */}
       {(loading || total > 0) && (
-      <>
-          {/* ───── PC : board 5 colonnes (drag & drop) ───── */}
-          <div className="hidden lg:grid grid-cols-5 gap-4 items-start">
-            {COLUMNS.map((col) => {
-              const apps = byStatus(col.id);
-              return (
-                <div
-                  key={col.id}
-                  onDragOver={(e) => { e.preventDefault(); setDragOver(col.id); }}
-                  onDragLeave={() => setDragOver((c) => (c === col.id ? null : c))}
-                  onDrop={() => { if (dragId) moveTo(dragId, col.id); setDragId(null); setDragOver(null); }}
-                  className={`rounded-2xl p-2.5 transition-all duration-200 ${col.soft} ${dragOver === col.id ? `ring-2 ${col.ring} scale-[1.02]` : 'ring-1 ring-transparent'}`}
-                >
-                  <div className="flex items-center justify-between px-2 py-1.5 mb-2">
-                    <div className="flex items-center gap-2">
-                      <span className={`w-2 h-2 rounded-full ${col.dot}`} />
-                      <h3 className={`text-sm font-bold ${col.text}`}>{col.label}</h3>
-                    </div>
-                    <span className="text-xs font-bold text-slate-400">{apps.length}</span>
-                  </div>
-                  <div className="space-y-2.5 min-h-[120px]">
-                    {loading ? (
-                      <><CardSkeleton /><CardSkeleton /></>
-                    ) : (
-                      <>
-                        {apps.map((app) => <Card key={app.id} app={app} col={col} />)}
-                        {apps.length === 0 && <EmptyCol />}
-                      </>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
+        <div className="space-y-4">
+          {/* Filtres par statut */}
+          <div className="flex gap-2 overflow-x-auto scrollbar-none -mx-1 px-1 pb-0.5">
+            <FilterPill id="ALL" label="Toutes" count={filtered.length} />
+            {STATUS.map((s) => (
+              <FilterPill key={s.id} id={s.id} label={s.label} count={byStatus(s.id).length} dot={s.dot} />
+            ))}
           </div>
 
-          {/* ───── Mobile / tablette : onglets de statut ───── */}
-          <div className="lg:hidden space-y-4">
-            <div className="flex gap-2 overflow-x-auto scrollbar-none -mx-1 px-1 pb-1">
-              {COLUMNS.map((col) => {
-                const count = byStatus(col.id).length;
-                const active = mobileTab === col.id;
-                return (
-                  <button
-                    key={col.id}
-                    onClick={() => setMobileTab(col.id)}
-                    className={`press shrink-0 flex items-center gap-2 px-3.5 py-2 rounded-full text-sm font-semibold border transition-colors ${
-                      active ? 'bg-[#7D5CFF] text-white border-[#7D5CFF]' : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300'
-                    }`}
-                  >
-                    <span className={`w-2 h-2 rounded-full ${active ? 'bg-white/80' : col.dot}`} />
-                    {col.label}
-                    <span className={`text-xs ${active ? 'text-white/80' : 'text-slate-400'}`}>{count}</span>
-                  </button>
-                );
-              })}
-            </div>
-            <div className="space-y-2.5">
-              {loading ? (
-                <><CardSkeleton /><CardSkeleton /><CardSkeleton /></>
-              ) : (
-                <>
-                  {byStatus(mobileTab).map((app) => {
-                    const col = COLUMNS.find((c) => c.id === mobileTab)!;
-                    return <Card key={app.id} app={app} col={col} />;
-                  })}
-                  {byStatus(mobileTab).length === 0 && (
-                    <div className="surface"><EmptyCol /></div>
-                  )}
-                </>
-              )}
-            </div>
+          {/* Liste */}
+          <div className="space-y-2.5">
+            {loading ? (
+              <><RowSkeleton /><RowSkeleton /><RowSkeleton /><RowSkeleton /></>
+            ) : visible.length > 0 ? (
+              visible.map((app) => <Row key={app.id} app={app} />)
+            ) : (
+              <div className="surface flex flex-col items-center justify-center text-center gap-2 py-12">
+                <Inbox size={26} className="text-slate-300 dark:text-slate-600" />
+                <p className="text-sm font-medium text-slate-400 dark:text-slate-500">
+                  {statusFilter === 'ALL'
+                    ? 'Aucune candidature ne correspond à votre recherche.'
+                    : `Aucune candidature dans « ${statusMeta(statusFilter).label} ».`}
+                </p>
+              </div>
+            )}
           </div>
-      </>
+        </div>
       )}
 
       {/* État vide illustré quand aucune candidature */}
