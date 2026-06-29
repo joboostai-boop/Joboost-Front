@@ -6,6 +6,7 @@ import { authHeaders } from '../services/authToken';
 import MatchRing from '../components/MatchRing';
 import EmptyState from '../components/EmptyState';
 import ExpandableText from '../components/ExpandableText';
+import FilterSelect from '../components/FilterSelect';
 import { formatSalary } from '../services/format';
 
 export interface JobOffer {
@@ -213,34 +214,28 @@ const PersonalizedOffers: React.FC = () => {
         </p>
 
         <div className="flex flex-col sm:flex-row items-stretch gap-2 w-full md:w-auto">
-          <div className="relative shrink-0">
-            <Briefcase className="absolute left-3 top-1/2 -translate-y-1/2 text-[#9CA3AF]" size={16} />
-            <select
-              value={contractType}
-              onChange={(e) => setContractType(e.target.value)}
-              title="Type de contrat"
-              className="input-pro pl-9 pr-8 appearance-none cursor-pointer w-full sm:w-auto"
-            >
-              <option value="">Tous contrats</option>
-              <option value="CDI">CDI</option>
-              <option value="CDD">CDD</option>
-              <option value="MIS">Intérim</option>
-              <option value="SAI">Saisonnier</option>
-            </select>
-          </div>
-          <div className="relative shrink-0">
-            <Navigation className="absolute left-3 top-1/2 -translate-y-1/2 text-[#9CA3AF]" size={16} />
-            <select
-              value={radius}
-              onChange={(e) => setRadius(Number(e.target.value))}
-              title="Rayon de recherche autour de ta ville"
-              className="input-pro pl-9 pr-8 appearance-none cursor-pointer w-full sm:w-auto"
-            >
-              {[10, 20, 30, 50, 100].map((km) => (
-                <option key={km} value={km}>{km} km</option>
-              ))}
-            </select>
-          </div>
+          <FilterSelect
+            className="w-full sm:w-auto shrink-0"
+            ariaLabel="Type de contrat"
+            icon={<Briefcase size={16} />}
+            value={contractType}
+            onChange={(v) => setContractType(String(v))}
+            options={[
+              { value: '', label: 'Tous contrats' },
+              { value: 'CDI', label: 'CDI' },
+              { value: 'CDD', label: 'CDD' },
+              { value: 'MIS', label: 'Intérim' },
+              { value: 'SAI', label: 'Saisonnier' },
+            ]}
+          />
+          <FilterSelect
+            className="w-full sm:w-auto shrink-0"
+            ariaLabel="Rayon de recherche autour de ta ville"
+            icon={<Navigation size={16} />}
+            value={radius}
+            onChange={(v) => setRadius(Number(v))}
+            options={[10, 20, 30, 50, 100].map((km) => ({ value: km, label: `${km} km` }))}
+          />
           <div className="relative w-full sm:w-64">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-[#9CA3AF]" size={16} />
             <input
