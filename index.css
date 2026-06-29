@@ -141,6 +141,17 @@
   background: #4B5563;
 }
 
+/* Masque la scrollbar tout en gardant le défilement (barres d'onglets / carrousels
+   horizontaux). Utilisée un peu partout dans l'app — elle était jusqu'ici sans effet
+   faute de définition, ce qui laissait apparaître une fine barre de défilement. */
+.scrollbar-none {
+  scrollbar-width: none;        /* Firefox */
+  -ms-overflow-style: none;     /* IE/Edge legacy */
+}
+.scrollbar-none::-webkit-scrollbar {
+  display: none;                /* Chrome/Safari */
+}
+
 /* Slide-in animation for drawers */
 @keyframes slide-in-right {
   from { transform: translateX(100%); }
