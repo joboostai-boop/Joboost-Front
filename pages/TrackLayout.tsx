@@ -1,29 +1,17 @@
 import React from 'react';
-import { Outlet, NavLink } from 'react-router-dom';
-import { LayoutDashboard, Briefcase, LineChart } from 'lucide-react';
-import PageHero, { heroTab } from '../components/PageHero';
+import { Outlet } from 'react-router-dom';
+import { LayoutDashboard, Briefcase } from 'lucide-react';
+import SectionNav, { SectionTab } from '../components/SectionNav';
 
 const TrackLayout: React.FC = () => {
+  const tabs: SectionTab[] = [
+    { name: 'Mes candidatures', path: '/track/applications', icon: <Briefcase size={17} /> },
+    { name: 'Statistiques', path: '/track/dashboard', icon: <LayoutDashboard size={17} /> },
+  ];
+
   return (
     <div className="flex flex-col min-h-full">
-      {/* maxWidth non précisé → largeur standard du produit (max-w-6xl, défaut PageHero). */}
-      <PageHero
-        tone="emerald"
-        eyebrow="Étape 3 · Suivre"
-        icon={<LineChart size={22} />}
-        title="Suivre mes candidatures"
-        subtitle="Garde un œil sur chaque candidature, de la préparation à l'offre — et tes statistiques."
-        tabs={
-          <>
-            <NavLink to="/track/applications" className={({ isActive }) => heroTab(isActive)}>
-              <Briefcase size={18} /> Mes candidatures
-            </NavLink>
-            <NavLink to="/track/dashboard" className={({ isActive }) => heroTab(isActive)}>
-              <LayoutDashboard size={18} /> Statistiques
-            </NavLink>
-          </>
-        }
-      />
+      <SectionNav tabs={tabs} />
       <div className="flex-1 w-full">
         <Outlet />
       </div>
