@@ -272,7 +272,7 @@ export const franceTravailService = {
       // Insight : début de la description de l'offre (nettoyé), sinon message générique.
       const rawDesc: string = (o?.description || '').replace(/\s+/g, ' ').trim();
       const aiInsight = rawDesc
-        ? `${rawDesc.slice(0, 220)}${rawDesc.length > 220 ? '…' : ''}`
+        ? `${rawDesc.slice(0, 600)}${rawDesc.length > 600 ? '…' : ''}`
         : `Offre publiée sur France Travail correspondant à votre recherche « ${jobTitle} ».`;
 
       return {

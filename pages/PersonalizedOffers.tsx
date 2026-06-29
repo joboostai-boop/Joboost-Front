@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { authHeaders } from '../services/authToken';
 import MatchRing from '../components/MatchRing';
 import EmptyState from '../components/EmptyState';
+import ExpandableText from '../components/ExpandableText';
 import { formatSalary } from '../services/format';
 
 export interface JobOffer {
@@ -311,7 +312,7 @@ const PersonalizedOffers: React.FC = () => {
                     <p className="flex items-center gap-1.5 text-[11px] font-semibold text-[#7D5CFF] uppercase tracking-wide mb-1">
                       <Sparkles size={12} /> Pourquoi ça matche
                     </p>
-                    <p className="text-sm text-[#4B5563] dark:text-slate-300 leading-relaxed">{offer.aiInsight}</p>
+                    <ExpandableText className="text-sm text-[#4B5563] dark:text-slate-300 leading-relaxed" text={offer.aiInsight} />
                   </div>
                 )}
 

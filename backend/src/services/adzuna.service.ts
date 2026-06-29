@@ -109,7 +109,7 @@ export const adzunaService = {
         url: o?.redirect_url || '',
         tags,
         aiInsight: rawDesc
-          ? `${rawDesc.slice(0, 220)}${rawDesc.length > 220 ? '…' : ''}`
+          ? `${rawDesc.slice(0, 600)}${rawDesc.length > 600 ? '…' : ''}`
           : `Offre publiée via Adzuna correspondant à votre recherche « ${what} ».`,
       };
     });
