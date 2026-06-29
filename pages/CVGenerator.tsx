@@ -15,6 +15,7 @@ import CvExamplesModal from '../components/CvExamplesModal';
 import Tilt from '../components/Tilt';
 import Collapsible, { CountBadge } from '../components/Collapsible';
 import ActionMenu from '../components/ActionMenu';
+import AiLoadingOverlay from '../components/AiLoadingOverlay';
 import { CvExample } from '../services/cvExamples';
 
 const uid = () => Math.random().toString(36).slice(2, 10);
@@ -271,6 +272,24 @@ const CVGenerator: React.FC = () => {
 
   return (
     <div className="p-5 md:p-8 max-w-6xl mx-auto flex flex-col lg:flex-row gap-8 lg:gap-10">
+      <AiLoadingOverlay
+        show={loadingSummary || aiExpId !== null}
+        title={loadingSummary ? 'Rédaction de votre résumé…' : 'Rédaction de votre expérience…'}
+        messages={
+          loadingSummary
+            ? [
+                'Analyse de votre profil…',
+                'Sélection de vos points forts…',
+                'Rédaction du résumé…',
+                'Touches finales…',
+              ]
+            : [
+                'Analyse de votre poste…',
+                'Formulation de vos missions…',
+                'Touches finales…',
+              ]
+        }
+      />
       <div className="flex-1 space-y-3">
         <header className="flex flex-col md:flex-row justify-between md:items-center gap-4">
           <p className="text-sm text-[#6B7280] dark:text-slate-400 flex items-center gap-1.5">

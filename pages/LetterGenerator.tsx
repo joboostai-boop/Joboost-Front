@@ -7,6 +7,7 @@ import { authHeaders } from '../services/authToken';
 import TemplateGallery from '../components/TemplateGallery';
 import Collapsible from '../components/Collapsible';
 import ActionMenu from '../components/ActionMenu';
+import AiLoadingOverlay from '../components/AiLoadingOverlay';
 import { LETTER_TEMPLATES, getLetterTemplate } from '../services/letterTemplates';
 
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -176,6 +177,17 @@ const LetterGenerator: React.FC = () => {
 
   return (
     <div className="p-5 md:p-8 max-w-6xl mx-auto space-y-6">
+      <AiLoadingOverlay
+        show={loading}
+        title="Rédaction de votre lettre…"
+        messages={[
+          "Analyse de l'offre et de votre profil…",
+          'Mise en correspondance de vos compétences…',
+          'Rédaction des paragraphes…',
+          'Vérification du ton et du style…',
+          'Touches finales…',
+        ]}
+      />
       <header className="flex flex-col md:flex-row justify-between md:items-center gap-4">
         <p className="text-sm text-[#6B7280] dark:text-slate-400">Des lettres de motivation ciblées, écrites à partir de votre profil et de l'offre.</p>
         <ActionMenu

@@ -191,6 +191,118 @@
   );
 }
 
+/* ============ Overlay de chargement IA (génération CV / lettre) ============ */
+/* Plein écran : backdrop flouté + carte centrale avec orbe animé, messages
+   d'étape et barre de progression indéterminée. Voir components/AiLoadingOverlay.tsx */
+.ai-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+}
+.ai-overlay__backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(17, 24, 39, 0.45);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  animation: ai-fade 0.25s ease-out;
+}
+.dark .ai-overlay__backdrop { background: rgba(2, 6, 23, 0.62); }
+.ai-overlay__card {
+  position: relative;
+  width: 100%;
+  max-width: 360px;
+  padding: 2.25rem 2rem;
+  border-radius: 1.25rem;
+  background: #fff;
+  box-shadow: 0 24px 60px -12px rgba(76, 29, 149, 0.35);
+  text-align: center;
+  animation: ai-pop 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.dark .ai-overlay__card {
+  background: #0f172a;
+  box-shadow: 0 24px 60px -12px rgba(0, 0, 0, 0.6);
+}
+.ai-overlay__orb {
+  position: relative;
+  width: 84px;
+  height: 84px;
+  margin: 0 auto 1.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.ai-overlay__icon { color: #7D5CFF; animation: ai-icon-pulse 1.8s ease-in-out infinite; }
+.ai-overlay__ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 9999px;
+  border: 2px solid transparent;
+  border-top-color: #7D5CFF;
+  border-right-color: #7D5CFF;
+  animation: ai-spin 1.1s linear infinite;
+}
+.ai-overlay__ring--2 {
+  inset: 12px;
+  border-top-color: #C4B5FD;
+  border-right-color: transparent;
+  border-left-color: #C4B5FD;
+  animation: ai-spin 1.6s linear infinite reverse;
+}
+.ai-overlay__title { font-weight: 700; font-size: 1.05rem; color: #111827; }
+.dark .ai-overlay__title { color: #fff; }
+.ai-overlay__msg {
+  margin-top: 0.4rem;
+  font-size: 0.85rem;
+  color: #6B7280;
+  min-height: 1.2em;
+  animation: ai-msg 0.4s ease-out;
+}
+.dark .ai-overlay__msg { color: #94a3b8; }
+.ai-overlay__bar {
+  margin-top: 1.4rem;
+  height: 4px;
+  border-radius: 9999px;
+  background: rgba(125, 92, 255, 0.15);
+  overflow: hidden;
+}
+.ai-overlay__bar > span {
+  display: block;
+  height: 100%;
+  width: 40%;
+  border-radius: 9999px;
+  background: linear-gradient(90deg, #7D5CFF, #C4B5FD);
+  animation: ai-bar 1.3s ease-in-out infinite;
+}
+@keyframes ai-spin { to { transform: rotate(360deg); } }
+@keyframes ai-icon-pulse {
+  0%, 100% { transform: scale(1); opacity: 0.9; }
+  50% { transform: scale(1.12); opacity: 1; }
+}
+@keyframes ai-pop {
+  from { opacity: 0; transform: translateY(12px) scale(0.96); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes ai-fade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes ai-msg {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes ai-bar {
+  0% { transform: translateX(-120%); }
+  100% { transform: translateX(320%); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ai-overlay__ring,
+  .ai-overlay__ring--2,
+  .ai-overlay__icon,
+  .ai-overlay__bar > span { animation: none; }
+}
+
 /* Pression tactile : léger enfoncement sans décaler la mise en page. */
 .press {
   @apply transition-transform duration-150 active:scale-[0.97];
