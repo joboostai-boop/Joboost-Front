@@ -108,9 +108,9 @@ export const adzunaService = {
         source: 'Adzuna',
         url: o?.redirect_url || '',
         tags,
+        // Description complète (Adzuna peut déjà la tronquer de son côté) ; le front la replie avec « Voir plus ».
         aiInsight: rawDesc
-          ? `${rawDesc.slice(0, 600)}${rawDesc.length > 600 ? '…' : ''}`
-          : `Offre publiée via Adzuna correspondant à votre recherche « ${what} ».`,
+          || `Offre publiée via Adzuna correspondant à votre recherche « ${what} ».`,
       };
     });
   },

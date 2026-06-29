@@ -269,11 +269,11 @@ export const franceTravailService = {
       const tags = competences.map((c) => c?.libelle).filter(Boolean).slice(0, 3);
       if (tags.length === 0 && o?.romeLibelle) tags.push(o.romeLibelle);
 
-      // Insight : début de la description de l'offre (nettoyé), sinon message générique.
+      // Description complète de l'offre (nettoyée), sinon message générique.
+      // On envoie le texte intégral : le front l'affiche replié avec un « Voir plus ».
       const rawDesc: string = (o?.description || '').replace(/\s+/g, ' ').trim();
       const aiInsight = rawDesc
-        ? `${rawDesc.slice(0, 600)}${rawDesc.length > 600 ? '…' : ''}`
-        : `Offre publiée sur France Travail correspondant à votre recherche « ${jobTitle} ».`;
+        || `Offre publiée sur France Travail correspondant à votre recherche « ${jobTitle} ».`;
 
       return {
         id: `ft_${o.id}`,
