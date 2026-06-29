@@ -480,3 +480,42 @@
     padding-bottom: env(safe-area-inset-bottom);
   }
 }
+
+/* ============ Impression : n'imprimer QUE l'aperçu (CV ou lettre) ============
+   « Imprimer » appelle window.print(). Sans cadrage, toute l'app (nav, onglets,
+   formulaire) part à l'impression. On masque tout et on ne révèle que l'aperçu
+   ancré (#cv-preview / #letter-preview), repositionné en haut de page. */
+@media print {
+  /* Tout masquer, puis ne re-révéler que l'aperçu et son contenu. */
+  body * { visibility: hidden !important; }
+  #cv-preview, #cv-preview *,
+  #letter-preview, #letter-preview * { visibility: visible !important; }
+
+  /* Neutralise le Tilt (le CV est dans un conteneur 3D) : sans ça, le transform
+     du conteneur fausse le positionnement absolu de l'aperçu. */
+  .tilt { perspective: none !important; }
+  .tilt-layer { transform: none !important; transform-style: flat !important; }
+  .tilt-glare { display: none !important; }
+
+  /* L'aperçu occupe la page, à plat, sans ombre ni coins arrondis. */
+  #cv-preview, #letter-preview {
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    transform: none !important;
+  }
+
+  /* Conserver les couleurs des modèles (sinon les fonds sont retirés). */
+  #cv-preview, #cv-preview *,
+  #letter-preview, #letter-preview * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  @page { margin: 12mm; }
+}
