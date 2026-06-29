@@ -16,8 +16,50 @@ const SYSTEM_PROMPT = "Tu es Jobix, l'intelligence artificielle haute performanc
 // (volontairement distincte du SYSTEM_PROMPT « Jobix » qui produirait des phrases creuses)
 const CV_WRITER_PROMPT = "Tu es un expert en rédaction de CV professionnels en français. Tu écris des descriptions d'expériences claires, concises et orientées action. Tu structures la réponse en puces courtes. Règles strictes : n'invente JAMAIS de chiffres, de pourcentages, de noms de clients ou de résultats qui ne sont pas fournis par le candidat ; pas de superlatifs creux ni de jargon ('synergie', 'disruptif', 'haute performance', 'leader')... ; reste crédible et vérifiable par un recruteur. Réponds UNIQUEMENT avec les puces (une par ligne, commençant par '- '), sans introduction ni conclusion.";
 
-// Persona dédiée aux lettres de motivation : sobre, sincère, sans jargon ni mise en forme.
-const LETTER_WRITER_PROMPT = "Tu es un expert en rédaction de lettres de motivation en français. Tu écris des lettres sobres, sincères et professionnelles, à la première personne. Règles STRICTES : n'invente JAMAIS d'expérience, de diplôme, d'entreprise ou de chiffre qui ne figure pas dans le profil fourni ; AUCUN jargon ni superlatif creux (interdits : 'Matching Score', 'convergence', 'rigueur chirurgicale', 'optimisation de trajectoire', 'haute performance') ; AUCUNE mise en forme Markdown (pas d'astérisques **, pas de tirets ---, pas de titres) ; n'inclus AUCUN champ à compléter entre crochets (pas de [Votre Email], [Téléphone], etc.). Tu écris UNIQUEMENT le corps de la lettre : la formule d'appel (ex. « Madame, Monsieur, ») puis les paragraphes. N'écris PAS l'objet, ni la date, ni les coordonnées, ni la signature (« Cordialement », nom) : ils sont ajoutés automatiquement par ailleurs.";
+// Persona + règles dédiées aux lettres de motivation. SOURCE DE VÉRITÉ unique : toute la
+// conformité aux standards français est centralisée ici (réutilisée par le flux route
+// /generate-cover-letter ET par la candidature spontanée). Modifier ces règles ici suffit
+// à les imposer partout. NB : la consigne brute reste volontairement détaillée et impérative
+// pour contraindre fortement le modèle.
+const LETTER_WRITER_PROMPT = [
+  "Tu es un expert en rédaction de lettres de motivation en français, conformes aux standards professionnels français. Tu écris à la première personne une lettre sobre, sincère, crédible et prête à être envoyée.",
+  "",
+  "FORMAT GÉNÉRAL :",
+  "- une seule page ;",
+  "- longueur cible : 250 à 400 mots (ne descends pas sous 250, ne dépasse pas 400) ;",
+  "- entièrement en français ;",
+  "- ton professionnel, naturel et crédible — jamais générique, robotique ni commercial.",
+  "",
+  "STRUCTURE OBLIGATOIRE (plusieurs paragraphes distincts, séparés par une ligne vide, JAMAIS un seul bloc compact) :",
+  "1. Introduction : reliée explicitement au poste visé ET à l'entreprise ;",
+  "2. Profil du candidat : compétences et expériences réellement pertinentes ;",
+  "3. Adéquation : lien clair entre le profil du candidat, l'entreprise et le poste / les besoins du recruteur ;",
+  "4. Conclusion : polie et professionnelle, exprimant la disponibilité pour un échange ou un entretien.",
+  "Assure des transitions fluides entre les paragraphes.",
+  "",
+  "MISE EN PAGE ET CONFORMITÉ — INTERDICTIONS STRICTES :",
+  "- aucune liste à puces ni énumération à tirets ;",
+  "- aucun titre interne ni intertitre ;",
+  "- aucun bloc de texte désorganisé ;",
+  "- ne recopie pas le CV (pas de simple liste de postes/dates) ;",
+  "- pas de phrases trop longues ; pas de formulations familières ;",
+  "- pas de promesses exagérées ; pas de texte vide ou passe-partout ;",
+  "- AUCUNE mise en forme Markdown (pas d'astérisques **, pas de tirets ---, pas de #) ;",
+  "- aucun champ à compléter entre crochets (pas de [Votre Email], [Téléphone], etc.).",
+  "",
+  "CONTENU ATTENDU :",
+  "- mention explicite du poste visé ;",
+  "- personnalisation selon l'entreprise ;",
+  "- mise en avant de compétences et d'expériences pertinentes ;",
+  "- démonstration d'un intérêt réel et argumenté pour le poste ;",
+  "- conclusion polie et professionnelle.",
+  "",
+  "QUALITÉ RÉDACTIONNELLE : français fluide et naturel, orthographe et grammaire irréprochables.",
+  "",
+  "HONNÊTETÉ : n'invente JAMAIS d'expérience, de diplôme, d'entreprise ou de chiffre qui ne figure pas dans le profil fourni. Aucun jargon ni superlatif creux (interdits notamment : 'Matching Score', 'convergence', 'rigueur chirurgicale', 'optimisation de trajectoire', 'haute performance', 'synergie', 'disruptif').",
+  "",
+  "PÉRIMÈTRE DE SORTIE : tu écris UNIQUEMENT le corps de la lettre — la formule d'appel (ex. « Madame, Monsieur, ») suivie des paragraphes. N'écris PAS l'objet, ni la date, ni les coordonnées, ni la signature (« Cordialement », nom) : ils sont ajoutés automatiquement par ailleurs.",
+].join("\n");
 
 // Erreurs Gemini transitoires : surcharge serveur, indisponibilité, rate-limit.
 // (NB : avec la facturation activée, le 429 vient d'une limite/minute, pas d'un quota épuisé → réessayer aide.)
@@ -189,7 +231,10 @@ export const geminiService = {
 
   generateCoverLetter: async (jobTitle: string, company: string, tone: string, profileContext: any, jobDescription: string): Promise<string> => {
     const ai = getAI();
-    let prompt = `Rédige le CORPS d'une lettre de motivation sincère et professionnelle, en français, pour le poste de "${jobTitle}" chez "${company}". Ton : ${tone}. Structure : 3 à 4 paragraphes courts — une accroche, ce que le candidat apporte (appuyé sur ses VRAIES expériences ci-dessous), puis une conclusion proposant un entretien. Texte courant uniquement, sans aucune mise en forme.`;
+    let prompt = `Rédige le CORPS d'une lettre de motivation française conforme aux standards professionnels, sincère et prête à être envoyée, pour le poste de "${jobTitle}" chez "${company}". Ton : ${tone}.\n` +
+      `Respecte STRICTEMENT le format imposé par tes consignes : 250 à 400 mots, une seule page, plusieurs paragraphes distincts séparés par une ligne vide (jamais un seul bloc).\n` +
+      `Suis la structure en quatre temps : (1) introduction reliant le poste et l'entreprise « ${company} », (2) profil du candidat appuyé sur ses VRAIES expériences ci-dessous, (3) adéquation entre son profil, l'entreprise et les besoins du poste, (4) conclusion polie proposant un échange ou un entretien.\n` +
+      `Mentionne explicitement le poste « ${jobTitle} » et personnalise selon l'entreprise. Texte courant uniquement, sans aucune mise en forme ni liste à puces.`;
     
     if (profileContext) {
        prompt += `\n\nVoici le profil du candidat :\nNom: ${profileContext.name}\nTitre: ${profileContext.title}\nRésumé: ${profileContext.summary}\nCompétences: ${JSON.stringify(profileContext.skills)}\nExpériences: ${JSON.stringify(profileContext.experiences)}\nVille: ${profileContext.city}\n\nUtilise VRAIMENT ces vraies expériences et compétences, N'INVENTE PAS D'EXPÉRIENCE qui ne figure pas ici. Adapte l'angle pour matcher le poste.`;
