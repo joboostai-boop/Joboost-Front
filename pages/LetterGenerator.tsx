@@ -8,6 +8,7 @@ import TemplateGallery from '../components/TemplateGallery';
 import Collapsible from '../components/Collapsible';
 import ActionMenu from '../components/ActionMenu';
 import AiLoadingOverlay from '../components/AiLoadingOverlay';
+import QuotaDialog, { isQuotaError } from '../components/QuotaDialog';
 import { LETTER_TEMPLATES, getLetterTemplate } from '../services/letterTemplates';
 
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -29,6 +30,8 @@ const LetterGenerator: React.FC = () => {
   const [generatedText, setGeneratedText] = useState('');
   const [loading, setLoading] = useState(false);
   const [loadingInit, setLoadingInit] = useState(true);
+  const [quotaOpen, setQuotaOpen] = useState(false);
+  const [quotaMessage, setQuotaMessage] = useState<string | undefined>();
   
   const [userProfile, setUserProfile] = useState<any>(null);
   const [letters, setLetters] = useState<any[]>([]);
@@ -89,7 +92,13 @@ const LetterGenerator: React.FC = () => {
       setGeneratedText(text);
       toast.success("Lettre générée avec succès !");
     } catch(err: any) {
-      toast.error(err.message || "Erreur de génération.");
+      // Quota atteint : on PROPOSE l'offre adaptée (modal → /pricing) au lieu d'un toast d'erreur.
+      if (isQuotaError(err)) {
+        setQuotaMessage(err.message);
+        setQuotaOpen(true);
+      } else {
+        toast.error(err.message || "Erreur de génération.");
+      }
     } finally {
       setLoading(false);
     }
@@ -177,6 +186,7 @@ const LetterGenerator: React.FC = () => {
 
   return (
     <div className="p-5 md:p-8 max-w-6xl mx-auto space-y-6">
+      <QuotaDialog open={quotaOpen} onClose={() => setQuotaOpen(false)} message={quotaMessage} />
       <AiLoadingOverlay
         show={loading}
         title="Rédaction de votre lettre…"

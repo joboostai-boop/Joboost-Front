@@ -68,11 +68,9 @@ export const generateCVSummary = async (title: string, skills: string[], experie
 };
 
 export const generateCoverLetter = async (jobTitle: string, company: string, tone: string, profileContext: any, jobDescription: string): Promise<string> => {
-  try {
-    return await fetchFromAPI('/generate-cover-letter', { jobTitle, company, tone, profileContext, jobDescription });
-  } catch (err: any) {
-    throw new Error(err.message || 'Erreur IA lors de la génération de lettre');
-  }
+  // On laisse remonter l'erreur d'origine (avec err.code/err.status, ex. QUOTA_EXCEEDED)
+  // pour que l'UI puisse proposer une offre adaptée plutôt qu'un simple toast d'erreur.
+  return await fetchFromAPI('/generate-cover-letter', { jobTitle, company, tone, profileContext, jobDescription });
 };
 
 export interface OfferExtraction {

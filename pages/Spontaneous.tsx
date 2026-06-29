@@ -7,6 +7,7 @@ import { authHeaders } from '../services/authToken';
 import MatchRing from '../components/MatchRing';
 import EmptyState from '../components/EmptyState';
 import RadiusSelect from '../components/RadiusSelect';
+import QuotaDialog from '../components/QuotaDialog';
 
 type AutoLevel = 'AUTO_SAFE' | 'AUTO_REVIEW' | 'NO_SEND';
 
@@ -72,6 +73,8 @@ const Spontaneous: React.FC = () => {
   const [emailMap, setEmailMap] = useState<Record<string, string>>({});
   const [editingEmail, setEditingEmail] = useState<Record<string, boolean>>({});
   const [processing, setProcessing] = useState<Record<string, boolean>>({});
+  const [quotaOpen, setQuotaOpen] = useState(false);
+  const [quotaMessage, setQuotaMessage] = useState<string | undefined>();
 
   useEffect(() => {
     if (user) {
@@ -147,8 +150,10 @@ const Spontaneous: React.FC = () => {
       const prep = await prepRes.json();
       if (!prep.success) {
         if (prep.code === 'QUOTA_EXCEEDED') {
-          toast.error(prep.error, { id: toastId });
-          navigate('/pricing');
+          // Quota atteint : on retire le toast de chargement et on PROPOSE l'offre adaptée.
+          toast.dismiss(toastId);
+          setQuotaMessage(prep.error);
+          setQuotaOpen(true);
           return;
         }
         toast.error(prep.error || 'Impossible de préparer la candidature.', { id: toastId });
@@ -192,6 +197,7 @@ const Spontaneous: React.FC = () => {
 
   return (
     <div className="p-5 md:p-8 max-w-6xl mx-auto space-y-6">
+      <QuotaDialog open={quotaOpen} onClose={() => setQuotaOpen(false)} message={quotaMessage} />
       <form onSubmit={handleSearch} className="surface p-5 md:p-6">
         <h3 className="text-sm font-semibold text-[#111827] dark:text-white mb-4">Critères de ciblage</h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
