@@ -102,8 +102,8 @@ router.post('/detail-experience', async (req, res) => {
 
 router.post('/generate-cv-summary', async (req, res) => {
     try {
-        const { title, skills, experiences } = req.body;
-        const result = await geminiService.generateCVSummary(title, skills, experiences);
+        const { title, skills, experiences, jobContext } = req.body;
+        const result = await geminiService.generateCVSummary(title, skills, experiences, jobContext);
         res.json({ success: true, data: result });
     } catch (error: any) {
         res.status(500).json({ success: false, error: error.message });

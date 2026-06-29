@@ -199,9 +199,11 @@ export const geminiService = {
   // Détaille une expérience professionnelle en puces factuelles pour le CV (modèle Flash, gratuit).
   detailExperience: async (input: {
     role?: string; company?: string; contractType?: string; period?: string; targetTitle?: string; notes?: string;
+    /** Offre ciblée : oriente le vocabulaire et les compétences mises en avant (sans rien inventer). */
+    jobContext?: string;
   }): Promise<string> => {
     const ai = getAI();
-    const { role, company, contractType, period, targetTitle, notes } = input || {};
+    const { role, company, contractType, period, targetTitle, notes, jobContext } = input || {};
     const response = await genWithRetry(ai, {
       model: 'gemini-3-flash-preview',
       contents:
@@ -211,19 +213,26 @@ export const geminiService = {
         `Type de contrat : ${contractType || '—'}\n` +
         `Période : ${period || '—'}\n` +
         `Poste actuellement visé par le candidat : ${targetTitle || '—'}\n` +
-        `Notes du candidat sur ses missions et réalisations : "${notes || ''}"\n\n` +
-        `Appuie-toi en priorité sur ces notes. Si elles sont vides ou très courtes, propose des missions ` +
+        `Notes du candidat sur ses missions et réalisations : "${notes || ''}"\n` +
+        (jobContext
+          ? `\nOffre ciblée par le candidat — oriente le vocabulaire des puces et fais ressortir en PRIORITÉ les missions et compétences pertinentes pour cette offre, en reprenant ses mots-clés quand c'est honnête (SANS inventer d'expérience ni de chiffre) :\n"""${`${jobContext}`.slice(0, 1500)}"""\n`
+          : '') +
+        `\nAppuie-toi en priorité sur ces notes. Si elles sont vides ou très courtes, propose des missions ` +
         `plausibles et génériques pour ce poste, SANS inventer de chiffres ni de résultats précis.`,
       config: { systemInstruction: CV_WRITER_PROMPT },
     });
     return response.text || notes || '';
   },
 
-  generateCVSummary: async (title: string, skills: string[], experiences: any[]): Promise<string> => {
+  generateCVSummary: async (title: string, skills: string[], experiences: any[], jobContext?: string): Promise<string> => {
     const ai = getAI();
     const response = await genWithRetry(ai, {
       model: 'gemini-3-flash-preview',
-      contents: `Génère un résumé de profil haute-performance pour un ${title}. Compétences : ${skills.join(', ')}. Historique : ${JSON.stringify(experiences)}`,
+      contents:
+        `Génère un résumé de profil haute-performance pour un ${title}. Compétences : ${skills.join(', ')}. Historique : ${JSON.stringify(experiences)}` +
+        (jobContext
+          ? `\n\nOffre ciblée par le candidat — aligne le vocabulaire du résumé sur cette offre et reprends ses mots-clés pertinents (SANS inventer d'expérience ni de compétence non présente ci-dessus) :\n"""${`${jobContext}`.slice(0, 1500)}"""`
+          : ''),
       config: { systemInstruction: SYSTEM_PROMPT }
     });
     return response.text || "";

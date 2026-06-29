@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search, MapPin, Bookmark, Clock, Edit3, ExternalLink, Briefcase, Euro, Sparkles, Inbox, Navigation, Send, Check, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Search, MapPin, Bookmark, Clock, Edit3, ExternalLink, Briefcase, Euro, Sparkles, Inbox, Navigation, Send, Check, ChevronLeft, ChevronRight, FileText } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
 import { authHeaders } from '../services/authToken';
@@ -336,6 +336,13 @@ const PersonalizedOffers: React.FC = () => {
                   })()}
                   <button onClick={() => navigate('/target/letter', { state: { jobTitle: offer.title, company: offer.company, targetContext: offer.aiInsight } })} className="press btn btn-secondary" title="Créer la lettre de motivation">
                     <Edit3 size={15} /> Lettre
+                  </button>
+                  <button
+                    onClick={() => navigate('/prepare/cv', { state: { jobTitle: offer.title, company: offer.company, targetContext: [offer.aiInsight, offer.tags?.length ? `Mots-clés : ${offer.tags.join(', ')}` : '', offer.type ? `Contrat : ${offer.type}` : ''].filter(Boolean).join('\n') } })}
+                    className="press btn btn-secondary"
+                    title="Générer un CV adapté à cette offre"
+                  >
+                    <FileText size={15} /> CV
                   </button>
                   {offer.url && (
                     <a href={offer.url} target="_blank" rel="noopener noreferrer" className="press btn btn-secondary !px-3" title="Voir l'offre (sans l'ajouter au suivi)">

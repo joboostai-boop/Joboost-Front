@@ -54,14 +54,16 @@ export const rewriteSection = async (sectionName: string, currentText: string, c
 
 export const detailExperience = async (input: {
   role?: string; company?: string; contractType?: string; period?: string; targetTitle?: string; notes?: string;
+  /** Offre ciblée : oriente le vocabulaire et les compétences mises en avant. */
+  jobContext?: string;
 }): Promise<string> => {
   // On laisse l'erreur remonter pour afficher un vrai message (ex. quota) côté UI.
   return await fetchFromAPI('/detail-experience', input);
 };
 
-export const generateCVSummary = async (title: string, skills: string[], experiences: any[]): Promise<string> => {
+export const generateCVSummary = async (title: string, skills: string[], experiences: any[], jobContext?: string): Promise<string> => {
   try {
-    return await fetchFromAPI('/generate-cv-summary', { title, skills, experiences });
+    return await fetchFromAPI('/generate-cv-summary', { title, skills, experiences, jobContext });
   } catch {
     return "";
   }

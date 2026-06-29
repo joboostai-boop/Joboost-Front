@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { useLocation } from 'react-router-dom';
-import { Printer, FileDown, Wand2, RefreshCw, Layout, Save, Clock, Loader2, Plus, Trash2, X, Files } from 'lucide-react';
+import { Printer, FileDown, Wand2, RefreshCw, Layout, Save, Clock, Loader2, Plus, Trash2, X, Files, Target } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { generateCVSummary, detailExperience } from '../services/gemini';
 // Import dynamique au clic (les libs PDF/Word sont lourdes — ~1,8 Mo — on ne les charge
@@ -57,8 +57,13 @@ const SkillsEditor: React.FC<{ value: string[]; onChange: (v: string[]) => void 
 
 const CVGenerator: React.FC = () => {
   const location = useLocation();
+  const incoming = (location.state as any) || {};
   // Modèle pré-sélectionné depuis la page « Modèles » (navigation avec state).
-  const incomingTemplate = (location.state as any)?.template as string | undefined;
+  const incomingTemplate = incoming.template as string | undefined;
+  // Offre ciblée (arrivée depuis le bouton « CV » d'une offre) : oriente la génération IA.
+  const [target, setTarget] = useState<{ jobTitle?: string; company?: string; context: string } | null>(
+    incoming.targetContext ? { jobTitle: incoming.jobTitle, company: incoming.company, context: incoming.targetContext } : null
+  );
 
   const [loadingSummary, setLoadingSummary] = useState(false);
   const [aiExpId, setAiExpId] = useState<string | null>(null);
@@ -113,7 +118,8 @@ const CVGenerator: React.FC = () => {
            setFormData(prev => ({
              ...prev,
              name: u.name || 'Candidat',
-             title: u.title || 'Développeur',
+             // Si on arrive depuis une offre, on cible directement son intitulé de poste.
+             title: incoming.jobTitle || u.title || 'Développeur',
              email: u.email || '',
              phone: u.phone || '',
              city: u.city || '',
@@ -152,7 +158,7 @@ const CVGenerator: React.FC = () => {
   const handleGenerateSummary = async () => {
     setLoadingSummary(true);
     try {
-      const summary = await generateCVSummary(formData.title, formData.skills, formData.experiences);
+      const summary = await generateCVSummary(formData.title, formData.skills, formData.experiences, target?.context);
       if (summary) {
         setFormData({ ...formData, summary });
         toast.success("Résumé généré avec succès !");
@@ -171,6 +177,7 @@ const CVGenerator: React.FC = () => {
         period: exp.period,
         targetTitle: formData.title,
         notes: exp.desc,
+        jobContext: target?.context,
       });
       if (txt) {
         updExperience(exp.id, { desc: txt });
@@ -291,6 +298,22 @@ const CVGenerator: React.FC = () => {
         }
       />
       <div className="flex-1 space-y-3">
+        {target && (
+          <div className="surface-accent rounded-xl p-3.5 flex items-start gap-3 ring-1 ring-[#7D5CFF]/20">
+            <span className="w-9 h-9 rounded-lg bg-[#7D5CFF]/10 text-[#7D5CFF] flex items-center justify-center shrink-0"><Target size={18} /></span>
+            <div className="min-w-0 flex-1">
+              <p className="text-sm font-semibold text-[#111827] dark:text-white">
+                CV ciblé pour cette offre{target.jobTitle ? ` : ${target.jobTitle}` : ''}{target.company ? ` — ${target.company}` : ''}
+              </p>
+              <p className="text-xs text-[#6B7280] dark:text-slate-400 mt-0.5">
+                « Aider à rédiger » et « Détailler avec l'IA » reprendront les mots-clés de l'offre, sans rien inventer.
+              </p>
+            </div>
+            <button onClick={() => setTarget(null)} aria-label="Retirer le ciblage de l'offre" className="press text-slate-400 hover:text-[#7D5CFF] shrink-0">
+              <X size={16} />
+            </button>
+          </div>
+        )}
         <header className="flex flex-col md:flex-row justify-between md:items-center gap-4">
           <p className="text-sm text-[#6B7280] dark:text-slate-400 flex items-center gap-1.5">
             <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-500" />
