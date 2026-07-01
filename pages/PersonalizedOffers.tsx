@@ -7,6 +7,7 @@ import MatchRing from '../components/MatchRing';
 import EmptyState from '../components/EmptyState';
 import ExpandableText from '../components/ExpandableText';
 import FilterSelect from '../components/FilterSelect';
+import ApplyInAppModal from '../components/ApplyInAppModal';
 import { formatSalary } from '../services/format';
 
 export interface JobOffer {
@@ -22,6 +23,7 @@ export interface JobOffer {
   url?: string;
   tags: string[];
   aiInsight: string;
+  contactEmail?: string; // email employeur (offres France Travail qui le fournissent)
 }
 
 const OfferSkeleton: React.FC = () => (
@@ -57,6 +59,7 @@ const PersonalizedOffers: React.FC = () => {
   const [radius, setRadius] = useState(30); // rayon de recherche en km
   const [page, setPage] = useState(1); // pagination (affichage)
   const [appliedKeys, setAppliedKeys] = useState<Set<string>>(new Set()); // offres déjà ajoutées au suivi (cette session)
+  const [applyOffer, setApplyOffer] = useState<JobOffer | null>(null); // offre en cours de candidature in-app
 
   const PER_PAGE = 10;
 
@@ -324,13 +327,25 @@ const PersonalizedOffers: React.FC = () => {
                 <div className="flex flex-wrap items-center gap-2 mt-4 pt-3.5 border-t border-slate-100 dark:border-slate-800">
                   {(() => {
                     const isApplied = appliedKeys.has(offerKey(offer));
+                    if (isApplied) {
+                      return (
+                        <button disabled className="press btn flex-1 sm:flex-none bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-500/10 dark:border-emerald-500/30 cursor-default">
+                          <Check size={15} /> Dans ton suivi
+                        </button>
+                      );
+                    }
+                    // Offre avec email employeur → candidature 100 % dans l'app (envoi par email).
+                    if (offer.contactEmail) {
+                      return (
+                        <button onClick={() => setApplyOffer(offer)} className="press btn btn-primary flex-1 sm:flex-none" title="Envoyer ta candidature par email, sans quitter Joboost">
+                          <Send size={15} /> Postuler depuis Joboost
+                        </button>
+                      );
+                    }
+                    // Sinon → ouverture de l'offre (l'employeur reçoit via son propre système) + suivi.
                     return (
-                      <button
-                        onClick={() => handlePostuler(offer)}
-                        disabled={isApplied}
-                        className={`press btn flex-1 sm:flex-none ${isApplied ? 'bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-500/10 dark:border-emerald-500/30 cursor-default' : 'btn-primary'}`}
-                      >
-                        {isApplied ? <><Check size={15} /> Dans ton suivi</> : <><Send size={15} /> Postuler</>}
+                      <button onClick={() => handlePostuler(offer)} className="press btn btn-primary flex-1 sm:flex-none">
+                        <Send size={15} /> Postuler
                       </button>
                     );
                   })()}
@@ -394,6 +409,14 @@ const PersonalizedOffers: React.FC = () => {
           </nav>
         )}
         </>
+      )}
+
+      {applyOffer && (
+        <ApplyInAppModal
+          offer={applyOffer}
+          onClose={() => setApplyOffer(null)}
+          onSent={() => setAppliedKeys((prev) => new Set(prev).add(offerKey(applyOffer)))}
+        />
       )}
     </div>
   );
