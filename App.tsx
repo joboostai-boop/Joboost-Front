@@ -26,7 +26,6 @@ const Pricing = React.lazy(() => import('./pages/Pricing'));
 const Profile = React.lazy(() => import('./pages/Profile'));
 const Settings = React.lazy(() => import('./pages/Settings'));
 const Onboarding = React.lazy(() => import('./pages/Onboarding'));
-const NotFound = React.lazy(() => import('./pages/NotFound'));
 const Spontaneous = React.lazy(() => import('./pages/Spontaneous'));
 const Login = React.lazy(() => import('./pages/Auth/Login'));
 const Register = React.lazy(() => import('./pages/Auth/Register'));
@@ -131,7 +130,10 @@ const App: React.FC = () => {
           <Routes>
             <Route path="/" element={<Home onStart={() => navigate('/auth/register')} />} />
             <Route path="/legal/:page" element={<Legal />} />
-            <Route path="*" element={<NotFound />} />
+            {/* Déconnecté sur une page interne (ex. /home, /track…) → on renvoie vers la
+                connexion plutôt que d'afficher un 404 déroutant. Seule la racine "/" garde
+                la vitrine ; les vraies pages inexistantes tombent aussi sur la connexion. */}
+            <Route path="*" element={<Navigate to="/auth/login" replace />} />
           </Routes>
         </Suspense>
       </div>
