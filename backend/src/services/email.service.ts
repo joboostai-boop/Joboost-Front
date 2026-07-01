@@ -1,6 +1,12 @@
 import dotenv from 'dotenv';
+import dns from 'dns';
 import nodemailer, { Transporter } from 'nodemailer';
 dotenv.config();
+
+// Certains hébergeurs (dont Render) résolvent smtp.gmail.com en IPv6 en premier,
+// mais ne routent pas l'IPv6 en sortie → « connect ENETUNREACH …:465 » puis timeout.
+// On force la résolution DNS à privilégier l'IPv4, qui fonctionne.
+try { dns.setDefaultResultOrder('ipv4first'); } catch { /* Node < 18 : ignoré */ }
 
 // ====================================================================
 //  Service d'envoi d'emails — deux transports possibles :
@@ -34,9 +40,14 @@ let gmailTransport: Transporter | null = null;
 const getGmailTransport = (): Transporter => {
   if (!gmailTransport) {
     gmailTransport = nodemailer.createTransport({
-      service: 'gmail',
+      host: 'smtp.gmail.com',
+      port: 465,
+      secure: true,
       auth: { user: GMAIL_USER, pass: GMAIL_APP_PASSWORD },
-    });
+      family: 4,                 // force IPv4 (Render ne route pas l'IPv6 sortant)
+      connectionTimeout: 15000,  // évite de rester bloqué trop longtemps si le port est filtré
+      greetingTimeout: 15000,
+    } as any);
   }
   return gmailTransport;
 };
