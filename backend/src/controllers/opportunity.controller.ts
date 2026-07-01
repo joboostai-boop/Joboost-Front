@@ -43,13 +43,13 @@ export const opportunityController = {
       const sources: Promise<FtOffer[]>[] = [];
       if (isFranceTravailConfigured()) {
         sources.push(
-          franceTravailService.searchOffers(title, location, 40, distance, contractType)
+          franceTravailService.searchOffers(title, location, 100, distance, contractType)
             .catch((e: any) => { console.error('France Travail indisponible (offres) :', e?.message || e); return [] as FtOffer[]; })
         );
       }
       if (isAdzunaConfigured()) {
         sources.push(
-          adzunaService.searchOffers(title, location, 30, distance, contractType)
+          adzunaService.searchOffers(title, location, 50, distance, contractType)
             .catch((e: any) => { console.error('Adzuna indisponible (offres) :', e?.message || e); return [] as FtOffer[]; })
         );
       }
@@ -63,7 +63,7 @@ export const opportunityController = {
             success: true,
             source: usedSources.length > 1 ? 'mixed' : (usedSources[0] === 'Adzuna' ? 'adzuna' : 'francetravail'),
             sources: usedSources,
-            recommendations: merged.slice(0, 60),
+            recommendations: merged.slice(0, 150),
           });
         }
         // Des sources réelles SONT configurées mais ne renvoient rien → vrai « aucun résultat ».
