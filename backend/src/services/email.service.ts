@@ -1,64 +1,36 @@
 import dotenv from 'dotenv';
-import dns from 'dns';
-import nodemailer, { Transporter } from 'nodemailer';
 dotenv.config();
 
-// Certains hébergeurs (dont Render) résolvent smtp.gmail.com en IPv6 en premier,
-// mais ne routent pas l'IPv6 en sortie → « connect ENETUNREACH …:465 » puis timeout.
-// On force la résolution DNS à privilégier l'IPv4, qui fonctionne.
-try { dns.setDefaultResultOrder('ipv4first'); } catch { /* Node < 18 : ignoré */ }
-
 // ====================================================================
-//  Service d'envoi d'emails — deux transports possibles :
-//   1) GMAIL SMTP (sans domaine à acheter) : GMAIL_USER + GMAIL_APP_PASSWORD.
-//      Envoie depuis l'adresse Gmail via un « mot de passe d'application ».
-//      Idéal pour un lancement à petit volume (~500 mails/j). PRIORITAIRE si présent.
+//  Service d'envoi d'emails — deux transports HTTP (le SMTP est bloqué sur Render) :
+//   1) BREVO (API HTTP, port 443) : BREVO_API_KEY + adresse expéditrice vérifiée chez
+//      Brevo (EMAIL_FROM / GMAIL_USER). Sans domaine à acheter. CANAL PRINCIPAL.
 //   2) RESEND (API REST) : RESEND_API_KEY + EMAIL_FROM (exige un domaine vérifié).
 //  Si aucun n'est configuré → mode "manuel" (aucun envoi réel), l'app reste
 //  fonctionnelle sans clé (repli identique à France Travail).
 //
 //  Reply-To = email réel de l'utilisateur → les réponses lui reviennent directement.
+//  NB : l'envoi Gmail SMTP a été retiré — Render (gratuit) bloque les ports SMTP sortants.
 // ====================================================================
 
 const RESEND_API_KEY = process.env.RESEND_API_KEY || '';
 const RESEND_URL = 'https://api.resend.com/emails';
 
-const GMAIL_USER = process.env.GMAIL_USER || '';
-// Mot de passe d'application Google (16 caractères), PAS le mot de passe du compte.
-const GMAIL_APP_PASSWORD = (process.env.GMAIL_APP_PASSWORD || '').replace(/\s+/g, '');
-
-// Brevo (ex-Sendinblue) — envoi par API HTTP (port 443), NON bloqué par Render gratuit
+// Brevo (ex-Sendinblue) — envoi par API HTTP (port 443), NON bloqué par Render
 // contrairement au SMTP. Sans domaine : on vérifie juste l'adresse expéditrice chez Brevo.
 const BREVO_API_KEY = process.env.BREVO_API_KEY || '';
 const BREVO_URL = 'https://api.brevo.com/v3/smtp/email';
 
-// Adresse expéditrice (doit être vérifiée chez Brevo). On réutilise GMAIL_USER/EMAIL_FROM.
-const EMAIL_FROM = process.env.EMAIL_FROM || GMAIL_USER || 'envois@joboost.io';
+// Adresse expéditrice (doit être vérifiée chez Brevo). GMAIL_USER n'est plus qu'une
+// source d'adresse (pas un secret) ; garder cette variable sur Render.
+const EMAIL_FROM = process.env.EMAIL_FROM || process.env.GMAIL_USER || 'envois@joboost.io';
 
 const useBrevo = (): boolean => Boolean(BREVO_API_KEY && EMAIL_FROM);
-const useGmail = (): boolean => Boolean(GMAIL_USER && GMAIL_APP_PASSWORD);
 const useResend = (): boolean => Boolean(RESEND_API_KEY && process.env.EMAIL_FROM);
 
-export const isEmailConfigured = (): boolean => useBrevo() || useGmail() || useResend();
+export const isEmailConfigured = (): boolean => useBrevo() || useResend();
 
-// Transport Gmail créé une seule fois (réutilisé entre les envois).
-let gmailTransport: Transporter | null = null;
-const getGmailTransport = (): Transporter => {
-  if (!gmailTransport) {
-    gmailTransport = nodemailer.createTransport({
-      host: 'smtp.gmail.com',
-      port: 465,
-      secure: true,
-      auth: { user: GMAIL_USER, pass: GMAIL_APP_PASSWORD },
-      family: 4,                 // force IPv4 (Render ne route pas l'IPv6 sortant)
-      connectionTimeout: 15000,  // évite de rester bloqué trop longtemps si le port est filtré
-      greetingTimeout: 15000,
-    } as any);
-  }
-  return gmailTransport;
-};
-
-// Envoi générique bas niveau : choisit Gmail (prioritaire) puis Resend.
+// Envoi générique bas niveau : Brevo (principal) puis Resend.
 interface RawMail {
   fromLabel: string;        // ex. "Sana via Joboost" (le domaine réel est EMAIL_FROM)
   to: string;
@@ -99,28 +71,6 @@ const sendRaw = async (mail: RawMail): Promise<SendResult> => {
       return { sent: true, manual: false, messageId: json?.messageId || null };
     } catch (e: any) {
       return { sent: false, manual: false, messageId: null, error: e?.message || 'Erreur réseau Brevo.' };
-    }
-  }
-
-  // 2) Gmail SMTP (sans domaine — ne marche PAS sur Render gratuit : port SMTP bloqué)
-  if (useGmail()) {
-    try {
-      const info = await getGmailTransport().sendMail({
-        from: `${mail.fromLabel} <${EMAIL_FROM}>`,
-        to: mail.to,
-        subject: mail.subject,
-        html: mail.html,
-        text: mail.text,
-        replyTo: mail.replyTo,
-        attachments: (mail.attachments || []).map((a) => ({
-          filename: a.filename,
-          content: a.content,
-          encoding: 'base64',
-        })),
-      });
-      return { sent: true, manual: false, messageId: info.messageId || null };
-    } catch (e: any) {
-      return { sent: false, manual: false, messageId: null, error: e?.message || 'Erreur Gmail SMTP.' };
     }
   }
 
