@@ -80,6 +80,9 @@ export interface FtOffer {
   url: string;
   tags: string[];
   aiInsight: string;
+  // Email de contact de l'employeur (fourni par certaines offres France Travail seulement).
+  // Quand présent → on peut proposer « Postuler depuis Joboost » (envoi par email, sans redirection).
+  contactEmail?: string;
 }
 
 // Met en forme une date de publication en libellé relatif FR ("Il y a 2 jours", "Aujourd'hui").
@@ -290,6 +293,8 @@ export const franceTravailService = {
         url: o?.origineOffre?.urlOrigine || '',
         tags,
         aiInsight,
+        // FT expose parfois un email de contact employeur (souvent absent, selon l'offre).
+        contactEmail: (o?.contact?.courriel || '').trim() || undefined,
       };
     });
   },
