@@ -8,8 +8,7 @@ const Login = () => {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [isBusinessLoading, setIsBusinessLoading] = useState(false);
-  
+
   const { login } = useAuth();
   const navigate = useNavigate();
 
@@ -42,31 +41,6 @@ const Login = () => {
       setError('Erreur de connexion au serveur');
     } finally {
       setIsLoading(false);
-    }
-  };
-
-  const handleBusinessLogin = async () => {
-    setIsBusinessLoading(true);
-    setError('');
-
-    try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/auth/business-login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include'
-      });
-      const data = await res.json();
-
-      if (data.success) {
-        login(data.user, data.token);
-        navigate('/business/offers');
-      } else {
-        setError(data.error || 'Erreur de connexion partenaire');
-      }
-    } catch (err) {
-      setError('Erreur de connexion au serveur');
-    } finally {
-      setIsBusinessLoading(false);
     }
   };
 
@@ -114,7 +88,10 @@ const Login = () => {
                 />
               </div>
               <div>
-                <label htmlFor="password" className="input-label">Mot de passe</label>
+                <div className="flex items-center justify-between mb-1">
+                  <label htmlFor="password" className="input-label mb-0">Mot de passe</label>
+                  <Link to="/auth/forgot" className="text-xs font-medium text-[#7D5CFF] hover:underline">Mot de passe oublié ?</Link>
+                </div>
                 <input
                   id="password"
                   name="password"
@@ -140,25 +117,25 @@ const Login = () => {
           </form>
         </div>
 
-        {/* Business Partner CTA — direct access, no credentials */}
+        {/* Espace recruteur — inscription self-service (identifiants) */}
         <div className="card-pro p-5 bg-white border-[#7D5CFF]/10">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-[#7D5CFF] to-[#4F46E5] flex items-center justify-center text-white shrink-0">
               <Building2 size={18} />
             </div>
             <div className="flex-1">
-              <p className="text-sm font-bold text-slate-900">Vous êtes un organisme partenaire ?</p>
-              <p className="text-xs text-slate-500">Mission Locale, agence d'insertion, organisme de formation...</p>
+              <p className="text-sm font-bold text-slate-900">Vous êtes un recruteur / organisme ?</p>
+              <p className="text-xs text-slate-500">Mission Locale, agence d'insertion, organisme de formation, entreprise…</p>
             </div>
           </div>
-          <button
-            onClick={handleBusinessLogin}
-            disabled={isBusinessLoading}
-            className="mt-4 w-full flex items-center justify-center gap-2 py-3 px-4 rounded-lg bg-gradient-to-r from-[#7D5CFF] to-[#4F46E5] text-white font-semibold text-sm hover:opacity-90 transition-opacity disabled:opacity-50"
+          <Link
+            to="/auth/register"
+            className="mt-4 w-full flex items-center justify-center gap-2 py-3 px-4 rounded-lg bg-gradient-to-r from-[#7D5CFF] to-[#4F46E5] text-white font-semibold text-sm hover:opacity-90 transition-opacity"
           >
             <Building2 size={16} />
-            {isBusinessLoading ? 'Connexion en cours...' : 'Accéder au portail partenaire'}
-          </button>
+            Créer un espace recruteur
+          </Link>
+          <p className="mt-2 text-center text-xs text-slate-400">Déjà un compte recruteur ? Connectez-vous ci-dessus avec vos identifiants.</p>
         </div>
       </div>
     </div>

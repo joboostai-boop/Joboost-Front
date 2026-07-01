@@ -11,6 +11,10 @@ const asyncHandler = (fn: any) => (req: any, res: any, next: any) => {
 // Toutes les routes business nécessitent le rôle BUSINESS_PARTNER
 router.use(requireBusinessRole);
 
+// --- Compte / entreprise ---
+router.get('/account', asyncHandler(businessController.getAccount));
+router.put('/account', asyncHandler(businessController.updateAccount));
+
 // --- Offres d'emploi ---
 router.post('/offers', asyncHandler(businessController.createOffer));
 router.get('/offers', asyncHandler(businessController.listOffers));

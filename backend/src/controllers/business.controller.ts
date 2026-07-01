@@ -4,6 +4,68 @@ import { prisma } from '../db';
 
 export const businessController = {
 
+  // ==================== COMPTE / ENTREPRISE ====================
+
+  // Renvoie les infos du compte recruteur + son organisation (entité).
+  getAccount: async (req: Request, res: Response) => {
+    try {
+      const user = await prisma.user.findUnique({
+        where: { id: req.userId! },
+        include: { organization: true },
+      });
+      if (!user) return res.status(404).json({ success: false, error: 'Compte introuvable.' });
+      res.json({
+        success: true,
+        account: {
+          name: user.name,
+          email: user.email,
+          plan: user.plan,
+          companyName: user.organization?.name || '',
+        },
+      });
+    } catch (error: any) {
+      console.error(error);
+      res.status(500).json({ success: false, error: 'Erreur lors du chargement du compte.' });
+    }
+  },
+
+  // Met à jour le nom du recruteur et le nom de l'entreprise (crée l'organisation si absente).
+  updateAccount: async (req: Request, res: Response) => {
+    try {
+      const { name, companyName } = req.body;
+      const user = await prisma.user.findUnique({ where: { id: req.userId! } });
+      if (!user) return res.status(404).json({ success: false, error: 'Compte introuvable.' });
+
+      if (typeof name === 'string' && name.trim()) {
+        await prisma.user.update({ where: { id: user.id }, data: { name: name.trim() } });
+      }
+
+      if (typeof companyName === 'string' && companyName.trim()) {
+        const cn = companyName.trim();
+        if (user.organizationId) {
+          await prisma.organization.update({ where: { id: user.organizationId }, data: { name: cn } });
+        } else {
+          const org = await prisma.organization.create({ data: { name: cn } });
+          await prisma.user.update({ where: { id: user.id }, data: { organizationId: org.id } });
+        }
+      }
+
+      const updated = await prisma.user.findUnique({ where: { id: user.id }, include: { organization: true } });
+      res.json({
+        success: true,
+        account: {
+          name: updated?.name,
+          email: updated?.email,
+          plan: updated?.plan,
+          companyName: updated?.organization?.name || '',
+        },
+      });
+    } catch (error: any) {
+      console.error(error);
+      res.status(500).json({ success: false, error: 'Erreur lors de la mise à jour du compte.' });
+    }
+  },
+
   // ==================== OFFERS ====================
 
   createOffer: async (req: Request, res: Response) => {

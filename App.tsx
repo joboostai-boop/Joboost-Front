@@ -30,6 +30,8 @@ const NotFound = React.lazy(() => import('./pages/NotFound'));
 const Spontaneous = React.lazy(() => import('./pages/Spontaneous'));
 const Login = React.lazy(() => import('./pages/Auth/Login'));
 const Register = React.lazy(() => import('./pages/Auth/Register'));
+const ForgotPassword = React.lazy(() => import('./pages/Auth/ForgotPassword'));
+const ResetPassword = React.lazy(() => import('./pages/Auth/ResetPassword'));
 const BusinessLayout = React.lazy(() => import('./pages/BusinessLayout'));
 const BusinessOffers = React.lazy(() => import('./pages/BusinessOffers'));
 const BusinessJobseekers = React.lazy(() => import('./pages/BusinessJobseekers'));
@@ -104,7 +106,7 @@ const App: React.FC = () => {
   }
 
   // Permettre l'accès aux pages d'authentification
-  if (!isAuthenticated && (location.pathname.startsWith('/auth/login') || location.pathname.startsWith('/auth/register'))) {
+  if (!isAuthenticated && location.pathname.startsWith('/auth/')) {
     return (
       <div className="min-h-screen bg-white dark:bg-slate-950 transition-colors duration-300">
          <Toaster position="top-right" />
@@ -112,6 +114,8 @@ const App: React.FC = () => {
            <Routes>
               <Route path="/auth/login" element={<Login />} />
               <Route path="/auth/register" element={<Register />} />
+              <Route path="/auth/forgot" element={<ForgotPassword />} />
+              <Route path="/auth/reset" element={<ResetPassword />} />
               <Route path="*" element={<Navigate to="/auth/login" replace />} />
            </Routes>
          </Suspense>

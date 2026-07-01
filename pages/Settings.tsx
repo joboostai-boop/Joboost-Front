@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import {
   Bell, LogOut, ChevronRight, UserRound, Moon, Sun,
-  Crown, Download, Trash2, Linkedin, Calendar, ShieldAlert, X, KeyRound, SlidersHorizontal, LifeBuoy, Mail
+  Crown, Download, Trash2, Linkedin, Calendar, ShieldAlert, X, KeyRound, SlidersHorizontal, LifeBuoy, Mail, Building2
 } from 'lucide-react';
 
 const SUPPORT_EMAIL = 'joboost.ai@gmail.com';
@@ -53,6 +53,39 @@ const Settings: React.FC<SettingsProps> = ({ user, isDarkMode, toggleDarkMode })
   // Compte (identité de connexion, distinct du Profil/CV)
   const [account, setAccount] = useState({ name: user.name || '', email: user.email || '' });
   const [savingAccount, setSavingAccount] = useState(false);
+
+  // Espace recruteur : nom de l'entreprise (organisation)
+  const isBusiness = user.role === 'BUSINESS_PARTNER';
+  const [companyName, setCompanyName] = useState('');
+  const [companyLoaded, setCompanyLoaded] = useState('');
+  const [savingCompany, setSavingCompany] = useState(false);
+
+  React.useEffect(() => {
+    if (!isBusiness) return;
+    (async () => {
+      try {
+        const res = await fetch(`${API}/api/business/account`, { credentials: 'include', headers: { ...authHeaders() } });
+        const data = await res.json();
+        if (data.success) { setCompanyName(data.account.companyName || ''); setCompanyLoaded(data.account.companyName || ''); }
+      } catch { /* silencieux */ }
+    })();
+  }, [isBusiness]);
+
+  const handleSaveCompany = async () => {
+    setSavingCompany(true);
+    try {
+      const res = await fetch(`${API}/api/business/account`, {
+        method: 'PUT',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json', ...authHeaders() },
+        body: JSON.stringify({ companyName }),
+      });
+      const data = await res.json();
+      if (data.success) { setCompanyLoaded(data.account.companyName || ''); toast.success('Entreprise mise à jour.'); }
+      else toast.error(data.error || 'Échec de la mise à jour.');
+    } catch { toast.error('Erreur réseau.'); }
+    finally { setSavingCompany(false); }
+  };
 
   // Alertes emploi par email (réellement persistées côté serveur)
   const [jobAlert, setJobAlert] = useState<{ optIn: boolean; frequency: 'daily' | 'weekly' }>({
@@ -181,6 +214,21 @@ const Settings: React.FC<SettingsProps> = ({ user, isDarkMode, toggleDarkMode })
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
         {/* ───────── Colonne gauche ───────── */}
         <div className="space-y-6">
+          {/* Mon entreprise (recruteurs uniquement) */}
+          {isBusiness && (
+            <Card title="Mon entreprise" icon={<Building2 size={16} />} desc="L'entité affichée sur vos offres">
+              <div className="px-5 py-4 space-y-4">
+                <div>
+                  <label className="input-label">Nom de l'entreprise</label>
+                  <input className="input-pro" value={companyName} onChange={(e) => setCompanyName(e.target.value)} placeholder="Ex : Mission Locale de Paris" />
+                </div>
+                <button onClick={handleSaveCompany} disabled={savingCompany || !companyName.trim() || companyName.trim() === companyLoaded} className="btn btn-primary w-full disabled:opacity-40">
+                  {savingCompany ? 'Enregistrement…' : 'Enregistrer'}
+                </button>
+              </div>
+            </Card>
+          )}
+
           {/* Compte */}
           <Card title="Compte" icon={<UserRound size={16} />} desc="Tes identifiants de connexion">
             <div className="px-5 py-4 space-y-4">

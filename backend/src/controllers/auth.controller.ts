@@ -1,8 +1,12 @@
 import { Request, Response } from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import crypto from 'crypto';
 import { prisma } from '../db';
-import { JWT_SECRET } from '../config';
+import { JWT_SECRET, FRONTEND_URL } from '../config';
+import { emailService } from '../services/email.service';
+
+const hashToken = (raw: string) => crypto.createHash('sha256').update(raw).digest('hex');
 
 
 const isProd = process.env.NODE_ENV === 'production';
@@ -98,6 +102,73 @@ export const authController = {
     } catch (error: any) {
       console.error(error);
       res.status(500).json({ success: false, error: "Erreur lors de la connexion." });
+    }
+  },
+
+  // Demande de réinitialisation : génère un token, l'envoie par email. Réponse TOUJOURS
+  // identique (succès) que l'email existe ou non → anti-énumération de comptes.
+  requestPasswordReset: async (req: Request, res: Response) => {
+    try {
+      const { email } = req.body;
+      const genericOk = () => res.json({ success: true, message: "Si un compte existe, un email de réinitialisation vient d'être envoyé." });
+
+      if (!email || typeof email !== 'string') return genericOk();
+
+      const user = await prisma.user.findUnique({ where: { email } });
+      // Pas de compte, ou compte OAuth-only (sans mot de passe) → on ne fait rien mais on répond pareil.
+      if (!user || !user.password) return genericOk();
+
+      const rawToken = crypto.randomBytes(32).toString('hex');
+      const resetTokenHash = hashToken(rawToken);
+      const resetTokenExpiry = new Date(Date.now() + 60 * 60 * 1000); // 1h
+      await prisma.user.update({ where: { id: user.id }, data: { resetTokenHash, resetTokenExpiry } });
+
+      const resetUrl = `${FRONTEND_URL}/auth/reset?token=${rawToken}&email=${encodeURIComponent(email)}`;
+      const result = await emailService.sendPasswordReset({ to: email, name: user.name, resetUrl });
+      if (!result.sent) {
+        // Envoi impossible (aucun transport configuré) : on ne laisse pas un token pendouiller.
+        await prisma.user.update({ where: { id: user.id }, data: { resetTokenHash: null, resetTokenExpiry: null } });
+        console.error('Password reset email non envoyé :', result.error || 'aucun transport email configuré');
+        return res.status(503).json({ success: false, error: "L'envoi d'emails n'est pas encore activé. Contactez le support à joboost.ai@gmail.com." });
+      }
+      return genericOk();
+    } catch (error: any) {
+      console.error(error);
+      res.status(500).json({ success: false, error: 'Erreur lors de la demande de réinitialisation.' });
+    }
+  },
+
+  // Réinitialisation effective : vérifie le token (hashé, non expiré) et change le mot de passe.
+  resetPassword: async (req: Request, res: Response) => {
+    try {
+      const { email, token, password } = req.body;
+      if (!email || !token || !password) {
+        return res.status(400).json({ success: false, error: 'Lien invalide ou incomplet.' });
+      }
+      if (String(password).length < 6) {
+        return res.status(400).json({ success: false, error: 'Le mot de passe doit contenir au moins 6 caractères.' });
+      }
+
+      const user = await prisma.user.findUnique({ where: { email } });
+      if (!user || !user.resetTokenHash || !user.resetTokenExpiry) {
+        return res.status(400).json({ success: false, error: 'Lien invalide ou déjà utilisé.' });
+      }
+      if (user.resetTokenExpiry.getTime() < Date.now()) {
+        return res.status(400).json({ success: false, error: 'Lien expiré. Refaites une demande.' });
+      }
+      if (hashToken(token) !== user.resetTokenHash) {
+        return res.status(400).json({ success: false, error: 'Lien invalide.' });
+      }
+
+      const hashedPassword = await bcrypt.hash(password, 10);
+      await prisma.user.update({
+        where: { id: user.id },
+        data: { password: hashedPassword, resetTokenHash: null, resetTokenExpiry: null },
+      });
+      return res.json({ success: true, message: 'Mot de passe réinitialisé. Vous pouvez vous connecter.' });
+    } catch (error: any) {
+      console.error(error);
+      res.status(500).json({ success: false, error: 'Erreur lors de la réinitialisation.' });
     }
   },
 

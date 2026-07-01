@@ -75,6 +75,10 @@ model User {
   workSchedules     String[]  @default([])
   projects          Json?     @default("[]")
 
+  // Réinitialisation de mot de passe (token hashé + expiration)
+  resetTokenHash    String?   // SHA-256 du token envoyé par email (jamais stocké en clair)
+  resetTokenExpiry  DateTime? // expiration du lien de réinitialisation (1h)
+
   // Consentements (RGPD / preuve d'acceptation)
   acceptedTermsAt   DateTime? // date d'acceptation des CGU + politique de confidentialité
   marketingOptIn    Boolean   @default(false) // consentement e-mails marketing (opt-in)

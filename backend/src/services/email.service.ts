@@ -1,21 +1,109 @@
 import dotenv from 'dotenv';
+import nodemailer, { Transporter } from 'nodemailer';
 dotenv.config();
 
 // ====================================================================
-//  Service d'envoi — candidatures spontanées
-//  Stratégie MVP : "send on behalf of" via Resend (API REST, pas de dépendance npm).
-//    From     : "Prénom Nom via Joboost <envois@joboost.io>"  (domaine vérifié Joboost)
-//    Reply-To : email réel de l'utilisateur  → les réponses lui reviennent directement
-//    To       : contact entreprise
-//  Si Resend n'est pas configuré, on bascule en mode "manuel" (aucun envoi réel),
-//  exactement comme le repli France Travail → l'app reste fonctionnelle sans clé.
+//  Service d'envoi d'emails — deux transports possibles :
+//   1) GMAIL SMTP (sans domaine à acheter) : GMAIL_USER + GMAIL_APP_PASSWORD.
+//      Envoie depuis l'adresse Gmail via un « mot de passe d'application ».
+//      Idéal pour un lancement à petit volume (~500 mails/j). PRIORITAIRE si présent.
+//   2) RESEND (API REST) : RESEND_API_KEY + EMAIL_FROM (exige un domaine vérifié).
+//  Si aucun n'est configuré → mode "manuel" (aucun envoi réel), l'app reste
+//  fonctionnelle sans clé (repli identique à France Travail).
+//
+//  Reply-To = email réel de l'utilisateur → les réponses lui reviennent directement.
 // ====================================================================
 
 const RESEND_API_KEY = process.env.RESEND_API_KEY || '';
-const EMAIL_FROM = process.env.EMAIL_FROM || 'envois@joboost.io';
 const RESEND_URL = 'https://api.resend.com/emails';
 
-export const isEmailConfigured = (): boolean => Boolean(RESEND_API_KEY && EMAIL_FROM);
+const GMAIL_USER = process.env.GMAIL_USER || '';
+// Mot de passe d'application Google (16 caractères), PAS le mot de passe du compte.
+const GMAIL_APP_PASSWORD = (process.env.GMAIL_APP_PASSWORD || '').replace(/\s+/g, '');
+
+// Adresse expéditrice : l'adresse Gmail si transport Gmail, sinon EMAIL_FROM (Resend).
+const EMAIL_FROM = GMAIL_USER || process.env.EMAIL_FROM || 'envois@joboost.io';
+
+const useGmail = (): boolean => Boolean(GMAIL_USER && GMAIL_APP_PASSWORD);
+const useResend = (): boolean => Boolean(RESEND_API_KEY && process.env.EMAIL_FROM);
+
+export const isEmailConfigured = (): boolean => useGmail() || useResend();
+
+// Transport Gmail créé une seule fois (réutilisé entre les envois).
+let gmailTransport: Transporter | null = null;
+const getGmailTransport = (): Transporter => {
+  if (!gmailTransport) {
+    gmailTransport = nodemailer.createTransport({
+      service: 'gmail',
+      auth: { user: GMAIL_USER, pass: GMAIL_APP_PASSWORD },
+    });
+  }
+  return gmailTransport;
+};
+
+// Envoi générique bas niveau : choisit Gmail (prioritaire) puis Resend.
+interface RawMail {
+  fromLabel: string;        // ex. "Sana via Joboost" (le domaine réel est EMAIL_FROM)
+  to: string;
+  subject: string;
+  html: string;
+  text?: string;
+  replyTo?: string;
+  attachments?: EmailAttachment[];
+}
+const sendRaw = async (mail: RawMail): Promise<SendResult> => {
+  // 1) Gmail SMTP (sans domaine)
+  if (useGmail()) {
+    try {
+      const info = await getGmailTransport().sendMail({
+        from: `${mail.fromLabel} <${EMAIL_FROM}>`,
+        to: mail.to,
+        subject: mail.subject,
+        html: mail.html,
+        text: mail.text,
+        replyTo: mail.replyTo,
+        attachments: (mail.attachments || []).map((a) => ({
+          filename: a.filename,
+          content: a.content,
+          encoding: 'base64',
+        })),
+      });
+      return { sent: true, manual: false, messageId: info.messageId || null };
+    } catch (e: any) {
+      return { sent: false, manual: false, messageId: null, error: e?.message || 'Erreur Gmail SMTP.' };
+    }
+  }
+
+  // 2) Resend (domaine vérifié)
+  if (useResend()) {
+    try {
+      const res = await fetch(RESEND_URL, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${RESEND_API_KEY}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          from: `${mail.fromLabel} <${EMAIL_FROM}>`,
+          to: [mail.to],
+          reply_to: mail.replyTo,
+          subject: mail.subject,
+          html: mail.html,
+          text: mail.text,
+          attachments: (mail.attachments || []).map((a) => ({ filename: a.filename, content: a.content })),
+        }),
+      });
+      if (!res.ok) {
+        const txt = await res.text().catch(() => '');
+        return { sent: false, manual: false, messageId: null, error: `Resend ${res.status}: ${txt.slice(0, 200)}` };
+      }
+      const json: any = await res.json().catch(() => ({}));
+      return { sent: true, manual: false, messageId: json?.id || null };
+    } catch (e: any) {
+      return { sent: false, manual: false, messageId: null, error: e?.message || 'Erreur réseau Resend.' };
+    }
+  }
+
+  // 3) Aucun transport → manuel
+  return { sent: false, manual: true, messageId: null };
+};
 
 export interface EmailAttachment {
   filename: string;
@@ -85,37 +173,15 @@ export const emailService = {
     if (!isEmailConfigured()) {
       return { sent: false, manual: true, messageId: null };
     }
-
-    const payload = {
-      from: `${params.senderName} via Joboost <${EMAIL_FROM}>`,
-      to: [params.to],
-      reply_to: params.replyTo,
+    return sendRaw({
+      fromLabel: `${params.senderName} via Joboost`,
+      to: params.to,
+      replyTo: params.replyTo,
       subject: `Candidature spontanée — ${params.jobTitle}`,
       html: buildHtml(params),
       text: params.bodyText,
-      attachments: (params.attachments || []).map((a) => ({ filename: a.filename, content: a.content })),
-    };
-
-    try {
-      const res = await fetch(RESEND_URL, {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${RESEND_API_KEY}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(payload),
-      });
-
-      if (!res.ok) {
-        const txt = await res.text().catch(() => '');
-        return { sent: false, manual: false, messageId: null, error: `Resend ${res.status}: ${txt.slice(0, 200)}` };
-      }
-
-      const json: any = await res.json().catch(() => ({}));
-      return { sent: true, manual: false, messageId: json?.id || null };
-    } catch (e: any) {
-      return { sent: false, manual: false, messageId: null, error: e?.message || 'Erreur réseau Resend.' };
-    }
+      attachments: params.attachments,
+    });
   },
 
   /**
@@ -147,7 +213,7 @@ export const emailService = {
     const n = params.offers.length;
     const html = `<!doctype html><html><body style="font-family:Arial,Helvetica,sans-serif;background:#F8FAFC;padding:16px;">
       <div style="max-width:560px;margin:0 auto;background:#fff;border-radius:16px;padding:24px;">
-        <div style="font-size:20px;font-weight:800;color:#111827;margin-bottom:4px;">Jo<span style="color:#7D5CFF;">Boost</span></div>
+        <div style="font-size:20px;font-weight:800;color:#111827;margin-bottom:4px;">Jo<span style="color:#7D5CFF;">boost</span></div>
         <p style="color:#111827;font-size:15px;">Bonjour ${escapeHtml(params.name.split(' ')[0] || '')},</p>
         <p style="color:#4B5563;font-size:14px;line-height:1.5;">${n > 1 ? `${n} nouvelles offres correspondent` : 'Une nouvelle offre correspond'} à votre profil :</p>
         <table role="presentation" style="width:100%;border-collapse:separate;">${cards}</table>
@@ -158,27 +224,36 @@ export const emailService = {
     </body></html>`;
 
     const subject = `${params.offers.length} nouvelle${params.offers.length > 1 ? 's' : ''} offre${params.offers.length > 1 ? 's' : ''} pour vous — Joboost`;
-    const payload = {
-      from: `Joboost <${EMAIL_FROM}>`,
-      to: [params.to],
-      subject,
-      html,
-    };
+    return sendRaw({ fromLabel: 'Joboost', to: params.to, subject, html });
+  },
 
-    try {
-      const res = await fetch(RESEND_URL, {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${RESEND_API_KEY}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      });
-      if (!res.ok) {
-        const txt = await res.text().catch(() => '');
-        return { sent: false, manual: false, messageId: null, error: `Resend ${res.status}: ${txt.slice(0, 200)}` };
-      }
-      const json: any = await res.json().catch(() => ({}));
-      return { sent: true, manual: false, messageId: json?.id || null };
-    } catch (e: any) {
-      return { sent: false, manual: false, messageId: null, error: e?.message || 'Erreur réseau Resend.' };
+  /**
+   * Envoie l'email de réinitialisation de mot de passe (lien avec token).
+   * Renvoie { manual: true } si aucun transport n'est configuré.
+   */
+  sendPasswordReset: async (params: { to: string; name?: string; resetUrl: string }): Promise<SendResult> => {
+    if (!isEmailConfigured()) {
+      return { sent: false, manual: true, messageId: null };
     }
+    const firstName = escapeHtml((params.name || '').split(' ')[0] || '');
+    const link = escapeHtml(params.resetUrl);
+    const html = `<!doctype html><html><body style="font-family:Arial,Helvetica,sans-serif;background:#F8FAFC;padding:16px;">
+      <div style="max-width:520px;margin:0 auto;background:#fff;border-radius:16px;padding:28px;">
+        <div style="font-size:20px;font-weight:800;color:#111827;margin-bottom:12px;">Jo<span style="color:#7D5CFF;">boost</span></div>
+        <p style="color:#111827;font-size:15px;">Bonjour ${firstName},</p>
+        <p style="color:#4B5563;font-size:14px;line-height:1.6;">Vous avez demandé à réinitialiser votre mot de passe. Cliquez sur le bouton ci-dessous (lien valable 1 heure) :</p>
+        <a href="${link}" style="display:inline-block;margin:14px 0;background:#7D5CFF;color:#fff;padding:12px 22px;border-radius:10px;text-decoration:none;font-weight:bold;font-size:14px;">Choisir un nouveau mot de passe</a>
+        <p style="color:#6B7280;font-size:12px;line-height:1.6;">Si vous n'êtes pas à l'origine de cette demande, ignorez simplement cet email — votre mot de passe reste inchangé.</p>
+        <hr style="border:none;border-top:1px solid #E5E7EB;margin:20px 0;"/>
+        <p style="font-size:11px;color:#9CA3AF;margin:0;word-break:break-all;">Si le bouton ne fonctionne pas, copiez ce lien : ${link}</p>
+      </div>
+    </body></html>`;
+    return sendRaw({
+      fromLabel: 'Joboost',
+      to: params.to,
+      subject: 'Réinitialisation de votre mot de passe Joboost',
+      html,
+      text: `Réinitialisez votre mot de passe : ${params.resetUrl}`,
+    });
   },
 };
