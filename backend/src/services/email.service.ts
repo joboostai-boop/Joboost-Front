@@ -27,13 +27,19 @@ const GMAIL_USER = process.env.GMAIL_USER || '';
 // Mot de passe d'application Google (16 caractères), PAS le mot de passe du compte.
 const GMAIL_APP_PASSWORD = (process.env.GMAIL_APP_PASSWORD || '').replace(/\s+/g, '');
 
-// Adresse expéditrice : l'adresse Gmail si transport Gmail, sinon EMAIL_FROM (Resend).
-const EMAIL_FROM = GMAIL_USER || process.env.EMAIL_FROM || 'envois@joboost.io';
+// Brevo (ex-Sendinblue) — envoi par API HTTP (port 443), NON bloqué par Render gratuit
+// contrairement au SMTP. Sans domaine : on vérifie juste l'adresse expéditrice chez Brevo.
+const BREVO_API_KEY = process.env.BREVO_API_KEY || '';
+const BREVO_URL = 'https://api.brevo.com/v3/smtp/email';
 
+// Adresse expéditrice (doit être vérifiée chez Brevo). On réutilise GMAIL_USER/EMAIL_FROM.
+const EMAIL_FROM = process.env.EMAIL_FROM || GMAIL_USER || 'envois@joboost.io';
+
+const useBrevo = (): boolean => Boolean(BREVO_API_KEY && EMAIL_FROM);
 const useGmail = (): boolean => Boolean(GMAIL_USER && GMAIL_APP_PASSWORD);
 const useResend = (): boolean => Boolean(RESEND_API_KEY && process.env.EMAIL_FROM);
 
-export const isEmailConfigured = (): boolean => useGmail() || useResend();
+export const isEmailConfigured = (): boolean => useBrevo() || useGmail() || useResend();
 
 // Transport Gmail créé une seule fois (réutilisé entre les envois).
 let gmailTransport: Transporter | null = null;
@@ -63,7 +69,40 @@ interface RawMail {
   attachments?: EmailAttachment[];
 }
 const sendRaw = async (mail: RawMail): Promise<SendResult> => {
-  // 1) Gmail SMTP (sans domaine)
+  // 1) Brevo (API HTTP — recommandé sur Render : le SMTP y est bloqué)
+  if (useBrevo()) {
+    try {
+      const res = await fetch(BREVO_URL, {
+        method: 'POST',
+        headers: {
+          'api-key': BREVO_API_KEY,
+          'Content-Type': 'application/json',
+          accept: 'application/json',
+        },
+        body: JSON.stringify({
+          sender: { name: mail.fromLabel, email: EMAIL_FROM },
+          to: [{ email: mail.to }],
+          replyTo: mail.replyTo ? { email: mail.replyTo } : undefined,
+          subject: mail.subject,
+          htmlContent: mail.html,
+          textContent: mail.text,
+          attachment: (mail.attachments || []).length
+            ? mail.attachments!.map((a) => ({ name: a.filename, content: a.content }))
+            : undefined,
+        }),
+      });
+      if (!res.ok) {
+        const txt = await res.text().catch(() => '');
+        return { sent: false, manual: false, messageId: null, error: `Brevo ${res.status}: ${txt.slice(0, 200)}` };
+      }
+      const json: any = await res.json().catch(() => ({}));
+      return { sent: true, manual: false, messageId: json?.messageId || null };
+    } catch (e: any) {
+      return { sent: false, manual: false, messageId: null, error: e?.message || 'Erreur réseau Brevo.' };
+    }
+  }
+
+  // 2) Gmail SMTP (sans domaine — ne marche PAS sur Render gratuit : port SMTP bloqué)
   if (useGmail()) {
     try {
       const info = await getGmailTransport().sendMail({
