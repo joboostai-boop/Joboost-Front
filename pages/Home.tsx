@@ -242,7 +242,7 @@ const Home: React.FC<HomeProps> = ({ onStart }) => {
             </h1>
 
             <p className="mt-7 text-lg sm:text-xl text-slate-500 max-w-xl mx-auto lg:mx-0 leading-relaxed animate-fade-in-up" style={{ animationDelay: '120ms' }}>
-              JobBoost prépare vos candidatures sur-mesure — CV optimisé pour les ATS, lettres adaptées à chaque offre et suivi clair de vos démarches. Pour décrocher <span className="text-slate-700 font-semibold">plus d'entretiens</span>, avec moins d'efforts.
+              Joboost prépare vos candidatures sur-mesure — CV optimisé pour les ATS, lettres adaptées à chaque offre et suivi clair de vos démarches. Pour décrocher <span className="text-slate-700 font-semibold">plus d'entretiens</span>, avec moins d'efforts.
             </p>
 
             <div className="mt-9 flex flex-col sm:flex-row gap-3 justify-center lg:justify-start animate-fade-in-up" style={{ animationDelay: '180ms' }}>
@@ -353,19 +353,19 @@ const Home: React.FC<HomeProps> = ({ onStart }) => {
           <div className="space-y-3">
             <FAQItem
               question="Comment l'IA optimise-t-elle mon CV ?"
-              answer="JobBoost structure votre CV pour qu'il soit lisible par les logiciels de recrutement (ATS) et met en avant les éléments pertinents par rapport à l'offre visée. Vous gardez la main : tout reste modifiable."
+              answer="Joboost structure votre CV pour qu'il soit lisible par les logiciels de recrutement (ATS) et met en avant les éléments pertinents par rapport à l'offre visée. Vous gardez la main : tout reste modifiable."
             />
             <FAQItem
               question="Les lettres sont-elles vraiment personnalisées ?"
               answer="Oui. Chaque lettre est rédigée à partir de votre profil et de l'offre concernée. Vous pouvez ensuite la relire et l'ajuster avant de l'envoyer."
             />
             <FAQItem
-              question="Puis-je utiliser JobBoost gratuitement ?"
+              question="Puis-je utiliser Joboost gratuitement ?"
               answer="Oui. Le plan gratuit permet de tester l'outil avec une candidature par mois. Vous pouvez passer à l'offre Élite ou prendre un pack de crédits selon votre rythme."
             />
             <FAQItem
               question="Mes données sont-elles protégées ?"
-              answer="JobBoost respecte le RGPD. Vos données ne sont jamais revendues et servent uniquement à vous aider dans votre recherche. Vous pouvez les exporter ou les supprimer à tout moment."
+              answer="Joboost respecte le RGPD. Vos données ne sont jamais revendues et servent uniquement à vous aider dans votre recherche. Vous pouvez les exporter ou les supprimer à tout moment."
             />
             <FAQItem
               question="D'où viennent les offres d'emploi ?"
@@ -434,7 +434,7 @@ const Home: React.FC<HomeProps> = ({ onStart }) => {
           </div>
         </div>
         <div className="max-w-6xl mx-auto mt-12 pt-6 border-t border-slate-100 flex justify-between items-center text-xs text-slate-400">
-          <span>© 2026 JobBoost</span>
+          <span>© 2026 Joboost</span>
           <span>France</span>
         </div>
       </footer>

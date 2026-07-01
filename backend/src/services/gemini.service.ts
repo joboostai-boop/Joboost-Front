@@ -61,6 +61,28 @@ const LETTER_WRITER_PROMPT = [
   "PÉRIMÈTRE DE SORTIE : tu écris UNIQUEMENT le corps de la lettre — la formule d'appel (ex. « Madame, Monsieur, ») suivie des paragraphes. N'écris PAS l'objet, ni la date, ni les coordonnées, ni la signature (« Cordialement », nom) : ils sont ajoutés automatiquement par ailleurs.",
 ].join("\n");
 
+// Filet de sécurité côté serveur : le modèle suit la consigne de paragraphes dans l'immense
+// majorité des cas, mais renvoie parfois un bloc compact (surtout sur les lettres courtes).
+// On redécoupe alors le texte en 4 paragraphes de taille équilibrée (regroupement de phrases)
+// pour ne jamais livrer un pavé illisible à l'utilisateur.
+const ensureParagraphs = (text: string): string => {
+  if (!text) return text;
+  const hasParagraphs = /\n\s*\n/.test(text);
+  if (hasParagraphs) return text;
+
+  // Découpe naïve en phrases (point/!/? suivi d'une majuscule ou fin de texte).
+  const sentences = text.match(/[^.!?]+[.!?]+(\s+|$)/g) || [text];
+  if (sentences.length < 4) return text;
+
+  const targetParagraphs = 4;
+  const perParagraph = Math.ceil(sentences.length / targetParagraphs);
+  const paragraphs: string[] = [];
+  for (let i = 0; i < sentences.length; i += perParagraph) {
+    paragraphs.push(sentences.slice(i, i + perParagraph).join('').trim());
+  }
+  return paragraphs.filter(Boolean).join('\n\n');
+};
+
 // Erreurs Gemini transitoires : surcharge serveur, indisponibilité, rate-limit.
 // (NB : avec la facturation activée, le 429 vient d'une limite/minute, pas d'un quota épuisé → réessayer aide.)
 const TRANSIENT_ERROR = /\b(503|429)\b|UNAVAILABLE|RESOURCE_EXHAUSTED|overloaded|high demand|try again/i;
@@ -259,7 +281,10 @@ export const geminiService = {
       config: { systemInstruction: LETTER_WRITER_PROMPT }
     });
     // Filet de sécurité : on retire tout résidu de Markdown que le modèle aurait laissé.
-    return (response.text || "").replace(/\*\*/g, '').replace(/^\s*---\s*$/gm, '').trim();
+    const cleaned = (response.text || "").replace(/\*\*/g, '').replace(/^\s*---\s*$/gm, '').trim();
+    // Filet de sécurité supplémentaire : si le modèle a malgré tout renvoyé un bloc compact
+    // (moins de 2 paragraphes), on le redécoupe nous-mêmes plutôt que de livrer un pavé illisible.
+    return ensureParagraphs(cleaned);
   },
 
   generateBulkMessage: async (candidateName: string, candidateTitle: string, companyName: string, companySector: string): Promise<string> => {

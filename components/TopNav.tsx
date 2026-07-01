@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Crown, UserRound, Settings2, Building2, ChevronDown, LogOut } from 'lucide-react';
 import { PRIMARY_NAV, BUSINESS_NAVIGATION } from '../constants';
 import Logo from './Logo';
@@ -29,6 +29,7 @@ const isItemActive = (currentPath: string, path: string) =>
    menu déroulant à droite, l'upgrade reste une pilule visible. */
 const TopNav: React.FC<TopNavProps> = ({ user, currentPath }) => {
   const { logout } = useAuth();
+  const navigate = useNavigate();
   const [menuOpen, setMenuOpen] = useState(false);
 
   const isBusiness = user?.role === 'BUSINESS_PARTNER';
@@ -128,7 +129,7 @@ const TopNav: React.FC<TopNavProps> = ({ user, currentPath }) => {
                   <div className="my-1 border-t border-[#ECEAF6] dark:border-[#1F2937]" />
                   <button
                     role="menuitem"
-                    onClick={() => { setMenuOpen(false); logout?.(); }}
+                    onClick={() => { setMenuOpen(false); logout?.(); navigate('/'); }}
                     className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium text-slate-500 dark:text-slate-400 hover:bg-red-50 dark:hover:bg-red-500/10 hover:text-red-600 transition-colors"
                   >
                     <LogOut size={16} /> Se déconnecter

@@ -4,7 +4,7 @@ dotenv.config();
 // ====================================================================
 //  Service d'envoi — candidatures spontanées
 //  Stratégie MVP : "send on behalf of" via Resend (API REST, pas de dépendance npm).
-//    From     : "Prénom Nom via JobBoost <envois@joboost.io>"  (domaine vérifié JobBoost)
+//    From     : "Prénom Nom via Joboost <envois@joboost.io>"  (domaine vérifié Joboost)
 //    Reply-To : email réel de l'utilisateur  → les réponses lui reviennent directement
 //    To       : contact entreprise
 //  Si Resend n'est pas configuré, on bascule en mode "manuel" (aucun envoi réel),
@@ -72,7 +72,7 @@ const buildHtml = (params: SendSpontaneousParams): string => {
   return `<!doctype html><html><body style="font-family:Arial,Helvetica,sans-serif;font-size:15px;background:#ffffff;padding:8px;">
     ${paragraphs}
     <hr style="border:none;border-top:1px solid #E5E7EB;margin:20px 0;"/>
-    <p style="font-size:12px;color:#6B7280;margin:0;">Candidature envoyée via JobBoost pour le compte de ${params.senderName}. Répondez directement à cet e-mail pour échanger avec le candidat.</p>
+    <p style="font-size:12px;color:#6B7280;margin:0;">Candidature envoyée via Joboost pour le compte de ${params.senderName}. Répondez directement à cet e-mail pour échanger avec le candidat.</p>
   </body></html>`;
 };
 
@@ -87,7 +87,7 @@ export const emailService = {
     }
 
     const payload = {
-      from: `${params.senderName} via JobBoost <${EMAIL_FROM}>`,
+      from: `${params.senderName} via Joboost <${EMAIL_FROM}>`,
       to: [params.to],
       reply_to: params.replyTo,
       subject: `Candidature spontanée — ${params.jobTitle}`,
@@ -153,13 +153,13 @@ export const emailService = {
         <table role="presentation" style="width:100%;border-collapse:separate;">${cards}</table>
         <a href="${APP_URL}/target/lbb" style="display:inline-block;margin-top:8px;background:#7D5CFF;color:#fff;padding:10px 18px;border-radius:10px;text-decoration:none;font-weight:bold;font-size:14px;">Voir toutes les offres</a>
         <hr style="border:none;border-top:1px solid #E5E7EB;margin:20px 0;"/>
-        <p style="font-size:11px;color:#9CA3AF;margin:0;">Vous recevez cet email car vous avez activé les alertes emploi sur JobBoost. Pour les désactiver, rendez-vous dans Paramètres → Notifications.</p>
+        <p style="font-size:11px;color:#9CA3AF;margin:0;">Vous recevez cet email car vous avez activé les alertes emploi sur Joboost. Pour les désactiver, rendez-vous dans Paramètres → Notifications.</p>
       </div>
     </body></html>`;
 
-    const subject = `${params.offers.length} nouvelle${params.offers.length > 1 ? 's' : ''} offre${params.offers.length > 1 ? 's' : ''} pour vous — JobBoost`;
+    const subject = `${params.offers.length} nouvelle${params.offers.length > 1 ? 's' : ''} offre${params.offers.length > 1 ? 's' : ''} pour vous — Joboost`;
     const payload = {
-      from: `JobBoost <${EMAIL_FROM}>`,
+      from: `Joboost <${EMAIL_FROM}>`,
       to: [params.to],
       subject,
       html,
