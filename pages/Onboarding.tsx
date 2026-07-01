@@ -353,13 +353,13 @@ const Onboarding: React.FC<OnboardingProps> = ({ user, onComplete, onSkip }) => 
         {/* Left: Message */}
         <div className="space-y-8 text-center md:text-left p-4">
           <div className="inline-flex items-center gap-3 px-4 py-2 bg-[#F3F0FF] dark:bg-[#7D5CFF]/10 rounded-full text-[#7D5CFF] dark:text-[#A78BFA] text-xs font-black uppercase tracking-widest">
-            <Rocket size={16} /> Bienvenue sur JoBoost
+            <Rocket size={16} /> Bienvenue sur Joboost
           </div>
           <h1 className="text-5xl md:text-7xl font-black text-slate-900 dark:text-white leading-[1.05] tracking-tight">
             Crée ton profil en <span className="text-[#7D5CFF]">2 minutes.</span>
           </h1>
           <p className="text-lg text-slate-500 font-medium leading-relaxed max-w-md">
-            Pour générer tes documents, JoBoost a besoin de te connaître. Choisis comment commencer.
+            Pour générer tes documents, Joboost a besoin de te connaître. Choisis comment commencer.
           </p>
         </div>
 

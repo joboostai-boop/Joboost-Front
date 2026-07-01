@@ -63,7 +63,7 @@ const Pricing: React.FC<PricingProps> = ({ user }) => {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     if (params.get('payment') === 'success') {
-      toast.success('Abonnement activé. Bienvenue dans JoBoost Élite !');
+      toast.success('Abonnement activé. Bienvenue dans Joboost Élite !');
     } else if (params.get('payment') === 'canceled') {
       toast('Paiement annulé. Vous pouvez réessayer à tout moment.', { icon: '↩️' });
     }
@@ -76,12 +76,12 @@ const Pricing: React.FC<PricingProps> = ({ user }) => {
       displayName: 'Gratuit',
       monthlyPrice: 0,
       annualPrice: 0,
-      description: 'Découverte du moteur JoBoost. Testez l\'IA, sans engagement.',
+      description: 'Découverte du moteur Joboost. Testez l\'IA, sans engagement.',
       features: [
         '1 candidature IA / mois',
         '1 génération de CV / mois',
         '1 génération de lettre de motivation / mois',
-        'Accès au moteur JoBoost',
+        'Accès au moteur Joboost',
         'Modèles de lettres standards',
       ],
       icon: <Layers size={22} strokeWidth={2.5} />,
@@ -366,7 +366,7 @@ const Pricing: React.FC<PricingProps> = ({ user }) => {
                   ['Générations de CV', '1 / mois', '50 / mois'],
                   ['Lettres de motivation', '1 / mois', '100 / mois'],
                   ['Candidatures spontanées', '—', '50 / mois'],
-                  ['Moteur IA', 'JoBoost', 'JoBoost Pro'],
+                  ['Moteur IA', 'Joboost', 'Joboost Pro'],
                   ['Envoi groupé (Bulk)', '—', 'Inclus'],
                   ['Support prioritaire', '—', '24h'],
                 ].map((row, i) => (

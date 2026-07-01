@@ -9,7 +9,7 @@ const NotFound: React.FC = () => {
     <div className="min-h-screen flex items-center justify-center px-6 bg-slate-50 dark:bg-slate-950">
       <div className="max-w-lg w-full text-center space-y-8">
         <div className="text-2xl font-black tracking-tight text-slate-900 dark:text-white">
-          Jo<span className="text-[#7D5CFF]">Boost</span>
+          Jo<span className="text-[#7D5CFF]">boost</span>
         </div>
 
         <div className="space-y-3">
@@ -41,7 +41,7 @@ const NotFound: React.FC = () => {
           to="/auth/register"
           className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-400 hover:text-[#7D5CFF] transition-colors"
         >
-          <Compass size={13} /> Découvrir JoBoost gratuitement
+          <Compass size={13} /> Découvrir Joboost gratuitement
         </Link>
       </div>
     </div>

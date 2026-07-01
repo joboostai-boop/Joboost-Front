@@ -32,7 +32,7 @@ const mentionsLegales: Section[] = [
     heading: '1. Éditeur du site',
     body: (
       <>
-        <p>Le site JoBoost est édité par :</p>
+        <p>Le site Joboost est édité par :</p>
         <ul className="list-disc pl-6 space-y-1 mt-2">
           <li>Dénomination / nom de l'éditeur : <strong>Sana Anger</strong>, exerçant sous le nom commercial <strong>BOOST</strong></li>
           <li>Forme juridique : Entrepreneur individuel</li>
@@ -62,7 +62,7 @@ const mentionsLegales: Section[] = [
     heading: '3. Propriété intellectuelle',
     body: (
       <p>
-        L'ensemble des éléments du site (marque JoBoost, logo, textes, interface, code) est protégé par le droit
+        L'ensemble des éléments du site (marque Joboost, logo, textes, interface, code) est protégé par le droit
         de la propriété intellectuelle. Toute reproduction non autorisée est interdite. Les marques et logos de
         tiers éventuellement cités appartiennent à leurs propriétaires respectifs ; leur mention n'implique aucun
         partenariat ni affiliation.
@@ -115,7 +115,7 @@ const confidentialite: Section[] = [
         <p>Vos données peuvent être traitées par nos prestataires techniques, uniquement pour les besoins du service :</p>
         <ul className="list-disc pl-6 space-y-1 mt-2">
           <li>Hébergement : Netlify, Render, Supabase.</li>
-          <li>Paiement : <strong>Stripe</strong> (les données de carte sont traitées directement par Stripe, jamais stockées par JoBoost).</li>
+          <li>Paiement : <strong>Stripe</strong> (les données de carte sont traitées directement par Stripe, jamais stockées par Joboost).</li>
           <li>Fonctionnalités d'IA : <strong>Google</strong> (modèles Gemini, via l'API Google AI) — seules les
           données de votre profil nécessaires à la génération demandée lui sont transmises.</li>
         </ul>
@@ -168,7 +168,7 @@ const cgu: Section[] = [
     body: (
       <p>
         Les présentes conditions générales d'utilisation (CGU) régissent l'accès et l'utilisation du service
-        JoBoost, plateforme d'aide à la recherche d'emploi assistée par intelligence artificielle.
+        Joboost, plateforme d'aide à la recherche d'emploi assistée par intelligence artificielle.
       </p>
     ),
   },
@@ -185,9 +185,9 @@ const cgu: Section[] = [
     heading: '3. Description du service',
     body: (
       <p>
-        JoBoost propose des outils d'analyse de CV, de génération de CV et de lettres de motivation, de suggestion
+        Joboost propose des outils d'analyse de CV, de génération de CV et de lettres de motivation, de suggestion
         d'offres et d'envoi de candidatures. Les contenus générés par l'IA sont des aides : ils peuvent comporter
-        des erreurs et doivent être relus et validés par l'utilisateur avant tout envoi. JoBoost ne garantit aucun
+        des erreurs et doivent être relus et validés par l'utilisateur avant tout envoi. Joboost ne garantit aucun
         résultat de recrutement ni aucun nombre d'entretiens ou d'embauches.
       </p>
     ),
@@ -205,7 +205,7 @@ const cgu: Section[] = [
     heading: '5. Responsabilité',
     body: (
       <p>
-        Le service est fourni « en l'état ». JoBoost met en œuvre les moyens raisonnables pour assurer sa
+        Le service est fourni « en l'état ». Joboost met en œuvre les moyens raisonnables pour assurer sa
         disponibilité mais ne saurait être tenu responsable des interruptions, ni des décisions de recrutement des
         entreprises tierces.
       </p>
@@ -227,7 +227,7 @@ const cgv: Section[] = [
     heading: '1. Offres et prix',
     body: (
       <>
-        <p>JoBoost propose les formules suivantes (prix TTC, TVA non applicable — art. 293 B du CGI) :</p>
+        <p>Joboost propose les formules suivantes (prix TTC, TVA non applicable — art. 293 B du CGI) :</p>
         <ul className="list-disc pl-6 space-y-1 mt-2">
           <li><strong>Gratuit</strong> — 0 € : 1 candidature IA par mois et fonctionnalités de découverte.</li>
           <li><strong>Élite</strong> — 14,99 € / mois ou 119 € / an : 150 candidatures IA par mois, sans engagement, résiliable à tout moment.</li>
@@ -286,22 +286,22 @@ const cgv: Section[] = [
 const PAGES: Record<string, { title: string; intro: string; sections: Section[] }> = {
   mentions: {
     title: 'Mentions légales',
-    intro: "Informations relatives à l'éditeur et à l'hébergement du site JoBoost.",
+    intro: "Informations relatives à l'éditeur et à l'hébergement du site Joboost.",
     sections: mentionsLegales,
   },
   confidentialite: {
     title: 'Politique de confidentialité',
-    intro: 'Comment JoBoost collecte, utilise et protège vos données personnelles, conformément au RGPD.',
+    intro: 'Comment Joboost collecte, utilise et protège vos données personnelles, conformément au RGPD.',
     sections: confidentialite,
   },
   cgu: {
     title: "Conditions générales d'utilisation",
-    intro: "Règles d'accès et d'utilisation du service JoBoost.",
+    intro: "Règles d'accès et d'utilisation du service Joboost.",
     sections: cgu,
   },
   cgv: {
     title: 'Conditions générales de vente',
-    intro: 'Conditions applicables aux abonnements payants JoBoost.',
+    intro: 'Conditions applicables aux abonnements payants Joboost.',
     sections: cgv,
   },
 };

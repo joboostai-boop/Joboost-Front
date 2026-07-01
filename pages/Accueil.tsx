@@ -233,7 +233,7 @@ const Accueil: React.FC<AccueilProps> = ({ user }) => {
                 <span className="w-7 h-7 rounded-lg surface-accent text-[#7D5CFF] flex items-center justify-center shrink-0"><PenLine size={15} /></span>
                 <h2 className="text-xs font-semibold uppercase tracking-wider text-[#9CA3AF]">Astuce</h2>
               </div>
-              <p className="text-sm text-[#374151] dark:text-slate-300 leading-relaxed">Une lettre adaptée à chaque offre fait vraiment la différence. JoBoost la rédige à partir de l'offre — tu n'as plus qu'à relire.</p>
+              <p className="text-sm text-[#374151] dark:text-slate-300 leading-relaxed">Une lettre adaptée à chaque offre fait vraiment la différence. Joboost la rédige à partir de l'offre — tu n'as plus qu'à relire.</p>
               <Link to="/prepare/letter" className="press inline-flex items-center gap-1.5 text-sm font-semibold text-[#7D5CFF] mt-3 hover:gap-2.5 transition-all">Rédiger une lettre <ArrowRight size={15} /></Link>
             </div>
           </div>

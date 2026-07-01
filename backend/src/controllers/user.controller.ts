@@ -160,7 +160,7 @@ export const userController = {
 
       const exportPayload = {
         exportedAt: new Date().toISOString(),
-        notice: "Export de vos données personnelles JoBoost (RGPD, art. 15 & 20).",
+        notice: "Export de vos données personnelles Joboost (RGPD, art. 15 & 20).",
         data: safeUser,
       };
 

@@ -18,7 +18,7 @@ const Logo: React.FC<LogoProps> = ({ variant = 'full', className = "h-10", monoc
       {variant === 'full' && (
         <div className="flex items-baseline font-black tracking-tighter text-3xl font-sans">
           <span className={joClass}>Jo</span>
-          <span className={boostClass}>Boost</span>
+          <span className={boostClass}>boost</span>
         </div>
       )}
 

@@ -268,7 +268,7 @@ const Dashboard: React.FC = () => {
               <EmptyState
                 bare compact variant="generic"
                 title="Pas encore de signal marché"
-                description="Renseignez votre poste et vos compétences pour que JoBoost détecte les entreprises qui recrutent autour de vous."
+                description="Renseignez votre poste et vos compétences pour que Joboost détecte les entreprises qui recrutent autour de vous."
                 action={<button onClick={() => navigate('/prepare/profile')} className="press btn btn-primary">Compléter mon profil <ArrowRight size={16} /></button>}
               />
             )}

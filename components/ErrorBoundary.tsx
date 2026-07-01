@@ -54,7 +54,7 @@ class ErrorBoundary extends React.Component<Props, State> {
             onClick={this.handleReload}
             className="mt-6 inline-flex items-center justify-center rounded-xl bg-[#7D5CFF] px-6 py-3 font-semibold text-white shadow-sm transition hover:bg-[#6B4AE6] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#7D5CFF] focus-visible:ring-offset-2"
           >
-            Recharger JoBoost
+            Recharger Joboost
           </button>
         </div>
       </div>

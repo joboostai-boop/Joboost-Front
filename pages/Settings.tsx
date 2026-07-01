@@ -197,7 +197,7 @@ const Settings: React.FC<SettingsProps> = ({ user, isDarkMode, toggleDarkMode })
     } catch (err: any) { toast.error(err.message || 'Erreur lors de la suppression.', { id: toastId }); setDeleting(false); }
   };
 
-  const planLabel = user.plan && user.plan !== 'Gratuit' ? `JoBoost ${user.plan}` : 'Forfait Gratuit';
+  const planLabel = user.plan && user.plan !== 'Gratuit' ? `Joboost ${user.plan}` : 'Forfait Gratuit';
   const accountChanged = account.name !== (user.name || '') || account.email !== (user.email || '');
 
   return (
