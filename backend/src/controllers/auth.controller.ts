@@ -101,6 +101,61 @@ export const authController = {
     }
   },
 
+  // Inscription recruteur en self-service : crée une organisation + un compte
+  // BUSINESS_PARTNER avec identifiants (email + mot de passe). Contrairement au
+  // businessLogin de démonstration (sans identifiant, fermé pour RGPD), ce compte
+  // est nominatif et sécurisé → chaque recruteur gère SON propre espace/vivier.
+  businessRegister: async (req: Request, res: Response) => {
+    try {
+      const { email, password, name, companyName, acceptedTerms } = req.body;
+
+      if (!email || !password || !name || !companyName) {
+        return res.status(400).json({ success: false, error: "Nom, société, email et mot de passe sont requis." });
+      }
+      if (!acceptedTerms) {
+        return res.status(400).json({ success: false, error: "Vous devez accepter les CGU et la politique de confidentialité." });
+      }
+      if (String(password).length < 6) {
+        return res.status(400).json({ success: false, error: "Le mot de passe doit contenir au moins 6 caractères." });
+      }
+
+      const existing = await prisma.user.findUnique({ where: { email } });
+      if (existing) {
+        return res.status(400).json({ success: false, error: "Cet email est déjà utilisé." });
+      }
+
+      const hashedPassword = await bcrypt.hash(password, 10);
+
+      // Organisation (entité recruteur) créée en même temps que le compte.
+      const organization = await prisma.organization.create({ data: { name: companyName } });
+
+      const user = await prisma.user.create({
+        data: {
+          email,
+          name,
+          password: hashedPassword,
+          role: 'BUSINESS_PARTNER',
+          plan: 'Essai',
+          organizationId: organization.id,
+          acceptedTermsAt: new Date(),
+        },
+      });
+
+      const token = jwt.sign(
+        { userId: user.id, role: user.role, organizationId: user.organizationId },
+        JWT_SECRET,
+        { expiresIn: '7d' }
+      );
+      res.cookie('token', token, COOKIE_OPTIONS);
+
+      const { password: _pw, ...userWithoutPassword } = user;
+      res.status(201).json({ success: true, user: userWithoutPassword, token });
+    } catch (error: any) {
+      console.error(error);
+      res.status(500).json({ success: false, error: "Erreur lors de la création du compte recruteur." });
+    }
+  },
+
   businessLogin: async (req: Request, res: Response) => {
     try {
       // 🔒 VERROU DE SÉCURITÉ ACTIF (refermé 2026-06-12 avant lancement pub / vrais candidats).

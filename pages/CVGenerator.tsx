@@ -1,7 +1,7 @@
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
-import { Printer, FileDown, Wand2, RefreshCw, Layout, Save, Clock, Loader2, Plus, Trash2, X, Files, Target } from 'lucide-react';
+import { Printer, FileDown, Wand2, RefreshCw, Layout, Save, Clock, Loader2, Plus, Trash2, X, Files, Target, Camera, ImageOff } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { generateCVSummary, detailExperience } from '../services/gemini';
 // Import dynamique au clic (les libs PDF/Word sont lourdes — ~1,8 Mo — on ne les charge
@@ -19,6 +19,35 @@ import AiLoadingOverlay from '../components/AiLoadingOverlay';
 import { CvExample } from '../services/cvExamples';
 
 const uid = () => Math.random().toString(36).slice(2, 10);
+
+// Lit une image locale, la recadre en carré et la réduit à ~256px (JPEG qualité 0.82).
+// Objectif : une photo d'identité nette pour le CV, SANS stocker un base64 énorme
+// (le CV est sauvegardé en JSON — une image brute de plusieurs Mo le rendrait lourd).
+const readAndResizePhoto = (file: File): Promise<string> =>
+  new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const img = new Image();
+      img.onload = () => {
+        const SIZE = 256;
+        const canvas = document.createElement('canvas');
+        canvas.width = SIZE;
+        canvas.height = SIZE;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) { reject(new Error('canvas')); return; }
+        // Recadrage carré centré (cover) pour une photo ronde propre dans les modèles.
+        const side = Math.min(img.width, img.height);
+        const sx = (img.width - side) / 2;
+        const sy = (img.height - side) / 2;
+        ctx.drawImage(img, sx, sy, side, side, 0, 0, SIZE, SIZE);
+        resolve(canvas.toDataURL('image/jpeg', 0.82));
+      };
+      img.onerror = () => reject(new Error('image'));
+      img.src = reader.result as string;
+    };
+    reader.onerror = () => reject(new Error('read'));
+    reader.readAsDataURL(file);
+  });
 
 interface ExperienceItem { id: string; role: string; company: string; period: string; desc: string; }
 interface EducationItem { id: string; degree: string; school: string; date: string; city: string; }
@@ -79,11 +108,26 @@ const CVGenerator: React.FC = () => {
     phone: '',
     city: '',
     summary: '',
+    photoUrl: '',
     template: incomingTemplate || 'vertex',
     skills: [] as string[],
     experiences: [] as ExperienceItem[],
     education: [] as EducationItem[],
   });
+  const photoInputRef = useRef<HTMLInputElement>(null);
+
+  const handlePhotoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = ''; // permet de re-sélectionner le même fichier
+    if (!file) return;
+    if (!file.type.startsWith('image/')) { toast.error('Choisis un fichier image (JPG, PNG).'); return; }
+    if (file.size > 8 * 1024 * 1024) { toast.error('Image trop lourde (max 8 Mo).'); return; }
+    try {
+      const dataUrl = await readAndResizePhoto(file);
+      setFormData((p) => ({ ...p, photoUrl: dataUrl }));
+      toast.success('Photo ajoutée — visible sur les modèles avec photo.');
+    } catch { toast.error("Impossible de lire cette image."); }
+  };
 
   // Normalise les expériences/formations (issues du profil ou d'un CV sauvegardé)
   // vers la forme éditée ici (période + description en texte simple).
@@ -124,6 +168,8 @@ const CVGenerator: React.FC = () => {
              phone: u.phone || '',
              city: u.city || '',
              summary: u.summary || '',
+             // Reprend la photo du profil (OAuth Google/LinkedIn) comme point de départ.
+             photoUrl: u.photoUrl || '',
              skills: Array.isArray(u.skills) ? u.skills.map((s:any) => typeof s === 'string' ? s : s.name) : [],
              experiences: normalizeExperiences(u.experiences),
              education: normalizeEducation(u.education),
@@ -355,6 +401,31 @@ const CVGenerator: React.FC = () => {
 
         {/* Coordonnées + résumé */}
         <Collapsible defaultOpen step={1} title="Coordonnées & résumé" bodyClassName="px-4 md:px-5 pb-5 space-y-5">
+          {/* Photo (optionnelle) — n'apparaît que sur les modèles « avec photo ». */}
+          <div className="flex items-center gap-4">
+            <div className="w-16 h-16 rounded-full overflow-hidden shrink-0 flex items-center justify-center bg-[#F3F0FF] dark:bg-[#7D5CFF]/10 text-[#7D5CFF] ring-1 ring-[#7D5CFF]/20">
+              {formData.photoUrl
+                ? <img src={formData.photoUrl} alt="Photo du CV" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                : <Camera size={22} />}
+            </div>
+            <div className="min-w-0">
+              <div className="flex flex-wrap items-center gap-2">
+                <button type="button" onClick={() => photoInputRef.current?.click()} className="press btn btn-secondary !min-h-0 !py-1.5 !px-3 text-xs">
+                  <Camera size={14} /> {formData.photoUrl ? 'Changer la photo' : 'Ajouter une photo'}
+                </button>
+                {formData.photoUrl && (
+                  <button type="button" onClick={() => setFormData((p) => ({ ...p, photoUrl: '' }))} className="press btn btn-secondary !min-h-0 !py-1.5 !px-3 text-xs !text-red-500 !border-red-200 hover:!bg-red-50">
+                    <ImageOff size={14} /> Retirer
+                  </button>
+                )}
+              </div>
+              <p className="text-[11px] text-[#9CA3AF] mt-1.5 leading-snug">
+                Optionnel. Visible uniquement sur les modèles « avec photo ». Astuce : un CV sans photo passe mieux les filtres automatiques (ATS).
+              </p>
+            </div>
+            <input ref={photoInputRef} type="file" accept="image/*" onChange={handlePhotoChange} className="hidden" />
+          </div>
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="input-label">Nom complet</label>

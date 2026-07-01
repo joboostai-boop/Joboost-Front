@@ -12,6 +12,7 @@ const router = Router();
 // On n'applique PAS le limiteur à /me ni aux callbacks OAuth (appelés à chaque chargement).
 router.post('/register', authLimiter, authController.register);
 router.post('/login', authLimiter, authController.login);
+router.post('/business-register', authLimiter, authController.businessRegister);
 router.post('/business-login', authLimiter, authController.businessLogin);
 router.post('/logout', authController.logout);
 router.get('/me', requireAuth, authController.me);

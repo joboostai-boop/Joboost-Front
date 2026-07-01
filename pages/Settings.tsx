@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import {
   Bell, LogOut, ChevronRight, UserRound, Moon, Sun,
-  Crown, Download, Trash2, Linkedin, Calendar, ShieldAlert, X, KeyRound, SlidersHorizontal
+  Crown, Download, Trash2, Linkedin, Calendar, ShieldAlert, X, KeyRound, SlidersHorizontal, LifeBuoy, Mail
 } from 'lucide-react';
+
+const SUPPORT_EMAIL = 'joboost.ai@gmail.com';
 import { User as UserType } from '../types';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
@@ -288,6 +290,20 @@ const Settings: React.FC<SettingsProps> = ({ user, isDarkMode, toggleDarkMode })
               </div>
               <ChevronRight size={18} className="text-slate-300 shrink-0" />
             </Row>
+          </Card>
+
+          {/* Aide & support */}
+          <Card title="Aide & support" icon={<LifeBuoy size={16} />}>
+            <a href={`mailto:${SUPPORT_EMAIL}`} className="flex items-center justify-between gap-3 py-3 group">
+              <div className="flex items-center gap-3">
+                <span className="w-9 h-9 rounded-lg bg-[#7D5CFF]/10 text-[#7D5CFF] flex items-center justify-center"><Mail size={18} /></span>
+                <div>
+                  <p className="text-sm font-semibold text-[#111827] dark:text-white">Contacter le support</p>
+                  <p className="text-xs text-slate-400">Une question, un souci ? On répond à {SUPPORT_EMAIL}</p>
+                </div>
+              </div>
+              <ChevronRight size={18} className="text-slate-300 shrink-0 group-hover:text-[#7D5CFF] transition-colors" />
+            </a>
           </Card>
 
           {/* Données */}
