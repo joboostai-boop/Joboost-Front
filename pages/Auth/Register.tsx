@@ -67,12 +67,12 @@ const Register = () => {
       <div className="max-w-md w-full space-y-8 card-pro p-8 bg-white">
         
         <div className="text-center">
-          <div className="flex justify-center items-center gap-2 mb-4">
+          <Link to="/" className="flex justify-center items-center gap-2 mb-4" aria-label="Retour à l'accueil Joboost">
             <Sparkles className="w-8 h-8 text-[#7D5CFF]" />
             <h1 className="text-3xl font-bold bg-gradient-to-r from-[#7D5CFF] to-violet-800 bg-clip-text text-transparent">
               Joboost
             </h1>
-          </div>
+          </Link>
           <h2 className="mt-2 text-2xl font-bold text-gray-900">
             {isBusiness ? 'Créez votre espace recruteur' : 'Créez votre compte gratuit'}
           </h2>

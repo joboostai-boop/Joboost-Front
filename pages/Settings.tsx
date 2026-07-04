@@ -104,7 +104,9 @@ const Settings: React.FC<SettingsProps> = ({ user, isDarkMode, toggleDarkMode })
   const [confirmText, setConfirmText] = useState('');
   const [deleting, setDeleting] = useState(false);
 
-  const handleLogout = async () => { await logout(); navigate('/'); };
+  // Pas de await : logout() déconnecte l'UI immédiatement et prévient le serveur
+  // en arrière-plan. Attendre la réponse ferait passer par /auth/login (cf. AuthContext).
+  const handleLogout = () => { logout(); navigate('/'); };
 
   const connectLinkedIn = async () => {
     const toastId = toast.loading('Redirection vers LinkedIn...');
@@ -193,7 +195,7 @@ const Settings: React.FC<SettingsProps> = ({ user, isDarkMode, toggleDarkMode })
       const data = await res.json();
       if (!res.ok || !data.success) throw new Error(data.error || 'Suppression impossible');
       toast.success('Compte supprimé. À bientôt.', { id: toastId });
-      await logout(); navigate('/');
+      logout(); navigate('/');
     } catch (err: any) { toast.error(err.message || 'Erreur lors de la suppression.', { id: toastId }); setDeleting(false); }
   };
 

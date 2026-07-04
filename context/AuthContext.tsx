@@ -73,15 +73,21 @@ export const AuthProvider: React.FC<{children: React.ReactNode}> = ({ children }
   };
 
   const logout = async () => {
+    // On capture le header d'auth AVANT de purger le token, puis on déconnecte
+    // l'interface immédiatement. Si on attendait la réponse du serveur, la
+    // redirection vers "/" partirait alors qu'on est encore « connecté » :
+    // "/" renverrait vers /home, puis la déconnexion effective renverrait
+    // /home vers /auth/login — l'utilisateur ne reverrait jamais la landing.
+    const headers = { ...authHeaders() };
+    clearToken();
+    setUser(null);
     try {
       await fetch(`${import.meta.env.VITE_API_URL || ''}/api/auth/logout`, {
         method: 'POST',
         credentials: 'include',
-        headers: { ...authHeaders() },
+        headers,
       });
     } catch(e) {}
-    clearToken();
-    setUser(null);
   };
 
   return (
