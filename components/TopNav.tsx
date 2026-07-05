@@ -129,7 +129,7 @@ const TopNav: React.FC<TopNavProps> = ({ user, currentPath }) => {
                   <div className="my-1 border-t border-[#ECEAF6] dark:border-[#1F2937]" />
                   <button
                     role="menuitem"
-                    onClick={() => { setMenuOpen(false); logout?.(); navigate('/'); }}
+                    onClick={async () => { setMenuOpen(false); await logout?.(); navigate('/'); }}
                     className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium text-slate-500 dark:text-slate-400 hover:bg-red-50 dark:hover:bg-red-500/10 hover:text-red-600 transition-colors"
                   >
                     <LogOut size={16} /> Se déconnecter
