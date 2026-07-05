@@ -156,6 +156,21 @@ router.post('/extract-offer', async (req, res) => {
     res.json({ success: true, data: result });
 });
 
+// Simulateur d'entretien — action gratuite (pas de quota) : c'est un outil de préparation,
+// on veut encourager son usage. Bornée par le rate-limit global de /api/ai.
+router.post('/interview-questions', async (req, res) => {
+    try {
+        const { jobTitle, company, jobDescription, profileContext } = req.body;
+        if (!jobTitle || !String(jobTitle).trim()) {
+            return res.status(400).json({ success: false, error: "Le poste visé est requis." });
+        }
+        const result = await geminiService.generateInterviewQuestions(jobTitle, company || '', jobDescription || '', profileContext);
+        res.json({ success: true, data: result });
+    } catch (error: any) {
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
 router.post('/generate-bulk-message', async (req, res) => {
     try {
         const { candidateName, candidateTitle, companyName, companySector } = req.body;

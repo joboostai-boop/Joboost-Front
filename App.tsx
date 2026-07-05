@@ -5,6 +5,7 @@ import { authHeaders, getToken } from './services/authToken';
 import TopNav from './components/TopNav';
 import Topbar from './components/Topbar';
 import MobileNav from './components/MobileNav';
+import PageSkeleton from './components/PageSkeleton';
 import { Toaster } from 'react-hot-toast';
 import { Plan, User } from './types';
 
@@ -19,6 +20,7 @@ const Dashboard = React.lazy(() => import('./pages/Dashboard'));
 const CVGenerator = React.lazy(() => import('./pages/CVGenerator'));
 const LetterGenerator = React.lazy(() => import('./pages/LetterGenerator'));
 const Templates = React.lazy(() => import('./pages/Templates'));
+const InterviewSimulator = React.lazy(() => import('./pages/InterviewSimulator'));
 const Applications = React.lazy(() => import('./pages/Applications'));
 const PersonalizedOffers = React.lazy(() => import('./pages/PersonalizedOffers'));
 const SavedOffers = React.lazy(() => import('./pages/SavedOffers'));
@@ -162,7 +164,7 @@ const App: React.FC = () => {
       {/* Contenu fluide */}
       <main className="flex-1 min-w-0 pb-28 md:pb-12">
         <div key={location.pathname} className="min-h-full animate-page">
-          <Suspense fallback={<div className="flex-1 flex items-center justify-center min-h-[50vh]"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#7D5CFF]"></div></div>}>
+          <Suspense fallback={<PageSkeleton />}>
           <Routes>
             {/* Accueil (hub) */}
             <Route path="/home" element={<Accueil user={user} />} />
@@ -175,6 +177,7 @@ const App: React.FC = () => {
                <Route path="profile" element={<Profile user={user} />} />
                <Route path="cv" element={<CVGenerator />} />
                <Route path="letter" element={<LetterGenerator />} />
+               <Route path="interview" element={<InterviewSimulator user={user} />} />
                <Route path="templates" element={<Templates />} />
             </Route>
 

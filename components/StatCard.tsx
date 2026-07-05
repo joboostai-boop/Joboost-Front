@@ -21,12 +21,15 @@ export interface StatCardProps {
   value: React.ReactNode;
   icon: React.ReactNode;
   tone?: StatTone;
+  /** Légende courte sous le label (ex. « Relance pour en décrocher » quand la valeur est 0).
+      Quand elle est fournie, elle est toujours rendue → hauteurs de cartes alignées. */
+  hint?: React.ReactNode;
   /** Rend la carte cliquable (navigation rapide). */
   onClick?: () => void;
   className?: string;
 }
 
-const StatCard: React.FC<StatCardProps> = ({ label, value, icon, tone = 'violet', onClick, className = '' }) => {
+const StatCard: React.FC<StatCardProps> = ({ label, value, icon, tone = 'violet', hint, onClick, className = '' }) => {
   const t = TONES[tone];
   const inner = (
     <>
@@ -36,6 +39,9 @@ const StatCard: React.FC<StatCardProps> = ({ label, value, icon, tone = 'violet'
       <div>
         <p className="text-2xl md:text-3xl font-bold text-[#111827] dark:text-white leading-none tracking-tight tabular-nums">{value}</p>
         <p className="text-xs font-medium text-slate-500 dark:text-slate-400 mt-2">{label}</p>
+        {hint !== undefined && (
+          <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-1 leading-snug">{hint}</p>
+        )}
       </div>
     </>
   );

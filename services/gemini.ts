@@ -92,6 +92,31 @@ export const extractOfferFromUrl = async (url: string): Promise<OfferExtraction>
   }
 };
 
+export interface InterviewQuestion {
+  question: string;
+  intent: string;
+  tip?: string;
+  sampleAnswer?: string;
+}
+export interface InterviewCategory {
+  title: string;
+  questions: InterviewQuestion[];
+}
+export interface InterviewSimulation {
+  categories: InterviewCategory[];
+}
+
+// Simulateur d'entretien : renvoie des questions personnalisées (offre + profil).
+// On laisse remonter l'erreur pour afficher un vrai message côté UI.
+export const generateInterviewQuestions = async (
+  jobTitle: string,
+  company: string,
+  jobDescription: string,
+  profileContext: any,
+): Promise<InterviewSimulation> => {
+  return await fetchFromAPI('/interview-questions', { jobTitle, company, jobDescription, profileContext });
+};
+
 export const generateBulkMessage = async (candidateName: string, candidateTitle: string, companyName: string, companySector: string): Promise<string> => {
   try {
     return await fetchFromAPI('/generate-bulk-message', { candidateName, candidateTitle, companyName, companySector });

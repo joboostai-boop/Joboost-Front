@@ -8,7 +8,7 @@ import CountUp from '../components/CountUp';
 import StatCard, { StatTone } from '../components/StatCard';
 import {
   UserRound, Send, LineChart, Plus, ArrowRight,
-  FileText, Search, Bell, Loader2, Clock, CalendarCheck, Award, PenLine, Sparkles
+  FileText, Search, Bell, Loader2, Clock, CalendarCheck, Award, PenLine, Sparkles, Mic
 } from 'lucide-react';
 
 interface AccueilProps {
@@ -39,6 +39,7 @@ const spaces = [
 const quickActions = [
   { to: '/prepare/cv', icon: <FileText size={16} />, label: 'Générer un CV' },
   { to: '/prepare/letter', icon: <PenLine size={16} />, label: 'Rédiger une lettre' },
+  { to: '/prepare/interview', icon: <Mic size={16} />, label: 'Simuler un entretien' },
   { to: '/target/offers', icon: <Search size={16} />, label: 'Trouver des offres' },
 ];
 
@@ -96,11 +97,17 @@ const Accueil: React.FC<AccueilProps> = ({ user }) => {
 
   // KPIs alignés sur les statuts du suivi (mêmes couleurs que le Kanban).
   // Même composant StatCard que le Dashboard → cohérence visuelle inter-pages.
-  const kpis: { label: string; value: number; icon: React.ReactNode; tone: StatTone }[] = [
-    { label: 'Candidatures', value: stats?.applications.total ?? 0, icon: <Send size={20} strokeWidth={2.4} />, tone: 'violet' },
-    { label: 'En attente', value: stats?.applications.pending ?? 0, icon: <Clock size={20} strokeWidth={2.4} />, tone: 'blue' },
-    { label: 'Entretiens', value: stats?.applications.interview ?? 0, icon: <CalendarCheck size={20} strokeWidth={2.4} />, tone: 'amber' },
-    { label: 'Offres', value: stats?.applications.offer ?? 0, icon: <Award size={20} strokeWidth={2.4} />, tone: 'emerald' },
+  // `hint` : légende contextuelle. Un compteur à 0 devient une invitation plutôt
+  // qu'un « vide » (ex. « Relance pour en décrocher » au lieu d'un 0 muet).
+  const kpis: { label: string; value: number; icon: React.ReactNode; tone: StatTone; hint: string }[] = [
+    { label: 'Candidatures', value: stats?.applications.total ?? 0, icon: <Send size={20} strokeWidth={2.4} />, tone: 'violet',
+      hint: (stats?.applications.total ?? 0) > 0 ? 'Total envoyé' : 'Postule pour démarrer' },
+    { label: 'En attente', value: stats?.applications.pending ?? 0, icon: <Clock size={20} strokeWidth={2.4} />, tone: 'blue',
+      hint: (stats?.applications.pending ?? 0) > 0 ? 'Réponse en cours' : 'Rien en attente' },
+    { label: 'Entretiens', value: stats?.applications.interview ?? 0, icon: <CalendarCheck size={20} strokeWidth={2.4} />, tone: 'amber',
+      hint: (stats?.applications.interview ?? 0) > 0 ? 'Décrochés 🎉' : 'Relance pour en décrocher' },
+    { label: 'Offres', value: stats?.applications.offer ?? 0, icon: <Award size={20} strokeWidth={2.4} />, tone: 'emerald',
+      hint: (stats?.applications.offer ?? 0) > 0 ? 'Reçues 🎉' : 'Continue, ça arrive' },
   ];
 
   return (
@@ -186,6 +193,7 @@ const Accueil: React.FC<AccueilProps> = ({ user }) => {
                   value={loading ? '–' : <CountUp value={k.value} />}
                   icon={k.icon}
                   tone={k.tone}
+                  hint={loading ? '' : k.hint}
                 />
               </Tilt>
             ))}

@@ -226,22 +226,36 @@ const Profile: React.FC<ProfileProps> = ({ user }) => {
     return ['Microsoft Office', 'Travail en équipe', 'Organisation'];
   }, [f.title]);
 
-  /* ── Barre de progression (pondérée) ── */
+  /* ── Barre de progression ──
+     Doit rester STRICTEMENT identique au calcul du backend (dashboard.controller.ts →
+     `profileCompletion`), sinon l'Accueil/les Stats (72%) et cette page (81%) affichent
+     deux valeurs différentes pour le même profil. Même liste de 18 champs, à poids égal.
+     `languages` et `languagesDetailed` sont enregistrés ensemble à partir de f.languages
+     (voir handleSave), donc ils sont pleins ou vides en même temps. */
   const completion = useMemo(() => {
-    let s = 0;
-    if (f.firstName && f.lastName) s += 8;
-    if (f.email) s += 4; if (f.phone) s += 4; if (f.city) s += 4;
-    if (f.title) s += 15;
-    if (f.experiences.length > 0 || f.education.length > 0 || f.projects.length > 0) s += 15;
-    if (f.skills.length >= 3) s += 10; else if (f.skills.length > 0) s += 5;
-    if (f.languages.length > 0) s += 5;
-    if (f.summary) s += 8;
-    if (f.softSkills.length > 0) s += 5;
-    if (f.targetSectors.length > 0 || f.contractTypes.length > 0) s += 7;
-    if (f.mobility.length > 0 || f.drivingLicenses.length > 0) s += 5;
-    if (f.linkedin || f.portfolio || f.github) s += 5;
-    if (f.hobbies.length > 0) s += 3;
-    return Math.min(100, s);
+    const hasLanguages = f.languages.length > 0;
+    const fields = [
+      !!(f.firstName && f.lastName),   // user.name
+      !!f.email,
+      !!f.title,
+      !!f.summary,
+      !!f.city,
+      !!f.phone,
+      f.skills.length > 0,
+      f.experiences.length > 0,
+      f.education.length > 0,
+      hasLanguages,                    // user.languages
+      hasLanguages,                    // user.languagesDetailed
+      f.softSkills.length > 0,
+      f.targetSectors.length > 0,
+      f.contractTypes.length > 0,
+      f.mobility.length > 0,
+      f.drivingLicenses.length > 0,
+      !!f.portfolio,
+      !!f.github,
+    ];
+    const filled = fields.filter(Boolean).length;
+    return Math.round((filled / fields.length) * 100);
   }, [f]);
 
   const handleSummaryAI = async () => {

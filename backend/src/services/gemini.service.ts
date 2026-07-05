@@ -287,6 +287,96 @@ export const geminiService = {
     return ensureParagraphs(cleaned);
   },
 
+  // Simulateur d'entretien : génère des questions d'entretien réalistes et personnalisées
+  // à partir de l'offre + du profil du candidat. Pour chaque question : l'intention du
+  // recruteur, un conseil de structure (STAR), et un exemple de réponse ancré UNIQUEMENT
+  // dans les vraies expériences fournies (aucune invention).
+  generateInterviewQuestions: async (
+    jobTitle: string,
+    company: string,
+    jobDescription: string,
+    profileContext: any,
+  ): Promise<any> => {
+    const ai = getAI();
+
+    const INTERVIEW_COACH_PROMPT = [
+      "Tu es un coach d'entretien d'embauche expert, en français.",
+      "Tu prépares un candidat à un entretien RÉEL pour un poste précis.",
+      "Tes questions sont réalistes et réellement posées par des recruteurs français.",
+      "Pour chaque question tu fournis : (1) l'intention — ce que le recruteur cherche à évaluer ;",
+      "(2) un conseil de structure de réponse (méthode STAR : Situation, Tâche, Action, Résultat, quand c'est pertinent) ;",
+      "(3) un exemple de réponse à la 1re personne, personnalisé.",
+      "HONNÊTETÉ ABSOLUE : l'exemple de réponse s'appuie UNIQUEMENT sur les vraies expériences,",
+      "compétences et formations du candidat fournies. N'invente JAMAIS d'expérience, de diplôme,",
+      "de chiffre, de client ou de résultat qui ne figure pas dans le profil. Si une info manque,",
+      "reste général plutôt que d'inventer. Aucun jargon creux. Français naturel et irréprochable.",
+    ].join("\n");
+
+    let prompt =
+      `Prépare une simulation d'entretien pour le poste de "${jobTitle}"` +
+      (company ? ` chez "${company}"` : '') + `.\n` +
+      `Organise 10 à 14 questions au total, réparties en catégories (dans cet ordre) :\n` +
+      `1. "Présentation & parcours" ; 2. "Compétences & expériences" ; 3. "Motivation & entreprise" ;\n` +
+      `4. "Mise en situation & comportemental" ; 5. "Questions à poser au recruteur" (ici, propose 2 à 3\n` +
+      `bonnes questions que LE CANDIDAT peut poser — pour ce dernier bloc, "intention" explique pourquoi\n` +
+      `c'est une bonne question, "tip" et "sampleAnswer" peuvent rester courts ou vides).`;
+
+    if (profileContext) {
+      prompt +=
+        `\n\nProfil RÉEL du candidat (unique source de vérité pour les exemples de réponse) :\n` +
+        `Nom: ${profileContext.name || '—'}\nTitre: ${profileContext.title || '—'}\n` +
+        `Résumé: ${profileContext.summary || '—'}\n` +
+        `Compétences: ${JSON.stringify(profileContext.skills || [])}\n` +
+        `Expériences: ${JSON.stringify(profileContext.experiences || [])}`;
+    }
+    if (jobDescription) {
+      prompt += `\n\nContenu de l'offre (pour cibler les questions et le vocabulaire) :\n"""${`${jobDescription}`.slice(0, 3000)}"""`;
+    }
+
+    const response = await genWithRetry(ai, {
+      model: 'gemini-3-flash-preview',
+      contents: prompt,
+      config: {
+        systemInstruction: INTERVIEW_COACH_PROMPT,
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: Type.OBJECT,
+          properties: {
+            categories: {
+              type: Type.ARRAY,
+              items: {
+                type: Type.OBJECT,
+                properties: {
+                  title: { type: Type.STRING },
+                  questions: {
+                    type: Type.ARRAY,
+                    items: {
+                      type: Type.OBJECT,
+                      properties: {
+                        question: { type: Type.STRING },
+                        intent: { type: Type.STRING },
+                        tip: { type: Type.STRING },
+                        sampleAnswer: { type: Type.STRING },
+                      },
+                      required: ["question", "intent"],
+                    },
+                  },
+                },
+                required: ["title", "questions"],
+              },
+            },
+          },
+          required: ["categories"],
+        },
+      },
+    });
+    try {
+      return JSON.parse(response.text || '{"categories":[]}');
+    } catch {
+      throw new Error("Impossible de générer la simulation d'entretien. Réessaie dans un instant.");
+    }
+  },
+
   generateBulkMessage: async (candidateName: string, candidateTitle: string, companyName: string, companySector: string): Promise<string> => {
     const ai = getAI();
     const prompt = `Génère un message de connexion stratégique de la part de ${candidateName} (${candidateTitle}) pour ${companyName} (${companySector}). Focus sur la valeur ajoutée immédiate.`;
