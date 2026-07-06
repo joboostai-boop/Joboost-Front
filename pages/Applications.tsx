@@ -1,8 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Building2, Calendar, Search, RefreshCw, Inbox, ArrowRight, Navigation, Briefcase, Send, CalendarCheck, Award, ChevronDown, Check } from 'lucide-react';
+import { Building2, Calendar, Search, RefreshCw, Inbox, ArrowRight, Navigation, Briefcase, Send, CalendarCheck, Award, ChevronDown, Check, Sparkles, X, Copy, BellRing } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
 import { authHeaders } from '../services/authToken';
+import { generateFollowUpMessage } from '../services/gemini';
+import { companyGradient } from '../services/visual';
 import EmptyState from '../components/EmptyState';
 import StatCard from '../components/StatCard';
 
@@ -32,13 +34,101 @@ const statusMeta = (id: StatusId) => STATUS.find((s) => s.id === id)!;
 const formatDate = (iso: string) =>
   new Date(iso).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' });
 
+const daysSince = (iso: string) => Math.max(0, Math.floor((Date.now() - new Date(iso).getTime()) / 86_400_000));
+
+/* Candidature envoyée depuis 7 jours ou plus, sans réponse → il est temps de relancer.
+   (Une relance polie double souvent les chances de réponse.) */
+const FOLLOW_UP_AFTER_DAYS = 7;
+const needsFollowUp = (app: Application) => app.status === 'SENT' && daysSince(app.appliedAt) >= FOLLOW_UP_AFTER_DAYS;
+
 const API = import.meta.env.VITE_API_URL || '';
+
+/* Modal « Message de relance » : l'IA rédige un email prêt à envoyer (objet + corps),
+   éditable puis copiable en un clic. */
+const FollowUpModal: React.FC<{ app: Application; onClose: () => void }> = ({ app, onClose }) => {
+  const [text, setText] = useState('');
+  const [genLoading, setGenLoading] = useState(true);
+
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      try {
+        const msg = await generateFollowUpMessage(app.company, app.title, daysSince(app.appliedAt));
+        if (alive) setText(msg);
+      } catch (e: any) {
+        toast.error(e?.message || 'Erreur lors de la génération du message.');
+        if (alive) onClose();
+      } finally {
+        if (alive) setGenLoading(false);
+      }
+    })();
+    return () => { alive = false; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const copy = async () => {
+    try {
+      await navigator.clipboard.writeText(text);
+      toast.success('Message copié ! Colle-le dans ton email.');
+    } catch {
+      toast.error('Copie impossible — sélectionne le texte à la main.');
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-[80] flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-slate-900/45 backdrop-blur-sm animate-fade-in" onClick={onClose} />
+      <div role="dialog" aria-modal="true" aria-label="Message de relance" className="relative w-full max-w-lg bg-white dark:bg-[#111827] rounded-2xl shadow-pop border border-[#ECEAF6] dark:border-[#1F2937] p-5 md:p-6 animate-scale-in">
+        <button onClick={onClose} aria-label="Fermer" className="press absolute top-4 right-4 w-8 h-8 rounded-lg grid place-items-center text-slate-400 hover:bg-[#F5F4FB] dark:hover:bg-[#1F2937] hover:text-[#7D5CFF] transition-colors">
+          <X size={17} />
+        </button>
+
+        <div className="flex items-center gap-3 mb-4">
+          <span className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#8C6DFF] to-[#6D28D9] text-white grid place-items-center shadow-[0_4px_14px_rgba(125,92,255,0.35)]">
+            <Send size={18} />
+          </span>
+          <div className="min-w-0">
+            <h2 className="text-base font-bold text-[#111827] dark:text-white leading-tight">Message de relance</h2>
+            <p className="text-xs text-[#9CA3AF] truncate">{app.title} · {app.company} · envoyée il y a {daysSince(app.appliedAt)} j</p>
+          </div>
+        </div>
+
+        {genLoading ? (
+          <div className="space-y-2.5 py-2" aria-busy="true">
+            <div className="skeleton h-4 w-2/3 rounded" />
+            <div className="skeleton h-3.5 w-full rounded" />
+            <div className="skeleton h-3.5 w-full rounded" />
+            <div className="skeleton h-3.5 w-5/6 rounded" />
+            <div className="skeleton h-3.5 w-1/2 rounded" />
+            <p className="text-xs text-[#9CA3AF] pt-1 flex items-center gap-1.5"><Sparkles size={12} className="text-[#7D5CFF]" /> L'IA rédige ta relance…</p>
+          </div>
+        ) : (
+          <>
+            <textarea
+              className="textarea-pro !min-h-[240px] !text-sm"
+              value={text}
+              onChange={(e) => setText(e.target.value)}
+              aria-label="Texte du message de relance"
+            />
+            <div className="flex items-center justify-between gap-2 mt-4">
+              <p className="text-[11px] text-[#9CA3AF]">Relis, ajuste si besoin, puis envoie-le par email au recruteur.</p>
+              <button onClick={copy} className="press btn btn-primary shrink-0">
+                <Copy size={15} /> Copier le message
+              </button>
+            </div>
+          </>
+        )}
+      </div>
+    </div>
+  );
+};
 
 const Applications: React.FC = () => {
   const [applications, setApplications] = useState<Application[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<StatusId | 'ALL'>('ALL');
+  const [followUpApp, setFollowUpApp] = useState<Application | null>(null); // relance IA en cours
   const navigate = useNavigate();
 
   const fetchApplications = async () => {
@@ -146,10 +236,12 @@ const Applications: React.FC = () => {
   };
 
   /* Ligne de candidature (liste). */
-  const Row: React.FC<{ app: Application }> = ({ app }) => (
-    <div className="surface p-3.5 md:p-4 hover:shadow-card-hover hover:-translate-y-0.5 transition-all duration-200">
+  const Row: React.FC<{ app: Application }> = ({ app }) => {
+    const followUp = needsFollowUp(app);
+    return (
+    <div className={`surface p-3.5 md:p-4 hover:shadow-card-hover hover:-translate-y-0.5 transition-all duration-200 ${followUp ? 'ring-1 ring-amber-300/60 dark:ring-amber-500/30' : ''}`}>
       <div className="flex items-start gap-3 md:gap-3.5">
-        <span className="w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 flex items-center justify-center font-bold text-sm shrink-0">
+        <span className={`w-10 h-10 rounded-xl bg-gradient-to-br ${companyGradient(app.company)} text-white flex items-center justify-center font-bold text-sm shrink-0 shadow-[0_2px_8px_rgba(16,24,40,0.16)]`}>
           {app.company?.charAt(0)?.toUpperCase() || '?'}
         </span>
         <div className="min-w-0 flex-1">
@@ -160,6 +252,11 @@ const Applications: React.FC = () => {
                 {app.isSpontaneous && (
                   <span className="shrink-0 inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-[#F3F0FF] text-[#7D5CFF] border border-[#7D5CFF]/30" title="Candidature spontanée">
                     <Navigation size={9} /> Spontanée
+                  </span>
+                )}
+                {followUp && (
+                  <span className="shrink-0 inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-600 border border-amber-200 dark:bg-amber-500/10 dark:text-amber-400 dark:border-amber-500/25" title={`Sans réponse depuis ${daysSince(app.appliedAt)} jours — pense à relancer`}>
+                    <BellRing size={9} /> À relancer
                   </span>
                 )}
               </div>
@@ -180,11 +277,21 @@ const Applications: React.FC = () => {
                 <span className="truncate italic">{app.notes}</span>
               </>
             )}
+            {followUp && (
+              <button
+                onClick={() => setFollowUpApp(app)}
+                className="press ml-auto shrink-0 inline-flex items-center gap-1 text-[11px] font-bold text-[#7D5CFF] hover:gap-1.5 transition-all"
+                title="L'IA rédige un message de relance prêt à envoyer"
+              >
+                <Sparkles size={12} /> Générer une relance
+              </button>
+            )}
           </div>
         </div>
       </div>
     </div>
-  );
+    );
+  };
 
   const RowSkeleton: React.FC = () => (
     <div className="surface p-3.5 md:p-4 flex items-center gap-3.5">
@@ -290,6 +397,8 @@ const Applications: React.FC = () => {
           }
         />
       )}
+
+      {followUpApp && <FollowUpModal app={followUpApp} onClose={() => setFollowUpApp(null)} />}
     </div>
   );
 };

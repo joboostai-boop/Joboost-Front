@@ -9,11 +9,13 @@ import React from 'react';
 
 export type StatTone = 'violet' | 'blue' | 'emerald' | 'amber';
 
-const TONES: Record<StatTone, { bg: string; text: string; border: string }> = {
-  violet: { bg: 'bg-[#F3F0FF] dark:bg-[#7D5CFF]/10', text: 'text-[#7D5CFF]', border: 'border-[#7D5CFF]/15 dark:border-[#7D5CFF]/20' },
-  blue: { bg: 'bg-blue-50 dark:bg-blue-500/10', text: 'text-blue-600 dark:text-blue-400', border: 'border-blue-100 dark:border-blue-500/20' },
-  emerald: { bg: 'bg-emerald-50 dark:bg-emerald-500/10', text: 'text-emerald-600 dark:text-emerald-400', border: 'border-emerald-100 dark:border-emerald-500/20' },
-  amber: { bg: 'bg-amber-50 dark:bg-amber-500/10', text: 'text-amber-600 dark:text-amber-400', border: 'border-amber-100 dark:border-amber-500/20' },
+/* Pastille d'icône en dégradé (icône blanche) : plus de relief que l'ancienne
+   teinte plate — cohérent avec les avatars d'offres et les badges d'étapes. */
+const TONES: Record<StatTone, { grad: string; shadow: string }> = {
+  violet: { grad: 'from-[#8C6DFF] to-[#6D28D9]', shadow: 'shadow-[0_3px_10px_rgba(125,92,255,0.35)]' },
+  blue: { grad: 'from-sky-400 to-blue-600', shadow: 'shadow-[0_3px_10px_rgba(59,130,246,0.35)]' },
+  emerald: { grad: 'from-emerald-400 to-teal-600', shadow: 'shadow-[0_3px_10px_rgba(16,185,129,0.35)]' },
+  amber: { grad: 'from-amber-400 to-orange-500', shadow: 'shadow-[0_3px_10px_rgba(245,158,11,0.35)]' },
 };
 
 export interface StatCardProps {
@@ -33,7 +35,7 @@ const StatCard: React.FC<StatCardProps> = ({ label, value, icon, tone = 'violet'
   const t = TONES[tone];
   const inner = (
     <>
-      <span className={`w-10 h-10 md:w-11 md:h-11 rounded-xl flex items-center justify-center border ${t.bg} ${t.text} ${t.border}`}>
+      <span className={`w-10 h-10 md:w-11 md:h-11 rounded-xl flex items-center justify-center bg-gradient-to-br text-white ${t.grad} ${t.shadow}`}>
         {icon}
       </span>
       <div>

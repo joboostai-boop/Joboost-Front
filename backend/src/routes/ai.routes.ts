@@ -4,6 +4,7 @@ import mammoth from 'mammoth';
 import { geminiService } from '../services/gemini.service';
 import { usageService } from '../services/usage.service';
 import { scraperService } from '../services/scraper.service';
+import { prisma } from '../db';
 
 // pdf-parse v2 expose une API par classe (`PDFParse`) — l'ancien appel
 // `pdfParse(buffer)` (v1) provoquait « pdfParse is not a function ».
@@ -154,6 +155,24 @@ router.post('/extract-offer', async (req, res) => {
     }
     const result = await scraperService.extractOffer(url);
     res.json({ success: true, data: result });
+});
+
+// Message de relance d'une candidature — action gratuite (c'est de la préparation,
+// on VEUT que les gens relancent), bornée par le rate-limit global de /api/ai.
+router.post('/follow-up-message', async (req, res) => {
+    try {
+        const { company, jobTitle, daysAgo } = req.body;
+        if (!company || !jobTitle) {
+            return res.status(400).json({ success: false, error: "Poste et entreprise requis." });
+        }
+        const user = await prisma.user.findUnique({ where: { id: req.userId! } });
+        const result = await geminiService.generateFollowUpMessage(
+            String(company), String(jobTitle), Math.max(1, Number(daysAgo) || 7), user?.name || undefined,
+        );
+        res.json({ success: true, data: result });
+    } catch (error: any) {
+        res.status(500).json({ success: false, error: error.message });
+    }
 });
 
 // Simulateur d'entretien — action gratuite (pas de quota) : c'est un outil de préparation,

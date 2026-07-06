@@ -3,7 +3,7 @@ import { Bookmark, Trash2, ArrowRight, MapPin, Euro, Clock, Sparkles, Send, Chec
 import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
 import { authHeaders } from '../services/authToken';
-import MatchRing from '../components/MatchRing';
+import MatchBadge from '../components/MatchBadge';
 import EmptyState from '../components/EmptyState';
 import ExpandableText from '../components/ExpandableText';
 import { formatSalary } from '../services/format';
@@ -136,7 +136,7 @@ const SavedOffers: React.FC = () => {
                     <p className="text-sm text-[#7D5CFF] font-medium truncate">{offer.company}</p>
                   </div>
                 </div>
-                {offer.matchScore ? <MatchRing score={offer.matchScore} /> : null}
+                {offer.matchScore ? <MatchBadge score={offer.matchScore} detailed /> : null}
               </div>
 
               <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 mt-3 text-xs font-medium text-[#6B7280] dark:text-slate-400">

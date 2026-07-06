@@ -4,7 +4,7 @@ import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { authHeaders } from '../services/authToken';
-import MatchRing from '../components/MatchRing';
+import MatchBadge from '../components/MatchBadge';
 import EmptyState from '../components/EmptyState';
 import RadiusSelect from '../components/RadiusSelect';
 import QuotaDialog from '../components/QuotaDialog';
@@ -276,7 +276,7 @@ const Spontaneous: React.FC = () => {
                       </div>
                     </div>
                     <div className="flex items-center gap-3 shrink-0">
-                      {company.matchScore ? <MatchRing score={company.matchScore} size={40} /> : null}
+                      {company.matchScore ? <MatchBadge score={company.matchScore} /> : null}
                       <AutoLevelBadge level={company.autoLevel} label={company.autoLevelLabel} score={company.autoScore} />
                     </div>
                   </div>

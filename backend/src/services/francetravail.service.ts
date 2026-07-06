@@ -249,8 +249,12 @@ export const franceTravailService = {
     const params = new URLSearchParams();
     if (jobTitle) params.set('motsCles', jobTitle);
     await applyGeoParams(params, location, distanceKm);
-    // Filtre type de contrat (codes France Travail : CDI, CDD, MIS=intérim, SAI=saisonnier).
-    if (contractType) params.set('typeContrat', contractType);
+    // Filtre contrat. La plupart des codes sont des `typeContrat` France Travail
+    // (CDI, CDD, MIS=intérim, SAI=saisonnier, DIN=CDI intérimaire, DDI/TTI=insertion,
+    // CCE/LIB/FRA/REP=indépendant). L'ALTERNANCE est à part : E2 (apprentissage) et
+    // FS (professionnalisation) sont des `natureContrat` dans l'API.
+    if (contractType === 'E2' || contractType === 'FS') params.set('natureContrat', contractType);
+    else if (contractType) params.set('typeContrat', contractType);
     params.set('range',`0-${Math.max(0, max - 1)}`);
 
     const res = await fetch(`${SEARCH_URL}?${params.toString()}`, {

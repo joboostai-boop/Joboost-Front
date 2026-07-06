@@ -66,6 +66,10 @@ export const adzunaService = {
    */
   searchOffers: async (what: string, where: string, max = 20, distanceKm = 30, contractType?: string): Promise<FtOffer[]> => {
     if (!isAdzunaConfigured()) return [];
+    // Adzuna ne sait filtrer que CDI/CDD : pour les autres types (intérim, saisonnier,
+    // alternance, insertion…), renvoyer des offres NON filtrées polluerait le résultat.
+    // On s'appuie alors uniquement sur France Travail, qui filtre correctement.
+    if (contractType && contractType !== 'CDI' && contractType !== 'CDD') return [];
 
     const params = new URLSearchParams({
       app_id: ADZUNA_APP_ID,

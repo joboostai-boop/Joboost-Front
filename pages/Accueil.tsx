@@ -3,12 +3,13 @@ import { Link } from 'react-router-dom';
 import { User } from '../types';
 import { authHeaders } from '../services/authToken';
 import PageHero from '../components/PageHero';
+import HeroDecor from '../components/HeroDecor';
 import Tilt from '../components/Tilt';
 import CountUp from '../components/CountUp';
 import StatCard, { StatTone } from '../components/StatCard';
 import {
   UserRound, Send, LineChart, Plus, ArrowRight,
-  FileText, Search, Bell, Loader2, Clock, CalendarCheck, Award, PenLine, Sparkles, Mic
+  FileText, Search, Bell, Loader2, Clock, CalendarCheck, Award, PenLine, Sparkles, Mic, Bookmark
 } from 'lucide-react';
 
 interface AccueilProps {
@@ -17,6 +18,8 @@ interface AccueilProps {
 
 interface DashboardStats {
   profileCompletion: number;
+  /** Libellés lisibles des champs de profil encore vides (ex. « tes langues »). */
+  profileMissing?: string[];
   cvCount: number;
   letterCount: number;
   savedCount: number;
@@ -30,10 +33,15 @@ interface DashboardStats {
   };
 }
 
+/* Parcours en 3 étapes — chaque espace a sa teinte (repère visuel), le numéro
+   d'étape matérialise la progression Préparer → Postuler → Suivre. */
 const spaces = [
-  { to: '/prepare/profile', icon: <UserRound size={20} />, title: 'Préparer', desc: 'Ton profil, ton CV et ta lettre type.' },
-  { to: '/target/offers', icon: <Send size={20} />, title: 'Postuler', desc: 'Trouve des offres et candidate avec l’IA.' },
-  { to: '/track/applications', icon: <LineChart size={20} />, title: 'Suivre', desc: 'Tes candidatures et tes réponses.' },
+  { to: '/prepare/profile', icon: <UserRound size={20} />, title: 'Préparer', desc: 'Ton profil, ton CV et ta lettre type.',
+    iconCls: 'bg-[#7D5CFF]/10 text-[#7D5CFF] border border-[#7D5CFF]/15' },
+  { to: '/target/offers', icon: <Send size={20} />, title: 'Postuler', desc: 'Trouve des offres et candidate avec l’IA.',
+    iconCls: 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/15' },
+  { to: '/track/applications', icon: <LineChart size={20} />, title: 'Suivre', desc: 'Tes candidatures et tes réponses.',
+    iconCls: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/15' },
 ];
 
 const quickActions = [
@@ -95,6 +103,19 @@ const Accueil: React.FC<AccueilProps> = ({ user }) => {
   const next = getNextAction(stats);
   const pct = stats?.profileCompletion ?? 0;
 
+  // Salutation vivante : varie selon l'heure + date du jour en français.
+  const hour = new Date().getHours();
+  const greeting = hour >= 5 && hour < 18 ? 'Bonjour' : 'Bonsoir';
+  const today = new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' });
+
+  // Arsenal du candidat : documents & favoris déjà comptés par /dashboard/stats
+  // mais jusqu'ici jamais montrés sur l'Accueil. Chips compactes → richesse utile.
+  const arsenal = [
+    { to: '/prepare/cv', icon: <FileText size={14} />, count: stats?.cvCount ?? 0, label: 'CV' },
+    { to: '/prepare/letter', icon: <PenLine size={14} />, count: stats?.letterCount ?? 0, label: stats?.letterCount === 1 ? 'lettre' : 'lettres' },
+    { to: '/target/saved', icon: <Bookmark size={14} />, count: stats?.savedCount ?? 0, label: stats?.savedCount === 1 ? 'sauvegardée' : 'sauvegardées' },
+  ];
+
   // KPIs alignés sur les statuts du suivi (mêmes couleurs que le Kanban).
   // Même composant StatCard que le Dashboard → cohérence visuelle inter-pages.
   // `hint` : légende contextuelle. Un compteur à 0 devient une invitation plutôt
@@ -114,10 +135,27 @@ const Accueil: React.FC<AccueilProps> = ({ user }) => {
     <>
       <PageHero
         tone="violet"
-        eyebrow="Accueil"
+        eyebrow={<span className="capitalize">{today}</span>}
         icon={<Sparkles size={22} />}
-        title={`Bonjour ${firstName}`}
-        subtitle="Voici l'état de votre recherche aujourd'hui."
+        decor={<HeroDecor variant="accueil" />}
+        title={<>{greeting} <span className="bg-gradient-to-r from-[#7D5CFF] via-[#8C6DFF] to-[#B49CFF] bg-clip-text text-transparent">{firstName}</span> <span className="inline-block origin-[70%_70%] animate-[wave_1.8s_ease-in-out_1]">👋</span></>}
+        subtitle="Voici l'état de ta recherche aujourd'hui."
+        actions={
+          !loading && stats ? (
+            <div className="flex flex-wrap items-center gap-2">
+              {arsenal.map((a) => (
+                <Link
+                  key={a.to}
+                  to={a.to}
+                  className="press inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/70 dark:bg-white/5 backdrop-blur border border-[#ECEAF6] dark:border-[#1F2937] text-xs font-semibold text-[#374151] dark:text-slate-300 hover:border-[#7D5CFF]/40 hover:text-[#7D5CFF] transition-colors"
+                >
+                  <span className="text-[#7D5CFF]">{a.icon}</span>
+                  <span className="tabular-nums">{a.count}</span> {a.label}
+                </Link>
+              ))}
+            </div>
+          ) : undefined
+        }
       />
 
       <div className="p-5 md:p-8 max-w-6xl mx-auto space-y-6 pb-28 md:pb-10">
@@ -126,20 +164,27 @@ const Accueil: React.FC<AccueilProps> = ({ user }) => {
           <Tilt glare className="lg:col-span-2 h-full" max={6}>
             <Link
               to={next.to}
-              className="press group relative overflow-hidden h-full min-h-[160px] flex flex-col justify-between gap-5 rounded-2xl p-6 bg-gradient-to-br from-[#9B7BFF] to-[#7D5CFF] text-white shadow-card hover:shadow-card-hover hover:-translate-y-0.5 transition-all animate-fade-in-up"
+              className="press group relative overflow-hidden h-full min-h-[160px] flex flex-col justify-between gap-5 rounded-2xl p-6 bg-gradient-to-br from-[#9B7BFF] via-[#7D5CFF] to-[#6D28D9] text-white shadow-card hover:shadow-card-hover hover:-translate-y-0.5 transition-all animate-fade-in-up"
             >
+              {/* Décor : halos + trame de points façon pitch deck (purement décoratif) */}
               <span aria-hidden className="pointer-events-none absolute -right-8 -bottom-12 w-44 h-44 rounded-full bg-white/10" />
+              <span aria-hidden className="pointer-events-none absolute -left-10 -top-14 w-36 h-36 rounded-full bg-white/[0.07]" />
+              <span
+                aria-hidden
+                className="pointer-events-none absolute inset-0 opacity-[0.14]"
+                style={{ backgroundImage: 'radial-gradient(rgba(255,255,255,0.9) 1px, transparent 1px)', backgroundSize: '18px 18px' }}
+              />
               <div className="relative flex items-start gap-4 min-w-0">
                 <span className="icon-shine w-12 h-12 rounded-xl bg-white/15 flex items-center justify-center shrink-0">
                   {loading ? <Loader2 size={22} className="animate-spin" /> : next.icon}
                 </span>
                 <div className="min-w-0">
                   <p className="text-[11px] uppercase tracking-wider font-semibold text-white/75">Prochaine étape</p>
-                  <p className="font-bold text-lg md:text-xl leading-snug mt-0.5">{next.title}</p>
+                  <p className="font-bold text-lg md:text-xl leading-snug mt-0.5 !text-white">{next.title}</p>
                   <p className="text-white/80 text-sm mt-1 max-w-md leading-relaxed">{next.desc}</p>
                 </div>
               </div>
-              <span className="relative self-start inline-flex items-center gap-2 bg-white text-[#6D28D9] font-semibold text-sm rounded-xl px-4 py-2.5 group-hover:gap-3 transition-all">
+              <span className="tab-shine relative self-start inline-flex items-center gap-2 bg-white text-[#6D28D9] font-semibold text-sm rounded-xl px-4 py-2.5 shadow-[0_4px_14px_rgba(0,0,0,0.12)] group-hover:gap-3 group-hover:shadow-[0_6px_20px_rgba(0,0,0,0.18)] transition-all">
                 Continuer <ArrowRight size={16} />
               </span>
             </Link>
@@ -150,17 +195,38 @@ const Accueil: React.FC<AccueilProps> = ({ user }) => {
               to="/prepare/profile"
               className="press card-pro h-full flex flex-col items-center justify-center text-center gap-3 hover:-translate-y-0.5 animate-fade-in-up"
             >
-              <div
-                className="relative w-[84px] h-[84px] rounded-full grid place-items-center"
-                style={{ background: `conic-gradient(#7D5CFF ${pct * 3.6}deg, rgba(125,92,255,0.15) ${pct * 3.6}deg)` }}
-              >
-                <div className="w-[64px] h-[64px] rounded-full bg-white dark:bg-[#111827] grid place-items-center text-lg font-bold text-[#111827] dark:text-white tabular-nums">
-                  {loading ? '–' : `${pct}%`}
+              {/* Anneau conic : dégradé + halo doux ; vert quand le profil est complet. */}
+              <div className="relative">
+                <span aria-hidden className={`pointer-events-none absolute inset-0 m-auto w-20 h-20 rounded-full blur-2xl ${pct >= 100 ? 'bg-emerald-400/30' : 'bg-[#7D5CFF]/25'}`} />
+                <div
+                  className="relative w-[92px] h-[92px] rounded-full grid place-items-center"
+                  style={{
+                    background: pct >= 100
+                      ? `conic-gradient(#34D399, #0D9488 ${pct * 3.6}deg, rgba(16,185,129,0.15) ${pct * 3.6}deg)`
+                      : `conic-gradient(#B49CFF, #7D5CFF ${pct * 3.6}deg, rgba(125,92,255,0.14) ${pct * 3.6}deg)`,
+                  }}
+                >
+                  <div className="w-[70px] h-[70px] rounded-full bg-white dark:bg-[#111827] grid place-items-center">
+                    <span className="text-xl font-black text-[#111827] dark:text-white tabular-nums tracking-tight">
+                      {loading ? '–' : `${pct}%`}
+                    </span>
+                  </div>
                 </div>
               </div>
               <div>
                 <p className="text-sm font-semibold text-[#111827] dark:text-white">Profil complété</p>
-                <p className="text-xs text-[#9CA3AF]">{pct >= 100 ? 'Profil complet' : 'Continue à le remplir'}</p>
+                <p className={`text-xs font-medium ${pct >= 100 ? 'text-emerald-600 dark:text-emerald-400' : 'text-[#9CA3AF]'}`}>
+                  {pct >= 100 ? 'Profil au top ✨' : pct >= 80 ? 'Presque parfait !' : pct >= 50 ? 'Bien parti, continue' : 'Pose les fondations'}
+                </p>
+                {/* Fini le pourcentage muet : on dit QUOI compléter (3 premiers manques). */}
+                {!loading && pct < 100 && (stats?.profileMissing?.length ?? 0) > 0 && (
+                  <p className="text-[11px] text-[#9CA3AF] mt-1.5 leading-snug max-w-[210px] mx-auto">
+                    Il manque&nbsp;:{' '}
+                    <span className="text-[#7D5CFF] font-semibold">
+                      {stats!.profileMissing!.slice(0, 3).join(', ')}{stats!.profileMissing!.length > 3 ? '…' : ''}
+                    </span>
+                  </p>
+                )}
               </div>
             </Link>
           </Tilt>
@@ -205,13 +271,22 @@ const Accueil: React.FC<AccueilProps> = ({ user }) => {
           <section className="lg:col-span-2 card-pro !p-5">
             <h2 className="text-xs font-semibold uppercase tracking-wider text-[#9CA3AF] mb-3">Mon parcours</h2>
             <div className="space-y-1.5">
-              {spaces.map((s) => (
+              {spaces.map((s, i) => (
                 <Link
                   key={s.to}
                   to={s.to}
-                  className="press group flex items-center gap-3 rounded-xl p-2.5 hover:bg-[#F5F4FB] dark:hover:bg-[#1F2937] transition-colors"
+                  className="press group relative flex items-center gap-3 rounded-xl p-2.5 hover:bg-[#F5F4FB] dark:hover:bg-[#1F2937] transition-colors"
                 >
-                  <span className="w-10 h-10 rounded-xl surface-accent text-[#7D5CFF] flex items-center justify-center shrink-0">{s.icon}</span>
+                  {/* Fil vertical reliant les étapes (sauf la dernière) */}
+                  {i < spaces.length - 1 && (
+                    <span aria-hidden className="absolute left-[30px] top-[52px] h-[calc(100%-40px)] w-px bg-[#ECEAF6] dark:bg-[#1F2937]" />
+                  )}
+                  <span className={`relative w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${s.iconCls}`}>
+                    {s.icon}
+                    <span className="absolute -top-1.5 -right-1.5 w-4.5 h-4.5 min-w-[18px] min-h-[18px] rounded-full bg-white dark:bg-[#111827] border border-[#ECEAF6] dark:border-[#1F2937] text-[9px] font-black text-[#9CA3AF] grid place-items-center">
+                      {i + 1}
+                    </span>
+                  </span>
                   <div className="min-w-0 flex-1">
                     <p className="text-sm font-semibold text-[#111827] dark:text-white">{s.title}</p>
                     <p className="text-xs text-[#9CA3AF] truncate">{s.desc}</p>
@@ -236,13 +311,14 @@ const Accueil: React.FC<AccueilProps> = ({ user }) => {
               </div>
             </div>
 
-            <div className="card-pro !p-5">
-              <div className="flex items-center gap-2 mb-2">
-                <span className="w-7 h-7 rounded-lg surface-accent text-[#7D5CFF] flex items-center justify-center shrink-0"><PenLine size={15} /></span>
-                <h2 className="text-xs font-semibold uppercase tracking-wider text-[#9CA3AF]">Astuce</h2>
+            <div className="relative overflow-hidden rounded-2xl p-5 surface-accent transition-all duration-200 ease-out hover:-translate-y-1">
+              <span aria-hidden className="pointer-events-none absolute -right-6 -top-8 w-24 h-24 rounded-full bg-[#7D5CFF]/10 blur-xl" />
+              <div className="relative flex items-center gap-2 mb-2">
+                <span className="w-7 h-7 rounded-lg bg-[#7D5CFF] text-white flex items-center justify-center shrink-0 shadow-[0_2px_8px_rgba(125,92,255,0.35)]"><Sparkles size={14} /></span>
+                <h2 className="text-xs font-bold uppercase tracking-wider text-[#7D5CFF]">Astuce du jour</h2>
               </div>
-              <p className="text-sm text-[#374151] dark:text-slate-300 leading-relaxed">Une lettre adaptée à chaque offre fait vraiment la différence. Joboost la rédige à partir de l'offre — tu n'as plus qu'à relire.</p>
-              <Link to="/prepare/letter" className="press inline-flex items-center gap-1.5 text-sm font-semibold text-[#7D5CFF] mt-3 hover:gap-2.5 transition-all">Rédiger une lettre <ArrowRight size={15} /></Link>
+              <p className="relative text-sm text-[#374151] dark:text-slate-300 leading-relaxed">Une lettre adaptée à chaque offre fait vraiment la différence. Joboost la rédige à partir de l'offre — tu n'as plus qu'à relire.</p>
+              <Link to="/prepare/letter" className="press relative inline-flex items-center gap-1.5 text-sm font-semibold text-[#7D5CFF] mt-3 hover:gap-2.5 transition-all">Rédiger une lettre <ArrowRight size={15} /></Link>
             </div>
           </div>
         </div>

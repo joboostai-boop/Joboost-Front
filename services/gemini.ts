@@ -92,6 +92,11 @@ export const extractOfferFromUrl = async (url: string): Promise<OfferExtraction>
   }
 };
 
+// Email de relance prêt à envoyer (« Objet : … » + corps). L'erreur remonte à l'UI.
+export const generateFollowUpMessage = async (company: string, jobTitle: string, daysAgo: number): Promise<string> => {
+  return await fetchFromAPI('/follow-up-message', { company, jobTitle, daysAgo });
+};
+
 export interface InterviewQuestion {
   question: string;
   intent: string;

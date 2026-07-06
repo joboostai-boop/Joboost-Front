@@ -161,6 +161,16 @@
   animation: slide-in-right 0.3s ease-out;
 }
 
+/* Petit salut de la main 👋 (Accueil) — joué une seule fois à l'arrivée. */
+@keyframes wave {
+  0%, 100% { transform: rotate(0deg); }
+  15% { transform: rotate(16deg); }
+  30% { transform: rotate(-8deg); }
+  45% { transform: rotate(14deg); }
+  60% { transform: rotate(-4deg); }
+  75% { transform: rotate(8deg); }
+}
+
 /* ================== INTERACTIONS (Phase 3) ================== */
 
 /* Apparition au scroll : on pose `.reveal` (état initial caché) puis on ajoute

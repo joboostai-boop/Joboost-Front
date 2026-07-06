@@ -377,6 +377,28 @@ export const geminiService = {
     }
   },
 
+  // Email de relance d'une candidature restée sans réponse. Texte prêt à envoyer :
+  // « Objet : … » en première ligne puis le corps. Aucune invention autorisée.
+  generateFollowUpMessage: async (company: string, jobTitle: string, daysAgo: number, candidateName?: string): Promise<string> => {
+    const ai = getAI();
+    const response = await genWithRetry(ai, {
+      model: 'gemini-3-flash-preview',
+      contents:
+        `Rédige un email de RELANCE de candidature en français.\n` +
+        `Poste : ${jobTitle}\nEntreprise : ${company}\nCandidature envoyée il y a ${daysAgo} jour${daysAgo > 1 ? 's' : ''}.\n` +
+        (candidateName ? `Candidat : ${candidateName}\n` : '') +
+        `\nFormat EXACT :\n` +
+        `- Première ligne : « Objet : » suivi d'un objet court et précis (ex. relance candidature + intitulé du poste).\n` +
+        `- Une ligne vide, puis le corps (100 à 150 mots) : rappel poli de la candidature envoyée, réaffirmation sincère de l'intérêt pour le poste et l'entreprise, proposition d'un échange, formule de politesse.\n` +
+        `- Termine par « Cordialement, »${candidateName ? ` puis « ${candidateName} » sur la ligne suivante` : ''}.\n` +
+        `Règles : ton professionnel, positif, jamais insistant ni culpabilisant. AUCUNE invention (pas de faux échanges, pas de chiffres inventés), aucun champ à compléter entre crochets, aucune mise en forme Markdown.`,
+      config: {
+        systemInstruction: "Tu es un expert des candidatures en France. Tu rédiges des emails de relance sobres, polis et efficaces, prêts à envoyer tels quels.",
+      },
+    });
+    return (response.text || '').replace(/\*\*/g, '').trim();
+  },
+
   generateBulkMessage: async (candidateName: string, candidateTitle: string, companyName: string, companySector: string): Promise<string> => {
     const ai = getAI();
     const prompt = `Génère un message de connexion stratégique de la part de ${candidateName} (${candidateTitle}) pour ${companyName} (${companySector}). Focus sur la valeur ajoutée immédiate.`;
