@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { BusinessJobseeker, BusinessJobseekerDetail, BusinessJobseekerInput, Pagination } from '../types';
 import { businessJobseekerApi } from '../services/business';
 import { useModalBehavior } from '../hooks/useModalBehavior';
@@ -7,7 +8,7 @@ import toast from 'react-hot-toast';
 import {
   Search, Filter, X, ChevronLeft, ChevronRight, Loader2, Download,
   Mail, Phone, MapPin, Briefcase, ExternalLink, FileText, User, MoreVertical,
-  UserPlus, Edit3, Trash2, Save, StickyNote
+  UserPlus, Edit3, Trash2, Save, StickyNote, Sparkles, Copy, Send
 } from 'lucide-react';
 
 const STATUS_FORM_OPTIONS = [
@@ -53,11 +54,17 @@ const BusinessJobseekers: React.FC = () => {
   const [removingId, setRemovingId] = useState<string | null>(null);
   const [removing, setRemoving] = useState(false);
 
+  // Message d'approche IA
+  const [outreachOpen, setOutreachOpen] = useState(false);
+  const [outreachLoading, setOutreachLoading] = useState(false);
+  const [outreachText, setOutreachText] = useState('');
+
   // Échap pour fermer + blocage du scroll de fond sur les overlays.
   useModalBehavior(drawerOpen, () => { setDrawerOpen(false); setSelectedDetail(null); });
   useModalBehavior(showFiltersMobile, () => setShowFiltersMobile(false));
   useModalBehavior(showMobileActions, () => setShowMobileActions(false));
   useModalBehavior(showForm, () => setShowForm(false));
+  useModalBehavior(outreachOpen, () => setOutreachOpen(false));
 
   const fetchJobseekers = useCallback(async (page = 1) => {
     try {
@@ -92,6 +99,57 @@ const BusinessJobseekers: React.FC = () => {
     } finally {
       setLoadingDetail(false);
     }
+  };
+
+  // Liens profonds depuis le tableau de bord : ?new=1 ouvre l'ajout, ?open=<id> ouvre une fiche.
+  const [searchParams, setSearchParams] = useSearchParams();
+  useEffect(() => {
+    const openId = searchParams.get('open');
+    if (searchParams.get('new') === '1') openCreate();
+    else if (openId) openDetail(openId);
+    if (openId || searchParams.get('new')) setSearchParams({}, { replace: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // --- Contact : email réel vs adresse interne du vivier ---
+  const hasRealEmail = (email?: string) => !!email && !email.endsWith('@candidat.joboost.local');
+
+  const handleOutreach = async () => {
+    if (!selectedDetail) return;
+    setOutreachOpen(true);
+    setOutreachLoading(true);
+    setOutreachText('');
+    try {
+      const text = await businessJobseekerApi.outreach(selectedDetail.id);
+      setOutreachText(text);
+    } catch (err: any) {
+      toast.error(err.message);
+      setOutreachOpen(false);
+    } finally {
+      setOutreachLoading(false);
+    }
+  };
+
+  const copyOutreach = async () => {
+    try {
+      await navigator.clipboard.writeText(outreachText);
+      toast.success('Message copié !');
+    } catch {
+      toast.error('Impossible de copier automatiquement — sélectionnez le texte.');
+    }
+  };
+
+  // Transforme le message généré (« Objet : … » + corps) en lien mailto prêt à envoyer.
+  const outreachMailto = () => {
+    if (!selectedDetail) return '#';
+    const lines = outreachText.split('\n');
+    let subject = 'Opportunité professionnelle';
+    let body = outreachText;
+    if (lines[0]?.toLowerCase().startsWith('objet')) {
+      subject = lines[0].replace(/^objet\s*:\s*/i, '').trim() || subject;
+      body = lines.slice(1).join('\n').trim();
+    }
+    return `mailto:${selectedDetail.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
   };
 
   const openCreate = () => {
@@ -315,15 +373,21 @@ const BusinessJobseekers: React.FC = () => {
                 placeholder="Rechercher par nom, email ou compétence..."
               />
             </div>
-            <div className="flex items-center gap-2">
-              <Filter size={14} className="text-slate-400" />
-              <select
-                className="input-pro w-auto min-w-[160px] min-h-[44px]"
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
-              >
-                {STATUS_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
-              </select>
+            <div className="flex items-center gap-1.5">
+              {STATUS_OPTIONS.map((o) => (
+                <button
+                  type="button"
+                  key={o.value}
+                  onClick={() => setStatusFilter(o.value)}
+                  className={`shrink-0 px-3 py-2 rounded-lg text-xs font-bold transition-colors min-h-[38px] ${
+                    statusFilter === o.value
+                      ? 'bg-[#7D5CFF] text-white shadow-sm'
+                      : 'bg-white dark:bg-slate-800 text-slate-500 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700'
+                  }`}
+                >
+                  {o.label}
+                </button>
+              ))}
             </div>
             <button type="submit" className="btn btn-primary min-h-[44px]">Rechercher</button>
           </form>
@@ -568,6 +632,21 @@ const BusinessJobseekers: React.FC = () => {
                       </div>
                     </div>
 
+                    {/* Contact */}
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={handleOutreach}
+                        className="min-h-[40px] text-sm flex-1 inline-flex items-center justify-center gap-2 rounded-xl bg-[#7D5CFF]/10 text-[#7D5CFF] dark:text-[#B9A7FF] font-semibold hover:bg-[#7D5CFF]/20 transition-colors px-3"
+                      >
+                        <Sparkles size={14} /> Message d'approche IA
+                      </button>
+                      {hasRealEmail(selectedDetail.email) && (
+                        <a href={`mailto:${selectedDetail.email}`} className="btn btn-secondary min-h-[40px] text-sm flex-1">
+                          <Mail size={14} /> Écrire un email
+                        </a>
+                      )}
+                    </div>
+
                     {/* Actions fiche */}
                     <div className="flex items-center gap-2 pt-1">
                       {selectedDetail.managed && (
@@ -780,6 +859,58 @@ const BusinessJobseekers: React.FC = () => {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* ─── Modale : message d'approche IA ─── */}
+      {outreachOpen && (
+        <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center">
+          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setOutreachOpen(false)} />
+          <div className="relative bg-white dark:bg-[#111827] w-full md:max-w-lg md:mx-4 max-h-[90dvh] md:max-h-[85vh] flex flex-col border-t md:border border-slate-200 dark:border-slate-700 rounded-t-2xl md:rounded-xl shadow-2xl">
+            <div className="shrink-0 flex items-start justify-between p-4 md:p-5 border-b border-slate-200 dark:border-slate-700">
+              <div className="absolute top-2 left-1/2 -translate-x-1/2 w-10 h-1 bg-slate-200 dark:bg-slate-700 rounded-full md:hidden" />
+              <div className="mt-2 md:mt-0 min-w-0 pr-3">
+                <h2 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                  <Sparkles size={18} className="text-[#7D5CFF] shrink-0" /> Message d'approche
+                </h2>
+                {selectedDetail && <p className="text-xs text-slate-500 mt-0.5 truncate">Pour {selectedDetail.name}</p>}
+              </div>
+              <button onClick={() => setOutreachOpen(false)} className="p-2.5 rounded-lg text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center shrink-0">
+                <X size={18} />
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-4 md:p-5">
+              {outreachLoading ? (
+                <div className="flex flex-col items-center justify-center py-14 gap-3">
+                  <Loader2 className="animate-spin text-[#7D5CFF]" size={28} />
+                  <p className="text-sm text-slate-500">L'IA rédige un message personnalisé…</p>
+                </div>
+              ) : (
+                <>
+                  <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800">
+                    <p className="text-sm text-slate-700 dark:text-slate-200 leading-relaxed whitespace-pre-wrap">{outreachText}</p>
+                  </div>
+                  <p className="text-[11px] text-slate-400 mt-3 leading-snug">
+                    Relisez et personnalisez avant d'envoyer — le message s'appuie uniquement sur les infos de la fiche candidat.
+                  </p>
+                </>
+              )}
+            </div>
+
+            {!outreachLoading && outreachText && (
+              <div className="shrink-0 flex flex-col-reverse sm:flex-row justify-end gap-2.5 p-4 md:p-5 border-t border-slate-200 dark:border-slate-700">
+                <button onClick={copyOutreach} className="btn btn-secondary min-h-[44px] w-full sm:w-auto">
+                  <Copy size={15} /> Copier le message
+                </button>
+                {selectedDetail && hasRealEmail(selectedDetail.email) && (
+                  <a href={outreachMailto()} className="btn btn-primary min-h-[44px] w-full sm:w-auto">
+                    <Send size={15} /> Ouvrir dans ma messagerie
+                  </a>
+                )}
+              </div>
+            )}
           </div>
         </div>
       )}

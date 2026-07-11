@@ -399,6 +399,113 @@ export const geminiService = {
     return (response.text || '').replace(/\*\*/g, '').trim();
   },
 
+  // ==================== ESPACE RECRUTEUR ====================
+
+  // Rédige le corps d'une offre d'emploi à partir des infos saisies par le recruteur,
+  // et suggère des compétences clés pour activer le matching avec le vivier.
+  // Même exigence d'honnêteté que côté candidat : rien d'inventé (salaire, avantages,
+  // chiffres d'entreprise…) qui ne figure pas dans les infos fournies.
+  generateJobOfferContent: async (input: {
+    title: string;
+    contractType?: string;
+    location?: string;
+    salaryRange?: string;
+    skills?: string[];
+    companyName?: string;
+    notes?: string;
+  }): Promise<{ description: string; suggestedSkills: string[] }> => {
+    const ai = getAI();
+
+    const OFFER_WRITER_PROMPT = [
+      "Tu es un expert du recrutement en France. Tu rédiges des offres d'emploi claires,",
+      "attractives et conformes aux usages français, prêtes à être publiées.",
+      "Structure attendue du texte (paragraphes et listes à puces '- ', SANS Markdown gras/titres #) :",
+      "1. Accroche courte sur le poste ; 2. « Vos missions : » suivie de 4 à 6 puces ;",
+      "3. « Profil recherché : » suivie de 3 à 5 puces ; 4. Une phrase de conclusion invitant à postuler.",
+      "HONNÊTETÉ STRICTE : n'invente JAMAIS de salaire, d'avantages, de chiffres, de nom ou de",
+      "description d'entreprise qui ne figurent pas dans les informations fournies. Si une info",
+      "manque, n'en parle pas. Pas de mention discriminatoire (âge, genre, origine…) — utilise",
+      "la mention (H/F) après l'intitulé. Français irréprochable, ton professionnel et humain.",
+    ].join("\n");
+
+    const parts = [
+      `Rédige une offre d'emploi pour le poste : « ${input.title} »`,
+      input.contractType ? `Type de contrat : ${input.contractType}` : '',
+      input.location ? `Lieu : ${input.location}` : '',
+      input.salaryRange ? `Rémunération annoncée : ${input.salaryRange}` : '',
+      input.companyName ? `Entreprise : ${input.companyName}` : '',
+      input.skills && input.skills.length > 0 ? `Compétences déjà identifiées : ${input.skills.join(', ')}` : '',
+      input.notes ? `Précisions du recruteur (source de vérité) : ${input.notes}` : '',
+      '',
+      `Renvoie aussi « suggestedSkills » : 5 à 8 compétences clés, courtes (1 à 3 mots),`,
+      `pertinentes pour ce poste, utilisables comme étiquettes de matching (complète celles déjà identifiées, sans les répéter).`,
+    ].filter(Boolean).join('\n');
+
+    const response = await genWithRetry(ai, {
+      model: 'gemini-3-flash-preview',
+      contents: parts,
+      config: {
+        systemInstruction: OFFER_WRITER_PROMPT,
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: Type.OBJECT,
+          properties: {
+            description: { type: Type.STRING },
+            suggestedSkills: { type: Type.ARRAY, items: { type: Type.STRING } },
+          },
+          required: ["description", "suggestedSkills"],
+        },
+      },
+    });
+    try {
+      const data = JSON.parse(response.text || '{}');
+      return {
+        description: String(data.description || '').replace(/\*\*/g, '').trim(),
+        suggestedSkills: Array.isArray(data.suggestedSkills)
+          ? data.suggestedSkills.map((s: any) => String(s).trim()).filter(Boolean).slice(0, 8)
+          : [],
+      };
+    } catch {
+      throw new Error("Impossible de générer l'offre. Réessayez dans un instant.");
+    }
+  },
+
+  // Message d'approche d'un candidat du vivier (email prêt à envoyer, « Objet : » en 1re ligne).
+  generateCandidateOutreach: async (input: {
+    candidateName: string;
+    candidateTitle?: string;
+    candidateSkills?: string[];
+    offerTitle?: string;
+    companyName?: string;
+    recruiterName?: string;
+  }): Promise<string> => {
+    const ai = getAI();
+    const response = await genWithRetry(ai, {
+      model: 'gemini-3-flash-preview',
+      contents:
+        `Rédige un email d'APPROCHE d'un candidat, envoyé par un recruteur, en français.\n` +
+        `Candidat : ${input.candidateName}` +
+        (input.candidateTitle ? ` (${input.candidateTitle})` : '') + `\n` +
+        (input.candidateSkills && input.candidateSkills.length > 0
+          ? `Compétences connues du candidat : ${input.candidateSkills.slice(0, 8).join(', ')}\n` : '') +
+        (input.offerTitle ? `Poste proposé : ${input.offerTitle}\n` : `Contexte : prise de contact pour une opportunité correspondant à son profil.\n`) +
+        (input.companyName ? `Entreprise / organisme : ${input.companyName}\n` : '') +
+        (input.recruiterName ? `Signataire : ${input.recruiterName}\n` : '') +
+        `\nFormat EXACT :\n` +
+        `- Première ligne : « Objet : » suivi d'un objet court et engageant.\n` +
+        `- Une ligne vide, puis le corps (90 à 140 mots) : salutation personnalisée, pourquoi ce profil` +
+        ` a retenu l'attention (en s'appuyant UNIQUEMENT sur les infos fournies), présentation brève de` +
+        ` l'opportunité, proposition d'un échange téléphonique, formule de politesse.\n` +
+        `- Termine par « Cordialement, »${input.recruiterName ? ` puis « ${input.recruiterName} » sur la ligne suivante` : ''}.\n` +
+        `Règles : ton professionnel et chaleureux, jamais racoleur. AUCUNE invention (pas de salaire, pas` +
+        ` d'avantages, pas de faux historique), aucun champ à compléter entre crochets, aucune mise en forme Markdown.`,
+      config: {
+        systemInstruction: "Tu es un recruteur français expérimenté. Tu écris des emails d'approche sobres, personnalisés et efficaces, prêts à envoyer tels quels.",
+      },
+    });
+    return (response.text || '').replace(/\*\*/g, '').trim();
+  },
+
   generateBulkMessage: async (candidateName: string, candidateTitle: string, companyName: string, companySector: string): Promise<string> => {
     const ai = getAI();
     const prompt = `Génère un message de connexion stratégique de la part de ${candidateName} (${candidateTitle}) pour ${companyName} (${companySector}). Focus sur la valeur ajoutée immédiate.`;

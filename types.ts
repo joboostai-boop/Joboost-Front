@@ -229,6 +229,20 @@ export interface BusinessStats {
   totalOffers: number;
 }
 
+// Compte recruteur (nom, entreprise) — affiché dans l'en-tête et le tableau de bord B2B
+export interface BusinessAccount {
+  name: string;
+  email: string;
+  plan: string;
+  companyName: string;
+}
+
+// Résultat de l'assistant IA de rédaction d'offre
+export interface OfferAssistResult {
+  description: string;
+  suggestedSkills: string[];
+}
+
 export interface Pagination {
   page: number;
   limit: number;

@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { randomUUID } from 'crypto';
 import { prisma } from '../db';
+import { geminiService } from '../services/gemini.service';
 
 export const businessController = {
 
@@ -101,15 +102,22 @@ export const businessController = {
       const page = parseInt(req.query.page as string) || 1;
       const limit = parseInt(req.query.limit as string) || 10;
       const skip = (page - 1) * limit;
+      const search = (req.query.search as string) || undefined;
+      const status = (req.query.status as string) || undefined; // 'published' | 'draft'
+
+      const where: any = { businessId: req.userId! };
+      if (search) where.title = { contains: search, mode: 'insensitive' };
+      if (status === 'published') where.isPublished = true;
+      if (status === 'draft') where.isPublished = false;
 
       const [offers, total] = await Promise.all([
         prisma.businessOffer.findMany({
-          where: { businessId: req.userId! },
+          where,
           orderBy: { createdAt: 'desc' },
           skip,
           take: limit,
         }),
-        prisma.businessOffer.count({ where: { businessId: req.userId! } }),
+        prisma.businessOffer.count({ where }),
       ]);
 
       res.json({
@@ -639,6 +647,77 @@ export const businessController = {
     } catch (error: any) {
       console.error('Business removeJobseeker error:', error);
       res.status(500).json({ success: false, error: 'Erreur lors du retrait du candidat.' });
+    }
+  },
+
+  // ==================== IA RECRUTEUR ====================
+
+  // Rédige le corps d'une offre (+ compétences suggérées) à partir des infos du formulaire.
+  // Action gratuite, bornée par le aiLimiter posé sur la route.
+  assistOffer: async (req: Request, res: Response) => {
+    try {
+      const { title, contractType, location, salaryRange, skills, notes } = req.body;
+      if (!title || !String(title).trim()) {
+        return res.status(400).json({ success: false, error: "L'intitulé du poste est requis pour générer l'offre." });
+      }
+
+      const user = await prisma.user.findUnique({
+        where: { id: req.userId! },
+        include: { organization: true },
+      });
+
+      const data = await geminiService.generateJobOfferContent({
+        title: String(title).trim(),
+        contractType: contractType ? String(contractType) : undefined,
+        location: location ? String(location) : undefined,
+        salaryRange: salaryRange ? String(salaryRange) : undefined,
+        skills: Array.isArray(skills) ? skills.map((s: string) => String(s)).filter(Boolean) : undefined,
+        companyName: user?.organization?.name || undefined,
+        notes: notes ? String(notes).slice(0, 1500) : undefined,
+      });
+
+      res.json({ success: true, data });
+    } catch (error: any) {
+      console.error('Business assistOffer error:', error);
+      res.status(500).json({ success: false, error: error.message || "Erreur lors de la génération de l'offre." });
+    }
+  },
+
+  // Email d'approche IA pour un candidat du vivier (contrôle d'affiliation obligatoire).
+  generateOutreach: async (req: Request, res: Response) => {
+    try {
+      const businessId = req.userId!;
+      const { id } = req.params;
+      const { offerTitle } = req.body || {};
+
+      const affiliation = await prisma.businessAffiliation.findFirst({
+        where: { businessId, jobseekerId: id },
+        include: {
+          jobseeker: { select: { name: true, title: true, skills: true } },
+        },
+      });
+      if (!affiliation) {
+        return res.status(404).json({ success: false, error: 'Candidat non trouvé dans votre vivier.' });
+      }
+
+      const recruiter = await prisma.user.findUnique({
+        where: { id: businessId },
+        include: { organization: true },
+      });
+
+      const message = await geminiService.generateCandidateOutreach({
+        candidateName: affiliation.jobseeker.name || 'Candidat',
+        candidateTitle: affiliation.jobseeker.title || undefined,
+        candidateSkills: affiliation.jobseeker.skills || [],
+        offerTitle: offerTitle ? String(offerTitle).slice(0, 200) : undefined,
+        companyName: recruiter?.organization?.name || undefined,
+        recruiterName: recruiter?.name || undefined,
+      });
+
+      res.json({ success: true, data: message });
+    } catch (error: any) {
+      console.error('Business generateOutreach error:', error);
+      res.status(500).json({ success: false, error: error.message || "Erreur lors de la génération du message." });
     }
   },
 

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { BusinessOffer, Pagination, OfferMatchesResult } from '../types';
 import { businessOfferApi } from '../services/business';
 import toast from 'react-hot-toast';
@@ -7,7 +8,7 @@ import { useModalBehavior } from '../hooks/useModalBehavior';
 import {
   Plus, Edit3, Trash2, Eye, EyeOff, X,
   MapPin, Briefcase, DollarSign, Clock, ChevronLeft, ChevronRight, Loader2,
-  Users, Sparkles
+  Users, Sparkles, Search, Copy, Wand2
 } from 'lucide-react';
 
 const CONTRACT_TYPES = ['CDI', 'CDD', 'Stage', 'Alternance', 'Mission', 'Freelance'];
@@ -21,6 +22,12 @@ const emptyOffer = {
   requiredSkills: [] as string[],
   expiresAt: '',
 };
+
+const STATUS_TABS = [
+  { value: '', label: 'Toutes' },
+  { value: 'published', label: 'Publiées' },
+  { value: 'draft', label: 'Brouillons' },
+];
 
 const BusinessOffers: React.FC = () => {
   const [offers, setOffers] = useState<BusinessOffer[]>([]);
@@ -36,6 +43,25 @@ const BusinessOffers: React.FC = () => {
   const [matchesOffer, setMatchesOffer] = useState<BusinessOffer | null>(null);
   const [matchesData, setMatchesData] = useState<OfferMatchesResult | null>(null);
   const [matchesLoading, setMatchesLoading] = useState(false);
+
+  // Recherche + filtre statut (côté serveur)
+  const [searchDraft, setSearchDraft] = useState('');
+  const [search, setSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState('');
+
+  // Assistant IA de rédaction
+  const [assistLoading, setAssistLoading] = useState(false);
+  const [suggestedSkills, setSuggestedSkills] = useState<string[]>([]);
+
+  // Liens profonds depuis le tableau de bord : ?new=1 ouvre la création, ?status=draft filtre.
+  const [searchParams, setSearchParams] = useSearchParams();
+  useEffect(() => {
+    const st = searchParams.get('status');
+    if (st === 'draft' || st === 'published') setStatusFilter(st);
+    if (searchParams.get('new') === '1') openCreate();
+    if (st || searchParams.get('new')) setSearchParams({}, { replace: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Échap pour fermer + blocage du scroll de fond sur les overlays.
   useModalBehavior(showModal, () => setShowModal(false));
@@ -59,7 +85,7 @@ const BusinessOffers: React.FC = () => {
   const fetchOffers = useCallback(async (page = 1) => {
     try {
       setLoading(true);
-      const data = await businessOfferApi.list(page);
+      const data = await businessOfferApi.list(page, 10, { search: search || undefined, status: statusFilter || undefined });
       setOffers(data.offers);
       setPagination(data.pagination);
     } catch (err: any) {
@@ -67,7 +93,7 @@ const BusinessOffers: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [search, statusFilter]);
 
   useEffect(() => { fetchOffers(); }, [fetchOffers]);
 
@@ -75,6 +101,7 @@ const BusinessOffers: React.FC = () => {
     setEditingOffer(null);
     setForm(emptyOffer);
     setSkillInput('');
+    setSuggestedSkills([]);
     setShowModal(true);
   };
 
@@ -90,7 +117,60 @@ const BusinessOffers: React.FC = () => {
       expiresAt: offer.expiresAt ? offer.expiresAt.slice(0, 10) : '',
     });
     setSkillInput('');
+    setSuggestedSkills([]);
     setShowModal(true);
+  };
+
+  // Dupliquer : pré-remplit le formulaire de création à partir d'une offre existante.
+  const openDuplicate = (offer: BusinessOffer) => {
+    setEditingOffer(null);
+    setForm({
+      title: `${offer.title} (copie)`,
+      description: offer.description,
+      contractType: offer.contractType || '',
+      location: offer.location || '',
+      salaryRange: offer.salaryRange || '',
+      requiredSkills: [...(offer.requiredSkills || [])],
+      expiresAt: '',
+    });
+    setSkillInput('');
+    setSuggestedSkills([]);
+    setShowModal(true);
+  };
+
+  // Assistant IA : rédige la description (en s'appuyant sur les notes déjà saisies)
+  // et propose des compétences clés pour le matching.
+  const handleAssist = async () => {
+    if (!form.title.trim()) {
+      toast.error("Indiquez d'abord l'intitulé du poste.");
+      return;
+    }
+    setAssistLoading(true);
+    try {
+      const res = await businessOfferApi.assist({
+        title: form.title.trim(),
+        contractType: form.contractType || undefined,
+        location: form.location || undefined,
+        salaryRange: form.salaryRange || undefined,
+        skills: form.requiredSkills,
+        notes: form.description.trim() || undefined,
+      });
+      setForm((f) => ({ ...f, description: res.description }));
+      const existing = new Set(form.requiredSkills.map((s) => s.toLowerCase()));
+      setSuggestedSkills(res.suggestedSkills.filter((s) => !existing.has(s.toLowerCase())));
+      toast.success('Offre rédigée ! Relisez et ajustez avant de publier.');
+    } catch (err: any) {
+      toast.error(err.message);
+    } finally {
+      setAssistLoading(false);
+    }
+  };
+
+  const addSuggestedSkill = (skill: string) => {
+    if (!form.requiredSkills.some((s) => s.toLowerCase() === skill.toLowerCase())) {
+      setForm({ ...form, requiredSkills: [...form.requiredSkills, skill] });
+    }
+    setSuggestedSkills((prev) => prev.filter((s) => s !== skill));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -193,6 +273,13 @@ const BusinessOffers: React.FC = () => {
         <Edit3 size={18} />
       </button>
       <button
+        onClick={(e) => { e.stopPropagation(); openDuplicate(offer); }}
+        className="p-2.5 rounded-lg text-slate-400 hover:text-[#7D5CFF] hover:bg-[#7D5CFF]/10 transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center"
+        title="Dupliquer"
+      >
+        <Copy size={18} />
+      </button>
+      <button
         onClick={(e) => { e.stopPropagation(); setDeletingOffer(offer); }}
         className="p-2.5 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center"
         title="Supprimer"
@@ -204,9 +291,48 @@ const BusinessOffers: React.FC = () => {
 
   return (
     <div>
-      {/* Barre d'outils (le titre est porté par le hero du layout) */}
-      <div className="flex justify-end mb-4 md:mb-6">
-        <button onClick={openCreate} className="btn btn-primary min-h-[44px] px-4 w-full sm:w-auto">
+      {/* Barre d'outils : recherche + filtre statut + création */}
+      <div className="flex flex-col md:flex-row md:items-center gap-3 mb-4 md:mb-6">
+        <form
+          onSubmit={(e) => { e.preventDefault(); setSearch(searchDraft.trim()); }}
+          className="relative flex-1 max-w-md"
+        >
+          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+          <input
+            className="input-pro pl-9 min-h-[44px] w-full"
+            value={searchDraft}
+            onChange={(e) => setSearchDraft(e.target.value)}
+            placeholder="Rechercher une offre par titre…"
+          />
+          {search && (
+            <button
+              type="button"
+              onClick={() => { setSearchDraft(''); setSearch(''); }}
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-600"
+              title="Effacer la recherche"
+            >
+              <X size={14} />
+            </button>
+          )}
+        </form>
+
+        <div className="flex items-center gap-1.5 overflow-x-auto">
+          {STATUS_TABS.map((t) => (
+            <button
+              key={t.value}
+              onClick={() => setStatusFilter(t.value)}
+              className={`shrink-0 px-3 py-2 rounded-lg text-xs font-bold transition-colors min-h-[38px] ${
+                statusFilter === t.value
+                  ? 'bg-[#7D5CFF] text-white shadow-sm'
+                  : 'bg-white dark:bg-slate-800 text-slate-500 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700'
+              }`}
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
+
+        <button onClick={openCreate} className="btn btn-primary min-h-[44px] px-4 w-full sm:w-auto md:ml-auto">
           <Plus size={16} /> Nouvelle offre
         </button>
       </div>
@@ -229,10 +355,18 @@ const BusinessOffers: React.FC = () => {
         ) : offers.length === 0 ? (
           <div className="text-center py-16 md:py-20 px-4">
             <Briefcase className="mx-auto text-slate-300 dark:text-slate-600 mb-4" size={48} />
-            <p className="text-slate-500 dark:text-slate-400 text-sm">Aucune offre pour le moment.</p>
-            <button onClick={openCreate} className="btn btn-primary mt-4 min-h-[44px]">
-              <Plus size={16} /> Créer votre première offre
-            </button>
+            <p className="text-slate-500 dark:text-slate-400 text-sm">
+              {search || statusFilter ? 'Aucune offre ne correspond à ces critères.' : 'Aucune offre pour le moment.'}
+            </p>
+            {search || statusFilter ? (
+              <button onClick={() => { setSearchDraft(''); setSearch(''); setStatusFilter(''); }} className="btn btn-secondary mt-4 min-h-[44px]">
+                <X size={16} /> Réinitialiser les filtres
+              </button>
+            ) : (
+              <button onClick={openCreate} className="btn btn-primary mt-4 min-h-[44px]">
+                <Plus size={16} /> Créer votre première offre
+              </button>
+            )}
           </div>
         ) : (
           <>
@@ -377,13 +511,25 @@ const BusinessOffers: React.FC = () => {
               </div>
 
               <div>
-                <label className="input-label">Description *</label>
+                <div className="flex items-center justify-between mb-1.5 gap-2">
+                  <label className="input-label !mb-0">Description *</label>
+                  <button
+                    type="button"
+                    onClick={handleAssist}
+                    disabled={assistLoading}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-[#7D5CFF]/10 text-[#7D5CFF] dark:text-[#B9A7FF] hover:bg-[#7D5CFF]/20 transition-colors disabled:opacity-60"
+                    title="L'IA rédige l'offre à partir de l'intitulé et de vos notes"
+                  >
+                    {assistLoading ? <Loader2 size={13} className="animate-spin" /> : <Wand2 size={13} />}
+                    {assistLoading ? 'Rédaction…' : 'Rédiger avec l\'IA'}
+                  </button>
+                </div>
                 <textarea
                   className="textarea-pro"
-                  rows={4}
+                  rows={6}
                   value={form.description}
                   onChange={(e) => setForm({ ...form, description: e.target.value })}
-                  placeholder="Décrivez le poste, les missions et les conditions..."
+                  placeholder="Décrivez le poste… ou notez quelques idées en vrac et cliquez sur « Rédiger avec l'IA » : elle s'appuiera sur l'intitulé et vos notes."
                   required
                 />
               </div>
@@ -452,6 +598,25 @@ const BusinessOffers: React.FC = () => {
                         <button type="button" onClick={() => removeSkill(skill)} className="hover:text-red-500 transition-colors p-0.5"><X size={12} /></button>
                       </span>
                     ))}
+                  </div>
+                )}
+                {suggestedSkills.length > 0 && (
+                  <div className="mt-3 p-3 rounded-xl bg-[#7D5CFF]/5 dark:bg-[#7D5CFF]/10 border border-[#7D5CFF]/15">
+                    <p className="text-[11px] font-bold text-[#7D5CFF] dark:text-[#B9A7FF] flex items-center gap-1.5 mb-2">
+                      <Sparkles size={12} /> Suggestions de l'IA — cliquez pour ajouter
+                    </p>
+                    <div className="flex flex-wrap gap-1.5">
+                      {suggestedSkills.map((skill) => (
+                        <button
+                          key={skill}
+                          type="button"
+                          onClick={() => addSuggestedSkill(skill)}
+                          className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-white dark:bg-slate-800 border border-[#7D5CFF]/30 text-[#7D5CFF] dark:text-[#B9A7FF] hover:bg-[#7D5CFF] hover:text-white transition-colors"
+                        >
+                          <Plus size={11} /> {skill}
+                        </button>
+                      ))}
+                    </div>
                   </div>
                 )}
               </div>

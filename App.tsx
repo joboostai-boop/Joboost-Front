@@ -34,6 +34,7 @@ const Register = React.lazy(() => import('./pages/Auth/Register'));
 const ForgotPassword = React.lazy(() => import('./pages/Auth/ForgotPassword'));
 const ResetPassword = React.lazy(() => import('./pages/Auth/ResetPassword'));
 const BusinessLayout = React.lazy(() => import('./pages/BusinessLayout'));
+const BusinessDashboard = React.lazy(() => import('./pages/BusinessDashboard'));
 const BusinessOffers = React.lazy(() => import('./pages/BusinessOffers'));
 const BusinessJobseekers = React.lazy(() => import('./pages/BusinessJobseekers'));
 const BusinessStatsPage = React.lazy(() => import('./pages/BusinessStats'));
@@ -199,7 +200,8 @@ const App: React.FC = () => {
             
             {/* 4. Espace Business Partner */}
             <Route path="/business" element={<BusinessLayout />}>
-               <Route index element={<Navigate to="offers" replace />} />
+               <Route index element={<Navigate to="dashboard" replace />} />
+               <Route path="dashboard" element={<BusinessDashboard />} />
                <Route path="offers" element={<BusinessOffers />} />
                <Route path="jobseekers" element={<BusinessJobseekers />} />
                <Route path="stats" element={<BusinessStatsPage />} />
@@ -211,7 +213,7 @@ const App: React.FC = () => {
             <Route path="/settings" element={<Settings user={user} isDarkMode={isDarkMode} toggleDarkMode={toggleDarkMode} />} />
             
             {/* Redirection Legacy ou par défaut vers l'accueil */}
-            <Route path="*" element={<Navigate to={isBusinessPartner ? '/business/offers' : '/home'} replace />} />
+            <Route path="*" element={<Navigate to={isBusinessPartner ? '/business/dashboard' : '/home'} replace />} />
           </Routes>
           </Suspense>
         </div>

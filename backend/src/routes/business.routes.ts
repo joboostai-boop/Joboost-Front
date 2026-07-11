@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { businessController } from '../controllers/business.controller';
 import { requireBusinessRole } from '../middleware/requireBusiness.middleware';
+import { aiLimiter } from '../middleware/rateLimit.middleware';
 
 const router = Router();
 
@@ -16,6 +17,8 @@ router.get('/account', asyncHandler(businessController.getAccount));
 router.put('/account', asyncHandler(businessController.updateAccount));
 
 // --- Offres d'emploi ---
+// NB : '/offers/assist' est déclaré avant les routes paramétrées '/offers/:id'.
+router.post('/offers/assist', aiLimiter, asyncHandler(businessController.assistOffer));
 router.post('/offers', asyncHandler(businessController.createOffer));
 router.get('/offers', asyncHandler(businessController.listOffers));
 router.put('/offers/:id', asyncHandler(businessController.updateOffer));
@@ -31,6 +34,7 @@ router.put('/jobseekers/:id', asyncHandler(businessController.updateJobseeker));
 router.patch('/jobseekers/:id/status', asyncHandler(businessController.updateJobseekerStatus));
 router.patch('/jobseekers/:id/note', asyncHandler(businessController.updateJobseekerNote));
 router.delete('/jobseekers/:id', asyncHandler(businessController.removeJobseeker));
+router.post('/jobseekers/:id/outreach', aiLimiter, asyncHandler(businessController.generateOutreach));
 
 // --- Statistiques ---
 router.get('/stats', asyncHandler(businessController.getStats));

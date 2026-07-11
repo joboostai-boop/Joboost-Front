@@ -1,4 +1,4 @@
-import { BusinessOffer, BusinessJobseeker, BusinessJobseekerDetail, BusinessJobseekerInput, BusinessStats, StatsQuery, Pagination, OfferMatchesResult } from '../types';
+import { BusinessOffer, BusinessJobseeker, BusinessJobseekerDetail, BusinessJobseekerInput, BusinessStats, StatsQuery, Pagination, OfferMatchesResult, BusinessAccount, OfferAssistResult } from '../types';
 import { authHeaders } from './authToken';
 
 const API_URL = import.meta.env.VITE_API_URL || '';
@@ -17,9 +17,28 @@ const fetchApi = async (path: string, options: RequestInit = {}) => {
 // ==================== OFFERS ====================
 
 export const businessOfferApi = {
-  list: async (page = 1, limit = 10): Promise<{ offers: BusinessOffer[]; pagination: Pagination }> => {
-    const data = await fetchApi(`/api/business/offers?page=${page}&limit=${limit}`);
+  list: async (page = 1, limit = 10, filters: { search?: string; status?: string } = {}): Promise<{ offers: BusinessOffer[]; pagination: Pagination }> => {
+    const query = new URLSearchParams({ page: String(page), limit: String(limit) });
+    if (filters.search) query.set('search', filters.search);
+    if (filters.status) query.set('status', filters.status);
+    const data = await fetchApi(`/api/business/offers?${query.toString()}`);
     return { offers: data.offers, pagination: data.pagination };
+  },
+
+  // Assistant IA : rédige la description de l'offre + suggère des compétences.
+  assist: async (input: {
+    title: string;
+    contractType?: string;
+    location?: string;
+    salaryRange?: string;
+    skills?: string[];
+    notes?: string;
+  }): Promise<OfferAssistResult> => {
+    const data = await fetchApi('/api/business/offers/assist', {
+      method: 'POST',
+      body: JSON.stringify(input),
+    });
+    return data.data;
   },
 
   create: async (offer: Partial<BusinessOffer>): Promise<BusinessOffer> => {
@@ -111,6 +130,24 @@ export const businessJobseekerApi = {
 
   remove: async (id: string): Promise<void> => {
     await fetchApi(`/api/business/jobseekers/${id}`, { method: 'DELETE' });
+  },
+
+  // Email d'approche IA d'un candidat du vivier (texte prêt à copier).
+  outreach: async (id: string, offerTitle?: string): Promise<string> => {
+    const data = await fetchApi(`/api/business/jobseekers/${id}/outreach`, {
+      method: 'POST',
+      body: JSON.stringify({ offerTitle }),
+    });
+    return data.data;
+  },
+};
+
+// ==================== COMPTE ====================
+
+export const businessAccountApi = {
+  get: async (): Promise<BusinessAccount> => {
+    const data = await fetchApi('/api/business/account');
+    return data.account;
   },
 };
 
