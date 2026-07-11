@@ -1,15 +1,108 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { BusinessJobseeker, BusinessJobseekerDetail, BusinessJobseekerInput, Pagination } from '../types';
-import { businessJobseekerApi } from '../services/business';
+import { businessJobseekerApi, businessOfferApi } from '../services/business';
 import { useModalBehavior } from '../hooks/useModalBehavior';
 import ConfirmDialog from '../components/ConfirmDialog';
 import toast from 'react-hot-toast';
 import {
   Search, Filter, X, ChevronLeft, ChevronRight, Loader2, Download,
   Mail, Phone, MapPin, Briefcase, ExternalLink, FileText, User, MoreVertical,
-  UserPlus, Edit3, Trash2, Save, StickyNote, Sparkles, Copy, Send
+  UserPlus, Edit3, Trash2, Save, StickyNote, Sparkles, Copy, Send, Eye, GraduationCap
 } from 'lucide-react';
+
+/* Aperçu lisible d'un CV Joboost (contenu JSON du builder candidat) — lecture seule
+   pour le recruteur. Tolérant : n'affiche que les sections présentes. */
+const CvPreview: React.FC<{ content: any }> = ({ content }) => {
+  const c = content || {};
+  const experiences: any[] = Array.isArray(c.experiences) ? c.experiences : [];
+  const education: any[] = Array.isArray(c.education) ? c.education : [];
+  const skills: string[] = Array.isArray(c.skills) ? c.skills.map((s: any) => String(s)) : [];
+  const hasAnything = c.name || c.summary || experiences.length > 0 || education.length > 0 || skills.length > 0;
+
+  if (!hasAnything) {
+    return <p className="text-sm text-slate-400 text-center py-10">Aperçu indisponible pour ce CV.</p>;
+  }
+
+  return (
+    <div className="space-y-5">
+      {/* En-tête */}
+      {(c.name || c.title) && (
+        <div className="flex items-center gap-3">
+          {c.photoUrl && (
+            <img src={c.photoUrl} alt="" className="w-14 h-14 rounded-full object-cover border border-slate-200 dark:border-slate-700 shrink-0" />
+          )}
+          <div className="min-w-0">
+            {c.name && <p className="text-lg font-extrabold text-slate-900 dark:text-white leading-tight">{c.name}</p>}
+            {c.title && <p className="text-sm font-semibold text-[#7D5CFF] mt-0.5">{c.title}</p>}
+            <div className="flex flex-wrap gap-x-3 gap-y-0.5 mt-1 text-[11px] text-slate-500">
+              {c.email && <span>{c.email}</span>}
+              {c.phone && <span>{c.phone}</span>}
+              {c.city && <span>{c.city}</span>}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {c.summary && (
+        <div>
+          <p className="text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">Profil</p>
+          <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed whitespace-pre-wrap">{c.summary}</p>
+        </div>
+      )}
+
+      {skills.length > 0 && (
+        <div>
+          <p className="text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-2">Compétences</p>
+          <div className="flex flex-wrap gap-1.5">
+            {skills.map((s) => (
+              <span key={s} className="px-2.5 py-1 rounded-lg bg-[#7D5CFF]/10 text-[#7D5CFF] dark:text-[#B9A7FF] text-xs font-semibold">{s}</span>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {experiences.length > 0 && (
+        <div>
+          <p className="text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-2 flex items-center gap-1.5">
+            <Briefcase size={12} /> Expériences
+          </p>
+          <div className="space-y-3">
+            {experiences.map((e, i) => (
+              <div key={e.id || i} className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800">
+                <p className="text-sm font-bold text-slate-900 dark:text-white">
+                  {e.role || e.title || 'Poste'}{e.company ? ` · ${e.company}` : ''}
+                </p>
+                {(e.period || e.dates) && <p className="text-[11px] text-slate-400 mt-0.5">{e.period || e.dates}</p>}
+                {(e.desc || e.description) && (
+                  <p className="text-xs text-slate-600 dark:text-slate-300 mt-1.5 leading-relaxed whitespace-pre-wrap">{e.desc || e.description}</p>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {education.length > 0 && (
+        <div>
+          <p className="text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-2 flex items-center gap-1.5">
+            <GraduationCap size={12} /> Formation
+          </p>
+          <div className="space-y-2">
+            {education.map((e, i) => (
+              <div key={e.id || i} className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800">
+                <p className="text-sm font-bold text-slate-900 dark:text-white">{e.degree || e.title || 'Formation'}</p>
+                <p className="text-[11px] text-slate-400 mt-0.5">
+                  {[e.school, e.date || e.year || e.period, e.city].filter(Boolean).join(' · ')}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
 
 const STATUS_FORM_OPTIONS = [
   { value: 'active', label: 'Actif' },
@@ -59,12 +152,26 @@ const BusinessJobseekers: React.FC = () => {
   const [outreachLoading, setOutreachLoading] = useState(false);
   const [outreachText, setOutreachText] = useState('');
 
+  // Lecture d'un CV (adhérent)
+  const [cvOpen, setCvOpen] = useState(false);
+  const [cvLoading, setCvLoading] = useState(false);
+  const [cvView, setCvView] = useState<{ title: string; content: any; updatedAt: string } | null>(null);
+
+  // Positionnement sur une offre (candidature déposée pour le candidat)
+  const [positionOpen, setPositionOpen] = useState(false);
+  const [offersLoading, setOffersLoading] = useState(false);
+  const [offerOptions, setOfferOptions] = useState<{ id: string; title: string }[]>([]);
+  const [selectedOfferId, setSelectedOfferId] = useState('');
+  const [positioning, setPositioning] = useState(false);
+
   // Échap pour fermer + blocage du scroll de fond sur les overlays.
   useModalBehavior(drawerOpen, () => { setDrawerOpen(false); setSelectedDetail(null); });
   useModalBehavior(showFiltersMobile, () => setShowFiltersMobile(false));
   useModalBehavior(showMobileActions, () => setShowMobileActions(false));
   useModalBehavior(showForm, () => setShowForm(false));
   useModalBehavior(outreachOpen, () => setOutreachOpen(false));
+  useModalBehavior(cvOpen, () => setCvOpen(false));
+  useModalBehavior(positionOpen, () => setPositionOpen(false));
 
   const fetchJobseekers = useCallback(async (page = 1) => {
     try {
@@ -136,6 +243,55 @@ const BusinessJobseekers: React.FC = () => {
       toast.success('Message copié !');
     } catch {
       toast.error('Impossible de copier automatiquement — sélectionnez le texte.');
+    }
+  };
+
+  // Ouvre l'aperçu lecture seule d'un CV du candidat.
+  const openCv = async (cvId: string) => {
+    if (!selectedDetail) return;
+    setCvOpen(true);
+    setCvLoading(true);
+    setCvView(null);
+    try {
+      const cv = await businessJobseekerApi.getCv(selectedDetail.id, cvId);
+      setCvView(cv);
+    } catch (err: any) {
+      toast.error(err.message);
+      setCvOpen(false);
+    } finally {
+      setCvLoading(false);
+    }
+  };
+
+  // Positionner le candidat sur une offre publiée de l'organisme.
+  const openPosition = async () => {
+    setPositionOpen(true);
+    setOffersLoading(true);
+    setSelectedOfferId('');
+    try {
+      const data = await businessOfferApi.list(1, 50, { status: 'published' });
+      setOfferOptions(data.offers.map((o) => ({ id: o.id, title: o.title })));
+    } catch (err: any) {
+      toast.error(err.message);
+      setPositionOpen(false);
+    } finally {
+      setOffersLoading(false);
+    }
+  };
+
+  const confirmPosition = async () => {
+    if (!selectedDetail || !selectedOfferId) return;
+    setPositioning(true);
+    try {
+      await businessOfferApi.applyCandidate(selectedOfferId, selectedDetail.id);
+      toast.success('Candidat positionné — la candidature apparaît dans son suivi.');
+      setPositionOpen(false);
+      const refreshed = await businessJobseekerApi.getDetail(selectedDetail.id);
+      setSelectedDetail(refreshed);
+    } catch (err: any) {
+      toast.error(err.message);
+    } finally {
+      setPositioning(false);
     }
   };
 
@@ -647,6 +803,14 @@ const BusinessJobseekers: React.FC = () => {
                       )}
                     </div>
 
+                    {/* Positionner sur une offre : dépose la candidature pour le candidat */}
+                    <button
+                      onClick={openPosition}
+                      className="w-full min-h-[40px] text-sm inline-flex items-center justify-center gap-2 rounded-xl border border-[#7D5CFF]/25 text-[#7D5CFF] dark:text-[#B9A7FF] font-semibold hover:bg-[#7D5CFF]/10 transition-colors px-3"
+                    >
+                      <Briefcase size={14} /> Positionner sur une offre
+                    </button>
+
                     {/* Actions fiche */}
                     <div className="flex items-center gap-2 pt-1">
                       {selectedDetail.managed && (
@@ -751,13 +915,19 @@ const BusinessJobseekers: React.FC = () => {
                       </h4>
                       <div className="space-y-2">
                         {selectedDetail.cvs.map((cv) => (
-                          <div key={cv.id} className="flex items-center gap-3 p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer">
+                          <button
+                            key={cv.id}
+                            onClick={() => openCv(cv.id)}
+                            title="Consulter ce CV"
+                            className="w-full flex items-center gap-3 p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors text-left group/cv"
+                          >
                             <div className="w-8 h-8 rounded-lg bg-white dark:bg-slate-700 shadow-sm flex items-center justify-center shrink-0">
                               <FileText size={14} className="text-[#7D5CFF] dark:text-[#A78BFA]" />
                             </div>
                             <span className="text-sm font-medium text-slate-700 dark:text-slate-300 flex-1 truncate">{cv.title}</span>
                             <span className="text-xs text-slate-400 shrink-0">{new Date(cv.updatedAt).toLocaleDateString('fr-FR')}</span>
-                          </div>
+                            <Eye size={14} className="text-slate-300 group-hover/cv:text-[#7D5CFF] transition-colors shrink-0" />
+                          </button>
                         ))}
                       </div>
                     </div>
@@ -915,6 +1085,86 @@ const BusinessJobseekers: React.FC = () => {
                   </a>
                 )}
               </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* ─── Modale : aperçu d'un CV (lecture seule) ─── */}
+      {cvOpen && (
+        <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center">
+          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setCvOpen(false)} />
+          <div className="relative bg-white dark:bg-[#111827] w-full md:max-w-2xl md:mx-4 max-h-[95dvh] md:max-h-[88vh] flex flex-col border-t md:border border-slate-200 dark:border-slate-700 rounded-t-2xl md:rounded-xl shadow-2xl">
+            <div className="shrink-0 flex items-start justify-between p-4 md:p-5 border-b border-slate-200 dark:border-slate-700">
+              <div className="absolute top-2 left-1/2 -translate-x-1/2 w-10 h-1 bg-slate-200 dark:bg-slate-700 rounded-full md:hidden" />
+              <div className="mt-2 md:mt-0 min-w-0 pr-3">
+                <h2 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                  <FileText size={18} className="text-[#7D5CFF] shrink-0" /> {cvView?.title || 'CV'}
+                </h2>
+                {cvView && <p className="text-xs text-slate-500 mt-0.5">Mis à jour le {new Date(cvView.updatedAt).toLocaleDateString('fr-FR')} · aperçu simplifié (lecture seule)</p>}
+              </div>
+              <button onClick={() => setCvOpen(false)} className="p-2.5 rounded-lg text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center shrink-0">
+                <X size={18} />
+              </button>
+            </div>
+            <div className="flex-1 overflow-y-auto p-4 md:p-6">
+              {cvLoading ? (
+                <div className="flex items-center justify-center py-16"><Loader2 className="animate-spin text-[#7D5CFF]" size={28} /></div>
+              ) : cvView ? (
+                <CvPreview content={cvView.content} />
+              ) : null}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ─── Modale : positionner le candidat sur une offre ─── */}
+      {positionOpen && (
+        <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center">
+          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setPositionOpen(false)} />
+          <div className="relative bg-white dark:bg-[#111827] w-full md:max-w-md md:mx-4 border-t md:border border-slate-200 dark:border-slate-700 rounded-t-2xl md:rounded-xl shadow-2xl p-4 md:p-5">
+            <div className="absolute top-2 left-1/2 -translate-x-1/2 w-10 h-1 bg-slate-200 dark:bg-slate-700 rounded-full md:hidden" />
+            <div className="flex items-center justify-between mb-3 mt-2 md:mt-0">
+              <h2 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                <Briefcase size={18} className="text-[#7D5CFF]" /> Positionner sur une offre
+              </h2>
+              <button onClick={() => setPositionOpen(false)} className="p-2 rounded-lg text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 min-h-[44px] min-w-[44px] flex items-center justify-center">
+                <X size={18} />
+              </button>
+            </div>
+            <p className="text-xs text-slate-500 mb-4 leading-relaxed">
+              La candidature est créée sur le compte de <span className="font-bold text-slate-700 dark:text-slate-200">{selectedDetail?.name}</span> :
+              elle apparaît dans son suivi et dans la section Candidatures de sa fiche.
+            </p>
+            {offersLoading ? (
+              <div className="flex items-center justify-center py-8"><Loader2 className="animate-spin text-[#7D5CFF]" size={24} /></div>
+            ) : offerOptions.length === 0 ? (
+              <p className="text-sm text-slate-500 text-center py-6">
+                Aucune offre publiée. Publiez d'abord une offre (icône œil) dans l'onglet Offres d'emploi.
+              </p>
+            ) : (
+              <>
+                <label className="input-label">Offre publiée</label>
+                <select
+                  className="input-pro w-full min-h-[44px]"
+                  value={selectedOfferId}
+                  onChange={(e) => setSelectedOfferId(e.target.value)}
+                >
+                  <option value="">Choisir une offre…</option>
+                  {offerOptions.map((o) => <option key={o.id} value={o.id}>{o.title}</option>)}
+                </select>
+                <div className="flex flex-col-reverse sm:flex-row justify-end gap-3 mt-5">
+                  <button onClick={() => setPositionOpen(false)} className="btn btn-secondary min-h-[44px] w-full sm:w-auto">Annuler</button>
+                  <button
+                    onClick={confirmPosition}
+                    disabled={!selectedOfferId || positioning}
+                    className="btn btn-primary min-h-[44px] w-full sm:w-auto disabled:opacity-50"
+                  >
+                    {positioning ? <Loader2 size={15} className="animate-spin" /> : <Send size={15} />}
+                    Positionner
+                  </button>
+                </div>
+              </>
             )}
           </div>
         </div>

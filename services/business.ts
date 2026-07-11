@@ -70,6 +70,14 @@ export const businessOfferApi = {
     const data = await fetchApi(`/api/business/offers/${id}/matches`);
     return { matches: data.matches, requiredSkills: data.requiredSkills, totalVivier: data.totalVivier };
   },
+
+  // Positionne un candidat du vivier sur l'offre (crée la candidature côté candidat).
+  applyCandidate: async (offerId: string, jobseekerId: string): Promise<void> => {
+    await fetchApi(`/api/business/offers/${offerId}/apply`, {
+      method: 'POST',
+      body: JSON.stringify({ jobseekerId }),
+    });
+  },
 };
 
 // ==================== JOBSEEKERS ====================
@@ -139,6 +147,12 @@ export const businessJobseekerApi = {
       body: JSON.stringify({ offerTitle }),
     });
     return data.data;
+  },
+
+  // Contenu d'un CV d'un candidat affilié (lecture seule).
+  getCv: async (id: string, cvId: string): Promise<{ id: string; title: string; template: string; content: any; updatedAt: string }> => {
+    const data = await fetchApi(`/api/business/jobseekers/${id}/cvs/${cvId}`);
+    return data.cv;
   },
 };
 

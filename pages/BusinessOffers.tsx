@@ -8,7 +8,7 @@ import { useModalBehavior } from '../hooks/useModalBehavior';
 import {
   Plus, Edit3, Trash2, Eye, EyeOff, X,
   MapPin, Briefcase, DollarSign, Clock, ChevronLeft, ChevronRight, Loader2,
-  Users, Sparkles, Search, Copy, Wand2
+  Users, Sparkles, Search, Copy, Wand2, Check
 } from 'lucide-react';
 
 const CONTRACT_TYPES = ['CDI', 'CDD', 'Stage', 'Alternance', 'Mission', 'Freelance'];
@@ -67,9 +67,14 @@ const BusinessOffers: React.FC = () => {
   useModalBehavior(showModal, () => setShowModal(false));
   useModalBehavior(!!matchesOffer, () => setMatchesOffer(null));
 
+  // Positionnement d'un candidat sur l'offre (depuis la modale de matching)
+  const [positioned, setPositioned] = useState<Set<string>>(new Set());
+  const [positioningId, setPositioningId] = useState<string | null>(null);
+
   const openMatches = async (offer: BusinessOffer) => {
     setMatchesOffer(offer);
     setMatchesData(null);
+    setPositioned(new Set());
     setMatchesLoading(true);
     try {
       const data = await businessOfferApi.matches(offer.id);
@@ -79,6 +84,24 @@ const BusinessOffers: React.FC = () => {
       setMatchesOffer(null);
     } finally {
       setMatchesLoading(false);
+    }
+  };
+
+  const positionCandidate = async (jobseekerId: string) => {
+    if (!matchesOffer) return;
+    setPositioningId(jobseekerId);
+    try {
+      await businessOfferApi.applyCandidate(matchesOffer.id, jobseekerId);
+      setPositioned((prev) => new Set(prev).add(jobseekerId));
+      toast.success('Candidat positionné — la candidature apparaît sur son profil et dans son suivi.');
+    } catch (err: any) {
+      // Déjà positionné : on reflète l'état plutôt que d'afficher une erreur brute.
+      if (String(err.message).toLowerCase().includes('déjà positionné')) {
+        setPositioned((prev) => new Set(prev).add(jobseekerId));
+      }
+      toast.error(err.message);
+    } finally {
+      setPositioningId(null);
     }
   };
 
@@ -687,9 +710,25 @@ const BusinessOffers: React.FC = () => {
                             {m.matchedSkills.length > 4 && <span className="text-[10px] text-slate-400 self-center">+{m.matchedSkills.length - 4}</span>}
                           </div>
                         </div>
-                        <div className="shrink-0 text-center">
-                          <div className="text-base font-black text-[#7D5CFF] leading-none">{m.matchPercent}%</div>
-                          <div className="text-[10px] text-slate-400 mt-0.5">{m.matchCount} compét.</div>
+                        <div className="shrink-0 flex flex-col items-center gap-1.5">
+                          <div className="text-center">
+                            <div className="text-base font-black text-[#7D5CFF] leading-none">{m.matchPercent}%</div>
+                            <div className="text-[10px] text-slate-400 mt-0.5">{m.matchCount} compét.</div>
+                          </div>
+                          {positioned.has(m.id) ? (
+                            <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-600 dark:text-emerald-400">
+                              <Check size={11} strokeWidth={3} /> Positionné
+                            </span>
+                          ) : (
+                            <button
+                              onClick={() => positionCandidate(m.id)}
+                              disabled={positioningId !== null}
+                              title="Créer la candidature sur le compte du candidat"
+                              className="px-2.5 py-1 rounded-lg bg-[#7D5CFF]/10 text-[#7D5CFF] dark:text-[#B9A7FF] text-[10.5px] font-bold hover:bg-[#7D5CFF]/20 transition-colors disabled:opacity-50"
+                            >
+                              {positioningId === m.id ? <Loader2 size={11} className="animate-spin" /> : 'Positionner'}
+                            </button>
+                          )}
                         </div>
                       </li>
                     ))}

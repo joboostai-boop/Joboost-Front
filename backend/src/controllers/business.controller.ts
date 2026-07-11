@@ -8,10 +8,12 @@ import { emailService } from '../services/email.service';
 // Modèle SUR DEVIS : « Essai » (période de découverte) a accès à tout, y compris l'IA,
 // mais avec un vivier plafonné. Un plan « Business … » (posé après signature du devis)
 // débloque le vivier illimité.
-const aiEnabledFor = (plan: string): boolean => plan === 'Essai' || plan.startsWith('Business');
+// NB : les comptes recruteurs historiques portent le plan « Pro » (ancien libellé) → traités comme abonnés.
+const isPaidBusinessPlan = (plan: string): boolean => plan === 'Pro' || plan.startsWith('Business');
+const aiEnabledFor = (plan: string): boolean => plan === 'Essai' || isPaidBusinessPlan(plan);
 const DISCOVERY_VIVIER_LIMIT = 100;
 const vivierLimitFor = (plan: string): number =>
-  plan.startsWith('Business') ? Number.POSITIVE_INFINITY : DISCOVERY_VIVIER_LIMIT;
+  isPaidBusinessPlan(plan) ? Number.POSITIVE_INFINITY : DISCOVERY_VIVIER_LIMIT;
 
 export const businessController = {
 
@@ -307,6 +309,58 @@ export const businessController = {
     } catch (error: any) {
       console.error('Business getOfferMatches error:', error);
       res.status(500).json({ success: false, error: 'Erreur lors du calcul des correspondances.' });
+    }
+  },
+
+  // Positionne un candidat AFFILIÉ sur une offre de l'organisme : crée la candidature
+  // sur le compte du candidat (visible dans son suivi ET dans son profil côté recruteur).
+  applyCandidateToOffer: async (req: Request, res: Response) => {
+    try {
+      const businessId = req.userId!;
+      const { id } = req.params; // id de l'offre
+      const { jobseekerId } = req.body || {};
+      if (!jobseekerId) {
+        return res.status(400).json({ success: false, error: 'Candidat manquant.' });
+      }
+
+      const offer = await prisma.businessOffer.findFirst({ where: { id, businessId } });
+      if (!offer) return res.status(404).json({ success: false, error: 'Offre non trouvée.' });
+
+      const affiliation = await prisma.businessAffiliation.findFirst({
+        where: { businessId, jobseekerId: String(jobseekerId) },
+      });
+      if (!affiliation) {
+        return res.status(403).json({ success: false, error: 'Ce candidat n\'est pas dans votre vivier.' });
+      }
+
+      const recruiter = await prisma.user.findUnique({
+        where: { id: businessId },
+        include: { organization: true },
+      });
+      const company = recruiter?.organization?.name || 'Organisme partenaire';
+
+      const dup = await prisma.application.findFirst({
+        where: { userId: String(jobseekerId), title: offer.title, company },
+      });
+      if (dup) {
+        return res.status(409).json({ success: false, error: 'Ce candidat est déjà positionné sur cette offre.' });
+      }
+
+      const application = await prisma.application.create({
+        data: {
+          userId: String(jobseekerId),
+          company,
+          title: offer.title,
+          source: 'Espace recruteur',
+          status: 'SENT',
+          notes: `Positionné par ${company} via l'espace recruteur Joboost.`,
+        },
+      });
+
+      res.status(201).json({ success: true, application });
+    } catch (error: any) {
+      console.error('Business applyCandidateToOffer error:', error);
+      res.status(500).json({ success: false, error: 'Erreur lors du positionnement du candidat.' });
     }
   },
 
@@ -685,6 +739,32 @@ export const businessController = {
     } catch (error: any) {
       console.error('Business updateJobseekerNote error:', error);
       res.status(500).json({ success: false, error: "Erreur lors de l'enregistrement de la note." });
+    }
+  },
+
+  // Contenu d'un CV d'un candidat AFFILIÉ (lecture seule — adhérent de l'organisme).
+  getJobseekerCv: async (req: Request, res: Response) => {
+    try {
+      const businessId = req.userId!;
+      const { id, cvId } = req.params;
+
+      const affiliation = await prisma.businessAffiliation.findFirst({
+        where: { businessId, jobseekerId: id },
+      });
+      if (!affiliation) {
+        return res.status(403).json({ success: false, error: 'Ce candidat n\'est pas dans votre vivier.' });
+      }
+
+      const cv = await prisma.cV.findFirst({ where: { id: cvId, userId: id } });
+      if (!cv) return res.status(404).json({ success: false, error: 'CV non trouvé.' });
+
+      res.json({
+        success: true,
+        cv: { id: cv.id, title: cv.title, template: cv.template, content: cv.content, updatedAt: cv.updatedAt },
+      });
+    } catch (error: any) {
+      console.error('Business getJobseekerCv error:', error);
+      res.status(500).json({ success: false, error: 'Erreur lors du chargement du CV.' });
     }
   },
 

@@ -25,6 +25,7 @@ router.put('/offers/:id', asyncHandler(businessController.updateOffer));
 router.delete('/offers/:id', asyncHandler(businessController.deleteOffer));
 router.patch('/offers/:id/publish', asyncHandler(businessController.togglePublish));
 router.get('/offers/:id/matches', asyncHandler(businessController.getOfferMatches));
+router.post('/offers/:id/apply', asyncHandler(businessController.applyCandidateToOffer));
 
 // --- Demandeurs d'emploi ---
 router.get('/jobseekers', asyncHandler(businessController.listJobseekers));
@@ -35,6 +36,7 @@ router.patch('/jobseekers/:id/status', asyncHandler(businessController.updateJob
 router.patch('/jobseekers/:id/note', asyncHandler(businessController.updateJobseekerNote));
 router.delete('/jobseekers/:id', asyncHandler(businessController.removeJobseeker));
 router.post('/jobseekers/:id/outreach', aiLimiter, asyncHandler(businessController.generateOutreach));
+router.get('/jobseekers/:id/cvs/:cvId', asyncHandler(businessController.getJobseekerCv));
 
 // --- Facturation (Stripe) & devis ---
 router.post('/billing/checkout', asyncHandler(businessController.createBillingCheckout));
