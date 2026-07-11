@@ -36,9 +36,11 @@ router.patch('/jobseekers/:id/note', asyncHandler(businessController.updateJobse
 router.delete('/jobseekers/:id', asyncHandler(businessController.removeJobseeker));
 router.post('/jobseekers/:id/outreach', aiLimiter, asyncHandler(businessController.generateOutreach));
 
-// --- Facturation (Stripe) ---
+// --- Facturation (Stripe) & devis ---
 router.post('/billing/checkout', asyncHandler(businessController.createBillingCheckout));
 router.post('/billing/portal', asyncHandler(businessController.createBillingPortal));
+// aiLimiter en garde-fou anti-spam (l'endpoint envoie un email).
+router.post('/billing/quote', aiLimiter, asyncHandler(businessController.requestQuote));
 
 // --- Statistiques ---
 router.get('/stats', asyncHandler(businessController.getStats));

@@ -15,7 +15,7 @@ const BUSINESS_TABS = [
   { name: 'Offres d\'emploi', icon: <Megaphone size={15} />, path: '/business/offers', title: 'Offres d\'emploi', subtitle: 'Créez et gérez les offres proposées à vos adhérents.' },
   { name: 'Demandeurs', icon: <Users size={15} />, path: '/business/jobseekers', title: 'Vivier de candidats', subtitle: 'Gérez votre base de candidats et suivez vos contacts.' },
   { name: 'Statistiques', icon: <BarChart3 size={15} />, path: '/business/stats', title: 'Statistiques', subtitle: 'Mesurez l\'activité et la performance de votre espace recruteur.' },
-  { name: 'Abonnement', icon: <CreditCard size={15} />, path: '/business/billing', title: 'Abonnement', subtitle: 'Choisissez le plan adapté à votre organisation et gérez votre facturation.' },
+  { name: 'Abonnement', icon: <CreditCard size={15} />, path: '/business/billing', title: 'Abonnement', subtitle: 'Une offre construite sur mesure selon les effectifs de votre organisme.' },
 ];
 
 const tabClass = (isActive: boolean) =>
@@ -25,16 +25,13 @@ const tabClass = (isActive: boolean) =>
       : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
   }`;
 
-// Libellé court du plan pour le badge d'en-tête.
+// Libellé court du plan pour le badge d'en-tête. Modèle sur devis : tout plan
+// « Business … » (posé après signature) = abonné ; sinon période de découverte.
 const planBadge = (plan?: string): { label: string; cls: string } => {
-  switch (plan) {
-    case 'Business Pro':
-      return { label: 'Plan Pro', cls: 'bg-[#7D5CFF] text-white border-transparent' };
-    case 'Business Essentiel':
-      return { label: 'Plan Essentiel', cls: 'bg-[#7D5CFF]/10 text-[#6023C0] dark:text-[#B9A7FF] border-[#7D5CFF]/25' };
-    default:
-      return { label: 'Découverte', cls: 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-900/20 dark:text-amber-400 dark:border-amber-800' };
+  if (plan && plan.startsWith('Business')) {
+    return { label: 'Plan Business', cls: 'bg-[#7D5CFF] text-white border-transparent' };
   }
+  return { label: 'Découverte', cls: 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-900/20 dark:text-amber-400 dark:border-amber-800' };
 };
 
 // Compression du logo côté client : contenu dans 256 px, PNG (transparence conservée).

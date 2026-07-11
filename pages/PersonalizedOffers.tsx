@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search, MapPin, Bookmark, Clock, Edit3, ExternalLink, Briefcase, Euro, Sparkles, Navigation, Send, Check, ChevronLeft, ChevronRight, FileText } from 'lucide-react';
+import { Search, MapPin, Bookmark, Clock, Edit3, ExternalLink, Briefcase, Euro, Sparkles, Navigation, Send, Check, ChevronLeft, ChevronRight, FileText, Building2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
 import { authHeaders } from '../services/authToken';
@@ -25,6 +25,9 @@ export interface JobOffer {
   tags: string[];
   aiInsight: string;
   contactEmail?: string; // email employeur (offres France Travail qui le fournissent)
+  // Offre publiée par un organisme partenaire auquel le candidat est affilié
+  // (espace recruteur) : nom + logo de l'organisme, affichés sur la carte.
+  partner?: { name: string; logoUrl?: string | null };
 }
 
 /* Squelette du nouvel agencement : liste compacte à gauche + panneau à droite. */
@@ -146,13 +149,19 @@ const PersonalizedOffers: React.FC = () => {
           title: offer.title,
           source: offer.source || 'Offre',
           status: 'SENT',
-          notes: offer.url ? `Offre : ${offer.url}` : undefined,
+          notes: offer.partner
+            ? `Offre de ${offer.partner.name} (organisme partenaire, via Joboost)`
+            : (offer.url ? `Offre : ${offer.url}` : undefined),
         }),
       });
       const data = await res.json();
       if (res.ok && data.success) {
         setAppliedKeys((prev) => new Set(prev).add(key));
-        toast.success("Ajoutée à ton suivi (Envoyées) — finalise sur la page de l'offre.");
+        // Offre partenaire : pas de site externe — l'organisme voit la candidature
+        // dans le profil du candidat (section Candidatures de son espace recruteur).
+        toast.success(offer.partner
+          ? `C'est noté ! ${offer.partner.name} voit ta candidature sur ton profil.`
+          : "Ajoutée à ton suivi (Envoyées) — finalise sur la page de l'offre.");
       } else {
         toast.error(data.error || "Impossible d'ajouter au suivi.");
       }
@@ -248,12 +257,25 @@ const PersonalizedOffers: React.FC = () => {
           </div>
         )}
 
+        {/* Offre publiée par l'organisme du candidat : attribution bien visible */}
+        {offer.partner && (
+          <div className={`inline-flex items-center gap-1.5 mb-4 px-2.5 py-1 rounded-full bg-[#7D5CFF]/10 border border-[#7D5CFF]/25 text-[#6D28D9] dark:text-[#B9A7FF] text-[11px] font-bold ${isBest ? 'ml-2' : ''}`}>
+            <Building2 size={12} /> Publiée par votre organisme · {offer.partner.name}
+          </div>
+        )}
+
         {/* Tête : entreprise + titre + badge de compatibilité */}
         <div className="flex items-start justify-between gap-4">
           <div className="flex items-start gap-3.5 min-w-0">
-            <span className={`w-12 h-12 rounded-xl bg-gradient-to-br ${companyGradient(offer.company)} text-white flex items-center justify-center font-bold text-lg shrink-0 shadow-[0_3px_10px_rgba(16,24,40,0.18)]`}>
-              {offer.company?.charAt(0)?.toUpperCase() || '?'}
-            </span>
+            {offer.partner?.logoUrl ? (
+              <span className="w-12 h-12 rounded-xl bg-white dark:bg-slate-800 border border-[#ECEAF6] dark:border-slate-700 flex items-center justify-center shrink-0 overflow-hidden shadow-[0_3px_10px_rgba(16,24,40,0.12)]">
+                <img src={offer.partner.logoUrl} alt={offer.partner.name} className="w-full h-full object-contain p-1" />
+              </span>
+            ) : (
+              <span className={`w-12 h-12 rounded-xl bg-gradient-to-br ${companyGradient(offer.company)} text-white flex items-center justify-center font-bold text-lg shrink-0 shadow-[0_3px_10px_rgba(16,24,40,0.18)]`}>
+                {offer.company?.charAt(0)?.toUpperCase() || '?'}
+              </span>
+            )}
             <div className="min-w-0">
               <h2 className="text-lg md:text-xl font-bold text-[#111827] dark:text-white leading-tight">{offer.title}</h2>
               <p className="text-sm text-[#7D5CFF] font-semibold truncate mt-0.5">{offer.company}</p>
@@ -470,15 +492,26 @@ const PersonalizedOffers: React.FC = () => {
                         : 'bg-white/70 dark:bg-[#111827]/70 border-[#ECEAF6] dark:border-[#1F2937] hover:border-[#7D5CFF]/30 hover:bg-white dark:hover:bg-[#111827]'
                     }`}
                   >
-                    <span className={`w-10 h-10 rounded-xl bg-gradient-to-br ${companyGradient(offer.company)} text-white flex items-center justify-center font-bold text-sm shrink-0 shadow-[0_2px_8px_rgba(16,24,40,0.16)]`}>
-                      {offer.company?.charAt(0)?.toUpperCase() || '?'}
-                    </span>
+                    {offer.partner?.logoUrl ? (
+                      <span className="w-10 h-10 rounded-xl bg-white dark:bg-slate-800 border border-[#ECEAF6] dark:border-slate-700 flex items-center justify-center shrink-0 overflow-hidden shadow-[0_2px_8px_rgba(16,24,40,0.10)]">
+                        <img src={offer.partner.logoUrl} alt={offer.partner.name} className="w-full h-full object-contain p-0.5" />
+                      </span>
+                    ) : (
+                      <span className={`w-10 h-10 rounded-xl bg-gradient-to-br ${companyGradient(offer.company)} text-white flex items-center justify-center font-bold text-sm shrink-0 shadow-[0_2px_8px_rgba(16,24,40,0.16)]`}>
+                        {offer.company?.charAt(0)?.toUpperCase() || '?'}
+                      </span>
+                    )}
                     <span className="min-w-0 flex-1">
                       <span className="flex items-center gap-1.5">
                         {isBest && <Sparkles size={12} className="text-[#7D5CFF] shrink-0" />}
                         <span className="block text-sm font-bold text-[#111827] dark:text-white truncate">{offer.title}</span>
                       </span>
                       <span className="block text-xs text-[#6B7280] dark:text-slate-400 truncate mt-0.5">
+                        {offer.partner && (
+                          <span className="inline-flex items-center gap-1 text-[#6D28D9] dark:text-[#B9A7FF] font-bold mr-1">
+                            <Building2 size={10} /> Votre organisme ·
+                          </span>
+                        )}
                         {offer.company}{offer.location ? ` · ${offer.location}` : ''}
                       </span>
                     </span>

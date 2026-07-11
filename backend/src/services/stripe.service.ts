@@ -26,9 +26,10 @@ function creditsForAmount(amount: number | null | undefined): number {
 
 // Plans de l'espace recruteur (abonnement mensuel, montants en centimes d'euro).
 // Créés dynamiquement via price_data : AUCUN produit à configurer dans le dashboard Stripe.
+// Au-delà des paliers (gros organismes, ex. 8 000 adhérents) → devis Entreprise.
 export const BUSINESS_PLANS: Record<string, { label: string; amount: number }> = {
-  essentiel: { label: 'Business Essentiel', amount: 7900 },  // 79 €/mois
-  pro: { label: 'Business Pro', amount: 19900 },             // 199 €/mois
+  essentiel: { label: 'Business Essentiel', amount: 19900 }, // 199 €/mois
+  pro: { label: 'Business Pro', amount: 39900 },             // 399 €/mois
 };
 
 export const stripeService = {

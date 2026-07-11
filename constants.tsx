@@ -47,11 +47,12 @@ export const SECONDARY_NAV = [
 // Conservé pour compatibilité (anciens imports éventuels).
 export const NAVIGATION = [...PRIMARY_NAV, ...SECONDARY_NAV];
 
-// Navigation business partner
+// Navigation business partner — libellés volontairement COURTS : 5 entrées dans le dock,
+// les intitulés longs se cassaient sur deux lignes (moche) et faisaient déborder la barre.
 export const BUSINESS_NAVIGATION = [
-  { name: 'Tableau de bord', icon: <LayoutDashboard size={18} />, path: 'business/dashboard' },
-  { name: 'Offres d\'emploi', icon: <Megaphone size={18} />, path: 'business/offers' },
-  { name: 'Demandeurs d\'emploi', icon: <Users size={18} />, path: 'business/jobseekers' },
+  { name: 'Accueil', icon: <LayoutDashboard size={18} />, path: 'business/dashboard' },
+  { name: 'Offres', icon: <Megaphone size={18} />, path: 'business/offers' },
+  { name: 'Demandeurs', icon: <Users size={18} />, path: 'business/jobseekers' },
   { name: 'Statistiques', icon: <BarChart3 size={18} />, path: 'business/stats' },
   { name: 'Paramètres', icon: <Settings2 size={18} />, path: 'settings' },
 ];

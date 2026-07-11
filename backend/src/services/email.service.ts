@@ -164,7 +164,64 @@ const buildHtml = (params: SendSpontaneousParams): string => {
   </body></html>`;
 };
 
+// Demande de devis Entreprise (espace recruteur) — envoyée à l'adresse Joboost.
+export interface BusinessQuoteParams {
+  organizationName: string;
+  contactName: string;
+  contactEmail: string;
+  phone?: string;
+  membersCount?: string;     // nb d'adhérents / candidats estimé (texte libre)
+  recruitersCount?: string;  // nb de recruteurs / utilisateurs
+  message?: string;
+}
+
 export const emailService = {
+  /**
+   * Demande de devis Entreprise : email interne envoyé à l'adresse Joboost
+   * (EMAIL_FROM), avec Reply-To sur le recruteur pour répondre en un clic.
+   */
+  sendBusinessQuoteRequest: async (params: BusinessQuoteParams): Promise<SendResult> => {
+    if (!isEmailConfigured()) {
+      return { sent: false, manual: true, messageId: null };
+    }
+    const row = (label: string, value?: string) =>
+      value && value.trim()
+        ? `<tr><td style="padding:6px 12px;color:#6B7280;font-size:13px;white-space:nowrap;">${label}</td><td style="padding:6px 12px;color:#111827;font-size:14px;font-weight:bold;">${escapeHtml(value)}</td></tr>`
+        : '';
+    const html = `<!doctype html><html><body style="font-family:Arial,Helvetica,sans-serif;background:#ffffff;padding:8px;">
+      <h2 style="color:#111827;margin:0 0 4px;">Demande de devis — Joboost Entreprise</h2>
+      <p style="color:#6B7280;font-size:13px;margin:0 0 16px;">Envoyée depuis l'espace recruteur (page Abonnement).</p>
+      <table style="border-collapse:collapse;background:#F9FAFB;border-radius:8px;">
+        ${row('Organisation', params.organizationName)}
+        ${row('Contact', params.contactName)}
+        ${row('Email', params.contactEmail)}
+        ${row('Téléphone', params.phone)}
+        ${row('Adhérents / candidats', params.membersCount)}
+        ${row('Recruteurs / utilisateurs', params.recruitersCount)}
+      </table>
+      ${params.message && params.message.trim()
+        ? `<p style="color:#111827;font-size:14px;line-height:1.6;margin:16px 0 0;white-space:pre-wrap;">${escapeHtml(params.message)}</p>`
+        : ''}
+      <hr style="border:none;border-top:1px solid #E5E7EB;margin:20px 0;"/>
+      <p style="font-size:12px;color:#6B7280;margin:0;">Répondez directement à cet e-mail pour contacter ${escapeHtml(params.contactName || 'le recruteur')}.</p>
+    </body></html>`;
+
+    return sendRaw({
+      fromLabel: 'Joboost — Devis Entreprise',
+      to: EMAIL_FROM,
+      replyTo: params.contactEmail,
+      subject: `Devis Entreprise — ${params.organizationName || 'organisation inconnue'}`,
+      html,
+      text:
+        `Demande de devis Entreprise\n` +
+        `Organisation : ${params.organizationName}\nContact : ${params.contactName} (${params.contactEmail})\n` +
+        (params.phone ? `Téléphone : ${params.phone}\n` : '') +
+        (params.membersCount ? `Adhérents/candidats : ${params.membersCount}\n` : '') +
+        (params.recruitersCount ? `Recruteurs : ${params.recruitersCount}\n` : '') +
+        (params.message ? `\n${params.message}\n` : ''),
+    });
+  },
+
   /**
    * Envoie une candidature spontanée. Renvoie { manual: true } sans rien envoyer
    * si Resend n'est pas configuré (l'appelant proposera alors l'envoi manuel).

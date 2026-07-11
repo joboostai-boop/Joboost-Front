@@ -176,6 +176,20 @@ export const businessBillingApi = {
     const data = await fetchApi('/api/business/billing/portal', { method: 'POST' });
     return data.url;
   },
+
+  // Demande de devis Entreprise (gros volumes) — envoie un email à l'équipe Joboost.
+  requestQuote: async (input: {
+    organizationName: string;
+    phone?: string;
+    membersCount?: string;
+    recruitersCount?: string;
+    message?: string;
+  }): Promise<void> => {
+    await fetchApi('/api/business/billing/quote', {
+      method: 'POST',
+      body: JSON.stringify(input),
+    });
+  },
 };
 
 // ==================== STATS ====================

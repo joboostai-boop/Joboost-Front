@@ -1,10 +1,14 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Crown, UserRound, Settings2, Building2, ChevronDown, LogOut } from 'lucide-react';
 import { PRIMARY_NAV, BUSINESS_NAVIGATION } from '../constants';
 import Logo from './Logo';
 import { User } from '../types';
 import { useAuth } from '../context/AuthContext';
+import { businessAccountApi } from '../services/business';
+
+// Logo d'entreprise du recruteur (affiché dans le dock) — chargé une fois par session.
+let bizLogoCache: string | null | undefined; // undefined = pas encore chargé
 
 interface TopNavProps {
   user: User;
@@ -37,6 +41,17 @@ const TopNav: React.FC<TopNavProps> = ({ user, currentPath }) => {
   const items = isBusiness ? BUSINESS_NAVIGATION : PRIMARY_NAV;
   const homeLink = isBusiness ? '/business/dashboard' : '/home';
 
+  // Logo d'entreprise dans la pastille compte (session recruteur).
+  const [bizLogo, setBizLogo] = useState<string | null>(bizLogoCache ?? null);
+  useEffect(() => {
+    if (!isBusiness || bizLogoCache !== undefined) return;
+    let cancelled = false;
+    businessAccountApi.get()
+      .then((a) => { bizLogoCache = a.logoUrl || null; if (!cancelled) setBizLogo(bizLogoCache); })
+      .catch(() => { bizLogoCache = null; });
+    return () => { cancelled = true; };
+  }, [isBusiness]);
+
   return (
     <header className="hidden md:block sticky top-0 z-40 px-6 pt-4 pb-2 bg-[#F5F4FB]/70 dark:bg-[#030712]/70 backdrop-blur-md">
       <div className="max-w-6xl mx-auto h-16 rounded-2xl bg-white/90 dark:bg-[#111827]/90 backdrop-blur border border-[#ECEAF6] dark:border-[#1F2937] shadow-card px-3 flex items-center justify-between gap-3">
@@ -67,7 +82,7 @@ const TopNav: React.FC<TopNavProps> = ({ user, currentPath }) => {
                     : 'text-slate-500 dark:text-slate-400 hover:text-[#7D5CFF] hover:bg-white dark:hover:bg-[#1F2937]'}`}
               >
                 <span className="flex items-center justify-center w-[18px] h-[18px] shrink-0">{item.icon}</span>
-                <span className="hidden lg:inline">{item.name}</span>
+                <span className="hidden lg:inline whitespace-nowrap">{item.name}</span>
               </Link>
             );
           })}
@@ -92,13 +107,19 @@ const TopNav: React.FC<TopNavProps> = ({ user, currentPath }) => {
               aria-expanded={menuOpen}
               className="press flex items-center gap-1.5 rounded-full pl-1 pr-2 py-1 hover:bg-[#F5F4FB] dark:hover:bg-[#1F2937] transition-colors outline-none"
             >
-              <span className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${
-                isBusiness
-                  ? 'bg-gradient-to-br from-[#7D5CFF] to-[#4F46E5] text-white'
-                  : 'bg-[#7D5CFF]/10 text-[#7D5CFF] dark:text-[#A78BFA] border border-[#7D5CFF]/20'
-              }`}>
-                {isBusiness ? <Building2 size={15} /> : initials(user?.name)}
-              </span>
+              {isBusiness && bizLogo ? (
+                <span className="w-8 h-8 rounded-full overflow-hidden bg-white border border-[#ECEAF6] dark:border-[#1F2937] flex items-center justify-center shrink-0">
+                  <img src={bizLogo} alt="Logo entreprise" className="w-full h-full object-contain p-0.5" />
+                </span>
+              ) : (
+                <span className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${
+                  isBusiness
+                    ? 'bg-gradient-to-br from-[#7D5CFF] to-[#4F46E5] text-white'
+                    : 'bg-[#7D5CFF]/10 text-[#7D5CFF] dark:text-[#A78BFA] border border-[#7D5CFF]/20'
+                }`}>
+                  {isBusiness ? <Building2 size={15} /> : initials(user?.name)}
+                </span>
+              )}
               <ChevronDown size={15} className={`text-slate-400 transition-transform duration-200 ${menuOpen ? 'rotate-180' : ''}`} />
             </button>
 

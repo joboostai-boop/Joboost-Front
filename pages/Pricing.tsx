@@ -328,8 +328,8 @@ const Pricing: React.FC<PricingProps> = ({ user }) => {
             </div>
             <h3 className="text-2xl md:text-3xl font-black tracking-tight">Recrutez avec votre propre espace dédié.</h3>
             <p className="text-slate-300 text-sm md:text-base font-medium max-w-xl leading-relaxed">
-              Vivier de candidats, offres avec matching par compétences, statistiques et assistant IA — dans un espace recruteur clé en main.
-              À partir de <span className="text-white font-black">79 € / mois</span>, sans engagement, avec une période de découverte gratuite.
+              Vivier de candidats, offres diffusées à vos adhérents, matching par compétences, statistiques et assistant IA — dans un espace recruteur clé en main.
+              <span className="text-white font-black"> Tarif sur devis</span>, construit selon vos effectifs, avec une période de découverte gratuite.
             </p>
           </div>
           <div className="relative z-10 shrink-0 flex flex-col gap-3">

@@ -803,6 +803,11 @@ const BusinessJobseekers: React.FC = () => {
                 <div>
                   <label className="input-label">E-mail</label>
                   <input className="input-pro" type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} placeholder="(facultatif)" />
+                  {!editingId && (
+                    <p className="text-[11px] text-slate-400 mt-1.5 leading-snug">
+                      Si cet e-mail correspond à un compte Joboost, le candidat est rattaché à votre organisme et voit vos offres dans son espace.
+                    </p>
+                  )}
                 </div>
                 <div>
                   <label className="input-label">Téléphone</label>

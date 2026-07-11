@@ -3,10 +3,15 @@ import { randomUUID } from 'crypto';
 import { prisma } from '../db';
 import { geminiService } from '../services/gemini.service';
 import { stripeService, BUSINESS_PLANS } from '../services/stripe.service';
+import { emailService } from '../services/email.service';
 
-// Plans donnant accès à l'assistant IA recruteur. « Essai » (période de découverte)
-// y a droit pour montrer la valeur du produit avant l'abonnement.
-const AI_ENABLED_PLANS = ['Essai', 'Business Pro'];
+// Modèle SUR DEVIS : « Essai » (période de découverte) a accès à tout, y compris l'IA,
+// mais avec un vivier plafonné. Un plan « Business … » (posé après signature du devis)
+// débloque le vivier illimité.
+const aiEnabledFor = (plan: string): boolean => plan === 'Essai' || plan.startsWith('Business');
+const DISCOVERY_VIVIER_LIMIT = 100;
+const vivierLimitFor = (plan: string): number =>
+  plan.startsWith('Business') ? Number.POSITIVE_INFINITY : DISCOVERY_VIVIER_LIMIT;
 
 export const businessController = {
 
@@ -463,20 +468,61 @@ export const businessController = {
         return res.status(400).json({ success: false, error: 'Le nom du candidat est requis.' });
       }
 
+      // Période de découverte : vivier plafonné. Un plan Business (après devis) = illimité.
+      const recruiter = await prisma.user.findUnique({ where: { id: businessId } });
+      const limit = vivierLimitFor(recruiter?.plan || 'Essai');
+      const currentCount = await prisma.businessAffiliation.count({ where: { businessId } });
+      if (currentCount >= limit) {
+        return res.status(403).json({
+          success: false,
+          code: 'PLAN_LIMIT',
+          error: `Votre vivier a atteint la limite de la période de découverte (${DISCOVERY_VIVIER_LIMIT} candidats). Demandez votre devis dans l'onglet Abonnement pour passer en illimité.`,
+        });
+      }
+
       const cleanSkills = Array.isArray(skills)
         ? skills.map((s: string) => String(s).trim()).filter(Boolean)
         : [];
 
-      // Email : si fourni, on refuse les doublons (un compte existe déjà avec cet email).
-      // Sinon on synthétise une adresse interne unique (le candidat n'a pas de compte).
+      // Email : si l'adresse correspond à un compte candidat Joboost existant, on RATTACHE
+      // ce compte au vivier (affiliation) au lieu de refuser → l'adhérent verra les offres
+      // de l'organisme dans son flux Joboost. Sans email, on synthétise une adresse interne.
       let finalEmail: string;
       const provided = email ? String(email).trim().toLowerCase() : '';
       if (provided) {
         const existing = await prisma.user.findUnique({ where: { email: provided } });
         if (existing) {
-          return res.status(409).json({
-            success: false,
-            error: 'Un profil avec cet e-mail existe déjà. Utilisez un autre e-mail ou laissez le champ vide.',
+          if (existing.role !== 'CANDIDATE') {
+            return res.status(409).json({ success: false, error: 'Cet e-mail correspond à un compte non candidat (recruteur/admin).' });
+          }
+          if (existing.managedByBusinessId && existing.managedByBusinessId !== businessId) {
+            return res.status(409).json({ success: false, error: 'Ce profil appartient déjà au vivier d\'un autre organisme.' });
+          }
+          const already = await prisma.businessAffiliation.findFirst({
+            where: { businessId, jobseekerId: existing.id },
+          });
+          if (already) {
+            return res.status(409).json({ success: false, error: 'Ce candidat est déjà dans votre vivier.' });
+          }
+          const affiliation = await prisma.businessAffiliation.create({
+            data: { businessId, jobseekerId: existing.id, status: 'active' },
+          });
+          return res.status(201).json({
+            success: true,
+            linkedExistingAccount: true, // le front peut préciser « compte Joboost rattaché »
+            jobseeker: {
+              affiliationId: affiliation.id,
+              affiliationStatus: affiliation.status,
+              affiliatedAt: affiliation.affiliatedAt,
+              id: existing.id,
+              name: existing.name,
+              email: existing.email,
+              title: existing.title,
+              skills: existing.skills,
+              city: existing.city,
+              phone: existing.phone,
+              updatedAt: existing.updatedAt,
+            },
           });
         }
         finalEmail = provided;
@@ -705,6 +751,46 @@ export const businessController = {
     }
   },
 
+  // Demande de devis Entreprise : envoie un email interne à Joboost (Reply-To = recruteur).
+  requestQuote: async (req: Request, res: Response) => {
+    try {
+      const { organizationName, phone, membersCount, recruitersCount, message } = req.body || {};
+
+      const user = await prisma.user.findUnique({
+        where: { id: req.userId! },
+        include: { organization: true },
+      });
+      if (!user) return res.status(404).json({ success: false, error: 'Compte introuvable.' });
+
+      const orgName = String(organizationName || user.organization?.name || '').trim();
+      if (!orgName) {
+        return res.status(400).json({ success: false, error: "Indiquez le nom de votre organisation." });
+      }
+
+      const result = await emailService.sendBusinessQuoteRequest({
+        organizationName: orgName.slice(0, 200),
+        contactName: user.name,
+        contactEmail: user.email,
+        phone: phone ? String(phone).slice(0, 50) : undefined,
+        membersCount: membersCount ? String(membersCount).slice(0, 100) : undefined,
+        recruitersCount: recruitersCount ? String(recruitersCount).slice(0, 100) : undefined,
+        message: message ? String(message).slice(0, 2000) : undefined,
+      });
+
+      if (!result.sent) {
+        return res.status(502).json({
+          success: false,
+          error: "L'envoi automatique est indisponible — écrivez-nous directement à joboost.ai@gmail.com.",
+        });
+      }
+
+      res.json({ success: true });
+    } catch (error: any) {
+      console.error('Business requestQuote error:', error);
+      res.status(500).json({ success: false, error: "Erreur lors de l'envoi de la demande de devis." });
+    }
+  },
+
   // ==================== IA RECRUTEUR ====================
 
   // Rédige le corps d'une offre (+ compétences suggérées) à partir des infos du formulaire.
@@ -721,11 +807,11 @@ export const businessController = {
         include: { organization: true },
       });
 
-      if (user && !AI_ENABLED_PLANS.includes(user.plan)) {
+      if (user && !aiEnabledFor(user.plan)) {
         return res.status(403).json({
           success: false,
           code: 'PLAN_REQUIRED',
-          error: "L'assistant IA est inclus dans le plan Business Pro. Rendez-vous dans l'onglet Abonnement pour le débloquer.",
+          error: "L'assistant IA n'est pas actif sur votre compte. Rendez-vous dans l'onglet Abonnement.",
         });
       }
 
@@ -768,11 +854,11 @@ export const businessController = {
         include: { organization: true },
       });
 
-      if (recruiter && !AI_ENABLED_PLANS.includes(recruiter.plan)) {
+      if (recruiter && !aiEnabledFor(recruiter.plan)) {
         return res.status(403).json({
           success: false,
           code: 'PLAN_REQUIRED',
-          error: "Le message d'approche IA est inclus dans le plan Business Pro. Rendez-vous dans l'onglet Abonnement pour le débloquer.",
+          error: "Le message d'approche IA n'est pas actif sur votre compte. Rendez-vous dans l'onglet Abonnement.",
         });
       }
 

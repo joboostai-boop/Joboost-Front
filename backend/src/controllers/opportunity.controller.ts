@@ -16,6 +16,74 @@ const dedupeOffers = (offers: FtOffer[]): FtOffer[] => {
   return out;
 };
 
+// Libellé relatif FR pour la date de publication d'une offre partenaire.
+const relativeLabel = (d?: Date | null): string => {
+  if (!d) return 'Récemment';
+  const days = Math.floor((Date.now() - d.getTime()) / 86_400_000);
+  if (days <= 0) return "Aujourd'hui";
+  if (days === 1) return 'Hier';
+  return `Il y a ${days} jours`;
+};
+
+// Offres publiées par les organismes auxquels le candidat est AFFILIÉ (espace recruteur).
+// Elles apparaissent en tête du flux, clairement attribuées à l'organisme (nom + logo).
+const getPartnerOffers = async (user: any, q: string, contractType?: string): Promise<any[]> => {
+  const affiliations = await prisma.businessAffiliation.findMany({
+    where: { jobseekerId: user.id },
+    select: { businessId: true },
+  });
+  if (affiliations.length === 0) return [];
+
+  const now = new Date();
+  const offers = await prisma.businessOffer.findMany({
+    where: {
+      businessId: { in: affiliations.map((a) => a.businessId) },
+      isPublished: true,
+      OR: [{ expiresAt: null }, { expiresAt: { gte: now } }],
+    },
+    include: { business: { include: { organization: true } } },
+    orderBy: [{ publishedAt: 'desc' }, { createdAt: 'desc' }],
+    take: 20,
+  });
+
+  const qNorm = q.toLowerCase();
+  const userSkills = new Set(
+    (Array.isArray(user.skills) ? user.skills : [])
+      .map((s: any) => String(typeof s === 'string' ? s : s?.name || '').trim().toLowerCase())
+      .filter(Boolean),
+  );
+
+  return offers
+    // Respecte la recherche libre et le filtre contrat pour ne pas polluer les résultats.
+    .filter((o) => !qNorm || `${o.title} ${o.description}`.toLowerCase().includes(qNorm))
+    .filter((o) => !contractType || (o.contractType || '').toUpperCase() === contractType)
+    .map((o) => {
+      const org = o.business?.organization;
+      const required = (o.requiredSkills || []).map((s) => s.trim().toLowerCase()).filter(Boolean);
+      const matched = required.filter((s) => userSkills.has(s));
+      // Score heuristique (même esprit que FT/Adzuna) : socle élevé — l'organisme
+      // s'adresse à ses propres adhérents — affiné par le recoupement de compétences.
+      const matchScore = required.length > 0
+        ? 50 + Math.round((matched.length / required.length) * 50)
+        : 70;
+      return {
+        id: `partner-${o.id}`,
+        title: o.title,
+        company: org?.name || 'Votre organisme',
+        location: o.location || '',
+        salary: o.salaryRange || '',
+        type: o.contractType || '',
+        matchScore,
+        postedDate: relativeLabel(o.publishedAt || o.createdAt),
+        source: 'Partenaire',
+        url: '',
+        tags: o.requiredSkills || [],
+        aiInsight: o.description,
+        partner: { name: org?.name || 'Votre organisme', logoUrl: org?.logoUrl || null },
+      };
+    });
+};
+
 export const opportunityController = {
   // Recommandations : vraies offres France Travail + Adzuna sourcées sur le profil
   // (ou sur une recherche libre), avec repli sur des exemples simulés si aucune source
@@ -39,6 +107,10 @@ export const opportunityController = {
         ? (req.query.contractType as string)
         : undefined;
 
+      // 0. Offres des organismes partenaires du candidat (toujours en tête de flux).
+      const partnerOffers = await getPartnerOffers(user, q, contractType)
+        .catch((e: any) => { console.error('Offres partenaires indisponibles :', e?.message || e); return [] as any[]; });
+
       // 1. Vraies offres : France Travail + Adzuna interrogés en parallèle (chacun protégé).
       const sources: Promise<FtOffer[]>[] = [];
       if (isFranceTravailConfigured()) {
@@ -57,13 +129,14 @@ export const opportunityController = {
       if (sources.length > 0) {
         const settled = await Promise.all(sources);
         const merged = dedupeOffers(settled.flat()).sort((a, b) => b.matchScore - a.matchScore);
-        if (merged.length > 0) {
+        if (merged.length > 0 || partnerOffers.length > 0) {
           const usedSources = Array.from(new Set(merged.map((o) => o.source)));
           return res.json({
             success: true,
             source: usedSources.length > 1 ? 'mixed' : (usedSources[0] === 'Adzuna' ? 'adzuna' : 'francetravail'),
-            sources: usedSources,
-            recommendations: merged.slice(0, 150),
+            sources: partnerOffers.length > 0 ? ['Partenaire', ...usedSources] : usedSources,
+            // Les offres de l'organisme du candidat passent devant les offres externes.
+            recommendations: [...partnerOffers, ...merged].slice(0, 150),
           });
         }
         // Des sources réelles SONT configurées mais ne renvoient rien → vrai « aucun résultat ».
@@ -124,7 +197,7 @@ export const opportunityController = {
         }
       ];
 
-      res.json({ success: true, source: 'demo', recommendations: simulatedRecommendations });
+      res.json({ success: true, source: 'demo', recommendations: [...partnerOffers, ...simulatedRecommendations] });
     } catch (error: any) {
       console.error(error);
       res.status(500).json({ success: false, error: "Erreur récupération recommandations" });
