@@ -51,7 +51,7 @@ const Register = () => {
 
       if (data.success) {
         login(data.user, data.token);
-        navigate(isBusiness ? '/business/offers' : '/home');
+        navigate(isBusiness ? '/business/dashboard' : '/home');
       } else {
         setError(data.error || 'Erreur lors de la création');
       }

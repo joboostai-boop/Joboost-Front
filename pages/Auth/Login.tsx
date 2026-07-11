@@ -30,7 +30,7 @@ const Login = () => {
         login(data.user, data.token);
         // Redirect based on role
         if (data.user.role === 'BUSINESS_PARTNER') {
-          navigate('/business/offers');
+          navigate('/business/dashboard');
         } else {
           navigate('/home');
         }

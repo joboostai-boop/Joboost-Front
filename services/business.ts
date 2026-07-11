@@ -149,6 +149,33 @@ export const businessAccountApi = {
     const data = await fetchApi('/api/business/account');
     return data.account;
   },
+
+  update: async (input: { name?: string; companyName?: string; logoUrl?: string | null }): Promise<BusinessAccount> => {
+    const data = await fetchApi('/api/business/account', {
+      method: 'PUT',
+      body: JSON.stringify(input),
+    });
+    return data.account;
+  },
+};
+
+// ==================== FACTURATION (STRIPE) ====================
+
+export const businessBillingApi = {
+  // Lance le paiement d'un abonnement Business → URL Stripe Checkout.
+  checkout: async (plan: 'essentiel' | 'pro'): Promise<string> => {
+    const data = await fetchApi('/api/business/billing/checkout', {
+      method: 'POST',
+      body: JSON.stringify({ plan }),
+    });
+    return data.url;
+  },
+
+  // Portail client Stripe (factures, carte, résiliation).
+  portal: async (): Promise<string> => {
+    const data = await fetchApi('/api/business/billing/portal', { method: 'POST' });
+    return data.url;
+  },
 };
 
 // ==================== STATS ====================

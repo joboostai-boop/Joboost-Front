@@ -27,7 +27,7 @@ const Topbar: React.FC<TopbarProps> = ({ user }) => {
   return (
     <header className="md:hidden sticky top-0 z-30 h-14 flex items-center justify-between gap-3 px-4 bg-white/85 dark:bg-[#0B1120]/85 backdrop-blur border-b border-slate-200 dark:border-slate-800">
       {/* Logo mobile (la sidebar est masquée < md) */}
-      <Link to={isBusiness ? '/business/offers' : '/home'} className="md:hidden flex items-center" aria-label="Accueil">
+      <Link to={isBusiness ? '/business/dashboard' : '/home'} className="md:hidden flex items-center" aria-label="Accueil">
         <Logo className="h-7" />
       </Link>
       {/* Espace à gauche sur desktop */}

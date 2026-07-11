@@ -36,6 +36,10 @@ router.patch('/jobseekers/:id/note', asyncHandler(businessController.updateJobse
 router.delete('/jobseekers/:id', asyncHandler(businessController.removeJobseeker));
 router.post('/jobseekers/:id/outreach', aiLimiter, asyncHandler(businessController.generateOutreach));
 
+// --- Facturation (Stripe) ---
+router.post('/billing/checkout', asyncHandler(businessController.createBillingCheckout));
+router.post('/billing/portal', asyncHandler(businessController.createBillingPortal));
+
 // --- Statistiques ---
 router.get('/stats', asyncHandler(businessController.getStats));
 

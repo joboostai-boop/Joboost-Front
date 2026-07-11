@@ -1,6 +1,6 @@
 import React from 'react';
 import { PRIMARY_NAV } from '../constants';
-import { Plus, Megaphone, Users, BarChart3 } from 'lucide-react';
+import { Plus, Megaphone, Users, BarChart3, LayoutDashboard } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
@@ -11,6 +11,7 @@ interface MobileNavProps {
 
 /* ─────────── Business bottom bar items ─────────── */
 const BUSINESS_BOTTOM_ITEMS = [
+  { label: 'Accueil', icon: <LayoutDashboard size={20} />, path: '/business/dashboard' },
   { label: 'Offres', icon: <Megaphone size={20} />, path: '/business/offers' },
   { label: 'Demandeurs', icon: <Users size={20} />, path: '/business/jobseekers' },
   { label: 'Stats', icon: <BarChart3 size={20} />, path: '/business/stats' },

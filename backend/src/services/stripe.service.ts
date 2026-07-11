@@ -24,6 +24,13 @@ function creditsForAmount(amount: number | null | undefined): number {
   return match ? match.credits : 0;
 }
 
+// Plans de l'espace recruteur (abonnement mensuel, montants en centimes d'euro).
+// Créés dynamiquement via price_data : AUCUN produit à configurer dans le dashboard Stripe.
+export const BUSINESS_PLANS: Record<string, { label: string; amount: number }> = {
+  essentiel: { label: 'Business Essentiel', amount: 7900 },  // 79 €/mois
+  pro: { label: 'Business Pro', amount: 19900 },             // 199 €/mois
+};
+
 export const stripeService = {
   /**
    * Récupère ou crée un Customer Stripe pour un utilisateur donné
@@ -81,6 +88,59 @@ export const stripeService = {
   },
 
   /**
+   * Crée une session Checkout pour un abonnement de l'espace recruteur.
+   * Le prix est défini inline (price_data) → rien à créer côté dashboard Stripe.
+   */
+  createBusinessCheckoutSession: async (userId: string, email: string, planKey: string): Promise<{ url: string }> => {
+    const plan = BUSINESS_PLANS[planKey];
+    if (!plan) throw new Error('Plan inconnu.');
+
+    const customerId = await stripeService.createOrGetCustomer(userId, email);
+
+    const session = await stripe.checkout.sessions.create({
+      customer: customerId,
+      mode: 'subscription',
+      payment_method_types: ['card'],
+      line_items: [
+        {
+          quantity: 1,
+          price_data: {
+            currency: 'eur',
+            unit_amount: plan.amount,
+            recurring: { interval: 'month' },
+            product_data: {
+              name: `Joboost ${plan.label}`,
+              description: 'Abonnement mensuel — espace recruteur Joboost',
+            },
+          },
+        },
+      ],
+      success_url: `${FRONTEND_URL}/business/billing?payment=success`,
+      cancel_url: `${FRONTEND_URL}/business/billing?payment=canceled`,
+      metadata: { userId, businessPlan: planKey },
+    });
+
+    if (!session.url) throw new Error('Impossible de créer la session de paiement');
+    return { url: session.url };
+  },
+
+  /**
+   * Portail client Stripe : le recruteur gère lui-même sa carte, ses factures
+   * et la résiliation. Nécessite un customer Stripe existant.
+   */
+  createBillingPortalSession: async (userId: string): Promise<{ url: string }> => {
+    const user = await prisma.user.findUnique({ where: { id: userId } });
+    if (!user?.stripeCustomerId) {
+      throw new Error("Aucun abonnement Stripe n'est associé à ce compte.");
+    }
+    const portal = await stripe.billingPortal.sessions.create({
+      customer: user.stripeCustomerId,
+      return_url: `${FRONTEND_URL}/business/billing`,
+    });
+    return { url: portal.url };
+  },
+
+  /**
    * Traite les webhooks Stripe entrants
    */
   handleWebhookEvent: async (payload: Buffer, sig: string): Promise<{ received: true }> => {
@@ -106,10 +166,16 @@ export const stripeService = {
           : session.customer?.id;
 
         if (session.mode === 'subscription') {
-          // Abonnement (Élite mensuel via checkout OU annuel via Payment Link)
+          // Abonnement : Élite candidat (checkout/Payment Link) OU plan Business
+          // (metadata.businessPlan posée par createBusinessCheckoutSession).
           const subscriptionId = typeof session.subscription === 'string'
             ? session.subscription
             : session.subscription?.id;
+
+          const businessPlanKey = session.metadata?.businessPlan;
+          const planLabel = businessPlanKey
+            ? (BUSINESS_PLANS[businessPlanKey]?.label ?? 'Business Essentiel')
+            : 'Pro';
 
           await prisma.user.update({
             where: { id: userId },
@@ -118,7 +184,7 @@ export const stripeService = {
               ...(customerId ? { stripeCustomerId: customerId } : {}),
               stripeSubscriptionId: subscriptionId ?? undefined,
               subscriptionStatus: 'active',
-              plan: 'Pro',
+              plan: planLabel,
             },
           });
         } else if (session.mode === 'payment') {
@@ -180,7 +246,8 @@ export const stripeService = {
           where: { id: user.id },
           data: {
             subscriptionStatus: 'canceled',
-            plan: 'Gratuit',
+            // Un recruteur résilié retombe sur la période de découverte, un candidat sur Gratuit.
+            plan: user.role === 'BUSINESS_PARTNER' ? 'Essai' : 'Gratuit',
           },
         });
         break;

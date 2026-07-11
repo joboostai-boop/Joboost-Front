@@ -35,7 +35,7 @@ const TopNav: React.FC<TopNavProps> = ({ user, currentPath }) => {
   const isBusiness = user?.role === 'BUSINESS_PARTNER';
   const isFree = !isBusiness && (!user?.plan || user.plan === 'Gratuit');
   const items = isBusiness ? BUSINESS_NAVIGATION : PRIMARY_NAV;
-  const homeLink = isBusiness ? '/business/offers' : '/home';
+  const homeLink = isBusiness ? '/business/dashboard' : '/home';
 
   return (
     <header className="hidden md:block sticky top-0 z-40 px-6 pt-4 pb-2 bg-[#F5F4FB]/70 dark:bg-[#030712]/70 backdrop-blur-md">
@@ -117,11 +117,9 @@ const TopNav: React.FC<TopNavProps> = ({ user, currentPath }) => {
                       <UserRound size={16} /> Mon profil
                     </Link>
                   )}
-                  {!isBusiness && (
-                    <Link to="/pricing" role="menuitem" onClick={() => setMenuOpen(false)} className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium text-slate-600 dark:text-slate-300 hover:bg-[#F5F4FB] dark:hover:bg-[#1F2937] hover:text-[#7D5CFF] transition-colors">
-                      <Crown size={16} /> Abonnement
-                    </Link>
-                  )}
+                  <Link to={isBusiness ? '/business/billing' : '/pricing'} role="menuitem" onClick={() => setMenuOpen(false)} className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium text-slate-600 dark:text-slate-300 hover:bg-[#F5F4FB] dark:hover:bg-[#1F2937] hover:text-[#7D5CFF] transition-colors">
+                    <Crown size={16} /> Abonnement
+                  </Link>
                   <Link to="/settings" role="menuitem" onClick={() => setMenuOpen(false)} className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium text-slate-600 dark:text-slate-300 hover:bg-[#F5F4FB] dark:hover:bg-[#1F2937] hover:text-[#7D5CFF] transition-colors">
                     <Settings2 size={16} /> Paramètres
                   </Link>

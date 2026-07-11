@@ -2,6 +2,11 @@ import { Request, Response } from 'express';
 import { randomUUID } from 'crypto';
 import { prisma } from '../db';
 import { geminiService } from '../services/gemini.service';
+import { stripeService, BUSINESS_PLANS } from '../services/stripe.service';
+
+// Plans donnant accès à l'assistant IA recruteur. « Essai » (période de découverte)
+// y a droit pour montrer la valeur du produit avant l'abonnement.
+const AI_ENABLED_PLANS = ['Essai', 'Business Pro'];
 
 export const businessController = {
 
@@ -22,6 +27,9 @@ export const businessController = {
           email: user.email,
           plan: user.plan,
           companyName: user.organization?.name || '',
+          logoUrl: user.organization?.logoUrl || null,
+          subscriptionStatus: user.subscriptionStatus || null,
+          subscriptionEndsAt: user.subscriptionEndsAt || null,
         },
       });
     } catch (error: any) {
@@ -30,10 +38,11 @@ export const businessController = {
     }
   },
 
-  // Met à jour le nom du recruteur et le nom de l'entreprise (crée l'organisation si absente).
+  // Met à jour le nom du recruteur, le nom de l'entreprise et son logo
+  // (crée l'organisation si absente).
   updateAccount: async (req: Request, res: Response) => {
     try {
-      const { name, companyName } = req.body;
+      const { name, companyName, logoUrl } = req.body;
       const user = await prisma.user.findUnique({ where: { id: req.userId! } });
       if (!user) return res.status(404).json({ success: false, error: 'Compte introuvable.' });
 
@@ -41,12 +50,24 @@ export const businessController = {
         await prisma.user.update({ where: { id: user.id }, data: { name: name.trim() } });
       }
 
-      if (typeof companyName === 'string' && companyName.trim()) {
-        const cn = companyName.trim();
+      // Validation du logo : data URL image, taille bornée (stockée en base).
+      if (logoUrl !== undefined && logoUrl !== null) {
+        if (typeof logoUrl !== 'string' || !logoUrl.startsWith('data:image/') || logoUrl.length > 500_000) {
+          return res.status(400).json({ success: false, error: 'Logo invalide ou trop lourd (500 Ko max).' });
+        }
+      }
+
+      const orgData: any = {};
+      if (typeof companyName === 'string' && companyName.trim()) orgData.name = companyName.trim();
+      if (logoUrl !== undefined) orgData.logoUrl = logoUrl; // null = retirer le logo
+
+      if (Object.keys(orgData).length > 0) {
         if (user.organizationId) {
-          await prisma.organization.update({ where: { id: user.organizationId }, data: { name: cn } });
+          await prisma.organization.update({ where: { id: user.organizationId }, data: orgData });
         } else {
-          const org = await prisma.organization.create({ data: { name: cn } });
+          const org = await prisma.organization.create({
+            data: { name: orgData.name || 'Mon entreprise', logoUrl: orgData.logoUrl ?? null },
+          });
           await prisma.user.update({ where: { id: user.id }, data: { organizationId: org.id } });
         }
       }
@@ -59,6 +80,9 @@ export const businessController = {
           email: updated?.email,
           plan: updated?.plan,
           companyName: updated?.organization?.name || '',
+          logoUrl: updated?.organization?.logoUrl || null,
+          subscriptionStatus: updated?.subscriptionStatus || null,
+          subscriptionEndsAt: updated?.subscriptionEndsAt || null,
         },
       });
     } catch (error: any) {
@@ -650,10 +674,41 @@ export const businessController = {
     }
   },
 
+  // ==================== FACTURATION (STRIPE) ====================
+
+  // Lance un abonnement Business (Essentiel/Pro) via Stripe Checkout.
+  createBillingCheckout: async (req: Request, res: Response) => {
+    try {
+      const planKey = String(req.body?.plan || '');
+      if (!BUSINESS_PLANS[planKey]) {
+        return res.status(400).json({ success: false, error: 'Plan inconnu.' });
+      }
+      const user = await prisma.user.findUnique({ where: { id: req.userId! } });
+      if (!user) return res.status(404).json({ success: false, error: 'Compte introuvable.' });
+
+      const { url } = await stripeService.createBusinessCheckoutSession(user.id, user.email, planKey);
+      res.json({ success: true, url });
+    } catch (error: any) {
+      console.error('Business createBillingCheckout error:', error);
+      res.status(500).json({ success: false, error: error.message || 'Erreur lors de la création du paiement.' });
+    }
+  },
+
+  // Ouvre le portail client Stripe (factures, moyen de paiement, résiliation).
+  createBillingPortal: async (req: Request, res: Response) => {
+    try {
+      const { url } = await stripeService.createBillingPortalSession(req.userId!);
+      res.json({ success: true, url });
+    } catch (error: any) {
+      console.error('Business createBillingPortal error:', error);
+      res.status(500).json({ success: false, error: error.message || "Erreur lors de l'ouverture du portail de facturation." });
+    }
+  },
+
   // ==================== IA RECRUTEUR ====================
 
   // Rédige le corps d'une offre (+ compétences suggérées) à partir des infos du formulaire.
-  // Action gratuite, bornée par le aiLimiter posé sur la route.
+  // Réservé aux plans avec IA (Business Pro + période de découverte), borné par aiLimiter.
   assistOffer: async (req: Request, res: Response) => {
     try {
       const { title, contractType, location, salaryRange, skills, notes } = req.body;
@@ -665,6 +720,14 @@ export const businessController = {
         where: { id: req.userId! },
         include: { organization: true },
       });
+
+      if (user && !AI_ENABLED_PLANS.includes(user.plan)) {
+        return res.status(403).json({
+          success: false,
+          code: 'PLAN_REQUIRED',
+          error: "L'assistant IA est inclus dans le plan Business Pro. Rendez-vous dans l'onglet Abonnement pour le débloquer.",
+        });
+      }
 
       const data = await geminiService.generateJobOfferContent({
         title: String(title).trim(),
@@ -704,6 +767,14 @@ export const businessController = {
         where: { id: businessId },
         include: { organization: true },
       });
+
+      if (recruiter && !AI_ENABLED_PLANS.includes(recruiter.plan)) {
+        return res.status(403).json({
+          success: false,
+          code: 'PLAN_REQUIRED',
+          error: "Le message d'approche IA est inclus dans le plan Business Pro. Rendez-vous dans l'onglet Abonnement pour le débloquer.",
+        });
+      }
 
       const message = await geminiService.generateCandidateOutreach({
         candidateName: affiliation.jobseeker.name || 'Candidat',

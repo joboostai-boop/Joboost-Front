@@ -35,6 +35,7 @@ const ForgotPassword = React.lazy(() => import('./pages/Auth/ForgotPassword'));
 const ResetPassword = React.lazy(() => import('./pages/Auth/ResetPassword'));
 const BusinessLayout = React.lazy(() => import('./pages/BusinessLayout'));
 const BusinessDashboard = React.lazy(() => import('./pages/BusinessDashboard'));
+const BusinessBilling = React.lazy(() => import('./pages/BusinessBilling'));
 const BusinessOffers = React.lazy(() => import('./pages/BusinessOffers'));
 const BusinessJobseekers = React.lazy(() => import('./pages/BusinessJobseekers'));
 const BusinessStatsPage = React.lazy(() => import('./pages/BusinessStats'));
@@ -205,6 +206,7 @@ const App: React.FC = () => {
                <Route path="offers" element={<BusinessOffers />} />
                <Route path="jobseekers" element={<BusinessJobseekers />} />
                <Route path="stats" element={<BusinessStatsPage />} />
+               <Route path="billing" element={<BusinessBilling />} />
             </Route>
 
             {/* Configurations transverses */}

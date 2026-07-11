@@ -18,9 +18,10 @@ enum Role {
 model Organization {
   id        String   @id @default(uuid())
   name      String
+  logoUrl   String?  // logo de l'entreprise (data URL compressée côté client, ≤ 500 Ko)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  
+
   users     User[]
 }
 

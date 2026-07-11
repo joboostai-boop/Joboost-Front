@@ -326,18 +326,24 @@ const Pricing: React.FC<PricingProps> = ({ user }) => {
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 text-[#A78BFA] text-[10px] font-black uppercase tracking-[0.2em]">
               <Building2 size={12} /> Recruteurs & Entreprises
             </div>
-            <h3 className="text-2xl md:text-3xl font-black tracking-tight">Recrutez dans notre vivier de talents.</h3>
+            <h3 className="text-2xl md:text-3xl font-black tracking-tight">Recrutez avec votre propre espace dédié.</h3>
             <p className="text-slate-300 text-sm md:text-base font-medium max-w-xl leading-relaxed">
-              Diffusez vos offres, accédez aux profils qualifiés et suivez vos recrutements depuis un tableau de bord dédié.
-              Offres sur mesure pour cabinets, PME et grands comptes — avec essai gratuit de 7 jours.
+              Vivier de candidats, offres avec matching par compétences, statistiques et assistant IA — dans un espace recruteur clé en main.
+              À partir de <span className="text-white font-black">79 € / mois</span>, sans engagement, avec une période de découverte gratuite.
             </p>
           </div>
-          <div className="relative z-10 shrink-0">
+          <div className="relative z-10 shrink-0 flex flex-col gap-3">
+            <a
+              href="/auth/register"
+              className="inline-flex items-center justify-center gap-2 px-8 py-5 bg-white text-slate-900 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] hover:bg-[#7D5CFF]/5 transition-all shadow-xl hover:-translate-y-1"
+            >
+              <Building2 size={16} /> Créer un espace recruteur
+            </a>
             <a
               href={`mailto:${B2B_CONTACT_EMAIL}?subject=Demande%20Joboost%20Business%20(Recruteur)`}
-              className="inline-flex items-center gap-2 px-8 py-5 bg-white text-slate-900 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] hover:bg-[#7D5CFF]/5 transition-all shadow-xl hover:-translate-y-1"
+              className="inline-flex items-center justify-center gap-2 text-[11px] font-bold text-slate-300 hover:text-white transition-colors"
             >
-              <Mail size={16} /> Nous contacter
+              <Mail size={13} /> Ou parlez-nous de votre besoin
             </a>
           </div>
         </div>
