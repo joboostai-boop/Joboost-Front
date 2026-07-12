@@ -39,9 +39,27 @@ app.use(helmet({
   crossOriginResourcePolicy: { policy: 'cross-origin' },
 }));
 
+// Origines autorisées (CORS). On accepte une LISTE plutôt qu'une seule adresse :
+// l'ancienne (netlify.app), la nouvelle (joboost.app + www), le dev local, et tout
+// ce qui est passé dans FRONTEND_URL / EXTRA_ORIGINS. Ainsi la bascule de domaine
+// ne casse jamais la connexion (les deux adresses marchent en parallèle).
+const allowedOrigins = [
+  'http://localhost:3000',
+  'https://joboost.netlify.app',
+  'https://joboost.app',
+  'https://www.joboost.app',
+  process.env.FRONTEND_URL,
+  ...(process.env.EXTRA_ORIGINS ? process.env.EXTRA_ORIGINS.split(',').map((s) => s.trim()) : []),
+].filter(Boolean) as string[];
+
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:3000',
-  credentials: true
+  origin: (origin, callback) => {
+    // Pas d'origine (appels serveur-à-serveur, curl, apps mobiles) → autorisé.
+    if (!origin || allowedOrigins.includes(origin)) return callback(null, true);
+    console.warn(`CORS refusé pour l'origine : ${origin}`);
+    return callback(new Error('Origine non autorisée par CORS'));
+  },
+  credentials: true,
 }));
 
 // ⚠️ Stripe Webhook: doit recevoir le body brut AVANT express.json()
