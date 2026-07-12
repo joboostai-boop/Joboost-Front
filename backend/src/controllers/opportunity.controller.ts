@@ -204,6 +204,20 @@ export const opportunityController = {
     }
   },
 
+  // Offres des organismes partenaires du candidat, sans les sources externes
+  // (endpoint léger pour l'Accueil : pas d'appel France Travail / Adzuna).
+  getPartnerOffers: async (req: Request, res: Response) => {
+    try {
+      const user = await prisma.user.findUnique({ where: { id: req.userId! } });
+      if (!user) return res.status(404).json({ success: false, error: "Utilisateur non trouvé" });
+      const offers = await getPartnerOffers(user, '', undefined);
+      res.json({ success: true, offers });
+    } catch (error: any) {
+      console.error(error);
+      res.status(500).json({ success: false, error: "Erreur récupération offres partenaires" });
+    }
+  },
+
   listSaved: async (req: Request, res: Response) => {
     try {
       const user = await prisma.user.findUnique({ where: { id: req.userId! } });

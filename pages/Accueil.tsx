@@ -9,11 +9,23 @@ import CountUp from '../components/CountUp';
 import StatCard, { StatTone } from '../components/StatCard';
 import {
   UserRound, Send, LineChart, Plus, ArrowRight,
-  FileText, Search, Bell, Loader2, Clock, CalendarCheck, Award, PenLine, Sparkles, Mic, Bookmark
+  FileText, Search, Bell, Loader2, Clock, CalendarCheck, Award, PenLine, Sparkles, Mic, Bookmark,
+  Building2, MapPin, Briefcase
 } from 'lucide-react';
 
 interface AccueilProps {
   user: User;
+}
+
+// Offre publiée par un organisme partenaire auquel le candidat est affilié.
+interface PartnerOffer {
+  id: string;
+  title: string;
+  company: string;
+  location: string;
+  type: string;
+  salary: string;
+  partner?: { name: string; logoUrl?: string | null };
 }
 
 interface DashboardStats {
@@ -80,6 +92,7 @@ const Accueil: React.FC<AccueilProps> = ({ user }) => {
   const firstName = user?.name?.split(' ')[0] || 'à toi';
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
+  const [partnerOffers, setPartnerOffers] = useState<PartnerOffer[]>([]);
 
   useEffect(() => {
     let alive = true;
@@ -95,6 +108,24 @@ const Accueil: React.FC<AccueilProps> = ({ user }) => {
         /* silencieux : on retombe sur l'action générique */
       } finally {
         if (alive) setLoading(false);
+      }
+    })();
+    return () => { alive = false; };
+  }, []);
+
+  // Offres des organismes du candidat (adhérent) : chargées à part, sans bloquer le reste.
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      try {
+        const res = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/opportunities/partner-offers`, {
+          credentials: 'include',
+          headers: { ...authHeaders() },
+        });
+        const data = await res.json();
+        if (alive && data.success) setPartnerOffers(data.offers || []);
+      } catch {
+        /* silencieux : la section ne s'affiche simplement pas */
       }
     })();
     return () => { alive = false; };
@@ -231,6 +262,56 @@ const Accueil: React.FC<AccueilProps> = ({ user }) => {
             </Link>
           </Tilt>
         </div>
+
+        {/* Offres de l'organisme du candidat (adhérent) — mises en avant sur l'Accueil.
+            Bandeau violet clair pour bien les distinguer des offres externes. */}
+        {partnerOffers.length > 0 && (
+          <section className="card-pro !p-5 animate-fade-in-up border border-[#7D5CFF]/20">
+            <div className="flex items-center gap-2 mb-4">
+              <span className="w-8 h-8 rounded-lg bg-[#7D5CFF]/10 text-[#7D5CFF] flex items-center justify-center shrink-0">
+                <Building2 size={16} />
+              </span>
+              <div className="min-w-0">
+                <h2 className="text-sm font-bold text-[#111827] dark:text-white leading-tight">Offres de votre organisme</h2>
+                <p className="text-xs text-[#9CA3AF]">Publiées spécialement pour vous par vos organismes partenaires.</p>
+              </div>
+              <Link to="/target/offers" className="press ml-auto hidden sm:inline-flex items-center gap-1 text-xs font-bold text-[#7D5CFF] hover:gap-1.5 transition-all shrink-0">
+                Tout voir <ArrowRight size={13} />
+              </Link>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              {partnerOffers.slice(0, 4).map((o) => (
+                <Link
+                  key={o.id}
+                  to="/target/offers"
+                  className="press group flex items-start gap-3 p-3.5 rounded-xl border border-[#ECEAF6] dark:border-[#1F2937] bg-white/60 dark:bg-[#111827]/60 hover:border-[#7D5CFF]/40 hover:bg-white dark:hover:bg-[#111827] transition-all"
+                >
+                  {o.partner?.logoUrl ? (
+                    <span className="w-11 h-11 rounded-xl bg-white dark:bg-slate-800 border border-[#ECEAF6] dark:border-slate-700 flex items-center justify-center shrink-0 overflow-hidden">
+                      <img src={o.partner.logoUrl} alt={o.partner.name} className="w-full h-full object-contain p-1" />
+                    </span>
+                  ) : (
+                    <span className="w-11 h-11 rounded-xl bg-gradient-to-br from-[#8C6DFF] to-[#5B3FD6] text-white flex items-center justify-center font-bold shrink-0">
+                      {(o.partner?.name || o.company || '?').charAt(0).toUpperCase()}
+                    </span>
+                  )}
+                  <div className="min-w-0 flex-1">
+                    <span className="inline-flex items-center gap-1 text-[10px] font-bold text-[#6D28D9] dark:text-[#B9A7FF] mb-0.5">
+                      <Building2 size={10} /> {o.partner?.name || o.company}
+                    </span>
+                    <p className="text-sm font-bold text-[#111827] dark:text-white leading-tight truncate">{o.title}</p>
+                    <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 mt-1 text-[11px] text-[#9CA3AF]">
+                      {o.type && <span className="inline-flex items-center gap-1"><Briefcase size={10} />{o.type}</span>}
+                      {o.location && <span className="inline-flex items-center gap-1"><MapPin size={10} />{o.location}</span>}
+                    </div>
+                  </div>
+                  <ArrowRight size={15} className="shrink-0 text-[#C4C4CC] group-hover:text-[#7D5CFF] group-hover:translate-x-0.5 transition-all mt-1" />
+                </Link>
+              ))}
+            </div>
+          </section>
+        )}
 
         {/* KPIs de suivi — ou état vide encourageant tant qu'aucune candidature n'existe
             (évite l'écran « 0 · 0 · 0 · 0 » qui paraît mort au tout premier lancement). */}

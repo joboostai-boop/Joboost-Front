@@ -10,6 +10,9 @@ const asyncHandler = (fn: any) => (req: any, res: any, next: any) => {
 // Recommandations simulées dynamiquement
 router.get('/recommendations', asyncHandler(opportunityController.getRecommendations));
 
+// Offres des organismes partenaires (affichées sur l'Accueil)
+router.get('/partner-offers', asyncHandler(opportunityController.getPartnerOffers));
+
 // CRUD Sauvegardes
 router.get('/saved', asyncHandler(opportunityController.listSaved));
 router.post('/saved', asyncHandler(opportunityController.createSaved));
