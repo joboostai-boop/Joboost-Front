@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { createPortal } from 'react-dom';
-import { Building2, Calendar, Search, RefreshCw, Inbox, ArrowRight, Navigation, Briefcase, Send, CalendarCheck, Award, ChevronDown, Check, Sparkles, X, Copy, BellRing } from 'lucide-react';
+import { Building2, Calendar, Search, RefreshCw, Inbox, ArrowRight, Navigation, Briefcase, Send, CalendarCheck, Award, ChevronDown, Check, Sparkles, X, Copy, BellRing, ExternalLink, FileText } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
 import { authHeaders } from '../services/authToken';
@@ -41,6 +41,23 @@ const daysSince = (iso: string) => Math.max(0, Math.floor((Date.now() - new Date
    (Une relance polie double souvent les chances de réponse.) */
 const FOLLOW_UP_AFTER_DAYS = 7;
 const needsFollowUp = (app: Application) => app.status === 'SENT' && daysSince(app.appliedAt) >= FOLLOW_UP_AFTER_DAYS;
+
+/* Beaucoup de candidatures rangent le lien de l'offre dans les notes
+   (ex. « Offre : https://… »). On isole l'URL pour la rendre cliquable
+   et on nettoie le texte de note affiché à l'écran. */
+const extractUrl = (notes: string | null): string | null => {
+  const m = notes?.match(/https?:\/\/[^\s]+/);
+  return m ? m[0] : null;
+};
+const cleanNote = (notes: string | null): string | null => {
+  if (!notes) return null;
+  const t = notes
+    .replace(/Offre\s*:\s*https?:\/\/\S+/gi, '')
+    .replace(/https?:\/\/\S+/g, '')
+    .replace(/\s{2,}/g, ' ')
+    .trim();
+  return t.length ? t : null;
+};
 
 const API = import.meta.env.VITE_API_URL || '';
 
@@ -130,6 +147,8 @@ const Applications: React.FC = () => {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<StatusId | 'ALL'>('ALL');
   const [followUpApp, setFollowUpApp] = useState<Application | null>(null); // relance IA en cours
+  const [expandedId, setExpandedId] = useState<string | null>(null); // candidature dépliée
+  const [letters, setLetters] = useState<Record<string, string>>({}); // lettre réelle par candidature spontanée (applicationId → texte)
   const navigate = useNavigate();
 
   const fetchApplications = async () => {
@@ -137,14 +156,32 @@ const Applications: React.FC = () => {
     try {
       const res = await fetch(`${API}/api/applications?limit=100`, { credentials: 'include', headers: { ...authHeaders() } });
       const data = await res.json();
-      if (data.success) setApplications(data.data);
-      else toast.error('Impossible de charger les candidatures.');
+      if (data.success) {
+        setApplications(data.data);
+        if (data.data.some((a: Application) => a.isSpontaneous)) fetchLetters();
+      } else toast.error('Impossible de charger les candidatures.');
     } catch {
       toast.error('Erreur de connexion.');
     } finally {
       setLoading(false);
     }
   };
+
+  /* Récupère les lettres réellement envoyées pour les candidatures spontanées
+     (l'endpoint existe déjà — bonus honnête, sans modifier le backend). */
+  const fetchLetters = async () => {
+    try {
+      const res = await fetch(`${API}/api/spontaneous`, { credentials: 'include', headers: { ...authHeaders() } });
+      const data = await res.json();
+      if (data.success && Array.isArray(data.data)) {
+        const map: Record<string, string> = {};
+        for (const sp of data.data) if (sp.applicationId && sp.coverLetterText) map[sp.applicationId] = sp.coverLetterText;
+        setLetters(map);
+      }
+    } catch { /* silencieux : la lettre est un plus, pas un bloquant */ }
+  };
+
+  const toggleExpand = (id: string) => setExpandedId((cur) => (cur === id ? null : id));
 
   useEffect(() => { fetchApplications(); }, []);
 
@@ -260,12 +297,26 @@ const Applications: React.FC = () => {
     );
   };
 
-  /* Ligne de candidature (liste). */
+  /* Ligne de candidature (liste) — cliquable pour déplier ses détails. */
   const Row: React.FC<{ app: Application }> = ({ app }) => {
     const followUp = needsFollowUp(app);
+    const open = expandedId === app.id;
+    const canFollowUp = app.status === 'SENT' || app.status === 'INTERVIEW';
+    const offerUrl = extractUrl(app.notes);
+    const note = cleanNote(app.notes);
+    const letter = letters[app.id];
+
     return (
-    <div className={`surface p-3.5 md:p-4 hover:shadow-card-hover hover:-translate-y-0.5 transition-all duration-200 ${followUp ? 'ring-1 ring-amber-300/60 dark:ring-amber-500/30' : ''}`}>
-      <div className="flex items-start gap-3 md:gap-3.5">
+    <div className={`surface overflow-hidden transition-all duration-200 ${open ? 'shadow-card-hover' : 'hover:shadow-card-hover hover:-translate-y-0.5'} ${followUp ? 'ring-1 ring-amber-300/60 dark:ring-amber-500/30' : ''}`}>
+      {/* En-tête cliquable */}
+      <div
+        role="button"
+        tabIndex={0}
+        aria-expanded={open}
+        onClick={() => toggleExpand(app.id)}
+        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleExpand(app.id); } }}
+        className="flex items-start gap-3 md:gap-3.5 p-3.5 md:p-4 cursor-pointer select-none"
+      >
         <span className={`w-10 h-10 rounded-xl bg-gradient-to-br ${companyGradient(app.company)} text-white flex items-center justify-center font-bold text-sm shrink-0 shadow-[0_2px_8px_rgba(16,24,40,0.16)]`}>
           {app.company?.charAt(0)?.toUpperCase() || '?'}
         </span>
@@ -289,31 +340,102 @@ const Applications: React.FC = () => {
                 <Building2 size={13} className="shrink-0" /> <span className="truncate">{app.company}</span>
               </p>
             </div>
-            <StatusSelect app={app} />
+            {/* Le sélecteur de statut ne doit pas déclencher le dépliage */}
+            <div className="shrink-0" onClick={(e) => e.stopPropagation()}>
+              <StatusSelect app={app} />
+            </div>
           </div>
 
           <div className="flex items-center gap-2.5 mt-2 text-[11px] text-slate-400 dark:text-slate-500">
             <span className="inline-flex items-center gap-1 shrink-0">
               <Calendar size={12} /> {formatDate(app.appliedAt)}
             </span>
-            {app.notes && (
+            {note && (
               <>
                 <span className="text-slate-300 dark:text-slate-600">·</span>
-                <span className="truncate italic">{app.notes}</span>
+                <span className="truncate italic">{note}</span>
               </>
             )}
-            {followUp && (
-              <button
-                onClick={() => setFollowUpApp(app)}
-                className="press ml-auto shrink-0 inline-flex items-center gap-1 text-[11px] font-bold text-[#7D5CFF] hover:gap-1.5 transition-all"
-                title="L'IA rédige un message de relance prêt à envoyer"
-              >
-                <Sparkles size={12} /> Générer une relance
-              </button>
-            )}
+            <span className="ml-auto shrink-0 inline-flex items-center gap-1 font-semibold text-[#7D5CFF]/85">
+              {open ? 'Masquer' : 'Détails'}
+              <ChevronDown size={13} className={`transition-transform duration-200 ${open ? 'rotate-180' : ''}`} />
+            </span>
           </div>
         </div>
       </div>
+
+      {/* Panneau de détails */}
+      {open && (
+        <div className="px-3.5 md:px-4 pb-4 pt-0.5 animate-fade-in">
+          <div className="rounded-xl border border-[#ECEAF6] dark:border-[#1F2937] bg-[#FAFAFE] dark:bg-[#0E1524] p-3.5 md:p-4 space-y-3.5 md:ml-[52px]">
+            {/* Informations connues */}
+            <dl className="grid grid-cols-2 gap-x-4 gap-y-2.5 text-xs">
+              <div>
+                <dt className="text-slate-400 dark:text-slate-500 font-medium mb-0.5">Source</dt>
+                <dd className="text-[#111827] dark:text-slate-200 font-semibold truncate">{app.source || '—'}</dd>
+              </div>
+              <div>
+                <dt className="text-slate-400 dark:text-slate-500 font-medium mb-0.5">Date de candidature</dt>
+                <dd className="text-[#111827] dark:text-slate-200 font-semibold">{formatDate(app.appliedAt)}</dd>
+              </div>
+              <div>
+                <dt className="text-slate-400 dark:text-slate-500 font-medium mb-0.5">Type</dt>
+                <dd className="text-[#111827] dark:text-slate-200 font-semibold">{app.isSpontaneous ? 'Candidature spontanée' : 'Candidature sur offre'}</dd>
+              </div>
+              <div>
+                <dt className="text-slate-400 dark:text-slate-500 font-medium mb-0.5">Statut</dt>
+                <dd className="inline-flex items-center gap-1.5 text-[#111827] dark:text-slate-200 font-semibold">
+                  <span className={`w-1.5 h-1.5 rounded-full ${statusMeta(app.status).dot}`} /> {statusMeta(app.status).label}
+                </dd>
+              </div>
+            </dl>
+
+            {/* Note libre éventuelle */}
+            {note && (
+              <div className="text-xs">
+                <p className="text-slate-400 dark:text-slate-500 font-medium mb-0.5">Note</p>
+                <p className="text-slate-600 dark:text-slate-300 italic">{note}</p>
+              </div>
+            )}
+
+            {/* Lettre de motivation réellement envoyée (candidatures spontanées) */}
+            {letter && (
+              <div className="text-xs">
+                <div className="flex items-center justify-between gap-2 mb-1">
+                  <p className="text-slate-400 dark:text-slate-500 font-medium inline-flex items-center gap-1.5"><FileText size={12} /> Lettre envoyée</p>
+                  <button
+                    onClick={async () => { try { await navigator.clipboard.writeText(letter); toast.success('Lettre copiée !'); } catch { toast.error('Copie impossible.'); } }}
+                    className="press inline-flex items-center gap-1 text-[11px] font-bold text-[#7D5CFF] hover:opacity-80"
+                  >
+                    <Copy size={12} /> Copier
+                  </button>
+                </div>
+                <div className="max-h-40 overflow-y-auto rounded-lg bg-white dark:bg-[#111827] border border-[#ECEAF6] dark:border-[#1F2937] p-2.5 text-slate-600 dark:text-slate-300 whitespace-pre-wrap leading-relaxed">
+                  {letter}
+                </div>
+              </div>
+            )}
+
+            {/* Actions : ouvrir l'offre + générer une relance */}
+            <div className="flex flex-wrap items-center gap-2 pt-0.5">
+              {offerUrl && (
+                <a href={offerUrl} target="_blank" rel="noopener noreferrer" className="press btn btn-secondary !py-1.5 !px-3 text-xs">
+                  <ExternalLink size={14} /> Voir l'offre
+                </a>
+              )}
+              {canFollowUp && (
+                <button
+                  onClick={() => setFollowUpApp(app)}
+                  className="press btn btn-primary !py-1.5 !px-3 text-xs"
+                  title="L'IA rédige un message de relance prêt à envoyer"
+                >
+                  <Sparkles size={14} /> Générer une relance
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
     );
   };
