@@ -1,4 +1,5 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { ChevronDown, Check } from 'lucide-react';
 
 /* ────────────────────────────────────────────────────────────────────────
@@ -38,25 +39,43 @@ const FilterSelect: React.FC<FilterSelectProps> = ({
   className = '',
 }) => {
   const [open, setOpen] = useState(false);
+  const [pos, setPos] = useState<{ top: number; left: number; width: number } | null>(null);
   const ref = useRef<HTMLDivElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
   const current = options.find((o) => o.value === value);
   const label = current?.label ?? placeholder ?? '';
 
+  // Positionne le menu (rendu en portail, hors des cartes) juste sous le bouton.
+  const place = useCallback(() => {
+    const el = ref.current;
+    if (!el) return;
+    const r = el.getBoundingClientRect();
+    setPos({ top: r.bottom + 6, left: r.left, width: r.width });
+  }, []);
+
   useEffect(() => {
     if (!open) return;
+    place();
     const onDoc = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+      const t = e.target as Node;
+      if (ref.current?.contains(t) || menuRef.current?.contains(t)) return;
+      setOpen(false);
     };
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setOpen(false);
-    };
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setOpen(false); };
+    // Le menu est en position fixe : on le referme si la page défile/redimensionne
+    // pour éviter qu'il « flotte » à côté du bouton.
+    const onScroll = () => setOpen(false);
     document.addEventListener('mousedown', onDoc);
     document.addEventListener('keydown', onKey);
+    window.addEventListener('scroll', onScroll, true);
+    window.addEventListener('resize', onScroll);
     return () => {
       document.removeEventListener('mousedown', onDoc);
       document.removeEventListener('keydown', onKey);
+      window.removeEventListener('scroll', onScroll, true);
+      window.removeEventListener('resize', onScroll);
     };
-  }, [open]);
+  }, [open, place]);
 
   return (
     <div ref={ref} className={`relative ${className}`}>
@@ -84,11 +103,13 @@ const FilterSelect: React.FC<FilterSelectProps> = ({
         />
       </button>
 
-      {open && (
+      {open && pos && createPortal(
         <div
+          ref={menuRef}
           role="listbox"
           aria-label={ariaLabel}
-          className="absolute left-0 z-50 mt-2 min-w-full w-max max-w-[16rem] rounded-2xl bg-white dark:bg-[#111827] border border-[#ECEAF6] dark:border-[#1F2937] shadow-pop p-1.5 animate-scale-in origin-top max-h-72 overflow-auto scrollbar-none"
+          style={{ position: 'fixed', top: pos.top, left: pos.left, minWidth: pos.width }}
+          className="z-[9999] w-max max-w-[16rem] rounded-2xl bg-white dark:bg-[#111827] border border-[#ECEAF6] dark:border-[#1F2937] shadow-pop p-1.5 animate-scale-in origin-top max-h-72 overflow-auto scrollbar-none"
         >
           {options.map((opt) => {
             const active = opt.value === value;
@@ -113,7 +134,8 @@ const FilterSelect: React.FC<FilterSelectProps> = ({
               </button>
             );
           })}
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );

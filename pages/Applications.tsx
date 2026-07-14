@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { Building2, Calendar, Search, RefreshCw, Inbox, ArrowRight, Navigation, Briefcase, Send, CalendarCheck, Award, ChevronDown, Check, Sparkles, X, Copy, BellRing } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
@@ -181,17 +182,40 @@ const Applications: React.FC = () => {
   /* Sélecteur de statut par ligne — pilule colorée + menu déroulant à la charte. */
   const StatusSelect: React.FC<{ app: Application }> = ({ app }) => {
     const [open, setOpen] = useState(false);
+    const [pos, setPos] = useState<{ top: number; right: number } | null>(null);
     const ref = useRef<HTMLDivElement>(null);
+    const menuRef = useRef<HTMLDivElement>(null);
     const meta = statusMeta(app.status);
+
+    // Menu rendu en portail (hors des cartes) → ne peut plus être recouvert/coupé.
+    const place = useCallback(() => {
+      const el = ref.current;
+      if (!el) return;
+      const r = el.getBoundingClientRect();
+      setPos({ top: r.bottom + 6, right: window.innerWidth - r.right });
+    }, []);
 
     useEffect(() => {
       if (!open) return;
-      const onDoc = (e: MouseEvent) => { if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false); };
+      place();
+      const onDoc = (e: MouseEvent) => {
+        const t = e.target as Node;
+        if (ref.current?.contains(t) || menuRef.current?.contains(t)) return;
+        setOpen(false);
+      };
       const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setOpen(false); };
+      const onScroll = () => setOpen(false);
       document.addEventListener('mousedown', onDoc);
       document.addEventListener('keydown', onKey);
-      return () => { document.removeEventListener('mousedown', onDoc); document.removeEventListener('keydown', onKey); };
-    }, [open]);
+      window.addEventListener('scroll', onScroll, true);
+      window.addEventListener('resize', onScroll);
+      return () => {
+        document.removeEventListener('mousedown', onDoc);
+        document.removeEventListener('keydown', onKey);
+        window.removeEventListener('scroll', onScroll, true);
+        window.removeEventListener('resize', onScroll);
+      };
+    }, [open, place]);
 
     return (
       <div ref={ref} className="relative shrink-0">
@@ -208,8 +232,8 @@ const Applications: React.FC = () => {
           <ChevronDown size={13} className={`transition-transform duration-200 ${open ? 'rotate-180' : ''}`} />
         </button>
 
-        {open && (
-          <div role="listbox" className="absolute right-0 z-50 mt-2 w-44 rounded-2xl bg-white dark:bg-[#111827] border border-[#ECEAF6] dark:border-[#1F2937] shadow-pop p-1.5 animate-scale-in origin-top-right">
+        {open && pos && createPortal(
+          <div ref={menuRef} role="listbox" style={{ position: 'fixed', top: pos.top, right: pos.right }} className="z-[9999] w-44 rounded-2xl bg-white dark:bg-[#111827] border border-[#ECEAF6] dark:border-[#1F2937] shadow-pop p-1.5 animate-scale-in origin-top-right">
             {STATUS.map((o) => {
               const active = o.id === app.status;
               return (
@@ -229,7 +253,8 @@ const Applications: React.FC = () => {
                 </button>
               );
             })}
-          </div>
+          </div>,
+          document.body
         )}
       </div>
     );
