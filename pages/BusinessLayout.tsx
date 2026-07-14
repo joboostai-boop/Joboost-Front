@@ -25,13 +25,18 @@ const tabClass = (isActive: boolean) =>
       : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
   }`;
 
-// Libellé court du plan pour le badge d'en-tête. Modèle sur devis : tout plan
-// « Business … » (posé après signature) = abonné ; sinon période de découverte.
-const planBadge = (plan?: string): { label: string; cls: string } => {
-  if (plan && plan.startsWith('Business')) {
+// Badge de plan pour l'en-tête. Abonné (Business/Pro) → violet ; sinon découverte,
+// avec le compte à rebours des 15 jours (ambre, ou rouge une fois expirée).
+const planBadge = (account: BusinessAccount | null): { label: string; cls: string } => {
+  if (account?.isPaid || account?.plan?.startsWith('Business')) {
     return { label: 'Plan Business', cls: 'bg-[#7D5CFF] text-white border-transparent' };
   }
-  return { label: 'Découverte', cls: 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-900/20 dark:text-amber-400 dark:border-amber-800' };
+  const days = account?.discoveryDaysLeft ?? null;
+  if (days !== null && days <= 0) {
+    return { label: 'Découverte terminée', cls: 'bg-red-50 text-red-700 border-red-200 dark:bg-red-900/20 dark:text-red-400 dark:border-red-800' };
+  }
+  const label = days !== null ? `Découverte · ${days} j` : 'Découverte';
+  return { label, cls: 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-900/20 dark:text-amber-400 dark:border-amber-800' };
 };
 
 // Compression du logo côté client : contenu dans 256 px, PNG (transparence conservée).
@@ -101,7 +106,7 @@ const BusinessLayout: React.FC = () => {
     }
   };
 
-  const badge = planBadge(account?.plan);
+  const badge = planBadge(account);
 
   return (
     <div className="min-h-full">

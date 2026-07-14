@@ -238,6 +238,9 @@ export interface BusinessAccount {
   logoUrl?: string | null;
   subscriptionStatus?: string | null;
   subscriptionEndsAt?: string | null;
+  isPaid?: boolean;             // abonné payant (Business/Pro) → pas de limite ni d'expiration
+  discoveryDaysLeft?: number;   // jours restants de la découverte 15 j (0 = expirée)
+  discoveryActive?: boolean;    // découverte encore en cours
 }
 
 // Résultat de l'assistant IA de rédaction d'offre

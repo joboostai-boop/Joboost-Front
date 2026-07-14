@@ -5,15 +5,31 @@ import { geminiService } from '../services/gemini.service';
 import { stripeService, BUSINESS_PLANS } from '../services/stripe.service';
 import { emailService } from '../services/email.service';
 
-// Modèle SUR DEVIS : « Essai » (période de découverte) a accès à tout, y compris l'IA,
-// mais avec un vivier plafonné. Un plan « Business … » (posé après signature du devis)
-// débloque le vivier illimité.
-// NB : les comptes recruteurs historiques portent le plan « Pro » (ancien libellé) → traités comme abonnés.
-const isPaidBusinessPlan = (plan: string): boolean => plan === 'Pro' || plan.startsWith('Business');
-const aiEnabledFor = (plan: string): boolean => plan === 'Essai' || isPaidBusinessPlan(plan);
+// Modèle SUR DEVIS (espace recruteur UNIQUEMENT — le côté candidat a son propre modèle).
+// Période de découverte de 15 JOURS à partir de la création du compte : accès complet
+// (IA + vivier plafonné à 100). Passé ce délai sans abonnement (plan 'Essai'), l'IA et
+// l'ajout de candidats se bloquent → l'organisme doit demander un devis. Un plan
+// « Business … » (posé après signature) ou « Pro » (legacy) = illimité, sans expiration.
+const DISCOVERY_DAYS = 15;
 const DISCOVERY_VIVIER_LIMIT = 100;
-const vivierLimitFor = (plan: string): number =>
-  isPaidBusinessPlan(plan) ? Number.POSITIVE_INFINITY : DISCOVERY_VIVIER_LIMIT;
+
+const isPaidBusinessPlan = (plan: string): boolean => plan === 'Pro' || plan.startsWith('Business');
+
+// Jours de découverte restants (0 = expirée), basés sur la date de création du compte.
+const discoveryDaysLeft = (user: { createdAt: Date }): number => {
+  const elapsedDays = (Date.now() - new Date(user.createdAt).getTime()) / 86_400_000;
+  return Math.max(0, Math.ceil(DISCOVERY_DAYS - elapsedDays));
+};
+const discoveryActive = (user: { createdAt: Date }): boolean => discoveryDaysLeft(user) > 0;
+
+// Accès complet = abonné payant OU découverte encore active.
+const hasFullAccess = (user: { plan: string; createdAt: Date }): boolean =>
+  isPaidBusinessPlan(user.plan) || discoveryActive(user);
+const aiEnabledFor = (user: { plan: string; createdAt: Date }): boolean => hasFullAccess(user);
+const vivierLimitFor = (user: { plan: string; createdAt: Date }): number =>
+  isPaidBusinessPlan(user.plan) ? Number.POSITIVE_INFINITY
+    : discoveryActive(user) ? DISCOVERY_VIVIER_LIMIT
+    : 0;
 
 export const businessController = {
 
@@ -37,6 +53,9 @@ export const businessController = {
           logoUrl: user.organization?.logoUrl || null,
           subscriptionStatus: user.subscriptionStatus || null,
           subscriptionEndsAt: user.subscriptionEndsAt || null,
+          isPaid: isPaidBusinessPlan(user.plan),
+          discoveryDaysLeft: discoveryDaysLeft(user),
+          discoveryActive: discoveryActive(user),
         },
       });
     } catch (error: any) {
@@ -90,6 +109,9 @@ export const businessController = {
           logoUrl: updated?.organization?.logoUrl || null,
           subscriptionStatus: updated?.subscriptionStatus || null,
           subscriptionEndsAt: updated?.subscriptionEndsAt || null,
+          isPaid: updated ? isPaidBusinessPlan(updated.plan) : false,
+          discoveryDaysLeft: updated ? discoveryDaysLeft(updated) : 0,
+          discoveryActive: updated ? discoveryActive(updated) : false,
         },
       });
     } catch (error: any) {
@@ -522,15 +544,18 @@ export const businessController = {
         return res.status(400).json({ success: false, error: 'Le nom du candidat est requis.' });
       }
 
-      // Période de découverte : vivier plafonné. Un plan Business (après devis) = illimité.
+      // Découverte : vivier plafonné (100) pendant 15 j, puis bloqué. Business = illimité.
       const recruiter = await prisma.user.findUnique({ where: { id: businessId } });
-      const limit = vivierLimitFor(recruiter?.plan || 'Essai');
+      const limit = recruiter ? vivierLimitFor(recruiter) : DISCOVERY_VIVIER_LIMIT;
       const currentCount = await prisma.businessAffiliation.count({ where: { businessId } });
       if (currentCount >= limit) {
+        const expired = recruiter && !isPaidBusinessPlan(recruiter.plan) && !discoveryActive(recruiter);
         return res.status(403).json({
           success: false,
           code: 'PLAN_LIMIT',
-          error: `Votre vivier a atteint la limite de la période de découverte (${DISCOVERY_VIVIER_LIMIT} candidats). Demandez votre devis dans l'onglet Abonnement pour passer en illimité.`,
+          error: expired
+            ? `Votre période de découverte de ${DISCOVERY_DAYS} jours est terminée. Demandez votre devis (onglet Abonnement) pour continuer à ajouter des candidats.`
+            : `Votre vivier a atteint la limite de la période de découverte (${DISCOVERY_VIVIER_LIMIT} candidats). Demandez votre devis dans l'onglet Abonnement pour passer en illimité.`,
         });
       }
 
@@ -887,11 +912,11 @@ export const businessController = {
         include: { organization: true },
       });
 
-      if (user && !aiEnabledFor(user.plan)) {
+      if (user && !aiEnabledFor(user)) {
         return res.status(403).json({
           success: false,
           code: 'PLAN_REQUIRED',
-          error: "L'assistant IA n'est pas actif sur votre compte. Rendez-vous dans l'onglet Abonnement.",
+          error: `Votre période de découverte de ${DISCOVERY_DAYS} jours est terminée. Demandez votre devis (onglet Abonnement) pour réactiver l'assistant IA.`,
         });
       }
 
@@ -934,11 +959,11 @@ export const businessController = {
         include: { organization: true },
       });
 
-      if (recruiter && !aiEnabledFor(recruiter.plan)) {
+      if (recruiter && !aiEnabledFor(recruiter)) {
         return res.status(403).json({
           success: false,
           code: 'PLAN_REQUIRED',
-          error: "Le message d'approche IA n'est pas actif sur votre compte. Rendez-vous dans l'onglet Abonnement.",
+          error: `Votre période de découverte de ${DISCOVERY_DAYS} jours est terminée. Demandez votre devis (onglet Abonnement) pour réactiver l'assistant IA.`,
         });
       }
 

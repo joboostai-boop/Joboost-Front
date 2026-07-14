@@ -75,15 +75,19 @@ const BusinessBilling: React.FC = () => {
   };
 
   const currentPlan = account?.plan || 'Essai';
-  const isSubscribed = currentPlan.startsWith('Business');
+  const isSubscribed = account?.isPaid || currentPlan.startsWith('Business');
+  const daysLeft = account?.discoveryDaysLeft ?? null;
+  const discoveryOver = !isSubscribed && daysLeft !== null && daysLeft <= 0;
 
   return (
     <div className="space-y-6 md:space-y-8 max-w-4xl">
 
       {/* ── Situation actuelle ── */}
-      <div className="card-pro flex flex-col sm:flex-row sm:items-center gap-4">
+      <div className={`card-pro flex flex-col sm:flex-row sm:items-center gap-4 ${discoveryOver ? '!border-red-200 dark:!border-red-900/40' : ''}`}>
         <div className={`w-11 h-11 rounded-xl flex items-center justify-center shrink-0 ${
-          isSubscribed ? 'bg-[#7D5CFF]/15 text-[#7D5CFF] dark:text-[#B9A7FF]' : 'bg-amber-500/15 text-amber-600 dark:text-amber-400'
+          isSubscribed ? 'bg-[#7D5CFF]/15 text-[#7D5CFF] dark:text-[#B9A7FF]'
+            : discoveryOver ? 'bg-red-500/15 text-red-600 dark:text-red-400'
+            : 'bg-amber-500/15 text-amber-600 dark:text-amber-400'
         }`}>
           <CreditCard size={20} />
         </div>
@@ -91,12 +95,18 @@ const BusinessBilling: React.FC = () => {
           <p className="text-sm font-bold text-slate-900 dark:text-white">
             {isSubscribed
               ? `Votre plan actuel : ${currentPlan.replace('Business ', '')}`
-              : 'Vous êtes en période de découverte'}
+              : discoveryOver
+                ? 'Votre période de découverte est terminée'
+                : daysLeft !== null
+                  ? `Période de découverte — ${daysLeft} jour${daysLeft > 1 ? 's' : ''} restant${daysLeft > 1 ? 's' : ''}`
+                  : 'Vous êtes en période de découverte'}
           </p>
           <p className="text-xs text-slate-500 mt-0.5 leading-relaxed">
             {isSubscribed
               ? 'Factures et moyen de paiement se gèrent depuis le portail sécurisé Stripe.'
-              : 'Accès complet pour explorer la plateforme, y compris l\'assistant IA. Quand vous êtes prêt, demandez votre devis.'}
+              : discoveryOver
+                ? 'L\'assistant IA et l\'ajout de nouveaux candidats sont suspendus. Vos données restent accessibles — demandez votre devis pour tout réactiver.'
+                : 'Accès complet à la plateforme pendant 15 jours, assistant IA inclus. Quand vous êtes prêt, demandez votre devis.'}
           </p>
         </div>
         {isSubscribed && (
@@ -106,6 +116,18 @@ const BusinessBilling: React.FC = () => {
           </button>
         )}
       </div>
+
+      {/* Barre de progression de la découverte (tant qu'on n'est pas abonné) */}
+      {!isSubscribed && daysLeft !== null && (
+        <div className="-mt-3">
+          <div className="h-1.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+            <div
+              className={`h-full rounded-full transition-all duration-500 ${discoveryOver ? 'bg-red-500' : 'bg-[#7D5CFF]'}`}
+              style={{ width: `${Math.max(4, (daysLeft / 15) * 100)}%` }}
+            />
+          </div>
+        </div>
+      )}
 
       {/* ── L'offre (sur devis) ── */}
       <div className="relative rounded-2xl bg-white dark:bg-[#111827] border border-[#7D5CFF] ring-1 ring-[#7D5CFF]/30 shadow-[0_18px_45px_-18px_rgba(124,92,255,0.4)] p-6 md:p-8 overflow-hidden">
