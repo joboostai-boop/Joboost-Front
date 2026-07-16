@@ -123,6 +123,35 @@ const BusinessDashboard: React.FC = () => {
   return (
     <div className="space-y-4 md:space-y-5">
 
+      {/* ── Bandeau de bienvenue à la marque du partenaire — visible uniquement
+           si l'organisme a posé son logo (auto-scopé, comme le co-branding). ── */}
+      {account?.logoUrl && (
+        <div className="relative overflow-hidden rounded-2xl border border-[#ECEAF6] dark:border-[#1F2937] bg-white dark:bg-[#0B1120] p-5 md:p-6">
+          <div
+            aria-hidden
+            className="pointer-events-none absolute inset-0"
+            style={{
+              background: 'radial-gradient(460px 220px at 92% -70px, rgba(125,92,255,0.12), transparent 70%)',
+              maskImage: 'linear-gradient(to bottom, black, black 68%, transparent)',
+              WebkitMaskImage: 'linear-gradient(to bottom, black, black 68%, transparent)',
+            }}
+          />
+          <div className="relative flex items-center gap-4 md:gap-5">
+            <div className="w-16 h-16 md:w-20 md:h-20 rounded-2xl bg-white dark:bg-[#111827] border border-[#ECEAF6] dark:border-[#1F2937] shadow-sm shrink-0 flex items-center justify-center p-2.5">
+              <img src={account.logoUrl} alt={account.companyName || 'Logo'} className="max-w-full max-h-full object-contain" />
+            </div>
+            <div className="min-w-0">
+              <h2 className="font-display text-xl md:text-[1.65rem] leading-tight font-extrabold text-[#0B0B14] dark:text-white tracking-[-0.02em]">
+                Bienvenue, {account.companyName}
+              </h2>
+              <p className="text-[13px] md:text-sm text-slate-500 dark:text-slate-400 mt-1.5 leading-relaxed max-w-xl">
+                Votre espace partenaire sur-mesure : vos adhérents, vos offres et votre suivi, réunis au même endroit.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* ── Checklist de démarrage (tant que tout n'est pas fait) ── */}
       {!checklist.complete && (
         <div className="card-pro border-l-[3px] border-l-[#7D5CFF]">
