@@ -160,8 +160,9 @@ const App: React.FC = () => {
       <Toaster position="top-right" />
 
       {/* Navigation : dock flottant en haut (desktop) — barre mobile flottante en bas.
-          Le business a sa barre unique (en-tête co-brandé) → on masque le dock pour lui. */}
-      {user?.role !== 'BUSINESS_PARTNER' && <TopNav user={user} currentPath={location.pathname} />}
+          Le dock est commun candidat/partenaire : il vit hors de `.animate-page`,
+          seul endroit où son `sticky` tient réellement au scroll. */}
+      <TopNav user={user} currentPath={location.pathname} />
       <Topbar user={user} />
 
       {/* Contenu fluide */}
