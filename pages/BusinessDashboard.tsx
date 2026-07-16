@@ -123,17 +123,18 @@ const BusinessDashboard: React.FC = () => {
   return (
     <div className="space-y-4 md:space-y-5">
 
-      {/* ── Bandeau de bienvenue à la marque du partenaire — visible uniquement
-           si l'organisme a posé son logo (auto-scopé, comme le co-branding). ── */}
+      {/* ── Bandeau de bienvenue — visible uniquement si l'organisme a posé son
+           logo (auto-scopé, comme le co-branding). Co-branding = le LOGO du
+           partenaire, rien d'autre : la palette reste celle de Joboost, sur le
+           même violet que la carte « prochaine étape » de l'Accueil candidat. ── */}
       {account?.logoUrl && (
-        <div className="relative overflow-hidden rounded-2xl p-5 md:p-6 text-white bg-gradient-to-br from-[#7C3AED] via-[#6D28D9] to-[#4C1D95] shadow-[0_12px_34px_-8px_rgba(76,29,149,0.45)]">
-          {/* Halo décoratif clair + liseré coloré (rappel des couleurs du logo Mission Locale) */}
+        <div className="relative overflow-hidden rounded-2xl p-5 md:p-6 text-white bg-gradient-to-br from-[#9B7BFF] via-[#7D5CFF] to-[#6D28D9] shadow-card">
+          {/* Halo décoratif clair */}
           <div
             aria-hidden
             className="pointer-events-none absolute inset-0"
             style={{ background: 'radial-gradient(540px 240px at 100% -50px, rgba(255,255,255,0.18), transparent 70%)' }}
           />
-          <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-[#E4007C] via-[#F39200] to-[#95C11F]" />
           <div className="relative flex items-center gap-4 md:gap-5">
             <div className="w-16 h-16 md:w-20 md:h-20 rounded-2xl bg-white shadow-sm shrink-0 flex items-center justify-center p-2.5">
               <img src={account.logoUrl} alt={account.companyName || 'Logo'} className="max-w-full max-h-full object-contain" />

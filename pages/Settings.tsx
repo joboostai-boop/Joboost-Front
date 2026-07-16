@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import {
   Bell, LogOut, ChevronRight, UserRound, Moon, Sun,
-  Crown, Download, Trash2, Linkedin, Calendar, ShieldAlert, X, KeyRound, SlidersHorizontal, LifeBuoy, Mail, Building2
+  Crown, Download, Trash2, Linkedin, Calendar, ShieldAlert, X, KeyRound, SlidersHorizontal, LifeBuoy, Mail, Building2,
+  Camera, Loader2
 } from 'lucide-react';
 
 const SUPPORT_EMAIL = 'joboost.ai@gmail.com';
@@ -19,6 +20,31 @@ interface SettingsProps {
 }
 
 const API = import.meta.env.VITE_API_URL || '';
+
+// Compression du logo côté client : contenu dans 256 px, PNG (transparence conservée).
+// Le backend stocke une data URL, plafonnée à 500 Ko (cf. Organization.logoUrl).
+const compressLogo = (file: File): Promise<string> =>
+  new Promise((resolve, reject) => {
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = () => {
+      const max = 256;
+      const scale = Math.min(max / img.width, max / img.height, 1);
+      const canvas = document.createElement('canvas');
+      canvas.width = Math.max(1, Math.round(img.width * scale));
+      canvas.height = Math.max(1, Math.round(img.height * scale));
+      const ctx = canvas.getContext('2d');
+      if (!ctx) { URL.revokeObjectURL(url); reject(new Error('Canvas indisponible.')); return; }
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+      URL.revokeObjectURL(url);
+      let out = canvas.toDataURL('image/png');
+      // Filet : si le PNG est trop lourd (photo), on repasse en JPEG compressé.
+      if (out.length > 400_000) out = canvas.toDataURL('image/jpeg', 0.85);
+      resolve(out);
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('Image illisible.')); };
+    img.src = url;
+  });
 
 /* Carte de section réutilisable */
 const Card: React.FC<{ title: string; icon: React.ReactNode; children: React.ReactNode; desc?: string }> = ({ title, icon, children, desc }) => (
@@ -54,11 +80,16 @@ const Settings: React.FC<SettingsProps> = ({ user, isDarkMode, toggleDarkMode })
   const [account, setAccount] = useState({ name: user.name || '', email: user.email || '' });
   const [savingAccount, setSavingAccount] = useState(false);
 
-  // Espace recruteur : nom de l'entreprise (organisation)
+  // Espace recruteur : identité de l'organisation (nom + logo).
+  // Le logo est le SEUL élément de marque du partenaire affiché dans l'app
+  // (dock de navigation + bandeau de bienvenue) ; la palette reste celle de Joboost.
   const isBusiness = user.role === 'BUSINESS_PARTNER';
   const [companyName, setCompanyName] = useState('');
   const [companyLoaded, setCompanyLoaded] = useState('');
   const [savingCompany, setSavingCompany] = useState(false);
+  const [companyLogo, setCompanyLogo] = useState<string | null>(null);
+  const [uploadingLogo, setUploadingLogo] = useState(false);
+  const logoInputRef = React.useRef<HTMLInputElement>(null);
 
   React.useEffect(() => {
     if (!isBusiness) return;
@@ -66,10 +97,39 @@ const Settings: React.FC<SettingsProps> = ({ user, isDarkMode, toggleDarkMode })
       try {
         const res = await fetch(`${API}/api/business/account`, { credentials: 'include', headers: { ...authHeaders() } });
         const data = await res.json();
-        if (data.success) { setCompanyName(data.account.companyName || ''); setCompanyLoaded(data.account.companyName || ''); }
+        if (data.success) {
+          setCompanyName(data.account.companyName || '');
+          setCompanyLoaded(data.account.companyName || '');
+          setCompanyLogo(data.account.logoUrl || null);
+        }
       } catch { /* silencieux */ }
     })();
   }, [isBusiness]);
+
+  const handleLogoFile = async (file: File | undefined) => {
+    if (!file) return;
+    if (!file.type.startsWith('image/')) { toast.error('Choisissez une image (PNG, JPG…).'); return; }
+    setUploadingLogo(true);
+    try {
+      const dataUrl = await compressLogo(file);
+      if (dataUrl.length > 500_000) throw new Error('Logo trop lourd — choisissez une image plus simple.');
+      const res = await fetch(`${API}/api/business/account`, {
+        method: 'PUT',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json', ...authHeaders() },
+        body: JSON.stringify({ logoUrl: dataUrl }),
+      });
+      const data = await res.json();
+      if (!data.success) throw new Error(data.error || 'Échec de la mise à jour.');
+      setCompanyLogo(data.account.logoUrl || null);
+      toast.success('Logo mis à jour ! Rechargez pour le voir dans la barre de navigation.');
+    } catch (err: any) {
+      toast.error(err.message || 'Impossible de mettre à jour le logo.');
+    } finally {
+      setUploadingLogo(false);
+      if (logoInputRef.current) logoInputRef.current.value = '';
+    }
+  };
 
   const handleSaveCompany = async () => {
     setSavingCompany(true);
@@ -220,6 +280,49 @@ const Settings: React.FC<SettingsProps> = ({ user, isDarkMode, toggleDarkMode })
           {isBusiness && (
             <Card title="Mon entreprise" icon={<Building2 size={16} />} desc="L'entité affichée sur vos offres">
               <div className="px-5 py-4 space-y-4">
+                {/* Logo — enregistré immédiatement au choix du fichier (pas de
+                    bouton « Enregistrer » : le nom, lui, garde le sien). */}
+                <div>
+                  <label className="input-label">Logo de l'organisation</label>
+                  <div className="flex items-center gap-3 mt-1.5">
+                    <input
+                      ref={logoInputRef}
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={(e) => handleLogoFile(e.target.files?.[0])}
+                    />
+                    <button
+                      onClick={() => logoInputRef.current?.click()}
+                      disabled={uploadingLogo}
+                      title={companyLogo ? 'Changer le logo' : 'Ajouter le logo de votre organisation'}
+                      className="group relative w-14 h-14 rounded-2xl shrink-0 bg-white dark:bg-[#111827] border border-[#ECEAF6] dark:border-[#1F2937] shadow-sm overflow-hidden flex items-center justify-center transition-transform hover:scale-[1.03] outline-none"
+                    >
+                      {companyLogo ? (
+                        <img src={companyLogo} alt={companyName || 'Logo'} className="w-full h-full object-contain p-1.5" />
+                      ) : (
+                        <span className="w-full h-full flex items-center justify-center bg-[#7D5CFF]/10 text-[#7D5CFF]">
+                          <Building2 size={20} />
+                        </span>
+                      )}
+                      <span className="absolute inset-0 flex items-center justify-center bg-black/45 opacity-0 group-hover:opacity-100 transition-opacity">
+                        {uploadingLogo ? <Loader2 size={15} className="text-white animate-spin" /> : <Camera size={15} className="text-white" />}
+                      </span>
+                    </button>
+                    <div className="min-w-0">
+                      <button
+                        onClick={() => logoInputRef.current?.click()}
+                        disabled={uploadingLogo}
+                        className="text-sm font-semibold text-[#7D5CFF] hover:underline disabled:opacity-40"
+                      >
+                        {companyLogo ? 'Changer le logo' : 'Ajouter un logo'}
+                      </button>
+                      <p className="text-xs text-slate-400 mt-0.5 leading-snug">
+                        Affiché dans la barre de navigation et sur votre tableau de bord.
+                      </p>
+                    </div>
+                  </div>
+                </div>
                 <div>
                   <label className="input-label">Nom de l'entreprise</label>
                   <input className="input-pro" value={companyName} onChange={(e) => setCompanyName(e.target.value)} placeholder="Ex : Mission Locale de Paris" />
