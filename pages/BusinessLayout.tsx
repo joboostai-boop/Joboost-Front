@@ -3,6 +3,7 @@ import { Outlet, NavLink, Link, useLocation } from 'react-router-dom';
 import { LayoutDashboard, Megaphone, Users, BarChart3, Building2, CreditCard, Camera, Loader2 } from 'lucide-react';
 import { BusinessAccount } from '../types';
 import { businessAccountApi } from '../services/business';
+import Logo from '../components/Logo';
 import toast from 'react-hot-toast';
 
 /* En-tête de l'espace recruteur — registre clair premium (type Stripe/Linear) :
@@ -136,6 +137,18 @@ const BusinessLayout: React.FC = () => {
               className="hidden"
               onChange={(e) => handleLogoFile(e.target.files?.[0])}
             />
+            {/* Co-branding : logo JoBoost + logo du partenaire, côte à côte.
+               Ne s'affiche QUE si l'organisme a un logo (account.logoUrl) — donc
+               auto-scopé aux structures partenaires équipées, invisible pour les
+               autres comptes qui gardent l'en-tête inchangé. */}
+            {account?.logoUrl && (
+              <>
+                <Link to="/business/dashboard" className="shrink-0" aria-label="Accueil Joboost">
+                  <Logo variant="full" className="h-8" />
+                </Link>
+                <span aria-hidden className="h-7 md:h-9 w-px bg-[#E6E1F5] dark:bg-[#2A3244] shrink-0" />
+              </>
+            )}
             <button
               onClick={() => fileRef.current?.click()}
               disabled={uploadingLogo}
