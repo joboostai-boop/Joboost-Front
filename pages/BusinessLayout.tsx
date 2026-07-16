@@ -175,7 +175,7 @@ const BusinessLayout: React.FC = () => {
                 Espace partenaire
               </div>
               <div className="flex items-center gap-2.5 min-w-0 mt-0.5">
-                <span className="text-[15px] md:text-base font-extrabold text-[#0B0B14] dark:text-white truncate tracking-[-0.01em]">
+                <span className="font-display text-[15px] md:text-base font-extrabold text-[#0B0B14] dark:text-white truncate tracking-[-0.01em]">
                   {account?.companyName || 'Votre organisation'}
                 </span>
                 <Link
@@ -190,7 +190,7 @@ const BusinessLayout: React.FC = () => {
           </div>
 
           {/* Titre de page */}
-          <h1 className="mt-4 md:mt-5 text-[1.55rem] md:text-[1.9rem] leading-[1.08] font-extrabold tracking-[-0.03em] text-[#0B0B14] dark:text-white">
+          <h1 className="font-display mt-4 md:mt-5 text-[1.55rem] md:text-[1.9rem] leading-[1.08] font-extrabold tracking-[-0.03em] text-[#0B0B14] dark:text-white">
             {active.title}
           </h1>
           <p className="mt-1 text-[13.5px] md:text-[14.5px] text-slate-500 dark:text-slate-400 max-w-2xl leading-relaxed">
