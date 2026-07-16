@@ -124,7 +124,7 @@ const Login = () => {
               <Building2 size={18} />
             </div>
             <div className="flex-1">
-              <p className="text-sm font-bold text-slate-900">Vous êtes un recruteur / organisme ?</p>
+              <p className="text-sm font-bold text-slate-900">Vous êtes une organisation ?</p>
               <p className="text-xs text-slate-500">Mission Locale, agence d'insertion, organisme de formation, entreprise…</p>
             </div>
           </div>
@@ -133,9 +133,9 @@ const Login = () => {
             className="mt-4 w-full flex items-center justify-center gap-2 py-3 px-4 rounded-lg bg-gradient-to-r from-[#7D5CFF] to-[#4F46E5] text-white font-semibold text-sm hover:opacity-90 transition-opacity"
           >
             <Building2 size={16} />
-            Créer un espace recruteur
+            Créer un espace partenaire
           </Link>
-          <p className="mt-2 text-center text-xs text-slate-400">Déjà un compte recruteur ? Connectez-vous ci-dessus avec vos identifiants.</p>
+          <p className="mt-2 text-center text-xs text-slate-400">Déjà un compte partenaire ? Connectez-vous ci-dessus avec vos identifiants.</p>
         </div>
       </div>
     </div>

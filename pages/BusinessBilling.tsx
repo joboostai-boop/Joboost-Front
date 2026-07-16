@@ -149,7 +149,7 @@ const BusinessBilling: React.FC = () => {
             </span>
             <div>
               <h3 className="text-xl font-extrabold text-slate-900 dark:text-white tracking-tight leading-tight">Joboost Business</h3>
-              <p className="text-xs text-slate-500">L'espace recruteur complet pour votre organisme</p>
+              <p className="text-xs text-slate-500">L'espace partenaire complet pour votre organisme</p>
             </div>
           </div>
 
@@ -158,7 +158,7 @@ const BusinessBilling: React.FC = () => {
           </p>
           <p className="text-[13px] text-slate-500 mt-1.5 leading-relaxed max-w-xl">
             Le tarif est construit avec vous, selon la taille de votre organisme : nombre d'adhérents
-            (500 ou 8 000, ce n'est pas la même chose), nombre de recruteurs et accompagnement souhaité.
+            (500 ou 8 000, ce n'est pas la même chose), nombre d'utilisateurs et accompagnement souhaité.
           </p>
 
           <ul className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-3">
@@ -257,7 +257,7 @@ const BusinessBilling: React.FC = () => {
                   />
                 </div>
                 <div>
-                  <label className="input-label">Recruteurs / utilisateurs</label>
+                  <label className="input-label">Conseillers / utilisateurs</label>
                   <input
                     className="input-pro"
                     value={quoteForm.recruitersCount}

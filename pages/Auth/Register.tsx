@@ -30,7 +30,7 @@ const Register = () => {
       return;
     }
     if (isBusiness && !companyName.trim()) {
-      setError("Indiquez le nom de votre entreprise.");
+      setError("Indiquez le nom de votre organisation.");
       return;
     }
 
@@ -74,7 +74,7 @@ const Register = () => {
             </h1>
           </Link>
           <h2 className="mt-2 text-2xl font-bold text-gray-900">
-            {isBusiness ? 'Créez votre espace recruteur' : 'Créez votre compte gratuit'}
+            {isBusiness ? 'Créez votre espace partenaire' : 'Créez votre compte gratuit'}
           </h2>
           <p className="mt-2 text-sm text-gray-600">
             Déjà inscrit ?{' '}
@@ -98,7 +98,7 @@ const Register = () => {
             onClick={() => { setAccount('business'); setError(''); }}
             className={`flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-bold transition-colors ${isBusiness ? 'bg-white text-[#7D5CFF] shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
           >
-            <Building2 size={16} /> Recruteur
+            <Building2 size={16} /> Partenaire
           </button>
         </div>
 
@@ -125,7 +125,7 @@ const Register = () => {
             </div>
             {isBusiness && (
               <div>
-                <label htmlFor="companyName" className="input-label">Nom de l'entreprise</label>
+                <label htmlFor="companyName" className="input-label">Nom de l'organisation</label>
                 <input
                   id="companyName"
                   name="companyName"
@@ -200,7 +200,7 @@ const Register = () => {
               disabled={isLoading || !acceptedTerms}
               className="btn-primary w-full flex justify-center py-3 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isLoading ? 'Création...' : isBusiness ? "Créer mon espace recruteur" : "S'inscrire"}
+              {isLoading ? 'Création...' : isBusiness ? "Créer mon espace partenaire" : "S'inscrire"}
             </button>
           </div>
         </form>

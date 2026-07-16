@@ -324,11 +324,11 @@ const Pricing: React.FC<PricingProps> = ({ user }) => {
         <div className="relative overflow-hidden rounded-2xl bg-slate-900 dark:bg-slate-950 border border-slate-800 p-8 md:p-12 text-white flex flex-col md:flex-row items-start md:items-center gap-8">
           <div className="relative z-10 flex-1 space-y-3">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 text-[#A78BFA] text-[10px] font-black uppercase tracking-[0.2em]">
-              <Building2 size={12} /> Recruteurs & Entreprises
+              <Building2 size={12} /> Organismes & partenaires
             </div>
-            <h3 className="text-2xl md:text-3xl font-black tracking-tight">Recrutez avec votre propre espace dédié.</h3>
+            <h3 className="text-2xl md:text-3xl font-black tracking-tight">Votre propre espace dédié, adapté à votre organisation.</h3>
             <p className="text-slate-300 text-sm md:text-base font-medium max-w-xl leading-relaxed">
-              Vivier de candidats, offres diffusées à vos adhérents, matching par compétences, statistiques et assistant IA — dans un espace recruteur clé en main.
+              Vivier de candidats, offres diffusées à vos adhérents, matching par compétences, statistiques et assistant IA — dans un espace partenaire clé en main.
               <span className="text-white font-black"> Tarif sur devis</span>, construit selon vos effectifs, avec une période de découverte gratuite.
             </p>
           </div>
@@ -337,10 +337,10 @@ const Pricing: React.FC<PricingProps> = ({ user }) => {
               href="/auth/register"
               className="inline-flex items-center justify-center gap-2 px-8 py-5 bg-white text-slate-900 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] hover:bg-[#7D5CFF]/5 transition-all shadow-xl hover:-translate-y-1"
             >
-              <Building2 size={16} /> Créer un espace recruteur
+              <Building2 size={16} /> Créer un espace partenaire
             </a>
             <a
-              href={`mailto:${B2B_CONTACT_EMAIL}?subject=Demande%20Joboost%20Business%20(Recruteur)`}
+              href={`mailto:${B2B_CONTACT_EMAIL}?subject=Demande%20Joboost%20Business%20(Partenaire)`}
               className="inline-flex items-center justify-center gap-2 text-[11px] font-bold text-slate-300 hover:text-white transition-colors"
             >
               <Mail size={13} /> Ou parlez-nous de votre besoin

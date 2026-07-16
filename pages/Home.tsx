@@ -195,7 +195,7 @@ const Home: React.FC<HomeProps> = ({ onStart }) => {
           <div className="flex items-center gap-1.5 sm:gap-3">
             <Link to="/auth/login" className="hidden sm:flex items-center gap-1.5 text-slate-500 font-medium text-sm px-3 py-2 hover:text-[#7D5CFF] transition-colors rounded-lg hover:bg-slate-50">
               <Building2 size={15} />
-              Espace recruteurs
+              Espace partenaire
             </Link>
             <button onClick={() => openAuth(false)} className="hidden sm:block text-slate-600 font-medium text-sm px-3 py-2 rounded-lg hover:bg-slate-50 hover:text-slate-900 transition-colors">
               Connexion

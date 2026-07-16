@@ -12,10 +12,10 @@ import toast from 'react-hot-toast';
    aux pages enfants via le contexte de l'Outlet (avec refreshAccount). */
 
 const BUSINESS_TABS = [
-  { name: 'Tableau de bord', icon: <LayoutDashboard size={15} />, path: '/business/dashboard', title: 'Tableau de bord', subtitle: 'Vue d\'ensemble de votre activité de recrutement.' },
+  { name: 'Tableau de bord', icon: <LayoutDashboard size={15} />, path: '/business/dashboard', title: 'Tableau de bord', subtitle: 'Vue d\'ensemble de votre activité.' },
   { name: 'Offres d\'emploi', icon: <Megaphone size={15} />, path: '/business/offers', title: 'Offres d\'emploi', subtitle: 'Créez et gérez les offres proposées à vos adhérents.' },
   { name: 'Demandeurs', icon: <Users size={15} />, path: '/business/jobseekers', title: 'Vivier de candidats', subtitle: 'Gérez votre base de candidats et suivez vos contacts.' },
-  { name: 'Statistiques', icon: <BarChart3 size={15} />, path: '/business/stats', title: 'Statistiques', subtitle: 'Mesurez l\'activité et la performance de votre espace recruteur.' },
+  { name: 'Statistiques', icon: <BarChart3 size={15} />, path: '/business/stats', title: 'Statistiques', subtitle: 'Mesurez l\'activité et la performance de votre espace partenaire.' },
   { name: 'Abonnement', icon: <CreditCard size={15} />, path: '/business/billing', title: 'Abonnement', subtitle: 'Une offre construite sur mesure selon les effectifs de votre organisme.' },
 ];
 
@@ -152,7 +152,7 @@ const BusinessLayout: React.FC = () => {
             <button
               onClick={() => fileRef.current?.click()}
               disabled={uploadingLogo}
-              title={account?.logoUrl ? 'Changer le logo' : 'Ajouter le logo de votre entreprise'}
+              title={account?.logoUrl ? 'Changer le logo' : 'Ajouter le logo de votre organisation'}
               className="group relative w-12 h-12 md:w-14 md:h-14 rounded-2xl shrink-0 bg-white dark:bg-[#111827] border border-[#ECEAF6] dark:border-[#1F2937] shadow-sm overflow-hidden flex items-center justify-center transition-transform hover:scale-[1.03] outline-none"
             >
               {account?.logoUrl ? (
@@ -172,11 +172,11 @@ const BusinessLayout: React.FC = () => {
 
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2 text-[10.5px] font-bold uppercase tracking-[0.14em] text-[#7D5CFF]">
-                Espace recruteur
+                Espace partenaire
               </div>
               <div className="flex items-center gap-2.5 min-w-0 mt-0.5">
                 <span className="text-[15px] md:text-base font-extrabold text-[#0B0B14] dark:text-white truncate tracking-[-0.01em]">
-                  {account?.companyName || 'Votre entreprise'}
+                  {account?.companyName || 'Votre organisation'}
                 </span>
                 <Link
                   to="/business/billing"

@@ -62,7 +62,7 @@ const TopNav: React.FC<TopNavProps> = ({ user, currentPath }) => {
           </Link>
           {isBusiness && (
             <span className="hidden lg:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#7D5CFF]/10 border border-[#7D5CFF]/20 text-[#6023C0] dark:text-[#A78BFA] text-[11px] font-bold">
-              <Building2 size={12} /> Espace recruteur
+              <Building2 size={12} /> Espace partenaire
             </span>
           )}
         </div>
@@ -130,7 +130,7 @@ const TopNav: React.FC<TopNavProps> = ({ user, currentPath }) => {
                 <div role="menu" className="absolute right-0 top-[calc(100%+8px)] z-50 w-56 rounded-2xl bg-white dark:bg-[#111827] border border-[#ECEAF6] dark:border-[#1F2937] shadow-pop p-1.5 animate-scale-in origin-top-right">
                   <div className="px-3 py-2.5 mb-1 border-b border-[#ECEAF6] dark:border-[#1F2937]">
                     <p className="text-sm font-bold text-slate-900 dark:text-white truncate">{user?.name || (isBusiness ? 'Partenaire' : 'Mon compte')}</p>
-                    <p className="text-xs text-slate-400 truncate">{user?.email || (isBusiness ? 'Espace recruteur' : 'Candidat')}</p>
+                    <p className="text-xs text-slate-400 truncate">{user?.email || (isBusiness ? 'Espace partenaire' : 'Candidat')}</p>
                   </div>
 
                   {!isBusiness && (
