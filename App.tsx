@@ -159,8 +159,9 @@ const App: React.FC = () => {
     <div className="app-shell min-h-screen flex flex-col bg-[#F5F4FB] dark:bg-[#030712] text-slate-900 dark:text-slate-100 selection:bg-[#7D5CFF]/15 selection:text-[#4F46E5] transition-colors duration-300">
       <Toaster position="top-right" />
 
-      {/* Navigation : dock flottant en haut (desktop) — barre mobile flottante en bas */}
-      <TopNav user={user} currentPath={location.pathname} />
+      {/* Navigation : dock flottant en haut (desktop) — barre mobile flottante en bas.
+          Le business a sa barre unique (en-tête co-brandé) → on masque le dock pour lui. */}
+      {user?.role !== 'BUSINESS_PARTNER' && <TopNav user={user} currentPath={location.pathname} />}
       <Topbar user={user} />
 
       {/* Contenu fluide */}

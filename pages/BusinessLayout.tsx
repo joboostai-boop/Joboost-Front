@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Outlet, NavLink, Link, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Megaphone, Users, BarChart3, Building2, CreditCard, Camera, Loader2 } from 'lucide-react';
+import { Outlet, NavLink, Link, useLocation, useNavigate } from 'react-router-dom';
+import { LayoutDashboard, Megaphone, Users, BarChart3, Building2, CreditCard, Camera, Loader2, ChevronDown, Settings2, LogOut } from 'lucide-react';
 import { BusinessAccount } from '../types';
 import { businessAccountApi } from '../services/business';
+import { useAuth } from '../context/AuthContext';
 import Logo from '../components/Logo';
 import toast from 'react-hot-toast';
 
@@ -70,9 +71,12 @@ let accountCache: BusinessAccount | null = null;
 
 const BusinessLayout: React.FC = () => {
   const location = useLocation();
+  const navigate = useNavigate();
+  const { user, logout } = useAuth();
   const active = BUSINESS_TABS.find((t) => location.pathname.startsWith(t.path)) ?? BUSINESS_TABS[0];
   const [account, setAccount] = useState<BusinessAccount | null>(accountCache);
   const [uploadingLogo, setUploadingLogo] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
   const refreshAccount = async () => {
@@ -112,7 +116,11 @@ const BusinessLayout: React.FC = () => {
   return (
     <div className="min-h-full">
       {/* ── En-tête clair premium ── */}
-      <div className="relative overflow-hidden bg-white/80 dark:bg-[#0B1120]/80 backdrop-blur border-b border-[#ECEAF6] dark:border-[#1F2937]">
+      <div className="sticky top-0 z-40 bg-white/80 dark:bg-[#0B1120]/80 backdrop-blur border-b border-[#ECEAF6] dark:border-[#1F2937]">
+        {/* Liseré coloré (couleurs du logo du partenaire) en haut de chaque page — si l'organisme a un logo */}
+        {account?.logoUrl && (
+          <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-[#E4007C] via-[#F39200] to-[#95C11F] z-10" />
+        )}
         {/* Lueur violette douce, ancrée hors-cadre + masquée (aucun rectangle visible) */}
         <div
           aria-hidden
@@ -186,6 +194,49 @@ const BusinessLayout: React.FC = () => {
                   {badge.label}
                 </Link>
               </div>
+            </div>
+
+            {/* Menu compte — fusionné ici (l'ancien dock est masqué pour le business) */}
+            <div className="relative shrink-0 ml-1">
+              <button
+                onClick={() => setMenuOpen((v) => !v)}
+                aria-haspopup="menu"
+                aria-expanded={menuOpen}
+                aria-label="Menu du compte"
+                className="flex items-center gap-1.5 rounded-full pl-1 pr-2 py-1 hover:bg-[#F5F4FB] dark:hover:bg-[#1F2937] transition-colors outline-none"
+              >
+                {account?.logoUrl ? (
+                  <span className="w-8 h-8 rounded-full overflow-hidden bg-white border border-[#ECEAF6] dark:border-[#1F2937] flex items-center justify-center shrink-0">
+                    <img src={account.logoUrl} alt="" className="w-full h-full object-contain p-0.5" />
+                  </span>
+                ) : (
+                  <span className="w-8 h-8 rounded-full flex items-center justify-center bg-gradient-to-br from-[#7D5CFF] to-[#4F46E5] text-white shrink-0">
+                    <Building2 size={15} />
+                  </span>
+                )}
+                <ChevronDown size={15} className={`text-slate-400 transition-transform duration-200 ${menuOpen ? 'rotate-180' : ''}`} />
+              </button>
+              {menuOpen && (
+                <>
+                  <button className="fixed inset-0 z-40 cursor-default" aria-hidden onClick={() => setMenuOpen(false)} tabIndex={-1} />
+                  <div role="menu" className="absolute right-0 top-[calc(100%+8px)] z-50 w-56 rounded-2xl bg-white dark:bg-[#111827] border border-[#ECEAF6] dark:border-[#1F2937] shadow-pop p-1.5 origin-top-right">
+                    <div className="px-3 py-2.5 mb-1 border-b border-[#ECEAF6] dark:border-[#1F2937]">
+                      <p className="text-sm font-bold text-slate-900 dark:text-white truncate">{user?.name || 'Partenaire'}</p>
+                      <p className="text-xs text-slate-400 truncate">{user?.email || account?.companyName || 'Espace partenaire'}</p>
+                    </div>
+                    <Link to="/business/billing" role="menuitem" onClick={() => setMenuOpen(false)} className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium text-slate-600 dark:text-slate-300 hover:bg-[#F5F4FB] dark:hover:bg-[#1F2937] hover:text-[#7D5CFF] transition-colors">
+                      <CreditCard size={16} /> Abonnement
+                    </Link>
+                    <Link to="/settings" role="menuitem" onClick={() => setMenuOpen(false)} className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium text-slate-600 dark:text-slate-300 hover:bg-[#F5F4FB] dark:hover:bg-[#1F2937] hover:text-[#7D5CFF] transition-colors">
+                      <Settings2 size={16} /> Paramètres
+                    </Link>
+                    <div className="my-1 border-t border-[#ECEAF6] dark:border-[#1F2937]" />
+                    <button role="menuitem" onClick={async () => { setMenuOpen(false); await logout?.(); navigate('/'); }} className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium text-slate-500 dark:text-slate-400 hover:bg-red-50 dark:hover:bg-red-500/10 hover:text-red-600 transition-colors">
+                      <LogOut size={16} /> Se déconnecter
+                    </button>
+                  </div>
+                </>
+              )}
             </div>
           </div>
 
