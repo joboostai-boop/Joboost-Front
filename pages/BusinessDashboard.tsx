@@ -126,25 +126,24 @@ const BusinessDashboard: React.FC = () => {
       {/* ── Bandeau de bienvenue à la marque du partenaire — visible uniquement
            si l'organisme a posé son logo (auto-scopé, comme le co-branding). ── */}
       {account?.logoUrl && (
-        <div className="relative overflow-hidden rounded-2xl border border-[#ECEAF6] dark:border-[#1F2937] bg-white dark:bg-[#0B1120] p-5 md:p-6">
+        <div className="relative overflow-hidden rounded-2xl p-5 md:p-6 text-white bg-gradient-to-br from-[#7C3AED] via-[#6D28D9] to-[#4C1D95] shadow-[0_12px_34px_-8px_rgba(76,29,149,0.45)]">
+          {/* Halo décoratif clair + liseré coloré (rappel des couleurs du logo Mission Locale) */}
           <div
             aria-hidden
             className="pointer-events-none absolute inset-0"
-            style={{
-              background: 'radial-gradient(460px 220px at 92% -70px, rgba(125,92,255,0.12), transparent 70%)',
-              maskImage: 'linear-gradient(to bottom, black, black 68%, transparent)',
-              WebkitMaskImage: 'linear-gradient(to bottom, black, black 68%, transparent)',
-            }}
+            style={{ background: 'radial-gradient(540px 240px at 100% -50px, rgba(255,255,255,0.18), transparent 70%)' }}
           />
+          <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-[#E4007C] via-[#F39200] to-[#95C11F]" />
           <div className="relative flex items-center gap-4 md:gap-5">
-            <div className="w-16 h-16 md:w-20 md:h-20 rounded-2xl bg-white dark:bg-[#111827] border border-[#ECEAF6] dark:border-[#1F2937] shadow-sm shrink-0 flex items-center justify-center p-2.5">
+            <div className="w-16 h-16 md:w-20 md:h-20 rounded-2xl bg-white shadow-sm shrink-0 flex items-center justify-center p-2.5">
               <img src={account.logoUrl} alt={account.companyName || 'Logo'} className="max-w-full max-h-full object-contain" />
             </div>
             <div className="min-w-0">
-              <h2 className="font-display text-xl md:text-[1.65rem] leading-tight font-extrabold text-[#0B0B14] dark:text-white tracking-[-0.02em]">
+              <p className="text-[10.5px] font-bold uppercase tracking-[0.16em] text-white/70">Espace partenaire</p>
+              <h2 className="font-display text-xl md:text-[1.7rem] leading-tight font-extrabold tracking-[-0.02em] mt-0.5">
                 Bienvenue, {account.companyName}
               </h2>
-              <p className="text-[13px] md:text-sm text-slate-500 dark:text-slate-400 mt-1.5 leading-relaxed max-w-xl">
+              <p className="text-[13px] md:text-sm text-white/85 mt-1.5 leading-relaxed max-w-xl">
                 Votre espace partenaire sur-mesure : vos adhérents, vos offres et votre suivi, réunis au même endroit.
               </p>
             </div>
