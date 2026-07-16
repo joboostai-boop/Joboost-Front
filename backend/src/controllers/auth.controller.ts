@@ -282,7 +282,12 @@ export const authController = {
   },
 
   logout: (req: Request, res: Response) => {
-    res.clearCookie('token');
+    // clearCookie doit reprendre les mêmes attributs que res.cookie (hors maxAge) :
+    // en prod le cookie est SameSite=None/Secure (cross-site front↔back) et le
+    // navigateur rejette une suppression qui n'a pas ces attributs — la session
+    // survivrait à la déconnexion et reconnecterait l'utilisateur au prochain accès.
+    const { maxAge: _ignored, ...clearOptions } = COOKIE_OPTIONS;
+    res.clearCookie('token', clearOptions);
     res.json({ success: true, message: "Déconnecté" });
   },
 
