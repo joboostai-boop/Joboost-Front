@@ -435,10 +435,12 @@ const BusinessStatsPage: React.FC = () => {
                 <span className="text-[10px] text-slate-400 ml-auto hidden md:inline">Cliquez une part pour voir les adhérents</span>
               </div>
               <div className="h-[240px] md:h-[300px] relative">
-                <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none pb-6 md:pb-0">
-                  <span className="text-2xl font-black text-slate-900 dark:text-white leading-none">{stats.kpis.totalActive}</span>
-                  <span className="text-[10px] uppercase font-bold text-slate-400 mt-1">Actifs</span>
-                </div>
+                {donutData.length > 0 && (
+                  <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none pb-6 md:pb-0">
+                    <span className="text-2xl font-black text-slate-900 dark:text-white leading-none">{stats.kpis.totalActive}</span>
+                    <span className="text-[10px] uppercase font-bold text-slate-400 mt-1">Actifs</span>
+                  </div>
+                )}
                 {donutData.length > 0 ? (
                   <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
