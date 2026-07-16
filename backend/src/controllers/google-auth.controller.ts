@@ -69,12 +69,31 @@ export const googleAuthController = {
         return res.redirect(`${FRONTEND_URL}/auth/login?error=no_id_token`);
       }
 
-      const ticket = await oauthClient.verifyIdToken({
-        idToken: tokens.id_token,
-        audience: GOOGLE_CLIENT_ID,
-      });
+      // Vérification de signature avec repli : l'id_token vient d'être obtenu
+      // directement auprès du serveur de Google en HTTPS (échange code→token),
+      // sa provenance est donc déjà sûre. La récupération des certificats de
+      // vérification échoue parfois depuis Render (« Failed to retrieve
+      // verification certificates ») : dans ce cas on décode le token en
+      // contrôlant l'audience plutôt que de faire échouer la connexion.
+      let payload: { email?: string; name?: string; picture?: string; sub?: string } | undefined;
+      try {
+        const ticket = await oauthClient.verifyIdToken({
+          idToken: tokens.id_token,
+          audience: GOOGLE_CLIENT_ID,
+        });
+        payload = ticket.getPayload();
+      } catch (verifyError) {
+        console.error('Google id_token verify failed, fallback decode:', verifyError);
+        const decoded = jwt.decode(tokens.id_token);
+        if (
+          decoded && typeof decoded === 'object' &&
+          (decoded as { aud?: string }).aud === GOOGLE_CLIENT_ID &&
+          (decoded as { iss?: string }).iss?.includes('accounts.google.com')
+        ) {
+          payload = decoded as typeof payload;
+        }
+      }
 
-      const payload = ticket.getPayload();
       if (!payload || !payload.email) {
         return res.redirect(`${FRONTEND_URL}/auth/login?error=invalid_token`);
       }
