@@ -37,6 +37,11 @@ const isLocalDb = (): boolean => /^(localhost|127\.0\.0\.1|::1)$/.test(dbHost())
 async function main() {
   const args = process.argv.slice(2);
   const apply = args.includes('--apply');
+  // Par défaut on NE SUPPRIME PAS les organisations vidées : on se contente de
+  // rattacher les comptes à une organisation commune (les collègues partagent alors
+  // vivier + offres). Les anciennes organisations restent en base, sans membre.
+  // Passez --delete-empty-orgs uniquement si vous voulez nettoyer ces coquilles.
+  const deleteEmptyOrgs = args.includes('--delete-empty-orgs');
   const emails = args.filter((a) => !a.startsWith('--')).map((e) => e.trim().toLowerCase());
 
   if (emails.length < 2) {
@@ -99,7 +104,10 @@ async function main() {
   log(`  logo : ${target.logoUrl ? 'oui' : 'non'} · créée le ${target.createdAt.toISOString().slice(0, 10)}`);
   const doomed = uniqueOrgs.filter((o) => o.id !== target.id);
   if (doomed.length) {
-    log(`Organisations absorbées : ${doomed.map((o) => `« ${o.name} » (${o.id})`).join(', ')}`);
+    log(`Organisations vidées : ${doomed.map((o) => `« ${o.name} » (${o.id})`).join(', ')}`);
+    log(deleteEmptyOrgs
+      ? '  → SUPPRIMÉES une fois vidées (--delete-empty-orgs).'
+      : '  → CONSERVÉES en base (vides, sans membre). Rien n\'est supprimé.');
   }
   log('');
 
@@ -186,9 +194,9 @@ async function main() {
       where: { id: { in: toMove.map((u) => u.id) } },
       data: { organizationId: target.id },
     });
-    // Les organisations absorbées n'ont plus de membre : on les supprime pour ne pas
-    // laisser d'entités fantômes portant le même nom.
-    if (doomed.length) {
+    // Les organisations absorbées n'ont plus de membre. Par défaut on les CONSERVE
+    // (coquilles vides, inoffensives) ; suppression uniquement si --delete-empty-orgs.
+    if (deleteEmptyOrgs && doomed.length) {
       const stillUsed = await tx.user.findMany({
         where: { organizationId: { in: doomed.map((o) => o.id) } },
         select: { id: true, email: true, organizationId: true },
@@ -207,6 +215,9 @@ async function main() {
   log('✅ Fusion appliquée.');
   log(`   ${toMove.length} compte(s) rattaché(s) à « ${target.name} ».`);
   log(`   ${duplicates.length} doublon(s) d'affiliation supprimé(s).`);
+  if (!deleteEmptyOrgs && doomed.length) {
+    log(`   ${doomed.length} ancienne(s) organisation(s) CONSERVÉE(S) en base (vides).`);
+  }
   log('   Les trois comptes partagent désormais vivier, offres et statistiques.');
 }
 
