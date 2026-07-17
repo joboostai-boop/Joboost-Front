@@ -60,11 +60,18 @@ const Card: React.FC<{ title: string; icon: React.ReactNode; children: React.Rea
   </section>
 );
 
-const Row: React.FC<{ children: React.ReactNode; onClick?: () => void }> = ({ children, onClick }) => (
-  <div onClick={onClick} className={`flex items-center justify-between gap-4 px-5 py-4 ${onClick ? 'cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors' : ''}`}>
-    {children}
-  </div>
-);
+/* Ligne de carte. `href` rend un vrai <a> (mailto, lien externe) tout en gardant
+   EXACTEMENT la meme geometrie que les lignes cliquables : c'est ce qui manquait
+   au lien du support, ecrit a la main sans padding horizontal — il debordait donc
+   de sa carte pendant que les autres lignes s'alignaient. */
+const Row: React.FC<{ children: React.ReactNode; onClick?: () => void; href?: string }> = ({ children, onClick, href }) => {
+  const interactive = !!onClick || !!href;
+  const cls = `group flex items-center justify-between gap-4 px-5 py-4 ${
+    interactive ? 'cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors' : ''
+  }`;
+  if (href) return <a href={href} className={cls}>{children}</a>;
+  return <div onClick={onClick} className={cls}>{children}</div>;
+};
 
 const Toggle: React.FC<{ on: boolean; onChange: () => void }> = ({ on, onChange }) => (
   <button onClick={onChange} className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors shrink-0 ${on ? 'bg-[#7D5CFF]' : 'bg-slate-200 dark:bg-slate-700'}`}>
@@ -447,16 +454,16 @@ const Settings: React.FC<SettingsProps> = ({ user, isDarkMode, toggleDarkMode })
 
           {/* Aide & support */}
           <Card title="Aide & support" icon={<LifeBuoy size={16} />}>
-            <a href={`mailto:${SUPPORT_EMAIL}`} className="flex items-center justify-between gap-3 py-3 group">
-              <div className="flex items-center gap-3">
-                <span className="w-9 h-9 rounded-lg bg-[#7D5CFF]/10 text-[#7D5CFF] flex items-center justify-center"><Mail size={18} /></span>
-                <div>
+            <Row href={`mailto:${SUPPORT_EMAIL}`}>
+              <div className="flex items-center gap-3 min-w-0">
+                <span className="w-9 h-9 rounded-lg bg-[#7D5CFF]/10 text-[#7D5CFF] flex items-center justify-center shrink-0"><Mail size={18} /></span>
+                <div className="min-w-0">
                   <p className="text-sm font-semibold text-[#111827] dark:text-white">Contacter le support</p>
-                  <p className="text-xs text-slate-400">Une question, un souci ? On répond à {SUPPORT_EMAIL}</p>
+                  <p className="text-xs text-slate-400 truncate">Une question, un souci ? On répond à {SUPPORT_EMAIL}</p>
                 </div>
               </div>
               <ChevronRight size={18} className="text-slate-300 shrink-0 group-hover:text-[#7D5CFF] transition-colors" />
-            </a>
+            </Row>
           </Card>
 
           {/* Données */}
