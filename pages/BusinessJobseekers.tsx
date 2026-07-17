@@ -708,12 +708,35 @@ const BusinessJobseekers: React.FC = () => {
       {drawerOpen && (
         <>
           <div className="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm" onClick={() => { setDrawerOpen(false); setSelectedDetail(null); }} />
-          <div className="fixed inset-x-0 bottom-0 md:top-0 md:right-0 md:left-auto md:w-full md:max-w-lg z-50 bg-white dark:bg-[#111827] shadow-2xl rounded-t-2xl md:rounded-none md:border-l border-slate-200 dark:border-slate-700 h-[90vh] md:h-full flex flex-col transition-transform duration-300">
-            {/* Header Sticky */}
-            <div className="shrink-0 bg-white dark:bg-[#111827] z-10 flex items-center justify-between p-4 border-b border-slate-200 dark:border-slate-700 rounded-t-2xl md:rounded-none">
-              <div className="absolute top-2 left-1/2 -translate-x-1/2 w-10 h-1 bg-slate-200 dark:bg-slate-700 rounded-full md:hidden" />
-              <h2 className="text-lg font-bold text-slate-900 dark:text-white mt-2 md:mt-0">Profil adhérent</h2>
-              <button onClick={() => { setDrawerOpen(false); setSelectedDetail(null); }} className="p-2.5 rounded-lg text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center mt-2 md:mt-0">
+          <div className="fixed inset-x-0 bottom-0 md:top-0 md:right-0 md:left-auto md:w-full md:max-w-xl z-50 bg-white dark:bg-[#111827] shadow-2xl rounded-t-2xl md:rounded-none md:border-l border-[#ECEAF6] dark:border-[#1F2937] h-[92dvh] md:h-full flex flex-col">
+
+            {/* ── En-tête : l'identité ne défile jamais. On sait toujours de qui
+                 parle le tiroir, même arrivé au bas d'un long profil. ── */}
+            <div className="shrink-0 relative flex items-start gap-3 p-4 md:p-5 border-b border-[#ECEAF6] dark:border-[#1F2937] rounded-t-2xl md:rounded-none">
+              <div aria-hidden className="absolute top-2 left-1/2 -translate-x-1/2 w-10 h-1 bg-slate-200 dark:bg-slate-700 rounded-full md:hidden" />
+              {selectedDetail ? (
+                <>
+                  <div className="w-12 h-12 rounded-full bg-[#EFEBFF] dark:bg-[#7D5CFF]/15 text-[#5B3FD6] dark:text-[#B9A7FF] flex items-center justify-center font-extrabold text-lg shrink-0 mt-2 md:mt-0">
+                    {selectedDetail.name.charAt(0).toUpperCase()}
+                  </div>
+                  <div className="min-w-0 flex-1 mt-2 md:mt-0">
+                    <p className="text-[10.5px] font-bold uppercase tracking-[0.14em] text-[#7D5CFF]">Profil adhérent</p>
+                    <h2 className="text-lg font-extrabold tracking-[-0.02em] text-slate-900 dark:text-white truncate leading-tight">
+                      {selectedDetail.name}
+                    </h2>
+                    {selectedDetail.title && (
+                      <p className="text-xs text-slate-500 dark:text-slate-400 truncate mt-0.5">{selectedDetail.title}</p>
+                    )}
+                  </div>
+                </>
+              ) : (
+                <h2 className="flex-1 text-lg font-extrabold text-slate-900 dark:text-white mt-2 md:mt-0">Profil adhérent</h2>
+              )}
+              <button
+                onClick={() => { setDrawerOpen(false); setSelectedDetail(null); }}
+                aria-label="Fermer"
+                className="shrink-0 p-2.5 rounded-lg text-slate-400 hover:bg-[#F5F4FB] dark:hover:bg-[#1F2937] hover:text-slate-600 transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center mt-2 md:mt-0"
+              >
                 <X size={20} />
               </button>
             </div>
@@ -724,26 +747,53 @@ const BusinessJobseekers: React.FC = () => {
                   <Loader2 className="animate-spin text-[#7D5CFF]" size={32} />
                 </div>
               ) : selectedDetail ? (
-                <div className="p-4 md:p-6 space-y-6 md:space-y-8">
-                  {/* Header Info */}
-                  <div className="flex items-center gap-4">
-                    <div className="w-16 h-16 md:w-20 md:h-20 rounded-full bg-[#EFEBFF] dark:bg-[#7D5CFF]/15 text-[#5B3FD6] dark:text-[#B9A7FF] flex items-center justify-center font-bold text-2xl md:text-3xl shrink-0">
-                      {selectedDetail.name.charAt(0).toUpperCase()}
-                    </div>
-                    <div className="flex-1">
-                      <h3 className="text-xl font-bold text-slate-900 dark:text-white leading-tight">{selectedDetail.name}</h3>
-                      {selectedDetail.title && <p className="text-sm font-medium text-slate-500 mt-1">{selectedDetail.title}</p>}
-                    </div>
-                  </div>
+                <div className="p-4 md:p-5 space-y-6">
 
-                  {/* ── Gestion (CRM) ── */}
-                  <div className="rounded-xl border border-slate-200 dark:border-slate-700 p-4 space-y-4">
-                    {/* Statut */}
+                  {/* ── Coordonnées ── */}
+                  {(hasRealEmail(selectedDetail.email) || selectedDetail.phone || selectedDetail.city || selectedDetail.linkedin) && (
+                    <div className="flex flex-wrap gap-2">
+                      {hasRealEmail(selectedDetail.email) && (
+                        <a
+                          href={`mailto:${selectedDetail.email}`}
+                          className="inline-flex items-center gap-2 max-w-full px-3 py-1.5 rounded-full bg-[#F5F4FB] dark:bg-[#0B1120] border border-[#ECEAF6] dark:border-[#1F2937] text-xs font-semibold text-slate-600 dark:text-slate-300 hover:border-[#7D5CFF]/40 hover:text-[#7D5CFF] transition-colors"
+                        >
+                          <Mail size={13} className="shrink-0" /> <span className="truncate">{selectedDetail.email}</span>
+                        </a>
+                      )}
+                      {selectedDetail.phone && (
+                        <a
+                          href={`tel:${selectedDetail.phone}`}
+                          className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#F5F4FB] dark:bg-[#0B1120] border border-[#ECEAF6] dark:border-[#1F2937] text-xs font-semibold text-slate-600 dark:text-slate-300 hover:border-[#7D5CFF]/40 hover:text-[#7D5CFF] transition-colors"
+                        >
+                          <Phone size={13} className="shrink-0" /> {selectedDetail.phone}
+                        </a>
+                      )}
+                      {selectedDetail.city && (
+                        <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#F5F4FB] dark:bg-[#0B1120] border border-[#ECEAF6] dark:border-[#1F2937] text-xs font-semibold text-slate-600 dark:text-slate-300">
+                          <MapPin size={13} className="shrink-0" /> {selectedDetail.city}
+                        </span>
+                      )}
+                      {selectedDetail.linkedin && (
+                        <a
+                          href={selectedDetail.linkedin}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#F5F4FB] dark:bg-[#0B1120] border border-[#ECEAF6] dark:border-[#1F2937] text-xs font-semibold text-[#7D5CFF] hover:border-[#7D5CFF]/40 transition-colors"
+                        >
+                          <ExternalLink size={13} className="shrink-0" /> LinkedIn
+                        </a>
+                      )}
+                    </div>
+                  )}
+
+                  {/* ── Suivi : statut + note privée ── */}
+                  <div className="rounded-2xl border border-[#ECEAF6] dark:border-[#1F2937] p-4 space-y-4">
                     <div>
                       <label className="text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-2 flex items-center gap-1.5">
                         Statut {savingStatus && <Loader2 size={11} className="animate-spin" />}
                       </label>
-                      <div className="flex items-center gap-1.5">
+                      {/* Segmented control : même langage visuel que le dock et les onglets */}
+                      <div className="flex gap-1 p-1 rounded-xl bg-[#F5F4FB] dark:bg-[#0B1120] border border-[#ECEAF6] dark:border-[#1F2937]">
                         {STATUS_FORM_OPTIONS.map((o) => {
                           const isActive = selectedDetail.affiliationStatus === o.value;
                           return (
@@ -751,10 +801,11 @@ const BusinessJobseekers: React.FC = () => {
                               key={o.value}
                               onClick={() => handleStatusChange(o.value)}
                               disabled={savingStatus || isActive}
-                              className={`flex-1 px-2 py-2 rounded-lg text-xs font-bold border transition-colors min-h-[40px] disabled:cursor-default ${
+                              aria-pressed={isActive}
+                              className={`flex-1 min-h-[38px] px-2 rounded-lg text-xs font-bold border transition-colors disabled:cursor-default ${
                                 isActive
                                   ? getStatusColor(o.value)
-                                  : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-700'
+                                  : 'border-transparent text-slate-500 dark:text-slate-400 hover:bg-white dark:hover:bg-[#1F2937]'
                               }`}
                             >
                               {o.label}
@@ -764,7 +815,6 @@ const BusinessJobseekers: React.FC = () => {
                       </div>
                     </div>
 
-                    {/* Note privée */}
                     <div>
                       <label className="text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-2 flex items-center gap-1.5">
                         <StickyNote size={12} /> Note privée
@@ -776,105 +826,34 @@ const BusinessJobseekers: React.FC = () => {
                         onChange={(e) => setNoteDraft(e.target.value)}
                         placeholder="Vos remarques sur ce candidat (visibles par vous seul)…"
                       />
-                      <div className="flex justify-end mt-2">
-                        <button
-                          onClick={handleSaveNote}
-                          disabled={savingNote || noteDraft === (selectedDetail.note || '')}
-                          className="btn btn-secondary min-h-[40px] text-sm disabled:opacity-50"
-                        >
-                          {savingNote ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />}
-                          Enregistrer la note
-                        </button>
-                      </div>
-                    </div>
-
-                    {/* Contact */}
-                    <div className="flex items-center gap-2">
-                      <button
-                        onClick={handleOutreach}
-                        className="min-h-[40px] text-sm flex-1 inline-flex items-center justify-center gap-2 rounded-xl bg-[#7D5CFF]/10 text-[#7D5CFF] dark:text-[#B9A7FF] font-semibold hover:bg-[#7D5CFF]/20 transition-colors px-3"
-                      >
-                        <Sparkles size={14} /> Message d'approche IA
-                      </button>
-                      {hasRealEmail(selectedDetail.email) && (
-                        <a href={`mailto:${selectedDetail.email}`} className="btn btn-secondary min-h-[40px] text-sm flex-1">
-                          <Mail size={14} /> Écrire un email
-                        </a>
+                      {/* Le bouton n'apparaît qu'en cas de modification : pas de bouton
+                          mort en permanence sous chaque champ. */}
+                      {noteDraft !== (selectedDetail.note || '') && (
+                        <div className="flex justify-end mt-2">
+                          <button onClick={handleSaveNote} disabled={savingNote} className="btn btn-secondary min-h-[38px] text-sm">
+                            {savingNote ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />}
+                            Enregistrer la note
+                          </button>
+                        </div>
                       )}
                     </div>
-
-                    {/* Positionner sur une offre : dépose la candidature pour le candidat */}
-                    <button
-                      onClick={openPosition}
-                      className="w-full min-h-[40px] text-sm inline-flex items-center justify-center gap-2 rounded-xl border border-[#7D5CFF]/25 text-[#7D5CFF] dark:text-[#B9A7FF] font-semibold hover:bg-[#7D5CFF]/10 transition-colors px-3"
-                    >
-                      <Briefcase size={14} /> Positionner sur une offre
-                    </button>
-
-                    {/* Actions fiche */}
-                    <div className="flex items-center gap-2 pt-1">
-                      {selectedDetail.managed && (
-                        <button onClick={() => openEdit(selectedDetail)} className="btn btn-secondary min-h-[40px] text-sm flex-1">
-                          <Edit3 size={14} /> Modifier la fiche
-                        </button>
-                      )}
-                      <button
-                        onClick={() => setRemovingId(selectedDetail.id)}
-                        className="min-h-[40px] text-sm flex-1 inline-flex items-center justify-center gap-2 rounded-xl border border-red-200 dark:border-red-900/40 text-red-600 dark:text-red-400 font-semibold hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors px-3"
-                      >
-                        <Trash2 size={14} /> Retirer du vivier
-                      </button>
-                    </div>
-                    {!selectedDetail.managed && (
-                      <p className="text-[11px] text-slate-400 leading-snug">
-                        Ce candidat possède un compte Joboost : sa fiche n'est pas modifiable ici.
-                      </p>
-                    )}
                   </div>
 
-                  {/* Contact Grid */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div className="flex items-center gap-3 p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl">
-                      <Mail size={16} className="text-slate-400 shrink-0" />
-                      <span className="text-sm font-medium text-slate-700 dark:text-slate-300 truncate">{selectedDetail.email}</span>
-                    </div>
-                    {selectedDetail.phone && (
-                      <div className="flex items-center gap-3 p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl">
-                        <Phone size={16} className="text-slate-400 shrink-0" />
-                        <span className="text-sm font-medium text-slate-700 dark:text-slate-300">{selectedDetail.phone}</span>
-                      </div>
-                    )}
-                    {selectedDetail.city && (
-                      <div className="flex items-center gap-3 p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl">
-                        <MapPin size={16} className="text-slate-400 shrink-0" />
-                        <span className="text-sm font-medium text-slate-700 dark:text-slate-300">{selectedDetail.city}</span>
-                      </div>
-                    )}
-                    {selectedDetail.linkedin && (
-                      <a href={selectedDetail.linkedin} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl text-[#7D5CFF] hover:bg-[#7D5CFF]/10 transition-colors">
-                        <ExternalLink size={16} className="shrink-0" />
-                        <span className="text-sm font-medium">LinkedIn</span>
-                      </a>
-                    )}
-                  </div>
-
-                  {/* Summary */}
+                  {/* ── Résumé ── */}
                   {selectedDetail.summary && (
                     <div>
-                      <h4 className="text-sm font-bold text-slate-900 dark:text-white mb-2 uppercase tracking-wider">Résumé</h4>
-                      <div className="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-100 dark:border-slate-800">
-                        <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">{selectedDetail.summary}</p>
-                      </div>
+                      <h4 className="text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-2">Résumé</h4>
+                      <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">{selectedDetail.summary}</p>
                     </div>
                   )}
 
-                  {/* Skills */}
+                  {/* ── Compétences ── */}
                   {selectedDetail.skills && selectedDetail.skills.length > 0 && (
                     <div>
-                      <h4 className="text-sm font-bold text-slate-900 dark:text-white mb-3 uppercase tracking-wider">Compétences</h4>
-                      <div className="flex flex-wrap gap-2">
+                      <h4 className="text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-2">Compétences</h4>
+                      <div className="flex flex-wrap gap-1.5">
                         {selectedDetail.skills.map((s: string) => (
-                          <span key={s} className="px-3 py-1.5 bg-[#F3F0FF] text-[#7D5CFF] border border-[#7D5CFF]/15 dark:bg-[#7D5CFF]/10 dark:text-[#A78BFA] dark:border-[#7D5CFF]/20 rounded-lg text-sm font-medium">
+                          <span key={s} className="px-2.5 py-1 bg-[#F3F0FF] text-[#7D5CFF] border border-[#7D5CFF]/15 dark:bg-[#7D5CFF]/10 dark:text-[#A78BFA] dark:border-[#7D5CFF]/20 rounded-lg text-xs font-semibold">
                             {s}
                           </span>
                         ))}
@@ -882,20 +861,20 @@ const BusinessJobseekers: React.FC = () => {
                     </div>
                   )}
 
-                  {/* Applications */}
+                  {/* ── Candidatures ── */}
                   {selectedDetail.applications && selectedDetail.applications.length > 0 && (
                     <div>
-                      <h4 className="text-sm font-bold text-slate-900 dark:text-white mb-3 flex items-center gap-2 uppercase tracking-wider">
-                        <Briefcase size={16} className="text-slate-400" /> Candidatures
+                      <h4 className="text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-2 flex items-center gap-1.5">
+                        <Briefcase size={12} /> Candidatures
                       </h4>
-                      <div className="space-y-3">
+                      <div className="rounded-2xl border border-[#ECEAF6] dark:border-[#1F2937] divide-y divide-[#ECEAF6] dark:divide-[#1F2937] overflow-hidden">
                         {selectedDetail.applications.map((app) => (
-                          <div key={app.id} className="flex items-center justify-between p-4 bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-xl shadow-sm">
-                            <div className="min-w-0 pr-4">
+                          <div key={app.id} className="flex items-center justify-between gap-3 p-3">
+                            <div className="min-w-0">
                               <p className="text-sm font-bold text-slate-900 dark:text-white truncate">{app.title}</p>
                               <p className="text-xs text-slate-500 truncate mt-0.5">{app.company}</p>
                             </div>
-                            <span className={`text-xs font-bold px-3 py-1 rounded-full shrink-0 ${
+                            <span className={`text-[10.5px] font-bold px-2.5 py-1 rounded-full shrink-0 ${
                               app.status === 'INTERVIEW' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' :
                               app.status === 'OFFER' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' :
                               app.status === 'REJECTED' ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' :
@@ -907,23 +886,21 @@ const BusinessJobseekers: React.FC = () => {
                     </div>
                   )}
 
-                  {/* CVs */}
+                  {/* ── CV ── */}
                   {selectedDetail.cvs && selectedDetail.cvs.length > 0 && (
                     <div>
-                      <h4 className="text-sm font-bold text-slate-900 dark:text-white mb-3 flex items-center gap-2 uppercase tracking-wider">
-                        <FileText size={16} className="text-slate-400" /> CVs enregistrés
+                      <h4 className="text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-2 flex items-center gap-1.5">
+                        <FileText size={12} /> CV enregistrés
                       </h4>
-                      <div className="space-y-2">
+                      <div className="rounded-2xl border border-[#ECEAF6] dark:border-[#1F2937] divide-y divide-[#ECEAF6] dark:divide-[#1F2937] overflow-hidden">
                         {selectedDetail.cvs.map((cv) => (
                           <button
                             key={cv.id}
                             onClick={() => openCv(cv.id)}
                             title="Consulter ce CV"
-                            className="w-full flex items-center gap-3 p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors text-left group/cv"
+                            className="w-full flex items-center gap-3 p-3 hover:bg-[#F5F4FB] dark:hover:bg-[#1F2937] transition-colors text-left group/cv"
                           >
-                            <div className="w-8 h-8 rounded-lg bg-white dark:bg-slate-700 shadow-sm flex items-center justify-center shrink-0">
-                              <FileText size={14} className="text-[#7D5CFF] dark:text-[#A78BFA]" />
-                            </div>
+                            <FileText size={14} className="text-[#7D5CFF] dark:text-[#A78BFA] shrink-0" />
                             <span className="text-sm font-medium text-slate-700 dark:text-slate-300 flex-1 truncate">{cv.title}</span>
                             <span className="text-xs text-slate-400 shrink-0">{new Date(cv.updatedAt).toLocaleDateString('fr-FR')}</span>
                             <Eye size={14} className="text-slate-300 group-hover/cv:text-[#7D5CFF] transition-colors shrink-0" />
@@ -932,12 +909,78 @@ const BusinessJobseekers: React.FC = () => {
                       </div>
                     </div>
                   )}
-                  
-                  {/* Padding bottom for safe area on mobile */}
-                  <div className="h-6 md:hidden"></div>
+
+                  {/* ── Profil vide : on dit quoi faire plutôt que de laisser un blanc ── */}
+                  {!selectedDetail.summary
+                    && !(selectedDetail.skills && selectedDetail.skills.length)
+                    && !(selectedDetail.cvs && selectedDetail.cvs.length)
+                    && !(selectedDetail.applications && selectedDetail.applications.length) && (
+                    <div className="rounded-2xl border border-dashed border-[#ECEAF6] dark:border-[#1F2937] p-5 text-center">
+                      <p className="text-sm font-semibold text-slate-600 dark:text-slate-300">Profil encore vide</p>
+                      <p className="text-xs text-slate-400 mt-1 leading-relaxed">
+                        {selectedDetail.managed
+                          ? 'Complétez sa fiche pour retrouver ce candidat par compétence.'
+                          : 'Ce candidat n\'a pas encore renseigné son profil sur Joboost.'}
+                      </p>
+                      {selectedDetail.managed && (
+                        <button onClick={() => openEdit(selectedDetail)} className="btn btn-secondary min-h-[38px] text-sm mt-3">
+                          <Edit3 size={14} /> Compléter la fiche
+                        </button>
+                      )}
+                    </div>
+                  )}
+
+                  {/* ── Zone sensible : isolée en fin de tiroir, loin des actions
+                       courantes, pour ne pas retirer un adhérent par méprise. ── */}
+                  <div className="pt-2 border-t border-[#ECEAF6] dark:border-[#1F2937] space-y-2">
+                    {selectedDetail.managed ? (
+                      <button onClick={() => openEdit(selectedDetail)} className="btn btn-secondary min-h-[40px] text-sm w-full">
+                        <Edit3 size={14} /> Modifier la fiche
+                      </button>
+                    ) : (
+                      <p className="text-[11px] text-slate-400 leading-snug">
+                        Ce candidat possède un compte Joboost : sa fiche n'est pas modifiable ici.
+                      </p>
+                    )}
+                    <button
+                      onClick={() => setRemovingId(selectedDetail.id)}
+                      className="w-full min-h-[40px] text-sm inline-flex items-center justify-center gap-2 rounded-xl text-slate-500 dark:text-slate-400 font-semibold hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-600 dark:hover:text-red-400 transition-colors px-3"
+                    >
+                      <Trash2 size={14} /> Retirer du vivier
+                    </button>
+                  </div>
                 </div>
               ) : null}
             </div>
+
+            {/* ── Pied fixe : les actions du recruteur restent atteignables, quelle
+                 que soit la longueur du profil. Libellés courts : « Message
+                 d'approche IA » passait sur deux lignes et cassait l'alignement. ── */}
+            {!loadingDetail && selectedDetail && (
+              <div className="shrink-0 border-t border-[#ECEAF6] dark:border-[#1F2937] bg-white dark:bg-[#111827] p-3 md:p-4 space-y-2 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+                <button onClick={openPosition} className="btn btn-primary w-full min-h-[44px]">
+                  <Briefcase size={15} /> Positionner sur une offre
+                </button>
+                <div className="flex gap-2">
+                  <button
+                    onClick={handleOutreach}
+                    title="Générer un message d'approche avec l'IA"
+                    className="flex-1 min-h-[44px] text-sm inline-flex items-center justify-center gap-2 rounded-xl bg-[#7D5CFF]/10 text-[#7D5CFF] dark:text-[#B9A7FF] font-semibold hover:bg-[#7D5CFF]/20 transition-colors px-3 whitespace-nowrap"
+                  >
+                    <Sparkles size={14} className="shrink-0" /> Message IA
+                  </button>
+                  {hasRealEmail(selectedDetail.email) && (
+                    <a
+                      href={`mailto:${selectedDetail.email}`}
+                      title={`Écrire à ${selectedDetail.email}`}
+                      className="btn btn-secondary flex-1 min-h-[44px] text-sm whitespace-nowrap"
+                    >
+                      <Mail size={14} className="shrink-0" /> Email
+                    </a>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
         </>
       )}
