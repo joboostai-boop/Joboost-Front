@@ -21,26 +21,89 @@ interface SettingsProps {
 
 const API = import.meta.env.VITE_API_URL || '';
 
-// Compression du logo côté client : contenu dans 256 px, PNG (transparence conservée).
-// Le backend stocke une data URL, plafonnée à 500 Ko (cf. Organization.logoUrl).
+/* Rogne les marges vides autour du logo (transparentes, ou d'une couleur de fond
+   unie). Sans ça, centrer l'IMAGE ne centre pas le LOGO : les fichiers fournis par
+   les organismes contiennent presque toujours un cadre vide asymétrique, et le
+   glyphe apparaît décalé dans sa pastille quoi qu'on fasse en CSS. On recadre donc
+   sur le contenu réel : le logo devient son image, et le centrage tombe juste. */
+const trimCanvas = (source: HTMLCanvasElement): HTMLCanvasElement => {
+  const ctx = source.getContext('2d', { willReadFrequently: true });
+  if (!ctx) return source;
+  const { width, height } = source;
+  const { data } = ctx.getImageData(0, 0, width, height);
+  const px = (x: number, y: number) => {
+    const i = (y * width + x) * 4;
+    return [data[i], data[i + 1], data[i + 2], data[i + 3]];
+  };
+
+  // La couleur de fond n'est retenue que si les 4 coins concordent : sinon le
+  // fichier n'a pas de cadre uni et on se contente de rogner la transparence.
+  const corners = [px(0, 0), px(width - 1, 0), px(0, height - 1), px(width - 1, height - 1)];
+  const bg = corners[0];
+  const uniformBg = corners.every((c) => c.every((v, k) => Math.abs(v - bg[k]) < 8));
+  const isBlank = (p: number[]) =>
+    p[3] < 10 || (uniformBg && bg[3] > 10 && p.slice(0, 3).every((v, k) => Math.abs(v - bg[k]) < 12));
+
+  const rowBlank = (y: number) => { for (let x = 0; x < width; x++) if (!isBlank(px(x, y))) return false; return true; };
+  const colBlank = (x: number) => { for (let y = 0; y < height; y++) if (!isBlank(px(x, y))) return false; return true; };
+
+  let top = 0, bottom = height - 1, left = 0, right = width - 1;
+  while (top < bottom && rowBlank(top)) top++;
+  while (bottom > top && rowBlank(bottom)) bottom--;
+  while (left < right && colBlank(left)) left++;
+  while (right > left && colBlank(right)) right--;
+
+  const w = right - left + 1;
+  const h = bottom - top + 1;
+  // Filet : rien à rogner, ou résultat absurde (image quasi vide) → on garde l'original.
+  if ((w === width && h === height) || w < 8 || h < 8) return source;
+
+  const out = document.createElement('canvas');
+  out.width = w;
+  out.height = h;
+  out.getContext('2d')?.drawImage(source, left, top, w, h, 0, 0, w, h);
+  return out;
+};
+
+// Préparation du logo côté client : recadrage sur le contenu, puis contenu dans
+// 256 px. Le backend stocke une data URL, plafonnée à 500 Ko (cf. Organization.logoUrl).
 const compressLogo = (file: File): Promise<string> =>
   new Promise((resolve, reject) => {
     const img = new Image();
     const url = URL.createObjectURL(file);
     img.onload = () => {
-      const max = 256;
-      const scale = Math.min(max / img.width, max / img.height, 1);
-      const canvas = document.createElement('canvas');
-      canvas.width = Math.max(1, Math.round(img.width * scale));
-      canvas.height = Math.max(1, Math.round(img.height * scale));
-      const ctx = canvas.getContext('2d');
-      if (!ctx) { URL.revokeObjectURL(url); reject(new Error('Canvas indisponible.')); return; }
-      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-      URL.revokeObjectURL(url);
-      let out = canvas.toDataURL('image/png');
-      // Filet : si le PNG est trop lourd (photo), on repasse en JPEG compressé.
-      if (out.length > 400_000) out = canvas.toDataURL('image/jpeg', 0.85);
-      resolve(out);
+      try {
+        // 1. Taille naturelle : nécessaire pour analyser les pixels avant réduction.
+        const src = document.createElement('canvas');
+        src.width = img.naturalWidth || img.width;
+        src.height = img.naturalHeight || img.height;
+        const sctx = src.getContext('2d');
+        if (!sctx) throw new Error('Canvas indisponible.');
+        sctx.drawImage(img, 0, 0);
+        URL.revokeObjectURL(url);
+
+        // 2. Recadrage sur le logo réel.
+        const trimmed = trimCanvas(src);
+
+        // 3. Mise à l'échelle dans 256 px, ratio préservé.
+        const max = 256;
+        const scale = Math.min(max / trimmed.width, max / trimmed.height, 1);
+        const out = document.createElement('canvas');
+        out.width = Math.max(1, Math.round(trimmed.width * scale));
+        out.height = Math.max(1, Math.round(trimmed.height * scale));
+        const octx = out.getContext('2d');
+        if (!octx) throw new Error('Canvas indisponible.');
+        octx.imageSmoothingQuality = 'high';
+        octx.drawImage(trimmed, 0, 0, out.width, out.height);
+
+        let dataUrl = out.toDataURL('image/png');
+        // Filet : si le PNG est trop lourd (photo), on repasse en JPEG compressé.
+        if (dataUrl.length > 400_000) dataUrl = out.toDataURL('image/jpeg', 0.85);
+        resolve(dataUrl);
+      } catch (err: any) {
+        URL.revokeObjectURL(url);
+        reject(err instanceof Error ? err : new Error('Image illisible.'));
+      }
     };
     img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('Image illisible.')); };
     img.src = url;
