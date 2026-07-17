@@ -99,17 +99,43 @@ async function main() {
     orderBy: { affiliatedAt: 'asc' },
   });
 
-  const seen = new Map<string, string>(); // jobseekerId -> id de l'affiliation conservée
+  const emailById = new Map(users.map((u) => [u.id, u.email]));
+
+  // On conserve la PLUS ANCIENNE affiliation par adhérent (celle d'origine, avec son
+  // statut). Mais on ne jette PAS les notes CRM des doublons : deux conseillers ont pu
+  // suivre la même personne et écrire chacun ses observations. Supprimer la ligne du
+  // second effacerait son travail sans retour possible — on fusionne donc les notes
+  // dans celle qui reste, en indiquant leur provenance.
+  const kept = new Map<string, (typeof affiliations)[number]>();       // jobseekerId -> affiliation conservée
+  const keptById = new Map<string, (typeof affiliations)[number]>();   // id -> même affiliation (accès direct)
   const duplicates: string[] = [];
+  const noteMerges = new Map<string, string[]>(); // id conservé -> notes à rapatrier
+
   for (const a of affiliations) {
-    if (seen.has(a.jobseekerId)) duplicates.push(a.id);
-    else seen.set(a.jobseekerId, a.id);
+    const existing = kept.get(a.jobseekerId);
+    if (!existing) { kept.set(a.jobseekerId, a); keptById.set(a.id, a); continue; }
+    duplicates.push(a.id);
+    const note = (a.note || '').trim();
+    if (note) {
+      const from = emailById.get(a.businessId) || a.businessId;
+      const bucket = noteMerges.get(existing.id) || [];
+      bucket.push(`[note de ${from}] ${note}`);
+      noteMerges.set(existing.id, bucket);
+    }
   }
 
-  log(`Vivier : ${affiliations.length} affiliation(s), ${seen.size} adhérent(s) distinct(s).`);
+  log(`Vivier : ${affiliations.length} affiliation(s), ${kept.size} adhérent(s) distinct(s).`);
   if (duplicates.length) {
     log(`  ⚠️  ${duplicates.length} doublon(s) à supprimer (le même adhérent affilié par plusieurs collègues).`);
-    log('     La plus ANCIENNE affiliation est conservée — avec son statut et sa note CRM.');
+    log('     La plus ANCIENNE affiliation est conservée, avec son statut.');
+    if (noteMerges.size) {
+      let n = 0;
+      noteMerges.forEach((v) => { n += v.length; });
+      log(`     ${n} note(s) CRM des doublons seront RAPATRIÉES dans l'affiliation conservée`);
+      log('     (préfixées par l\'email de leur auteur) — aucune note n\'est perdue.');
+    } else {
+      log('     Aucun doublon ne porte de note : rien à rapatrier.');
+    }
   } else {
     log('  Aucun doublon.');
   }
@@ -127,6 +153,13 @@ async function main() {
 
   // ── Application, dans une transaction : tout ou rien.
   await prisma.$transaction(async (tx) => {
+    // Rapatrier les notes AVANT de supprimer les doublons : si la transaction échoue
+    // après coup, elle est annulée en entier — mais l'ordre garde l'intention claire.
+    for (const [keptId, notes] of noteMerges) {
+      const current = keptById.get(keptId)!;
+      const merged = [(current.note || '').trim(), ...notes].filter(Boolean).join('\n\n');
+      await tx.businessAffiliation.update({ where: { id: keptId }, data: { note: merged } });
+    }
     if (duplicates.length) {
       await tx.businessAffiliation.deleteMany({ where: { id: { in: duplicates } } });
     }
