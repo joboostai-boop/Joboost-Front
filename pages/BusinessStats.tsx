@@ -11,15 +11,23 @@ import {
 } from 'lucide-react';
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip,
-  ResponsiveContainer, PieChart, Pie, Cell, Legend,
+  ResponsiveContainer, PieChart, Pie, Cell,
 } from 'recharts';
 
-const DONUT_COLORS = ['#10B981', '#6B7280', '#EF4444', '#F59E0B', '#8B5CF6'];
 const STATUS_LABELS: Record<string, string> = {
   active: 'Actifs',
   inactive: 'Inactifs',
   suspended: 'Suspendus',
 };
+
+/* Couleur indexée par STATUT, et non par position : avec un tableau positionnel,
+   un organisme n'ayant que des « Suspendus » les affichait en vert (index 0). */
+const STATUS_COLORS: Record<string, string> = {
+  active: '#10B981',
+  inactive: '#94A3B8',
+  suspended: '#EF4444',
+};
+const FALLBACK_COLOR = '#8B5CF6';
 
 const MONTH_LABELS: Record<string, string> = {
   '01': 'Jan', '02': 'Fév', '03': 'Mar', '04': 'Avr',
@@ -80,7 +88,6 @@ const BusinessStatsPage: React.FC = () => {
   const [stats, setStats] = useState<BusinessStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const [showMobileActions, setShowMobileActions] = useState(false);
 
   // Filtres / période
@@ -102,12 +109,6 @@ const BusinessStatsPage: React.FC = () => {
   useModalBehavior(showCustomize, () => setShowCustomize(false));
   useModalBehavior(showMobileActions, () => setShowMobileActions(false));
   useModalBehavior(!!drill, () => setDrill(null));
-
-  useEffect(() => {
-    const handleResize = () => setIsMobile(window.innerWidth < 768);
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
 
   useEffect(() => {
     localStorage.setItem(LAYOUT_KEY, JSON.stringify(layout));
@@ -159,8 +160,14 @@ const BusinessStatsPage: React.FC = () => {
       name: STATUS_LABELS[s.status] || s.status,
       value: s.count,
       status: s.status,
+      color: STATUS_COLORS[s.status] || FALLBACK_COLOR,
     }));
   }, [stats]);
+
+  // Le centre du donut doit porter le TOTAL des parts affichées. Il montrait
+  // `totalActive` étiqueté « Actifs » alors que l'anneau agrège tous les statuts :
+  // avec 3 actifs et 2 inactifs, l'anneau valait 5 mais le centre annonçait 3.
+  const donutTotal = useMemo(() => donutData.reduce((sum, d) => sum + d.value, 0), [donutData]);
 
   // --- Export CSV (liberté : réutiliser les données) ---
   const handleExportCSV = () => {
@@ -280,16 +287,18 @@ const BusinessStatsPage: React.FC = () => {
         </button>
       </div>
 
-      {/* Sélecteur de période (segmented control) */}
-      <div className="flex items-center gap-1.5 mb-3 overflow-x-auto pb-1 print:hidden">
+      {/* Sélecteur de période — segmented control de l'app (conteneur + pilule
+          active), et non des boutons isolés : même langage que le dock et les onglets. */}
+      <div className="inline-flex gap-1 p-1 mb-3 rounded-xl bg-white dark:bg-[#111827] border border-[#ECEAF6] dark:border-[#1F2937] shadow-xs max-w-full overflow-x-auto scrollbar-none print:hidden">
         {PERIOD_OPTIONS.map((opt) => (
           <button
             key={opt.value}
             onClick={() => setPeriod(opt.value)}
-            className={`shrink-0 px-3 py-2 rounded-lg text-xs font-bold transition-colors min-h-[38px] ${
+            aria-pressed={period === opt.value}
+            className={`press shrink-0 px-3.5 py-2 rounded-lg text-xs font-bold whitespace-nowrap transition-all min-h-[38px] outline-none ${
               period === opt.value
-                ? 'bg-[#7D5CFF] text-white shadow-sm'
-                : 'bg-white dark:bg-slate-800 text-slate-500 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700'
+                ? 'bg-gradient-to-b from-[#8C6DFF] to-[#7D5CFF] text-white shadow-[0_4px_14px_-3px_rgba(124,92,255,0.6)]'
+                : 'text-slate-500 dark:text-slate-400 hover:text-[#7D5CFF] hover:bg-[#F5F4FB] dark:hover:bg-[#1F2937]'
             }`}
           >
             {opt.label}
@@ -434,40 +443,66 @@ const BusinessStatsPage: React.FC = () => {
                 <h3 className="text-sm font-bold text-slate-900 dark:text-white">Répartition par statut</h3>
                 <span className="text-[10px] text-slate-400 ml-auto hidden md:inline">Cliquez une part pour voir les adhérents</span>
               </div>
-              <div className="h-[240px] md:h-[300px] relative">
-                {donutData.length > 0 && (
-                  <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none pb-6 md:pb-0">
-                    <span className="text-2xl font-black text-slate-900 dark:text-white leading-none">{stats.kpis.totalActive}</span>
-                    <span className="text-[10px] uppercase font-bold text-slate-400 mt-1">Actifs</span>
+              {donutData.length > 0 ? (
+                /* Le donut vit dans un carré de taille FIXE : le calque du total se
+                   cale donc exactement dessus. Avec la légende Recharts (align=right),
+                   la zone du graphe était rognée et le donut glissait vers la gauche,
+                   pendant que le calque restait centré sur la carte — d'où le
+                   décalage. La légende est désormais du HTML : alignement maîtrisé,
+                   et chaque ligne devient cliquable avec son compte et sa part. */
+                <div className="flex flex-col md:flex-row md:items-center gap-5 md:gap-8">
+                  <div className="relative w-[190px] h-[190px] shrink-0 mx-auto md:mx-0">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart>
+                        <Pie
+                          data={donutData} cx="50%" cy="50%"
+                          innerRadius={64} outerRadius={90}
+                          paddingAngle={donutData.length > 1 ? 2 : 0}
+                          dataKey="value" stroke="none"
+                          onClick={(d: any) => d && setDrill({ type: 'status', value: d.status, label: d.name })}
+                          className="cursor-pointer"
+                        >
+                          {donutData.map((d) => <Cell key={d.status} fill={d.color} />)}
+                        </Pie>
+                        <Tooltip
+                          contentStyle={{ backgroundColor: '#111827', border: 'none', borderRadius: '8px', color: '#F9FAFB', fontSize: '12px' }}
+                          itemStyle={{ color: '#fff' }}
+                        />
+                      </PieChart>
+                    </ResponsiveContainer>
+                    <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                      <span className="text-[1.75rem] font-extrabold tracking-tight text-slate-900 dark:text-white leading-none tabular-nums">
+                        {donutTotal}
+                      </span>
+                      <span className="text-[10px] uppercase font-bold tracking-wider text-slate-400 mt-1">
+                        Adhérent{donutTotal > 1 ? 's' : ''}
+                      </span>
+                    </div>
                   </div>
-                )}
-                {donutData.length > 0 ? (
-                  <ResponsiveContainer width="100%" height="100%">
-                    <PieChart>
-                      <Pie
-                        data={donutData} cx="50%" cy={isMobile ? '45%' : '50%'}
-                        innerRadius={isMobile ? 55 : 70} outerRadius={isMobile ? 75 : 95}
-                        paddingAngle={2} dataKey="value" stroke="none"
-                        onClick={(d: any) => d && setDrill({ type: 'status', value: d.status, label: d.name })}
-                        className="cursor-pointer"
-                      >
-                        {donutData.map((_, index) => (
-                          <Cell key={`cell-${index}`} fill={DONUT_COLORS[index % DONUT_COLORS.length]} />
-                        ))}
-                      </Pie>
-                      <Legend
-                        verticalAlign={isMobile ? 'bottom' : 'middle'} align={isMobile ? 'center' : 'right'}
-                        layout={isMobile ? 'horizontal' : 'vertical'} iconType="circle" iconSize={8}
-                        wrapperStyle={isMobile ? { paddingTop: '20px' } : { paddingLeft: '20px' }}
-                        formatter={(value: string) => <span className="text-xs font-medium text-slate-600 dark:text-slate-300 ml-1">{value}</span>}
-                      />
-                      <Tooltip contentStyle={{ backgroundColor: '#111827', border: 'none', borderRadius: '8px', color: '#F9FAFB', fontSize: '12px' }} itemStyle={{ color: '#fff' }} />
-                    </PieChart>
-                  </ResponsiveContainer>
-                ) : (
-                  <div className="flex items-center justify-center h-full text-sm text-slate-400">Aucune donnée</div>
-                )}
-              </div>
+
+                  <ul className="flex-1 min-w-0 w-full space-y-1">
+                    {donutData.map((d) => {
+                      const pct = donutTotal > 0 ? Math.round((d.value / donutTotal) * 100) : 0;
+                      return (
+                        <li key={d.status}>
+                          <button
+                            onClick={() => setDrill({ type: 'status', value: d.status, label: d.name })}
+                            className="w-full flex items-center gap-3 px-2 py-2 rounded-lg text-left hover:bg-[#F5F4FB] dark:hover:bg-[#1F2937] transition-colors group/leg"
+                          >
+                            <span aria-hidden className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: d.color }} />
+                            <span className="flex-1 min-w-0 truncate text-sm font-medium text-slate-600 dark:text-slate-300">{d.name}</span>
+                            <span className="text-sm font-bold text-slate-900 dark:text-white tabular-nums">{d.value}</span>
+                            <span className="w-10 text-right text-xs text-slate-400 tabular-nums">{pct} %</span>
+                            <ChevronRight size={14} className="text-slate-300 group-hover/leg:text-[#7D5CFF] transition-colors shrink-0" />
+                          </button>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </div>
+              ) : (
+                <div className="flex items-center justify-center py-12 text-sm text-slate-400">Aucune donnée</div>
+              )}
             </div>
           );
         }
@@ -479,14 +514,16 @@ const BusinessStatsPage: React.FC = () => {
                 <Briefcase size={16} className="text-[#7D5CFF]" />
                 <h3 className="text-sm font-bold text-slate-900 dark:text-white">Offres d'emploi</h3>
               </div>
+              {/* Même échelle typographique que les KPI du haut : les chiffres
+                  géants centrés juraient avec le reste de la page. */}
               <div className="grid grid-cols-2 gap-3 md:gap-4">
-                <div className="p-4 md:p-6 bg-[#7D5CFF]/5 dark:bg-[#7D5CFF]/10 rounded-xl text-center">
-                  <p className="font-black text-[#7D5CFF] dark:text-[#B9A7FF]" style={{ fontSize: 'clamp(1.5rem, 4vw, 2.5rem)' }}>{stats.totalOffers}</p>
-                  <p className="text-xs font-medium uppercase tracking-wider text-[#7D5CFF]/70 dark:text-[#B9A7FF]/80 mt-2">Total des offres</p>
+                <div className="p-4 rounded-xl bg-[#7D5CFF]/5 dark:bg-[#7D5CFF]/10 border border-[#7D5CFF]/10">
+                  <p className="text-[1.75rem] font-extrabold tracking-tight leading-none text-[#7D5CFF] dark:text-[#B9A7FF] tabular-nums">{stats.totalOffers}</p>
+                  <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 mt-2">Total des offres</p>
                 </div>
-                <div className="p-4 md:p-6 bg-emerald-50 dark:bg-emerald-900/10 rounded-xl text-center">
-                  <p className="font-black text-emerald-600 dark:text-emerald-400" style={{ fontSize: 'clamp(1.5rem, 4vw, 2.5rem)' }}>{stats.publishedOffers}</p>
-                  <p className="text-xs font-medium uppercase tracking-wider text-emerald-600/70 dark:text-emerald-500 mt-2">Publiées</p>
+                <div className="p-4 rounded-xl bg-emerald-50 dark:bg-emerald-900/10 border border-emerald-500/10">
+                  <p className="text-[1.75rem] font-extrabold tracking-tight leading-none text-emerald-600 dark:text-emerald-400 tabular-nums">{stats.publishedOffers}</p>
+                  <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 mt-2">Publiées</p>
                 </div>
               </div>
             </div>
