@@ -24,6 +24,16 @@ import { prisma } from '../db';
 
 const log = (...a: any[]) => console.log(...a);
 
+// Hôte de la base VISÉE, affiché sans jamais divulguer les identifiants.
+// Le `.env` du dépôt pointe sur une base LOCALE : sans surcharge de POSTGRES_URI,
+// ce script fusionnerait des comptes locaux en annonçant un succès, pendant que la
+// production resterait inchangée. On rend donc la cible explicite.
+const dbHost = (): string => {
+  try { return new URL(process.env.POSTGRES_URI || '').hostname || '(inconnu)'; }
+  catch { return '(inconnu)'; }
+};
+const isLocalDb = (): boolean => /^(localhost|127\.0\.0\.1|::1)$/.test(dbHost());
+
 async function main() {
   const args = process.argv.slice(2);
   const apply = args.includes('--apply');
@@ -34,6 +44,15 @@ async function main() {
     process.exit(1);
   }
 
+  log(`Base ciblée : ${dbHost()}${isLocalDb() ? '  ← BASE LOCALE' : '  ← base distante'}`);
+  if (isLocalDb()) {
+    log('');
+    log('⚠️  Vous visez une base LOCALE. Pour agir sur la PRODUCTION, surchargez');
+    log('    POSTGRES_URI avec l\'URI de production (Render → Environment) :');
+    log('      PowerShell : $env:POSTGRES_URI = "<uri-prod>"; npm run org:merge -- <emails>');
+    log('      bash       : POSTGRES_URI="<uri-prod>" npm run org:merge -- <emails>');
+  }
+  log('');
   log(apply ? '⚠️  MODE APPLICATION — les écritures seront effectuées.' : 'ℹ️  SIMULATION — aucune écriture. Ajoutez --apply pour exécuter.');
   log('');
 
