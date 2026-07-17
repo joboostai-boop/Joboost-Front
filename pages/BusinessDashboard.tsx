@@ -136,8 +136,14 @@ const BusinessDashboard: React.FC = () => {
             style={{ background: 'radial-gradient(540px 240px at 100% -50px, rgba(255,255,255,0.18), transparent 70%)' }}
           />
           <div className="relative flex items-center gap-4 md:gap-5">
-            <div className="w-16 h-16 md:w-20 md:h-20 rounded-2xl bg-white shadow-sm shrink-0 flex items-center justify-center p-2.5">
-              <img src={account.logoUrl} alt={account.companyName || 'Logo'} className="max-w-full max-h-full object-contain" />
+            {/* Le logo remplit sa tuile et `object-contain` le centre (object-position
+               50% 50% par defaut) sans jamais le deformer, quel que soit son ratio. */}
+            <div className="w-16 h-16 md:w-20 md:h-20 rounded-2xl bg-white shadow-sm shrink-0 overflow-hidden">
+              <img
+                src={account.logoUrl}
+                alt={account.companyName || 'Logo'}
+                className="block w-full h-full object-contain object-center p-2"
+              />
             </div>
             <div className="min-w-0">
               <p className="text-[10.5px] font-bold uppercase tracking-[0.16em] text-white/70">Espace partenaire</p>

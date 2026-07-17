@@ -57,10 +57,15 @@ export default {
         },
       },
       animation: {
-        // Apparitions au montage / au scroll — `both` garde l'état final.
-        'fade-in-up': 'fade-in-up 0.5s cubic-bezier(0.16, 1, 0.3, 1) both',
-        'fade-in': 'fade-in 0.4s ease-out both',
-        'scale-in': 'scale-in 0.25s cubic-bezier(0.16, 1, 0.3, 1) both',
+        // Apparitions au montage / au scroll. `backwards` et NON `both` : `forwards`
+        // conserverait la dernière keyframe, or `transform: none`/`translateY(0)`/
+        // `scale(1)` s'y calculent en MATRICE IDENTITÉ, pas en `none`. L'élément
+        // garderait un transform à vie et deviendrait le bloc conteneur de tout
+        // descendant `fixed`/`sticky` (modales tronquées, popovers mal ancrés).
+        // L'état final rejoint l'état naturel : le rendu est identique.
+        'fade-in-up': 'fade-in-up 0.5s cubic-bezier(0.16, 1, 0.3, 1) backwards',
+        'fade-in': 'fade-in 0.4s ease-out backwards',
+        'scale-in': 'scale-in 0.25s cubic-bezier(0.16, 1, 0.3, 1) backwards',
         // Effet de chargement (skeleton) pour les générateurs IA.
         shimmer: 'shimmer 1.5s infinite',
       },
