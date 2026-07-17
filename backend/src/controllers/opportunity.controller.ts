@@ -34,10 +34,28 @@ const getPartnerOffers = async (user: any, q: string, contractType?: string): Pr
   });
   if (affiliations.length === 0) return [];
 
+  /* Le candidat est affilié à un CONSEILLER, mais les offres appartiennent à
+     l'ORGANISME : sans cet élargissement, un adhérent inscrit par un conseiller ne
+     verrait pas les offres publiées par ses collègues de la même Mission Locale.
+     On remonte donc du conseiller à son organisme, puis à tous ses membres. */
+  const recruiterIds = affiliations.map((a) => a.businessId);
+  const recruiters = await prisma.user.findMany({
+    where: { id: { in: recruiterIds } },
+    select: { id: true, organizationId: true },
+  });
+  const orgIds = recruiters.map((r) => r.organizationId).filter(Boolean) as string[];
+  const colleagues = orgIds.length
+    ? await prisma.user.findMany({
+        where: { organizationId: { in: orgIds }, role: 'BUSINESS_PARTNER' },
+        select: { id: true },
+      })
+    : [];
+  const businessIds = Array.from(new Set([...recruiterIds, ...colleagues.map((c) => c.id)]));
+
   const now = new Date();
   const offers = await prisma.businessOffer.findMany({
     where: {
-      businessId: { in: affiliations.map((a) => a.businessId) },
+      businessId: { in: businessIds },
       isPublished: true,
       OR: [{ expiresAt: null }, { expiresAt: { gte: now } }],
     },

@@ -31,6 +31,68 @@ const vivierLimitFor = (user: { plan: string; createdAt: Date }): number =>
     : discoveryActive(user) ? DISCOVERY_VIVIER_LIMIT
     : 0;
 
+/* ═══════════════════ PORTÉE ORGANISATION ═══════════════════
+   Les données B2B (offres, vivier, CRM) appartiennent à l'ORGANISME, pas au
+   conseiller : trois collègues d'une même Mission Locale doivent voir le même
+   vivier et les mêmes offres sans les ressaisir chacun de leur côté.
+
+   On NE déplace PAS les tables sur `organizationId` : `businessId` reste posé à
+   la création et devient l'AUTEUR (traçabilité de qui a ajouté quoi), tandis que
+   toutes les lectures/écritures sont élargies aux membres de l'organisation.
+   Aucune donnée à migrer, aucune contrainte d'unicité à casser.
+
+   Un compte sans organisation reste seul dans sa portée — comportement inchangé. */
+type OrgScope = {
+  orgId: string | null;
+  memberIds: string[];  // tous les membres de l'organisme, l'appelant inclus
+  plan: string;         // plan retenu pour l'organisme
+  createdAt: Date;      // adhésion la plus ancienne (base du calcul de découverte)
+};
+
+const getOrgScope = async (userId: string): Promise<OrgScope> => {
+  const me = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { id: true, organizationId: true, plan: true, createdAt: true },
+  });
+  if (!me) return { orgId: null, memberIds: [userId], plan: 'Gratuit', createdAt: new Date() };
+  if (!me.organizationId) return { orgId: null, memberIds: [me.id], plan: me.plan, createdAt: me.createdAt };
+
+  const members = await prisma.user.findMany({
+    where: { organizationId: me.organizationId, role: 'BUSINESS_PARTNER' },
+    select: { id: true, plan: true, createdAt: true },
+  });
+  const list = members.length > 0 ? members : [me];
+
+  // L'abonnement est porté par l'ORGANISME : si un membre est abonné, tous le sont
+  // (sinon un collègue invité arriverait sans accès). À défaut, la découverte court
+  // depuis l'adhésion la PLUS ANCIENNE — inviter quelqu'un ne rouvre pas 15 jours d'essai.
+  const paid = list.find((m) => isPaidBusinessPlan(m.plan));
+  const oldest = list.reduce((a, b) => (a.createdAt <= b.createdAt ? a : b));
+  return {
+    orgId: me.organizationId,
+    memberIds: list.map((m) => m.id),
+    plan: paid ? paid.plan : oldest.plan,
+    createdAt: oldest.createdAt,
+  };
+};
+
+// Clause Prisma « appartient à mon organisme » (et non « m'appartient »).
+const ownedByOrg = (scope: OrgScope) => ({ businessId: { in: scope.memberIds } });
+
+/* Dédoublonne les affiliations par candidat. L'unicité en base porte sur
+   [businessId, jobseekerId] : elle empêche UN membre d'affilier deux fois la même
+   personne, mais pas deux collègues de le faire chacun de leur côté. À l'échelle de
+   l'organisme, un adhérent apparaîtrait alors en double. On garde la PLUS ANCIENNE
+   affiliation (celle d'origine), indépendamment de l'ordre de la requête. */
+const dedupeByJobseeker = <T extends { jobseekerId: string; affiliatedAt: Date }>(rows: T[]): T[] => {
+  const byId = new Map<string, T>();
+  for (const r of rows) {
+    const seen = byId.get(r.jobseekerId);
+    if (!seen || r.affiliatedAt < seen.affiliatedAt) byId.set(r.jobseekerId, r);
+  }
+  return Array.from(byId.values());
+};
+
 export const businessController = {
 
   // ==================== COMPTE / ENTREPRISE ====================
@@ -43,19 +105,23 @@ export const businessController = {
         include: { organization: true },
       });
       if (!user) return res.status(404).json({ success: false, error: 'Compte introuvable.' });
+      // Abonnement et découverte sont ceux de l'ORGANISME : trois collègues d'une
+      // même Mission Locale doivent voir le même plan, pas trois essais distincts.
+      const scope = await getOrgScope(user.id);
+      const org = { plan: scope.plan, createdAt: scope.createdAt };
       res.json({
         success: true,
         account: {
           name: user.name,
           email: user.email,
-          plan: user.plan,
+          plan: scope.plan,
           companyName: user.organization?.name || '',
           logoUrl: user.organization?.logoUrl || null,
           subscriptionStatus: user.subscriptionStatus || null,
           subscriptionEndsAt: user.subscriptionEndsAt || null,
-          isPaid: isPaidBusinessPlan(user.plan),
-          discoveryDaysLeft: discoveryDaysLeft(user),
-          discoveryActive: discoveryActive(user),
+          isPaid: isPaidBusinessPlan(scope.plan),
+          discoveryDaysLeft: discoveryDaysLeft(org),
+          discoveryActive: discoveryActive(org),
         },
       });
     } catch (error: any) {
@@ -99,19 +165,22 @@ export const businessController = {
       }
 
       const updated = await prisma.user.findUnique({ where: { id: user.id }, include: { organization: true } });
+      // Portée recalculée APRÈS coup : ce handler peut venir de créer l'organisation.
+      const scopeAfter = await getOrgScope(user.id);
+      const orgAfter = { plan: scopeAfter.plan, createdAt: scopeAfter.createdAt };
       res.json({
         success: true,
         account: {
           name: updated?.name,
           email: updated?.email,
-          plan: updated?.plan,
+          plan: scopeAfter.plan,
           companyName: updated?.organization?.name || '',
           logoUrl: updated?.organization?.logoUrl || null,
           subscriptionStatus: updated?.subscriptionStatus || null,
           subscriptionEndsAt: updated?.subscriptionEndsAt || null,
-          isPaid: updated ? isPaidBusinessPlan(updated.plan) : false,
-          discoveryDaysLeft: updated ? discoveryDaysLeft(updated) : 0,
-          discoveryActive: updated ? discoveryActive(updated) : false,
+          isPaid: isPaidBusinessPlan(scopeAfter.plan),
+          discoveryDaysLeft: discoveryDaysLeft(orgAfter),
+          discoveryActive: discoveryActive(orgAfter),
         },
       });
     } catch (error: any) {
@@ -130,6 +199,8 @@ export const businessController = {
         return res.status(400).json({ success: false, error: 'Le titre et la description sont requis.' });
       }
 
+      // `businessId` = l'AUTEUR de l'offre. Elle reste visible et modifiable par
+      // tous les membres de l'organisme (cf. getOrgScope).
       const offer = await prisma.businessOffer.create({
         data: {
           businessId: req.userId!,
@@ -158,7 +229,8 @@ export const businessController = {
       const search = (req.query.search as string) || undefined;
       const status = (req.query.status as string) || undefined; // 'published' | 'draft'
 
-      const where: any = { businessId: req.userId! };
+      const scope = await getOrgScope(req.userId!);
+      const where: any = { ...ownedByOrg(scope) };
       if (search) where.title = { contains: search, mode: 'insensitive' };
       if (status === 'published') where.isPublished = true;
       if (status === 'draft') where.isPublished = false;
@@ -194,9 +266,11 @@ export const businessController = {
       const { id } = req.params;
       const { title, description, contractType, location, salaryRange, requiredSkills, expiresAt } = req.body;
 
-      // Vérifier que l'offre appartient au business_partner
+      // L'offre doit appartenir à l'ORGANISME (pas seulement à l'appelant) :
+      // un collègue de la même Mission Locale peut la modifier.
+      const scope = await getOrgScope(req.userId!);
       const existing = await prisma.businessOffer.findFirst({
-        where: { id, businessId: req.userId! },
+        where: { id, ...ownedByOrg(scope) },
       });
 
       if (!existing) {
@@ -227,8 +301,9 @@ export const businessController = {
     try {
       const { id } = req.params;
 
+      const scope = await getOrgScope(req.userId!);
       const existing = await prisma.businessOffer.findFirst({
-        where: { id, businessId: req.userId! },
+        where: { id, ...ownedByOrg(scope) },
       });
 
       if (!existing) {
@@ -247,8 +322,9 @@ export const businessController = {
     try {
       const { id } = req.params;
 
+      const scope = await getOrgScope(req.userId!);
       const existing = await prisma.businessOffer.findFirst({
-        where: { id, businessId: req.userId! },
+        where: { id, ...ownedByOrg(scope) },
       });
 
       if (!existing) {
@@ -276,8 +352,9 @@ export const businessController = {
     try {
       const { id } = req.params;
 
+      const scope = await getOrgScope(req.userId!);
       const offer = await prisma.businessOffer.findFirst({
-        where: { id, businessId: req.userId! },
+        where: { id, ...ownedByOrg(scope) },
       });
       if (!offer) {
         return res.status(404).json({ success: false, error: 'Offre non trouvée.' });
@@ -292,14 +369,15 @@ export const businessController = {
         return res.json({ success: true, matches: [], requiredSkills: [], totalVivier: 0 });
       }
 
-      const affiliations = await prisma.businessAffiliation.findMany({
-        where: { businessId: req.userId! },
+      const affiliationsRaw = await prisma.businessAffiliation.findMany({
+        where: ownedByOrg(scope),
         include: {
           jobseeker: {
             select: { id: true, name: true, email: true, title: true, city: true, skills: true },
           },
         },
       });
+      const affiliations = dedupeByJobseeker(affiliationsRaw);
 
       const requiredSet = new Set(required);
 
@@ -339,17 +417,18 @@ export const businessController = {
   applyCandidateToOffer: async (req: Request, res: Response) => {
     try {
       const businessId = req.userId!;
+      const scope = await getOrgScope(businessId);
       const { id } = req.params; // id de l'offre
       const { jobseekerId } = req.body || {};
       if (!jobseekerId) {
         return res.status(400).json({ success: false, error: 'Candidat manquant.' });
       }
 
-      const offer = await prisma.businessOffer.findFirst({ where: { id, businessId } });
+      const offer = await prisma.businessOffer.findFirst({ where: { id, ...ownedByOrg(scope) } });
       if (!offer) return res.status(404).json({ success: false, error: 'Offre non trouvée.' });
 
       const affiliation = await prisma.businessAffiliation.findFirst({
-        where: { businessId, jobseekerId: String(jobseekerId) },
+        where: { ...ownedByOrg(scope), jobseekerId: String(jobseekerId) },
       });
       if (!affiliation) {
         return res.status(403).json({ success: false, error: 'Ce candidat n\'est pas dans votre vivier.' });
@@ -396,8 +475,13 @@ export const businessController = {
       const status = (req.query.status as string) || undefined;
       const search = (req.query.search as string) || undefined;
 
-      // Build affiliation filter
-      const affiliationWhere: any = { businessId: req.userId! };
+      // Vivier de l'ORGANISME, pas du seul conseiller connecté.
+      // La liste est paginée : on ne peut pas dédoublonner après coup sans fausser
+      // le total. Les doublons sont donc évités À LA SOURCE (addJobseeker vérifie
+      // l'organisme entier) et les doublons historiques sont nettoyés une fois par
+      // le script de fusion (backend/src/scripts/merge-organizations.ts).
+      const scope = await getOrgScope(req.userId!);
+      const affiliationWhere: any = { ...ownedByOrg(scope) };
       if (status) affiliationWhere.status = status;
 
       // Build jobseeker search filter
@@ -473,9 +557,10 @@ export const businessController = {
     try {
       const { id } = req.params;
 
-      // Vérifier l'affiliation
+      // Affiliation à l'ORGANISME : un collègue peut consulter la fiche.
+      const scope = await getOrgScope(req.userId!);
       const affiliation = await prisma.businessAffiliation.findFirst({
-        where: { businessId: req.userId!, jobseekerId: id },
+        where: { ...ownedByOrg(scope), jobseekerId: id },
       });
 
       if (!affiliation) {
@@ -538,6 +623,7 @@ export const businessController = {
   createJobseeker: async (req: Request, res: Response) => {
     try {
       const businessId = req.userId!;
+      const scope = await getOrgScope(businessId);
       const { name, email, title, city, phone, summary, skills, linkedin } = req.body;
 
       if (!name || !String(name).trim()) {
@@ -545,11 +631,14 @@ export const businessController = {
       }
 
       // Découverte : vivier plafonné (100) pendant 15 j, puis bloqué. Business = illimité.
-      const recruiter = await prisma.user.findUnique({ where: { id: businessId } });
-      const limit = recruiter ? vivierLimitFor(recruiter) : DISCOVERY_VIVIER_LIMIT;
-      const currentCount = await prisma.businessAffiliation.count({ where: { businessId } });
+      // Les droits sont ceux de l'ORGANISME (cf. getOrgScope) : le vivier est commun,
+      // son plafond doit l'être aussi — sinon un collègue invité, au plan « Gratuit »,
+      // se verrait refuser l'ajout dans un organisme pourtant abonné.
+      const org = { plan: scope.plan, createdAt: scope.createdAt };
+      const limit = vivierLimitFor(org);
+      const currentCount = await prisma.businessAffiliation.count({ where: ownedByOrg(scope) });
       if (currentCount >= limit) {
-        const expired = recruiter && !isPaidBusinessPlan(recruiter.plan) && !discoveryActive(recruiter);
+        const expired = !isPaidBusinessPlan(org.plan) && !discoveryActive(org);
         return res.status(403).json({
           success: false,
           code: 'PLAN_LIMIT',
@@ -574,11 +663,13 @@ export const businessController = {
           if (existing.role !== 'CANDIDATE') {
             return res.status(409).json({ success: false, error: 'Cet e-mail correspond à un compte non candidat (recruteur/admin).' });
           }
-          if (existing.managedByBusinessId && existing.managedByBusinessId !== businessId) {
+          // « Un autre organisme » = hors de MON organisme : une fiche saisie par un
+          // collègue de la même Mission Locale n'est pas un tiers.
+          if (existing.managedByBusinessId && !scope.memberIds.includes(existing.managedByBusinessId)) {
             return res.status(409).json({ success: false, error: 'Ce profil appartient déjà au vivier d\'un autre organisme.' });
           }
           const already = await prisma.businessAffiliation.findFirst({
-            where: { businessId, jobseekerId: existing.id },
+            where: { ...ownedByOrg(scope), jobseekerId: existing.id },
           });
           if (already) {
             return res.status(409).json({ success: false, error: 'Ce candidat est déjà dans votre vivier.' });
@@ -655,17 +746,18 @@ export const businessController = {
   updateJobseeker: async (req: Request, res: Response) => {
     try {
       const businessId = req.userId!;
+      const scope = await getOrgScope(businessId);
       const { id } = req.params;
 
       const affiliation = await prisma.businessAffiliation.findFirst({
-        where: { businessId, jobseekerId: id },
+        where: { ...ownedByOrg(scope), jobseekerId: id },
       });
       if (!affiliation) {
         return res.status(404).json({ success: false, error: 'Candidat non trouvé dans votre vivier.' });
       }
 
       const candidate = await prisma.user.findUnique({ where: { id } });
-      if (!candidate || candidate.managedByBusinessId !== businessId) {
+      if (!candidate || !candidate.managedByBusinessId || !scope.memberIds.includes(candidate.managedByBusinessId)) {
         return res.status(403).json({
           success: false,
           error: "Ce profil appartient à un utilisateur Joboost et ne peut pas être modifié ici.",
@@ -721,6 +813,7 @@ export const businessController = {
   updateJobseekerStatus: async (req: Request, res: Response) => {
     try {
       const businessId = req.userId!;
+      const scope = await getOrgScope(businessId);
       const { id } = req.params;
       const { status } = req.body;
 
@@ -730,7 +823,7 @@ export const businessController = {
       }
 
       const affiliation = await prisma.businessAffiliation.findFirst({
-        where: { businessId, jobseekerId: id },
+        where: { ...ownedByOrg(scope), jobseekerId: id },
       });
       if (!affiliation) {
         return res.status(404).json({ success: false, error: 'Candidat non trouvé dans votre vivier.' });
@@ -748,11 +841,12 @@ export const businessController = {
   updateJobseekerNote: async (req: Request, res: Response) => {
     try {
       const businessId = req.userId!;
+      const scope = await getOrgScope(businessId);
       const { id } = req.params;
       const { note } = req.body;
 
       const affiliation = await prisma.businessAffiliation.findFirst({
-        where: { businessId, jobseekerId: id },
+        where: { ...ownedByOrg(scope), jobseekerId: id },
       });
       if (!affiliation) {
         return res.status(404).json({ success: false, error: 'Candidat non trouvé dans votre vivier.' });
@@ -771,10 +865,11 @@ export const businessController = {
   getJobseekerCv: async (req: Request, res: Response) => {
     try {
       const businessId = req.userId!;
+      const scope = await getOrgScope(businessId);
       const { id, cvId } = req.params;
 
       const affiliation = await prisma.businessAffiliation.findFirst({
-        where: { businessId, jobseekerId: id },
+        where: { ...ownedByOrg(scope), jobseekerId: id },
       });
       if (!affiliation) {
         return res.status(403).json({ success: false, error: 'Ce candidat n\'est pas dans votre vivier.' });
@@ -798,10 +893,11 @@ export const businessController = {
   removeJobseeker: async (req: Request, res: Response) => {
     try {
       const businessId = req.userId!;
+      const scope = await getOrgScope(businessId);
       const { id } = req.params;
 
       const affiliation = await prisma.businessAffiliation.findFirst({
-        where: { businessId, jobseekerId: id },
+        where: { ...ownedByOrg(scope), jobseekerId: id },
       });
       if (!affiliation) {
         return res.status(404).json({ success: false, error: 'Candidat non trouvé dans votre vivier.' });
@@ -812,7 +908,7 @@ export const businessController = {
         select: { managedByBusinessId: true },
       });
 
-      if (candidate?.managedByBusinessId === businessId) {
+      if (candidate?.managedByBusinessId && scope.memberIds.includes(candidate.managedByBusinessId)) {
         await prisma.user.delete({ where: { id } }); // cascade : supprime l'affiliation
       } else {
         await prisma.businessAffiliation.delete({ where: { id: affiliation.id } });
@@ -912,7 +1008,8 @@ export const businessController = {
         include: { organization: true },
       });
 
-      if (user && !aiEnabledFor(user)) {
+      const aiScope = await getOrgScope(req.userId!);
+      if (!aiEnabledFor({ plan: aiScope.plan, createdAt: aiScope.createdAt })) {
         return res.status(403).json({
           success: false,
           code: 'PLAN_REQUIRED',
@@ -941,11 +1038,12 @@ export const businessController = {
   generateOutreach: async (req: Request, res: Response) => {
     try {
       const businessId = req.userId!;
+      const scope = await getOrgScope(businessId);
       const { id } = req.params;
       const { offerTitle } = req.body || {};
 
       const affiliation = await prisma.businessAffiliation.findFirst({
-        where: { businessId, jobseekerId: id },
+        where: { ...ownedByOrg(scope), jobseekerId: id },
         include: {
           jobseeker: { select: { name: true, title: true, skills: true } },
         },
@@ -959,7 +1057,7 @@ export const businessController = {
         include: { organization: true },
       });
 
-      if (recruiter && !aiEnabledFor(recruiter)) {
+      if (!aiEnabledFor({ plan: scope.plan, createdAt: scope.createdAt })) {
         return res.status(403).json({
           success: false,
           code: 'PLAN_REQUIRED',
@@ -988,6 +1086,7 @@ export const businessController = {
   getStats: async (req: Request, res: Response) => {
     try {
       const businessId = req.userId!;
+      const scope = await getOrgScope(businessId);
 
       // --- 1. Résolution de la fenêtre temporelle (liberté : période + perso) ---
       const period = (req.query.period as string) || '6m';
@@ -1024,14 +1123,14 @@ export const businessController = {
       const skillFilter = (req.query.skill as string) || undefined;
 
       const jobseekerFilter = skillFilter ? { skills: { hasSome: [skillFilter] } } : undefined;
-      const baseAffiliationWhere: any = { businessId };
+      const baseAffiliationWhere: any = { ...ownedByOrg(scope) };
       if (statusFilter) baseAffiliationWhere.status = statusFilter;
       if (jobseekerFilter) baseAffiliationWhere.jobseeker = jobseekerFilter;
 
       // --- 3. KPIs ---
       // Total adhérents actifs (snapshot, respecte le filtre compétence)
       const totalActive = await prisma.businessAffiliation.count({
-        where: { businessId, status: 'active', ...(jobseekerFilter ? { jobseeker: jobseekerFilter } : {}) },
+        where: { ...ownedByOrg(scope), status: 'active', ...(jobseekerFilter ? { jobseeker: jobseekerFilter } : {}) },
       });
 
       // Nouveaux adhérents dans la fenêtre + fenêtre précédente (delta)
@@ -1094,7 +1193,7 @@ export const businessController = {
       // --- 4. Répartition par statut (donut) — non filtrée par statut pour rester lisible ---
       const statusDistribution = await prisma.businessAffiliation.groupBy({
         by: ['status'],
-        where: { businessId, ...(jobseekerFilter ? { jobseeker: jobseekerFilter } : {}) },
+        where: { ...ownedByOrg(scope), ...(jobseekerFilter ? { jobseeker: jobseekerFilter } : {}) },
         _count: { _all: true },
       });
 
@@ -1157,10 +1256,10 @@ export const businessController = {
 
       // --- 7. Offres ---
       const publishedOffers = await prisma.businessOffer.count({
-        where: { businessId, isPublished: true },
+        where: { ...ownedByOrg(scope), isPublished: true },
       });
       const totalOffers = await prisma.businessOffer.count({
-        where: { businessId },
+        where: ownedByOrg(scope),
       });
 
       res.json({

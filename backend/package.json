@@ -8,6 +8,7 @@
     "dev": "nodemon src/index.ts",
     "build": "prisma generate && prisma db push --skip-generate && tsc",
     "test": "ts-node --transpile-only src/services/__tests__/spontaneous.scoring.test.ts",
+    "org:merge": "ts-node --transpile-only src/scripts/merge-organizations.ts",
     "job:followup": "ts-node --transpile-only src/jobs/followup.job.ts",
     "job:alerts": "ts-node --transpile-only src/jobs/jobAlerts.job.ts",
     "db:push": "prisma db push",
