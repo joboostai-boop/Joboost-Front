@@ -6,6 +6,7 @@ import { emailService, isEmailConfigured, EmailAttachment } from '../services/em
 import { loadUserGuards, scoreCompanyForUser } from '../services/spontaneous.guards';
 import { AUTO_LEVEL_LABEL } from '../services/spontaneous.scoring.service';
 import { pdfService } from '../services/pdf.service';
+import { contactDetector } from '../services/contactDetector.service';
 
 const monthKey = (d: Date = new Date()): string =>
   `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
@@ -53,6 +54,24 @@ export const spontaneousController = {
       return res.status(404).json({ success: false, error: 'Candidature introuvable.' });
     }
     res.json({ success: true, data: withLabel(item) });
+  },
+
+  /**
+   * Détecte un email de contact employeur pour une candidature spontanée.
+   * Best-effort (scraping du site + vérif) : renvoie { data: null } si rien de fiable.
+   * Sert à alimenter l'envoi via le relais DKIM contact@joboost.app, sans tiers.
+   */
+  detectContact: async (req: Request, res: Response) => {
+    const { companyName, city, domain } = req.body || {};
+    if (!companyName && !domain) {
+      return res.status(400).json({ success: false, error: "Fournissez 'companyName' ou 'domain'." });
+    }
+    const result = await contactDetector.detect({
+      companyName: companyName || domain,
+      city,
+      knownDomain: domain,
+    });
+    return res.json({ success: true, data: result });
   },
 
   /**
