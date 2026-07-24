@@ -1,5 +1,6 @@
 import dotenv from 'dotenv';
 dotenv.config();
+import { extractContactEmail } from './contactEmail.util';
 
 // ====================================================================
 //  Service France Travail — vraies offres d'emploi (API "Offres d'emploi v2")
@@ -297,8 +298,13 @@ export const franceTravailService = {
         url: o?.origineOffre?.urlOrigine || '',
         tags,
         aiInsight,
-        // FT expose parfois un email de contact employeur (souvent absent, selon l'offre).
-        contactEmail: (o?.contact?.courriel || '').trim() || undefined,
+        // Email de contact employeur : champ structuré (rare), sinon coordonnées,
+        // sinon email écrit en clair dans la description → maximise les offres « postables ».
+        contactEmail: extractContactEmail(
+          o?.contact?.courriel,
+          o?.contact?.coordonnees1, o?.contact?.coordonnees2, o?.contact?.coordonnees3,
+          rawDesc,
+        ),
       };
     });
   },

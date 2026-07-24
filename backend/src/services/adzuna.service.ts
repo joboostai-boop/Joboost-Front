@@ -2,6 +2,7 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 import type { FtOffer } from './francetravail.service';
+import { extractContactEmail } from './contactEmail.util';
 
 // ====================================================================
 //  Service Adzuna — agrégateur d'offres d'emploi (complète France Travail).
@@ -115,6 +116,8 @@ export const adzunaService = {
         // Description complète (Adzuna peut déjà la tronquer de son côté) ; le front la replie avec « Voir plus ».
         aiInsight: rawDesc
           || `Offre publiée via Adzuna correspondant à votre recherche « ${what} ».`,
+        // Email employeur éventuellement présent dans la description → offre « postable ».
+        contactEmail: extractContactEmail(rawDesc),
       };
     });
   },
