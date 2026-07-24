@@ -97,11 +97,24 @@ export const spontaneousController = {
     const user = await prisma.user.findUnique({ where: { id: userId } });
     if (!user) return res.status(404).json({ success: false, error: 'Utilisateur non trouvé.' });
 
+    // 0. Détection d'email en SILENCE si aucun contact fourni (candidature spontanée "par nous-mêmes").
+    //    Sécurité : on ne retient QUE les détections à HAUTE confiance (site confirmé + MX vérifié)
+    //    pour ne jamais envoyer au mauvais destinataire. Best-effort, borné à 9 s.
+    let resolvedContactEmail: string | undefined = contactEmail || undefined;
+    let resolvedContactSource = contactSource;
+    if (!resolvedContactEmail) {
+      const detected = await contactDetector.detect({ companyName, city: companyAddress, knownDomain: domain }, 9000);
+      if (detected && detected.confidence === 'high') {
+        resolvedContactEmail = detected.email;
+        resolvedContactSource = 'estimated'; // email détecté → scoring le force en "À valider" (jamais d'envoi auto)
+      }
+    }
+
     // 1. Scoring serveur (garde-fous DB inclus)
     const guards = await loadUserGuards(userId);
     const scoring = await scoreCompanyForUser(
       {
-        companyName, domain, contactEmail, contactSource,
+        companyName, domain, contactEmail: resolvedContactEmail, contactSource: resolvedContactSource,
         hiringPotential, sector: companySector, companyLocation: companyAddress,
         ftSource, includeLetter: Boolean(includeLetter),
       },

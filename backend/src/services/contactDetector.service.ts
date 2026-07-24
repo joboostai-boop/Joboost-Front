@@ -105,11 +105,12 @@ const CONTACT_PATHS = ['', '/contact', '/nous-contacter', '/mentions-legales', '
 const cleanDomain = (d: string): string =>
   d.replace(/^https?:\/\//, '').replace(/^www\./, '').replace(/\/.*$/, '').trim().toLowerCase();
 
-const scrapeDomain = async (domain: string, companyName: string, city?: string): Promise<DetectResult | null> => {
+const scrapeDomain = async (domain: string, companyName: string, city: string | undefined, deadline: number): Promise<DetectResult | null> => {
   let matched = false;
   let candidate: string | null = null;
   outer: for (const base of [`https://${domain}`, `https://www.${domain}`]) {
     for (const p of CONTACT_PATHS) {
+      if (Date.now() > deadline) break outer; // budget de temps dépassé
       const html = await fetchPage(base + p);
       if (!html) continue;
       if (!matched && siteMatchesCompany(html, companyName, city)) matched = true;
@@ -139,7 +140,8 @@ const DIRECTORIES = [
   'tripadvisor', 'wikipedia', 'pappers', 'kompass', '118000', 'indeed', 'hellowork',
   'leboncoin', '.gouv.fr', 'annuaire', 'duckduckgo',
 ];
-const resolveDomainViaSearch = async (companyName: string, city?: string): Promise<string | null> => {
+const resolveDomainViaSearch = async (companyName: string, city: string | undefined, deadline: number): Promise<string | null> => {
+  if (Date.now() > deadline) return null;
   const html = await fetchPage('https://html.duckduckgo.com/html/?q=' + encodeURIComponent(`${companyName} ${city || ''}`.trim()));
   if (!html) return null;
   for (const m of html.matchAll(/uddg=([^"&]+)/g)) {
@@ -161,22 +163,26 @@ export const contactDetector = {
   isPlaceholderEmail,
   siteMatchesCompany,
 
-  /** Détecte un email employeur exploitable. Best-effort : renvoie null si rien de fiable. */
-  detect: async (input: DetectInput): Promise<DetectResult | null> => {
+  /**
+   * Détecte un email employeur exploitable. Best-effort : renvoie null si rien de fiable.
+   * `budgetMs` borne le temps total (utile quand appelé dans un flux synchrone comme /prepare).
+   */
+  detect: async (input: DetectInput, budgetMs = 9000): Promise<DetectResult | null> => {
     const key = (input.knownDomain ? cleanDomain(input.knownDomain) : `${input.companyName}|${input.city || ''}`).toLowerCase();
     const hit = cache.get(key);
     if (hit && Date.now() - hit.at < TTL_MS) return hit.result;
 
+    const deadline = Date.now() + budgetMs;
     let result: DetectResult | null = null;
     try {
       let domain = input.knownDomain ? cleanDomain(input.knownDomain) : null;
       let viaSearch = false;
       if (!domain) {
-        domain = await resolveDomainViaSearch(input.companyName, input.city);
+        domain = await resolveDomainViaSearch(input.companyName, input.city, deadline);
         viaSearch = true;
       }
       if (domain) {
-        result = await scrapeDomain(domain, input.companyName, input.city);
+        result = await scrapeDomain(domain, input.companyName, input.city, deadline);
         if (result && viaSearch) result.source = 'web-search';
       }
     } catch {
