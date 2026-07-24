@@ -102,8 +102,11 @@ export const spontaneousController = {
     //    pour ne jamais envoyer au mauvais destinataire. Best-effort, borné à 9 s.
     let resolvedContactEmail: string | undefined = contactEmail || undefined;
     let resolvedContactSource = contactSource;
-    if (!resolvedContactEmail) {
-      const detected = await contactDetector.detect({ companyName, city: companyAddress, knownDomain: domain }, 9000);
+    // On ne tente la détection ICI que si on a DÉJÀ un domaine (chemin rapide et fiable).
+    // La recherche web (retrouver le site via un moteur) est lente et souvent bloquée depuis
+    // le serveur → réservée à l'endpoint /detect-contact à la demande, pas dans ce flux synchrone.
+    if (!resolvedContactEmail && domain) {
+      const detected = await contactDetector.detect({ companyName, city: companyAddress, knownDomain: domain }, 6000);
       if (detected && detected.confidence === 'high') {
         resolvedContactEmail = detected.email;
         resolvedContactSource = 'estimated'; // email détecté → scoring le force en "À valider" (jamais d'envoi auto)
