@@ -6,6 +6,12 @@ export default {
     "./src/**/*.{js,ts,jsx,tsx}",
     "./components/**/*.{js,ts,jsx,tsx}",
     "./pages/**/*.{js,ts,jsx,tsx}",
+    // `services/` définit aussi des classes (ex. dégradés d'avatars entreprise
+    // dans visual.ts) : sans ce chemin, Tailwind les purge et les avatars
+    // s'affichent en blanc.
+    "./services/**/*.{js,ts,jsx,tsx}",
+    "./hooks/**/*.{js,ts,jsx,tsx}",
+    "./context/**/*.{js,ts,jsx,tsx}",
     "./App.tsx"
   ],
   theme: {

@@ -66,6 +66,22 @@ const OfferSkeleton: React.FC = () => (
   </div>
 );
 
+/**
+ * Fenêtre de pagination : au-delà de 7 pages, on ne montre que la première,
+ * la dernière et les voisines de la page courante (le reste devient « … »).
+ */
+const pageWindow = (current: number, total: number): (number | 'gap')[] => {
+  if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);
+  const out: (number | 'gap')[] = [1];
+  const start = Math.max(2, current - 1);
+  const end = Math.min(total - 1, current + 1);
+  if (start > 2) out.push('gap');
+  for (let p = start; p <= end; p++) out.push(p);
+  if (end < total - 1) out.push('gap');
+  out.push(total);
+  return out;
+};
+
 const PersonalizedOffers: React.FC = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
@@ -546,16 +562,25 @@ const PersonalizedOffers: React.FC = () => {
                 >
                   <ChevronLeft size={16} />
                 </button>
-                {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
-                  <button
-                    key={p}
-                    onClick={() => goToPage(p)}
-                    aria-current={p === currentPage ? 'page' : undefined}
-                    className={`press btn !px-3.5 ${p === currentPage ? 'btn-primary' : 'btn-secondary'}`}
-                  >
-                    {p}
-                  </button>
-                ))}
+                {/* Mobile : compteur compact (12 numéros débordaient de l'écran). */}
+                <span className="sm:hidden px-3 text-sm font-semibold text-[#4B5563] dark:text-[#D1D5DB] tabular-nums">
+                  Page {currentPage} / {totalPages}
+                </span>
+                {/* Desktop : numéros, resserrés autour de la page courante au-delà de 7 pages. */}
+                {pageWindow(currentPage, totalPages).map((p, i) =>
+                  p === 'gap' ? (
+                    <span key={`gap-${i}`} className="hidden sm:inline px-1 text-slate-400 select-none">…</span>
+                  ) : (
+                    <button
+                      key={p}
+                      onClick={() => goToPage(p)}
+                      aria-current={p === currentPage ? 'page' : undefined}
+                      className={`press btn !px-3.5 hidden sm:inline-flex ${p === currentPage ? 'btn-primary' : 'btn-secondary'}`}
+                    >
+                      {p}
+                    </button>
+                  ),
+                )}
                 <button
                   onClick={() => goToPage(currentPage + 1)}
                   disabled={currentPage === totalPages}
