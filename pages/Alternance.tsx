@@ -41,6 +41,9 @@ const Alternance: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [results, setResults] = useState<AlternanceResult[]>([]);
   const [searched, setSearched] = useState(false);
+  // Indique si le serveur a dû élargir la recherche pour trouver des résultats.
+  const [widened, setWidened] = useState<null | 'radius' | 'job'>(null);
+  const [radiusUsed, setRadiusUsed] = useState<number>(30);
   const [sending, setSending] = useState<Record<string, boolean>>({});
   const [sentIds, setSentIds] = useState<Record<string, boolean>>({});
   const [confirmTarget, setConfirmTarget] = useState<AlternanceResult | null>(null);
@@ -64,6 +67,8 @@ const Alternance: React.FC = () => {
       const data = await res.json();
       if (data.success) {
         setResults(data.results || []);
+        setWidened(data.widened ?? null);
+        setRadiusUsed(data.radiusUsed ?? radius);
         setSearched(true);
         toast.success(`${data.count} opportunité${data.count > 1 ? 's' : ''} en alternance.`);
       } else {
@@ -187,6 +192,17 @@ const Alternance: React.FC = () => {
               <div className="skeleton h-12 w-full rounded-lg" />
             </div>
           ))}
+        </div>
+      )}
+
+      {!loading && results.length > 0 && widened && (
+        <div className="surface p-3.5 flex items-start gap-2.5 border-l-4 border-amber-400">
+          <Info className="text-amber-500 shrink-0 mt-0.5" size={16} />
+          <p className="text-sm text-[#4B5563] dark:text-[#D1D5DB]">
+            {widened === 'radius'
+              ? <>Peu d'alternances sur ce métier tout près de chez vous — nous avons élargi la recherche à <strong>{radiusUsed} km</strong>.</>
+              : <>Aucune alternance sur ce métier précis dans la zone — voici <strong>toutes les alternances</strong> dans un rayon de {radiusUsed} km.</>}
+          </p>
         </div>
       )}
 

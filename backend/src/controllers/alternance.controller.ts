@@ -27,12 +27,34 @@ export const alternanceController = {
     if (!geo) return res.status(400).json({ success: false, error: 'Localisation introuvable.' });
 
     try {
-      const results = await laBonneAlternanceService.search({
-        latitude: geo.lat, longitude: geo.lon, radius,
-        romes: romeCode, diplomaLevel: diploma,
-      });
-      // `sample` = 1er élément brut : utile pour vérifier la structure réelle au 1er test.
-      return res.json({ success: true, source: 'labonnealternance', count: results.length, results, sample: results[0]?.raw ?? null });
+      // Hors grandes villes, filtrer sur UN code ROME vide souvent la liste.
+      // On élargit alors progressivement plutôt que de renvoyer une page vide :
+      //   1. métier + rayon demandé → 2. rayon doublé → 3. sans filtre métier.
+      const widenedRadius = Math.min(100, Math.max(radius * 2, 60));
+      const attempts: Array<{ romes?: string; radius: number; widened: null | 'radius' | 'job' }> = [
+        { romes: romeCode, radius, widened: null },
+        { romes: romeCode, radius: widenedRadius, widened: 'radius' },
+        { romes: undefined, radius: widenedRadius, widened: 'job' },
+      ];
+
+      for (const a of attempts) {
+        // On ne rejoue une tentative que si elle change vraiment la requête.
+        if (a.widened === 'radius' && widenedRadius === radius) continue;
+        if (a.widened === 'job' && !romeCode) continue;
+        const results = await laBonneAlternanceService.search({
+          latitude: geo.lat, longitude: geo.lon, radius: a.radius,
+          romes: a.romes, diplomaLevel: diploma,
+        });
+        if (results.length > 0 || a === attempts[attempts.length - 1]) {
+          return res.json({
+            success: true, source: 'labonnealternance',
+            count: results.length, results,
+            widened: a.widened,          // 'radius' | 'job' | null → message côté UI
+            radiusUsed: a.radius,
+          });
+        }
+      }
+      return res.json({ success: true, source: 'labonnealternance', count: 0, results: [], widened: null, radiusUsed: radius });
     } catch (e: any) {
       console.error('Alternance search error:', e?.message || e);
       return res.status(502).json({ success: false, error: "La recherche d'alternance est momentanément indisponible." });
