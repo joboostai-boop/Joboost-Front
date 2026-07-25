@@ -7,6 +7,7 @@ import { loadUserGuards, scoreCompanyForUser } from '../services/spontaneous.gua
 import { AUTO_LEVEL_LABEL } from '../services/spontaneous.scoring.service';
 import { pdfService } from '../services/pdf.service';
 import { contactDetector } from '../services/contactDetector.service';
+import { companyContactService } from '../services/companyContact.service';
 
 const monthKey = (d: Date = new Date()): string =>
   `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
@@ -97,12 +98,26 @@ export const spontaneousController = {
     const user = await prisma.user.findUnique({ where: { id: userId } });
     if (!user) return res.status(404).json({ success: false, error: 'Utilisateur non trouvé.' });
 
-    // 0. Détection d'email en SILENCE si aucun contact fourni (candidature spontanée "par nous-mêmes").
-    //    Sécurité : on ne retient QUE les détections à HAUTE confiance (site confirmé + MX vérifié)
-    //    pour ne jamais envoyer au mauvais destinataire. Best-effort, borné à 9 s.
+    // 0. Résolution de l'email de contact (candidature spontanée "par nous-mêmes") :
+    //    a) email fourni (manuel/offre) → on l'enregistre dans la base PARTAGÉE (« une bonne
+    //       fois pour toutes » : les prochains candidats l'auront pré-rempli) ;
+    //    b) sinon → base partagée (email déjà trouvé par un autre candidat) ;
+    //    c) sinon, si domaine connu → détection rapide ; haute confiance uniquement.
     let resolvedContactEmail: string | undefined = contactEmail || undefined;
     let resolvedContactSource = contactSource;
-    // On ne tente la détection ICI que si on a DÉJÀ un domaine (chemin rapide et fiable).
+    if (resolvedContactEmail) {
+      await companyContactService.save(companyName, resolvedContactEmail, {
+        location: companyAddress, domain,
+        source: contactSource === 'ft_contact' ? 'offer' : 'manual',
+      });
+    }
+    if (!resolvedContactEmail) {
+      const known = await companyContactService.lookup(companyName, companyAddress);
+      if (known) {
+        resolvedContactEmail = known.email;
+        resolvedContactSource = 'manual'; // déjà validé par un humain → même confiance qu'une saisie
+      }
+    }
     // La recherche web (retrouver le site via un moteur) est lente et souvent bloquée depuis
     // le serveur → réservée à l'endpoint /detect-contact à la demande, pas dans ce flux synchrone.
     if (!resolvedContactEmail && domain) {
@@ -110,6 +125,9 @@ export const spontaneousController = {
       if (detected && detected.confidence === 'high') {
         resolvedContactEmail = detected.email;
         resolvedContactSource = 'estimated'; // email détecté → scoring le force en "À valider" (jamais d'envoi auto)
+        await companyContactService.save(companyName, detected.email, {
+          location: companyAddress, domain: detected.domain, source: 'detector', verifiedMx: detected.mxVerified,
+        });
       }
     }
 

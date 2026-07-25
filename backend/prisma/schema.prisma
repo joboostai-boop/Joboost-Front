@@ -360,3 +360,24 @@ model BusinessAffiliation {
   @@index([jobseekerId])
   @@index([affiliatedAt])
 }
+
+// ==================== BASE D'EMAILS D'ENTREPRISE PARTAGÉE ====================
+// « Une bonne fois pour toutes » : chaque email d'entreprise trouvé une fois
+// (offre / détecteur / ajout manuel d'un candidat) est stocké et réutilisé pour
+// TOUS les candidats. Clé = nom normalisé + code postal (limite les homonymes).
+// Emails de contact PROFESSIONNELS publiés par les entreprises → réutilisables.
+model CompanyContact {
+  id          String   @id @default(uuid())
+  companyKey  String   @unique // nom normalisé + "|" + code postal
+  companyName String            // nom d'origine (affichage / debug)
+  email       String
+  domain      String?
+  postalCode  String?
+  source      String   @default("manual") // manual | offer | detector
+  verifiedMx  Boolean  @default(false)
+  usageCount  Int      @default(0) // nb de réutilisations (mesure l'intérêt)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([companyKey])
+}

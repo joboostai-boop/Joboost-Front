@@ -3,6 +3,7 @@ import { franceTravailService, isFranceTravailConfigured, FtCompany } from '../s
 import { laBonneBoiteService, geocodeLocation } from '../services/labonneboite.service';
 import { loadUserGuards, scoreCompanyForUser } from '../services/spontaneous.guards';
 import { AUTO_LEVEL_LABEL } from '../services/spontaneous.scoring.service';
+import { companyContactService } from '../services/companyContact.service';
 
 // Données de démonstration utilisées en repli si France Travail n'est pas configuré
 // ou momentanément indisponible (l'API renvoie parfois des 500 le temps de l'activation).
@@ -57,10 +58,15 @@ const enrichWithScoring = async (
   const guards = await loadUserGuards(userId);
   return Promise.all(
     companies.map(async (c) => {
+      // Base partagée : si un email a déjà été trouvé pour cette entreprise
+      // (par un autre candidat, une offre ou le détecteur), on le réutilise.
+      const known = await companyContactService.lookup(c.name, c.address);
       const scoring = await scoreCompanyForUser(
         {
           companyName: c.name,
-          domain: c.domain,
+          domain: c.domain || known?.domain || undefined,
+          contactEmail: known?.email,
+          contactSource: known ? 'manual' : undefined,
           hiringPotential: c.hiringPotential,
           sector: c.sector,
           companyLocation: c.address,
