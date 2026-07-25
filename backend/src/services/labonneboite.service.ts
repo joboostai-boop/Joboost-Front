@@ -118,9 +118,13 @@ export const laBonneBoiteService = {
         contractType: 'Candidature spontanée',
         domain: undefined, // non fourni par l'API v2
         matchedJob: jobTitle,
+        // Le fait qu'elle accepte les emails est exposé via `acceptsEmail` (message
+        // actionnable côté UI) plutôt que dans `reason`, pour ne pas contredire
+        // le « aucune adresse identifiée » quand on n'a pas encore l'email.
         reason: `Entreprise du marché caché : identifiée par La Bonne Boîte (France Travail) comme susceptible de recruter dans les 6 prochains mois sur le métier « ${jobTitle} »${
           score ? ` (potentiel ${Math.round(score)}/100)` : ''
-        }.${acceptsEmail ? ' Elle accepte les candidatures par email.' : ''}`,
+        }.`,
+        acceptsEmail,
         contactRole: 'Service Recrutement',
         offerUrl: '',
       };

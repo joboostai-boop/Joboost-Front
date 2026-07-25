@@ -32,6 +32,7 @@ interface CompanyResult {
   matchScore: number;
   contactEmail: string | null;
   contactSource: string;
+  acceptsEmail?: boolean; // l'entreprise accepte les candidatures par email (La Bonne Boîte)
 }
 
 const API = import.meta.env.VITE_API_URL || '';
@@ -328,8 +329,17 @@ const Spontaneous: React.FC = () => {
 
                   <div className="p-4 bg-[#F3F4F6] dark:bg-[#1F2937] rounded border-l-4 border-[#D1D5DB] dark:border-[#4B5563]">
                     <p className="text-sm text-[#4B5563] dark:text-[#9CA3AF]"><strong>Cible :</strong> {company.reason}</p>
-                    {blocked && company.autoBlockReason && (
-                      <p className="text-xs text-amber-700 mt-2 flex items-center gap-1.5"><Lock size={12} /> Envoi auto bloqué : {company.autoBlockReason}</p>
+                    {blocked && (
+                      company.acceptsEmail ? (
+                        // Message ACTIONNABLE : l'entreprise accepte les emails, il ne manque
+                        // que l'adresse — que le candidat peut trouver puis coller ci-dessus.
+                        <p className="text-xs text-[#7D5CFF] mt-2 flex items-start gap-1.5">
+                          <Mail size={12} className="mt-0.5 shrink-0" />
+                          Cette entreprise accepte les candidatures par email — ajoutez son adresse ci-dessus pour envoyer depuis Joboost.
+                        </p>
+                      ) : company.autoBlockReason ? (
+                        <p className="text-xs text-amber-700 mt-2 flex items-center gap-1.5"><Lock size={12} /> Envoi auto bloqué : {company.autoBlockReason}</p>
+                      ) : null
                     )}
                   </div>
                 </div>

@@ -65,6 +65,7 @@ export interface FtCompany {
   contactRole: string;
   offerUrl: string;
   domain?: string;       // domaine web de l'entreprise si exposé par FT (sert à estimer l'email)
+  acceptsEmail?: boolean; // La Bonne Boîte signale que l'entreprise accepte les candidatures par email
 }
 
 // Offre d'emploi réelle au format attendu par le front "Offres pour moi"
