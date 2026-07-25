@@ -12,8 +12,11 @@ import { getFtToken, isFranceTravailConfigured, FtCompany } from './francetravai
 //  retombe proprement sur l'approche "offres regroupées par entreprise".
 // ====================================================================
 
-const LBB_SCOPE = process.env.LBB_SCOPE || 'api_labonneboitev1';
-const LBB_BASE = process.env.LBB_API_BASE || 'https://api.francetravail.io/partenaire/labonneboite/v1/company/';
+// La Bonne Boîte **v2** : l'API exige TROIS scopes (`search office api_labonneboitev2`),
+// sinon le gateway répond 403 « Invalid scope ». La v1 est morte (invalid_scope).
+// Endpoint de recherche : GET {base}/recherche. Surchargeable par env.
+const LBB_SCOPE = process.env.LBB_SCOPE || 'search office api_labonneboitev2';
+const LBB_BASE = (process.env.LBB_API_BASE || 'https://api.francetravail.io/partenaire/labonneboite/v2').replace(/\/$/, '');
 const GEOCODE_URL = 'https://api-adresse.data.gouv.fr/search/';
 
 export const isLbbConfigured = (): boolean => isFranceTravailConfigured();
@@ -38,11 +41,19 @@ export const geocodeLocation = async (location: string): Promise<GeoPoint | unde
   return undefined;
 };
 
-const potentialFromStars = (stars: number): string => {
-  if (stars >= 4) return 'Très Élevé';
-  if (stars >= 3) return 'Élevé';
-  if (stars >= 2) return 'Modéré';
+// v2 : `hiring_potential` est un score 0-100 (et non plus des étoiles /5).
+const potentialFromScore = (score: number): string => {
+  if (score >= 80) return 'Très Élevé';
+  if (score >= 60) return 'Élevé';
+  if (score >= 40) return 'Modéré';
   return 'Moyen';
+};
+
+// Effectif lisible à partir des bornes renvoyées par l'API.
+const headcountLabel = (min?: number, max?: number): string => {
+  if (!min && !max) return 'Effectif non communiqué';
+  if (min && max) return `${min} à ${max} salariés`;
+  return `${min || max}+ salariés`;
 };
 
 const extractDomain = (url?: string): string | undefined => {
@@ -70,16 +81,15 @@ export const laBonneBoiteService = {
     const token = await getFtToken(LBB_SCOPE);
 
     const params = new URLSearchParams({
+      rome: romeCode,
       latitude: String(geo.lat),
       longitude: String(geo.lon),
       distance: String(distanceKm),
-      rome_codes: romeCode,
-      sort: 'score',
       page: '1',
-      page_size: String(max),
+      page_size: String(Math.min(100, Math.max(1, max))),
     });
 
-    const res = await fetch(`${LBB_BASE}?${params.toString()}`, {
+    const res = await fetch(`${LBB_BASE}/recherche?${params.toString()}`, {
       headers: { Authorization: `Bearer ${token}`, Accept: 'application/json' },
     });
 
@@ -90,27 +100,29 @@ export const laBonneBoiteService = {
     }
 
     const json: any = await res.json();
-    const companies: any[] = Array.isArray(json?.companies) ? json.companies : [];
+    const companies: any[] = Array.isArray(json?.items) ? json.items : [];
 
     return companies.map((c): FtCompany => {
-      const stars = Number(c?.stars ?? 0);
-      const website: string | undefined = c?.website || c?.social_network || undefined;
-      const addressParts = [c?.address, c?.city].filter(Boolean).join(', ');
+      const score = Number(c?.hiring_potential ?? 0);
+      const addressParts = [c?.postcode, c?.city].filter(Boolean).join(' ');
+      // v2 n'expose ni site ni email : seul un indicateur `email` ("yes"/"no")
+      // signale que l'entreprise accepte les candidatures par email.
+      const acceptsEmail = String(c?.email || '').toLowerCase() === 'yes';
       return {
-        id: `lbb_${c?.siret || c?.name}`,
-        name: c?.name?.trim() || 'Entreprise',
-        address: addressParts || c?.city || 'France',
-        sector: c?.naf_text || c?.naf || 'Secteur non précisé',
-        hiringPotential: potentialFromStars(stars),
-        size: c?.headcount_text || 'Effectif non communiqué',
+        id: `lbb_${c?.siret || c?.id}`,
+        name: (c?.company_name || c?.office_name || 'Entreprise').trim(),
+        address: addressParts || c?.city || c?.department || 'France',
+        sector: c?.naf_label || c?.naf || 'Secteur non précisé',
+        hiringPotential: potentialFromScore(score),
+        size: headcountLabel(c?.headcount_min, c?.headcount_max),
         contractType: 'Candidature spontanée',
-        domain: extractDomain(website),
+        domain: undefined, // non fourni par l'API v2
         matchedJob: jobTitle,
-        reason: `Entreprise identifiée par La Bonne Boîte (France Travail) comme ayant un fort potentiel d'embauche${
-          stars ? ` (${stars}/5)` : ''
-        } sur le métier « ${jobTitle} ». Idéale pour une candidature spontanée.`,
+        reason: `Entreprise du marché caché : identifiée par La Bonne Boîte (France Travail) comme susceptible de recruter dans les 6 prochains mois sur le métier « ${jobTitle} »${
+          score ? ` (potentiel ${Math.round(score)}/100)` : ''
+        }.${acceptsEmail ? ' Elle accepte les candidatures par email.' : ''}`,
         contactRole: 'Service Recrutement',
-        offerUrl: c?.url || '',
+        offerUrl: '',
       };
     });
   },
