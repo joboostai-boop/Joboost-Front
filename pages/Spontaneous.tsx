@@ -259,8 +259,12 @@ const Spontaneous: React.FC = () => {
           {visible.map((company) => {
             const busy = processing[company.id] || false;
             const wantsLetter = includeLetterMap[company.id] || false;
-            const blocked = company.autoLevel === 'NO_SEND';
-            const ctaLabel = blocked ? 'Postuler manuellement' : company.autoLevel === 'AUTO_REVIEW' ? 'Valider et envoyer' : 'Envoyer la candidature';
+            const hasEmail = !!(emailMap[company.id] || '').trim();
+            // Un email saisi par le candidat rend l'envoi possible même si le scoring initial était "Manuel".
+            const blocked = company.autoLevel === 'NO_SEND' && !hasEmail;
+            const ctaLabel = blocked
+              ? 'Postuler manuellement'
+              : (company.autoLevel === 'AUTO_REVIEW' && !hasEmail) ? 'Valider et envoyer' : 'Envoyer la candidature';
 
             return (
               <div key={company.id} className={`surface p-5 flex flex-col md:flex-row gap-6 transition-all duration-200 group animate-fade-in-up ${busy ? 'opacity-70 pointer-events-none ring-1 ring-[#7D5CFF]' : 'hover:shadow-card-hover hover:-translate-y-0.5'}`}>
@@ -302,10 +306,23 @@ const Spontaneous: React.FC = () => {
                         className="input-pro py-1 text-sm flex-1"
                       />
                     ) : (
-                      <button onClick={() => setEditingEmail((s) => ({ ...s, [company.id]: true }))} className="flex items-center gap-1.5 text-[#4B5563] dark:text-[#D1D5DB] hover:text-[#7D5CFF] group/email">
-                        {emailMap[company.id] ? <span>{emailMap[company.id]}</span> : <span className="italic text-[#9CA3AF]">Aucun e-mail — cliquez pour ajouter</span>}
-                        <Pencil size={12} className="opacity-0 group-hover/email:opacity-100 transition-opacity" />
-                      </button>
+                      <div className="flex items-center gap-2 flex-wrap min-w-0">
+                        <button onClick={() => setEditingEmail((s) => ({ ...s, [company.id]: true }))} className="flex items-center gap-1.5 text-[#4B5563] dark:text-[#D1D5DB] hover:text-[#7D5CFF] group/email min-w-0">
+                          {emailMap[company.id] ? <span className="truncate">{emailMap[company.id]}</span> : <span className="italic text-[#9CA3AF]">Aucun e-mail — cliquez pour ajouter</span>}
+                          <Pencil size={12} className="opacity-0 group-hover/email:opacity-100 transition-opacity shrink-0" />
+                        </button>
+                        {!emailMap[company.id] && (
+                          <a
+                            href={`https://www.google.com/search?q=${encodeURIComponent(`${company.name} recrutement contact email`)}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-xs text-[#7D5CFF] hover:underline inline-flex items-center gap-1 shrink-0"
+                            title="Chercher l'adresse de contact de l'entreprise sur le web"
+                          >
+                            <Search size={11} /> Trouver le contact
+                          </a>
+                        )}
+                      </div>
                     )}
                   </div>
 
