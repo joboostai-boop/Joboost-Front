@@ -9,7 +9,7 @@ const TargetLayout: React.FC = () => {
   const showLetterTab = location.pathname.includes('/target/letter');
 
   const tabs: SectionTab[] = [
-    { name: 'Offres pour moi', path: '/target/offers', icon: <Target size={17} /> },
+    { name: 'Offres pour moi', shortName: 'Offres', path: '/target/offers', icon: <Target size={17} /> },
     { name: 'Candidatures spontanées', shortName: 'Spontanées', path: '/target/lbb', icon: <Navigation size={17} /> },
     { name: 'Alternance', path: '/target/alternance', icon: <GraduationCap size={17} /> },
     { name: 'Offres sauvegardées', shortName: 'Sauvegardées', path: '/target/saved', icon: <Bookmark size={17} /> },

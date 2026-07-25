@@ -197,7 +197,7 @@ const Spontaneous: React.FC = () => {
   const visible = filter === 'ALL' ? companies : companies.filter((c) => c.autoLevel === filter);
 
   return (
-    <div className="p-5 md:p-8 max-w-6xl mx-auto space-y-6">
+    <div className="p-4 md:p-8 pb-28 md:pb-8 max-w-6xl mx-auto space-y-5 md:space-y-6">
       <QuotaDialog open={quotaOpen} onClose={() => setQuotaOpen(false)} message={quotaMessage} />
       <form onSubmit={handleSearch} className="surface p-5 md:p-6">
         <h3 className="text-sm font-semibold text-[#111827] dark:text-white mb-4">Critères de ciblage</h3>
@@ -268,9 +268,10 @@ const Spontaneous: React.FC = () => {
               : (company.autoLevel === 'AUTO_REVIEW' && !hasEmail) ? 'Valider et envoyer' : 'Envoyer la candidature';
 
             return (
-              <div key={company.id} className={`surface p-5 flex flex-col md:flex-row gap-6 transition-all duration-200 group animate-fade-in-up ${busy ? 'opacity-70 pointer-events-none ring-1 ring-[#7D5CFF]' : 'hover:shadow-card-hover hover:-translate-y-0.5'}`}>
-                <div className="flex-1 space-y-4">
-                  <div className="flex justify-between items-start gap-3">
+              <div key={company.id} className={`surface p-4 md:p-5 flex flex-col md:flex-row gap-4 md:gap-6 transition-all duration-200 group animate-fade-in-up ${busy ? 'opacity-70 pointer-events-none ring-1 ring-[#7D5CFF]' : 'hover:shadow-card-hover md:hover:-translate-y-0.5'}`}>
+                <div className="flex-1 space-y-3 md:space-y-4 min-w-0">
+                  {/* Mobile : les badges passent sous le nom (sinon ils l'écrasent). */}
+                  <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2 sm:gap-3">
                     <div className="flex items-center gap-3 min-w-0">
                       <span className="w-10 h-10 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 flex items-center justify-center font-semibold text-sm shrink-0">
                         {company.name?.charAt(0) || <Building2 size={18} />}
@@ -280,7 +281,7 @@ const Spontaneous: React.FC = () => {
                         <p className="text-[#6B7280] text-xs flex items-center gap-1.5 mt-0.5"><MapPin size={13} /> {company.address}</p>
                       </div>
                     </div>
-                    <div className="flex items-center gap-3 shrink-0">
+                    <div className="flex items-center gap-2 flex-wrap shrink-0">
                       {company.matchScore ? <MatchBadge score={company.matchScore} /> : null}
                       <AutoLevelBadge level={company.autoLevel} label={company.autoLevelLabel} score={company.autoScore} />
                     </div>
@@ -350,14 +351,15 @@ const Spontaneous: React.FC = () => {
                     <span className={`text-xs font-bold transition-colors ${wantsLetter ? 'text-[#7D5CFF]' : 'text-[#6B7280]'}`}>Inclure lettre de motivation (IA)</span>
                   </div>
 
-                  <button onClick={() => handleSend(company)} disabled={busy} className="btn btn-primary w-full mt-2">
+                  {/* Cibles tactiles ≥ 44px + retour au toucher (rendu « application »). */}
+                  <button onClick={() => handleSend(company)} disabled={busy} className="btn btn-primary w-full mt-2 min-h-[46px] active:scale-[0.98] transition-transform">
                     <div className="flex items-center justify-center gap-2">
                       {busy ? <Zap className="animate-spin" size={16} /> : blocked ? <ExternalLink size={16} /> : <Send size={16} />}
                       <span>{ctaLabel}</span>
                     </div>
                   </button>
 
-                  <button onClick={() => navToLetter(company)} disabled={busy} className="btn btn-secondary w-full">
+                  <button onClick={() => navToLetter(company)} disabled={busy} className="btn btn-secondary w-full min-h-[46px] active:scale-[0.98] transition-transform">
                     Aperçu manuel de la lettre
                   </button>
                 </div>

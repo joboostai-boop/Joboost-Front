@@ -107,12 +107,14 @@ const Alternance: React.FC = () => {
     }
   };
 
+  // pb-28 sur mobile : le dernier bouton ne passe pas sous le dock du bas.
   return (
-    <div className="p-5 md:p-8 max-w-6xl mx-auto space-y-6">
-      {/* Confirmation avant envoi réel */}
+    <div className="p-4 md:p-8 pb-28 md:pb-8 max-w-6xl mx-auto space-y-5 md:space-y-6">
+      {/* Confirmation avant envoi réel — mobile : feuille montante ; desktop : modale centrée. */}
       {confirmTarget && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={() => setConfirmTarget(null)}>
-          <div className="surface p-6 max-w-md w-full space-y-4" onClick={(e) => e.stopPropagation()}>
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 sm:p-4" onClick={() => setConfirmTarget(null)}>
+          <div className="surface p-5 sm:p-6 w-full sm:max-w-md space-y-4 rounded-t-2xl sm:rounded-2xl animate-fade-in-up pb-8 sm:pb-6" onClick={(e) => e.stopPropagation()}>
+            <div className="sm:hidden w-10 h-1 rounded-full bg-slate-300 dark:bg-slate-600 mx-auto -mt-1 mb-1" />
             <h3 className="text-lg font-semibold text-[#111827] dark:text-white flex items-center gap-2">
               <Send size={18} className="text-[#7D5CFF]" /> Envoyer votre candidature ?
             </h3>
@@ -124,8 +126,8 @@ const Alternance: React.FC = () => {
               L'envoi est effectué par La Bonne Alternance (service public). Le recruteur vous répondra directement par email.
             </p>
             <div className="flex gap-3 pt-1">
-              <button onClick={() => setConfirmTarget(null)} className="btn btn-secondary flex-1">Annuler</button>
-              <button onClick={() => doApply(confirmTarget)} className="btn btn-primary flex-1">Confirmer l'envoi</button>
+              <button onClick={() => setConfirmTarget(null)} className="btn btn-secondary flex-1 min-h-[46px]">Annuler</button>
+              <button onClick={() => doApply(confirmTarget)} className="btn btn-primary flex-1 min-h-[46px]">Confirmer l'envoi</button>
             </div>
           </div>
         </div>
@@ -195,7 +197,7 @@ const Alternance: React.FC = () => {
             const done = sentIds[item.id];
             const canApply = !!item.recipientId;
             return (
-              <div key={item.id} className={`surface p-5 flex flex-col md:flex-row gap-6 transition-all duration-200 animate-fade-in-up ${busy ? 'opacity-70 pointer-events-none ring-1 ring-[#7D5CFF]' : 'hover:shadow-card-hover hover:-translate-y-0.5'}`}>
+              <div key={item.id} className={`surface p-4 md:p-5 flex flex-col md:flex-row gap-4 md:gap-6 transition-all duration-200 animate-fade-in-up ${busy ? 'opacity-70 pointer-events-none ring-1 ring-[#7D5CFF]' : 'hover:shadow-card-hover md:hover:-translate-y-0.5'}`}>
                 <div className="flex-1 space-y-3 min-w-0">
                   <div className="flex items-start gap-3">
                     <span className="w-10 h-10 rounded-lg bg-[#F3F0FF] dark:bg-[#7D5CFF]/10 text-[#7D5CFF] flex items-center justify-center font-semibold text-sm shrink-0">
@@ -231,7 +233,7 @@ const Alternance: React.FC = () => {
                     </div>
                   ) : (
                     <>
-                      <button onClick={() => setConfirmTarget(item)} disabled={busy || !canApply} className="btn btn-primary w-full">
+                      <button onClick={() => setConfirmTarget(item)} disabled={busy || !canApply} className="btn btn-primary w-full min-h-[46px] active:scale-[0.98] transition-transform">
                         <div className="flex items-center justify-center gap-2">
                           {busy ? <Zap className="animate-spin" size={16} /> : <Send size={16} />}
                           <span>Postuler en 1 clic</span>
