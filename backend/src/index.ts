@@ -18,6 +18,7 @@ import opportunityRoutes from './routes/opportunity.routes';
 import dashboardRoutes from './routes/dashboard.routes';
 import lbbRoutes from './routes/lbb.routes';
 import spontaneousRoutes from './routes/spontaneous.routes';
+import alternanceRoutes from './routes/alternance.routes';
 import { resendWebhookController } from './controllers/webhook.resend.controller';
 import stripeRoutes from './routes/stripe.routes';
 import businessRoutes from './routes/business.routes';
@@ -93,6 +94,7 @@ app.use('/api/dashboard', requireAuth, dashboardRoutes);
 app.use('/api/lbb', requireAuth, lbbRoutes);
 // Candidatures spontanées (préparation / envoi / suivi)
 app.use('/api/spontaneous', requireAuth, spontaneousRoutes);
+app.use('/api/alternance', requireAuth, alternanceRoutes);
 // Webhook Resend (tracking envois) — route publique
 app.post('/api/webhooks/resend', resendWebhookController.handle);
 // Initialize Stripe Billing
