@@ -29,6 +29,7 @@ const Profile = React.lazy(() => import('./pages/Profile'));
 const Settings = React.lazy(() => import('./pages/Settings'));
 const Onboarding = React.lazy(() => import('./pages/Onboarding'));
 const Spontaneous = React.lazy(() => import('./pages/Spontaneous'));
+const Alternance = React.lazy(() => import('./pages/Alternance'));
 const Login = React.lazy(() => import('./pages/Auth/Login'));
 const Register = React.lazy(() => import('./pages/Auth/Register'));
 const ForgotPassword = React.lazy(() => import('./pages/Auth/ForgotPassword'));
@@ -190,6 +191,7 @@ const App: React.FC = () => {
                <Route index element={<Navigate to="offers" replace />} />
                <Route path="offers" element={<PersonalizedOffers />} />
                <Route path="lbb" element={<Spontaneous />} />
+               <Route path="alternance" element={<Alternance />} />
                <Route path="saved" element={<SavedOffers />} />
                <Route path="letter" element={<LetterGenerator />} />
             </Route>

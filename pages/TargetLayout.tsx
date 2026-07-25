@@ -1,6 +1,6 @@
 import React from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
-import { Target, Navigation, PenLine, Bookmark } from 'lucide-react';
+import { Target, Navigation, PenLine, Bookmark, GraduationCap } from 'lucide-react';
 import SectionNav, { SectionTab } from '../components/SectionNav';
 
 const TargetLayout: React.FC = () => {
@@ -11,6 +11,7 @@ const TargetLayout: React.FC = () => {
   const tabs: SectionTab[] = [
     { name: 'Offres pour moi', path: '/target/offers', icon: <Target size={17} /> },
     { name: 'Candidatures spontanées', shortName: 'Spontanées', path: '/target/lbb', icon: <Navigation size={17} /> },
+    { name: 'Alternance', path: '/target/alternance', icon: <GraduationCap size={17} /> },
     { name: 'Offres sauvegardées', shortName: 'Sauvegardées', path: '/target/saved', icon: <Bookmark size={17} /> },
     ...(showLetterTab
       ? [{ name: 'Lettre pour cette offre', shortName: 'Lettre', path: '/target/letter', icon: <PenLine size={17} /> }]
