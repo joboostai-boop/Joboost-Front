@@ -134,7 +134,11 @@ export const googleAuthController = {
       // cookie tiers (SameSite=None) est bloqué, le frontend lit donc le token ici
       // et le stocke en localStorage. Le fragment n'est jamais envoyé au serveur
       // (pas de fuite dans les logs / le referer), et le frontend nettoie l'URL.
-      res.redirect(`${FRONTEND_URL}/dashboard?oauth=success#token=${jwtToken}`);
+      // ⚠️ /home et non /dashboard : la route « /dashboard » n'existe PAS côté
+      // front (les vraies sont /track/dashboard et /business/dashboard). Rediriger
+      // vers une URL inconnue faisait tomber l'utilisateur sur la règle de repli du
+      // routeur, donc sur la page d'authentification au lieu d'entrer dans l'app.
+      res.redirect(`${FRONTEND_URL}/home?oauth=success#token=${jwtToken}`);
     } catch (error: unknown) {
       console.error('Google OAuth callback error:', error);
       const message = error instanceof Error ? error.message : 'Unknown error';

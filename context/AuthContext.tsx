@@ -63,23 +63,9 @@ export const AuthProvider: React.FC<{children: React.ReactNode}> = ({ children }
   };
 
   useEffect(() => {
-    // Retour d'un login OAuth (Google) : le backend renvoie le JWT dans le
-    // fragment d'URL (#token=...) car le cookie tiers est bloqué sur mobile.
-    // On le persiste en localStorage, puis on nettoie l'URL pour ne pas
-    // laisser le token visible dans la barre d'adresse / l'historique.
-    try {
-      if (window.location.hash.includes('token=')) {
-        const params = new URLSearchParams(window.location.hash.slice(1));
-        const t = params.get('token');
-        if (t) {
-          setToken(t);
-          const cleanUrl = window.location.pathname + window.location.search;
-          window.history.replaceState({}, document.title, cleanUrl);
-        }
-      }
-    } catch {
-      /* no-op */
-    }
+    // Le jeton d'un retour Google (#token=...) est désormais lu AVANT le premier
+    // rendu, dans index.tsx via captureTokenFromUrl() — le faire ici était trop
+    // tard : le routeur avait déjà redirigé et détruit le fragment.
     checkAuth();
   }, []);
 
