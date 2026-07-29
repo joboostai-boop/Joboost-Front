@@ -1,11 +1,14 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
+  UploadCloud,
+  UserPlus,
   ArrowRight,
   FileText,
   Linkedin,
   CheckCircle2,
   Loader2,
+  Rocket,
   Plus,
   Trash2,
   Mail,
@@ -21,7 +24,7 @@ interface OnboardingProps {
   onSkip: () => void;
 }
 
-type OnboardingStep = 'form';
+type OnboardingStep = 'choice' | 'form' | 'uploading';
 
 // Expérience structurée : même forme que le profil et les modèles de CV
 // (role / company / period / missions) → l'expérience s'affiche correctement
@@ -36,8 +39,9 @@ interface ExperienceForm {
 const emptyExperience = (): ExperienceForm => ({ role: '', company: '', period: '', missions: '' });
 
 const Onboarding: React.FC<OnboardingProps> = ({ user, onComplete, onSkip }) => {
-  const [step, setStep] = useState<OnboardingStep>('form');
+  const [step, setStep] = useState<OnboardingStep>('choice');
   const [isLoading, setIsLoading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [formData, setFormData] = useState({
     name: user?.name || '',
@@ -61,6 +65,69 @@ const Onboarding: React.FC<OnboardingProps> = ({ user, onComplete, onSkip }) => 
     }));
   }, [user]);
 
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("Le fichier est trop volumineux (max 5 Mo)");
+      return;
+    }
+
+    setStep('uploading');
+    setIsLoading(true);
+
+    try {
+      const fd = new FormData();
+      fd.append('file', file);
+      const res = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/ai/parse-cv`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: { ...authHeaders() }, // pas de Content-Type : le navigateur gère le boundary multipart
+        body: fd,
+      });
+      const data = await res.json();
+
+      if (data.success && data.data) {
+        const d = data.data;
+        // Les expériences extraites sont gardées structurées (role / company / period / missions)
+        // pour alimenter directement le CV.
+        const exps: ExperienceForm[] = Array.isArray(d.experiences)
+          ? d.experiences.map((x: any) =>
+              typeof x === 'string'
+                ? { ...emptyExperience(), missions: x }
+                : {
+                    role: x.role || '',
+                    company: x.company || '',
+                    period: x.period || [x.startDate, x.endDate].filter(Boolean).join(' – ') || '',
+                    missions: x.desc || x.missions || '',
+                  }
+            )
+          : [];
+        while (exps.length < 3) exps.push(emptyExperience());
+
+        setFormData((prev) => ({
+          ...prev,
+          name: d.name || prev.name || '',
+          email: d.email || prev.email || '',
+          phone: d.phone || prev.phone || '',
+          title: d.title || '',
+          skills: Array.isArray(d.skills) ? d.skills.join(', ') : (d.skills || ''),
+          experiences: exps.slice(0, 3),
+        }));
+        toast.success("CV analysé ! Vérifie et complète tes infos.");
+      } else {
+        toast.error(data.error || "On n'a pas pu lire ton CV. Saisis tes infos à la main.");
+      }
+    } catch {
+      toast.error("Erreur réseau. Saisis tes infos à la main.");
+    } finally {
+      setIsLoading(false);
+      // On bascule sur le formulaire pour que l'utilisateur vérifie/complète (zéro fausse donnée).
+      setStep('form');
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  };
 
   const handleFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -83,9 +150,10 @@ const Onboarding: React.FC<OnboardingProps> = ({ user, onComplete, onSkip }) => 
         desc: e.missions.trim(),
       }));
 
-    // On attend la fin réelle de l'enregistrement avant d'annoncer un succès :
-    // avant, le message « Profil enregistré ! » s'affichait même quand la requête
-    // échouait, et l'utilisateur restait bloqué sur cet écran sans comprendre.
+    // On attend la fin réelle de l'enregistrement. Avant, un setTimeout affichait
+    // « Profil enregistré ! » au bout d'une seconde sans attendre la requête :
+    // le message s'affichait même en cas d'échec. Le résultat est désormais
+    // annoncé par App.tsx, une fois la réponse du serveur connue.
     Promise.resolve(onComplete({ ...formData, experiences }))
       .finally(() => setIsLoading(false));
   };
@@ -95,11 +163,51 @@ const Onboarding: React.FC<OnboardingProps> = ({ user, onComplete, onSkip }) => 
     setFormData({ ...formData, experiences: newExps });
   };
 
-  return (
+  if (step === 'uploading') {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-6 text-center">
+        <div className="max-w-md w-full space-y-8 animate-scale-in">
+          <div className="relative">
+            <div className="w-24 h-24 bg-[#7D5CFF]/10 rounded-3xl mx-auto flex items-center justify-center text-[#7D5CFF]">
+              <Loader2 size={48} className="animate-spin" />
+            </div>
+            <div className="absolute -top-2 -right-2 w-8 h-8 bg-[#7D5CFF] rounded-full flex items-center justify-center text-white shadow-lg">
+              <Rocket size={16} />
+            </div>
+          </div>
+          <div>
+            <h2 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight mb-2">Analyse de ton CV en cours</h2>
+            <p className="text-slate-500 font-medium">On lit ton CV pour préremplir ton profil automatiquement...</p>
+          </div>
+          <div className="space-y-3">
+             <div className="h-2 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                <div className="h-full bg-[#7D5CFF] animate-[loading_2s_ease-in-out_infinite]" style={{width: '60%'}}></div>
+             </div>
+             <p className="text-[10px] uppercase font-black tracking-[0.2em] text-[#7D5CFF]">Lecture en cours</p>
+          </div>
+        </div>
+        <style>{`
+          @keyframes loading {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(200%); }
+          }
+        `}</style>
+      </div>
+    );
+  }
+
+  if (step === 'form') {
+    return (
       <div className="min-h-screen p-6 md:p-12 overflow-y-auto">
         <div className="max-w-4xl mx-auto space-y-10 animate-fade-in-up">
           <header className="flex items-center justify-between">
             <div className="flex items-center gap-3">
+              <button
+                onClick={() => setStep('choice')}
+                className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors text-slate-400"
+              >
+                <ArrowRight className="rotate-180" size={24} />
+              </button>
               <div>
                 <h1 className="text-2xl font-black text-slate-900 dark:text-white">Mon profil</h1>
                 <p className="text-sm text-slate-500 font-medium">Ces infos servent à générer ton CV et tes lettres.</p>
@@ -237,6 +345,79 @@ const Onboarding: React.FC<OnboardingProps> = ({ user, onComplete, onSkip }) => 
         </div>
       </div>
     );
+  }
+
+  return (
+    <div className="min-h-screen flex items-center justify-center p-6 bg-slate-50 dark:bg-slate-950">
+      <div className="max-w-5xl w-full grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+
+        {/* Left: Message */}
+        <div className="space-y-8 text-center md:text-left p-4">
+          <div className="inline-flex items-center gap-3 px-4 py-2 bg-[#F3F0FF] dark:bg-[#7D5CFF]/10 rounded-full text-[#7D5CFF] dark:text-[#A78BFA] text-xs font-black uppercase tracking-widest">
+            <Rocket size={16} /> Bienvenue sur Joboost
+          </div>
+          <h1 className="text-5xl md:text-7xl font-black text-slate-900 dark:text-white leading-[1.05] tracking-tight">
+            Crée ton profil en <span className="text-[#7D5CFF]">2 minutes.</span>
+          </h1>
+          <p className="text-lg text-slate-500 font-medium leading-relaxed max-w-md">
+            Pour générer tes documents, Joboost a besoin de te connaître. Choisis comment commencer.
+          </p>
+        </div>
+
+        {/* Right: Choices */}
+        <div className="grid grid-cols-1 gap-6">
+          <button
+            onClick={() => fileInputRef.current?.click()}
+            className="press group card-modern p-10 text-left border-2 border-transparent hover:border-[#7D5CFF] hover:-translate-y-0.5 transition-all bg-white dark:bg-slate-900 shadow-2xl hover:shadow-[#7D5CFF]/20 dark:hover:shadow-none relative overflow-hidden"
+          >
+            <div className="absolute top-0 right-0 w-32 h-32 bg-[#F3F0FF] dark:bg-[#7D5CFF]/10 rounded-full -mr-16 -mt-16 group-hover:scale-110 transition-transform"></div>
+            <div className="relative z-10 flex flex-col h-full">
+              <div className="w-16 h-16 bg-[#7D5CFF] text-white rounded-2xl flex items-center justify-center mb-8 shadow-lg shadow-[#7D5CFF]/30 dark:shadow-none">
+                <UploadCloud size={32} />
+              </div>
+              <h3 className="text-2xl font-black text-slate-900 dark:text-white mb-2">Importer mon CV</h3>
+              <p className="text-slate-500 font-medium">L'IA lit ton fichier (PDF/DOCX) et préremplit tout automatiquement.</p>
+              <div className="mt-8 flex items-center gap-2 text-[#7D5CFF] font-black text-xs uppercase tracking-widest">
+                Importer mon CV <ArrowRight size={14} />
+              </div>
+            </div>
+            <input
+              type="file"
+              className="hidden"
+              ref={fileInputRef}
+              accept=".pdf,.doc,.docx"
+              onChange={handleFileUpload}
+            />
+          </button>
+
+          <button
+            onClick={() => setStep('form')}
+            className="press group card-modern p-10 text-left border-2 border-transparent hover:border-[#7D5CFF] hover:-translate-y-0.5 transition-all bg-white dark:bg-slate-900 shadow-xl hover:shadow-[#7D5CFF]/20 dark:hover:shadow-none relative overflow-hidden"
+          >
+            <div className="relative z-10 flex flex-col h-full">
+              <div className="w-16 h-16 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 rounded-2xl flex items-center justify-center mb-8">
+                <UserPlus size={32} />
+              </div>
+              <h3 className="text-2xl font-black text-slate-900 dark:text-white mb-2">Saisie manuelle</h3>
+              <p className="text-slate-500 font-medium">Remplis ton profil toi-même, étape par étape.</p>
+              <div className="mt-8 flex items-center gap-2 text-slate-400 group-hover:text-[#7D5CFF] font-black text-xs uppercase tracking-widest transition-colors">
+                Remplir à la main <ArrowRight size={14} />
+              </div>
+            </div>
+          </button>
+
+          <button
+            type="button"
+            onClick={onSkip}
+            className="text-sm font-semibold text-slate-400 hover:text-[#7D5CFF] transition-colors py-2 text-center"
+          >
+            Je remplirai mon profil plus tard
+          </button>
+        </div>
+
+      </div>
+    </div>
+  );
 };
 
 export default Onboarding;
