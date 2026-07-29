@@ -471,7 +471,12 @@ const Profile: React.FC<ProfileProps> = ({ user }) => {
                     ? 'Accès illimité (compte interne).'
                     : usage.isSubscribed
                       ? `Abonnement Élite actif${usage.subscriptionEndsAt ? ` · renouvellement le ${new Date(usage.subscriptionEndsAt).toLocaleDateString('fr-FR')}` : ''}.`
-                      : 'Plan Gratuit · 1 candidature IA / mois.'}
+                      : usage.inTrial
+                        // Pendant l'essai, la ligne annonçait « Plan Gratuit · 1 candidature IA /
+                        // mois » alors que le badge affichait « Essai · 7 j » et le compteur 150 :
+                        // les trois se contredisaient à l'écran.
+                        ? `Essai · accès complet pendant ${usage.trialDaysLeft} jour${(usage.trialDaysLeft ?? 0) > 1 ? 's' : ''}, puis 1 candidature IA / mois.`
+                        : 'Plan Gratuit · 1 candidature IA / mois.'}
               </p>
             </div>
           </div>
