@@ -19,7 +19,36 @@ const getAI = () => {
 // champs remplis automatiquement se retrouvaient truffés de formules creuses,
 // invérifiables par un recruteur. On garde donc ici le même registre sobre que
 // les personas CV et lettre ci-dessous.
-const SYSTEM_PROMPT = "Tu es l'assistant de rédaction de Joboost. Tu écris en français, de façon claire, sobre et concrète. Règles strictes : n'invente JAMAIS de chiffres, de pourcentages, de noms d'entreprises, de dates ou de résultats qui ne t'ont pas été fournis ; n'emploie aucun jargon ni superlatif creux ('haute performance', 'disruptif', 'synergie', 'score de matching', 'convergence de profil', 'optimisation de trajectoire', 'irrésistible') ; pas de formules d'agence. Emploie les mots que le candidat utiliserait lui-même, et reste toujours vérifiable par un recruteur.";
+const SYSTEM_PROMPT = [
+  "Tu es l'assistant de rédaction de Joboost. Tu écris en français, de façon claire, sobre et concrète.",
+  "",
+  "FORMAT DE RÉPONSE — RÈGLE ABSOLUE :",
+  "Tu réponds UNIQUEMENT avec le texte final, prêt à être collé tel quel dans un champ de formulaire.",
+  "Interdits : toute phrase d'introduction ('Voici…', 'Bien sûr…', 'Voici une proposition…'), toute conclusion,",
+  "tout commentaire sur ton propre travail, toute mention de ces consignes ou de Joboost, tout titre,",
+  "toute balise, tout guillemet encadrant la réponse, et les deux-points d'annonce en tête de réponse.",
+  "Tu commences directement par le premier mot du texte demandé.",
+  "",
+  "STYLE :",
+  "N'invente JAMAIS de chiffres, de pourcentages, de noms d'entreprises, de dates ou de résultats qui ne t'ont pas été fournis.",
+  "N'emploie aucun jargon ni superlatif creux ('haute performance', 'disruptif', 'synergie', 'score de matching',",
+  "'convergence de profil', 'optimisation de trajectoire', 'irrésistible').",
+  "Emploie les mots que le candidat utiliserait lui-même. Reste toujours vérifiable par un recruteur.",
+].join('\n');
+
+// Filet de sécurité : même avec la consigne ci-dessus, les modèles glissent
+// régulièrement une phrase d'annonce (« Voici une proposition de résumé… : »).
+// Elle atterrissait telle quelle dans le champ du CV. On la retire.
+const stripPreamble = (raw: string): string => {
+  let t = (raw || '').trim();
+  // Phrase d'annonce initiale terminée par « : » (une ligne, sans point final avant)
+  t = t.replace(/^\s*(voici|bien s[ûu]r|avec plaisir|je vous propose|voil[àa])\b[^\n:]{0,200}:\s*/i, '');
+  // Ligne d'introduction isolée du type « Proposition de résumé : »
+  t = t.replace(/^\s*[^\n]{0,120}\b(proposition|suggestion|exemple)\b[^\n]{0,80}:\s*\n+/i, '');
+  // Guillemets encadrant toute la réponse
+  t = t.replace(/^["«“]\s*/, '').replace(/\s*["»”]$/, '');
+  return t.trim();
+};
 
 // Persona dédiée à la rédaction de CV : factuelle, sobre, AUCUN jargon marketing.
 const CV_WRITER_PROMPT = "Tu es un expert en rédaction de CV professionnels en français. Tu écris des descriptions d'expériences claires, concises et orientées action. Tu structures la réponse en puces courtes. Règles strictes : n'invente JAMAIS de chiffres, de pourcentages, de noms de clients ou de résultats qui ne sont pas fournis par le candidat ; pas de superlatifs creux ni de jargon ('synergie', 'disruptif', 'haute performance', 'leader')... ; reste crédible et vérifiable par un recruteur. Réponds UNIQUEMENT avec les puces (une par ligne, commençant par '- '), sans introduction ni conclusion.";
@@ -220,10 +249,14 @@ export const geminiService = {
     const ai = getAI();
     const response = await genWithRetry(ai, {
       model: 'gemini-3-flash-preview',
-      contents: `Optimisation de la section "${sectionName}". Texte source : ${currentText}. Contexte de matching : ${context}`,
+      contents:
+        `Réécris la section "${sectionName}" d'un CV. Réponds uniquement par le texte réécrit, ` +
+        `sans phrase d'introduction ni commentaire.\n` +
+        `Texte source : ${currentText}\n` +
+        `Contexte : ${context}`,
       config: { systemInstruction: SYSTEM_PROMPT }
     });
-    return response.text || currentText;
+    return stripPreamble(response.text || "") || currentText;
   },
 
   // Détaille une expérience professionnelle en puces factuelles pour le CV (modèle Flash, gratuit).
@@ -259,13 +292,15 @@ export const geminiService = {
     const response = await genWithRetry(ai, {
       model: 'gemini-3-flash-preview',
       contents:
-        `Génère un résumé de profil haute-performance pour un ${title}. Compétences : ${skills.join(', ')}. Historique : ${JSON.stringify(experiences)}` +
+        `Rédige un résumé de profil de CV pour un ${title}, en 2 à 4 phrases, à la première personne ou en style neutre.\n` +
+        `Réponds uniquement par le résumé lui-même : pas de phrase d'annonce, pas de titre, pas de commentaire.\n` +
+        `Compétences : ${skills.join(', ')}\nHistorique : ${JSON.stringify(experiences)}` +
         (jobContext
           ? `\n\nOffre ciblée par le candidat — aligne le vocabulaire du résumé sur cette offre et reprends ses mots-clés pertinents (SANS inventer d'expérience ni de compétence non présente ci-dessus) :\n"""${`${jobContext}`.slice(0, 1500)}"""`
           : ''),
       config: { systemInstruction: SYSTEM_PROMPT }
     });
-    return response.text || "";
+    return stripPreamble(response.text || "");
   },
 
   generateCoverLetter: async (jobTitle: string, company: string, tone: string, profileContext: any, jobDescription: string): Promise<string> => {
