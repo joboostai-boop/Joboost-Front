@@ -80,7 +80,7 @@ const Templates: React.FC = () => {
   );
 
   return (
-    <div className="p-5 md:p-8 max-w-6xl mx-auto space-y-6">
+    <div className="p-5 md:p-8 max-w-6xl mx-auto space-y-8 md:space-y-6">
       {/* Barre d'outils : type de document + filtres */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex gap-1 p-1 rounded-xl bg-white dark:bg-[#111827] border border-[#ECEAF6] dark:border-[#1F2937] shadow-xs w-full sm:w-fit">

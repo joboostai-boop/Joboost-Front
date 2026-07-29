@@ -198,7 +198,7 @@ const LetterGenerator: React.FC = () => {
   const hasLetter = generatedText.trim().length > 0;
 
   return (
-    <div className="p-5 md:p-8 max-w-6xl mx-auto space-y-6">
+    <div className="p-5 md:p-8 max-w-6xl mx-auto space-y-8 md:space-y-6">
       <QuotaDialog open={quotaOpen} onClose={() => setQuotaOpen(false)} message={quotaMessage} />
       <AiLoadingOverlay
         show={loading}

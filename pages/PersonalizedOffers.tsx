@@ -401,7 +401,7 @@ const PersonalizedOffers: React.FC = () => {
   };
 
   return (
-    <div className="p-5 md:p-8 max-w-6xl mx-auto space-y-6">
+    <div className="p-5 md:p-8 max-w-6xl mx-auto space-y-8 md:space-y-6">
       {/* Barre d'outils (le titre est porté par le hero du layout) */}
       <header className="surface !rounded-2xl p-4 md:p-5 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="min-w-0 space-y-2">

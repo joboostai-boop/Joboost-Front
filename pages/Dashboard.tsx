@@ -43,7 +43,7 @@ const tally = (arr: (string | undefined | null)[]): [string, number][] => {
 
 /* Skeleton calqué sur la mise en page réelle. */
 const DashboardSkeleton: React.FC = () => (
-  <div className="p-5 md:p-8 max-w-6xl mx-auto space-y-6">
+  <div className="p-5 md:p-8 max-w-6xl mx-auto space-y-8 md:space-y-6">
     <div className="flex items-center justify-between gap-3">
       <div className="skeleton h-5 w-56" />
       <div className="skeleton h-[42px] w-24 rounded-xl" />
@@ -167,7 +167,7 @@ const Dashboard: React.FC = () => {
   ];
 
   return (
-    <div className="p-5 md:p-8 max-w-6xl mx-auto space-y-6">
+    <div className="p-5 md:p-8 max-w-6xl mx-auto space-y-8 md:space-y-6">
       {/* Toolbar */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-2.5">

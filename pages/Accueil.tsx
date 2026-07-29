@@ -189,7 +189,7 @@ const Accueil: React.FC<AccueilProps> = ({ user }) => {
         }
       />
 
-      <div className="p-5 md:p-8 max-w-6xl mx-auto space-y-6 pb-28 md:pb-10">
+      <div className="p-5 md:p-8 max-w-6xl mx-auto space-y-8 md:space-y-6 pb-28 md:pb-10">
         {/* Bloc focal : grande carte « prochaine étape » + anneau de profil. */}
         <div className="grid lg:grid-cols-3 gap-4 items-stretch">
           <Tilt glare className="lg:col-span-2 h-full" max={6}>

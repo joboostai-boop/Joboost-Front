@@ -409,7 +409,7 @@ const Profile: React.FC<ProfileProps> = ({ user }) => {
   };
 
   return (
-    <div className="p-5 md:p-8 max-w-6xl mx-auto pb-10 space-y-5">
+    <div className="p-5 md:p-8 max-w-6xl mx-auto pb-10 space-y-7 md:space-y-5">
       {/* En-tête focal : carte avec avatar entouré de l'anneau de complétion (cohérent Accueil/Dashboard) */}
       <section className="card-pro !p-5 md:!p-6">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
