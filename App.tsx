@@ -6,7 +6,7 @@ import TopNav from './components/TopNav';
 import Topbar from './components/Topbar';
 import MobileNav from './components/MobileNav';
 import PageSkeleton from './components/PageSkeleton';
-import { Toaster } from 'react-hot-toast';
+import toast, { Toaster } from 'react-hot-toast';
 import { Plan, User } from './types';
 
 // Lazy-loaded pages for code splitting
@@ -76,19 +76,41 @@ const App: React.FC = () => {
   const toggleDarkMode = () => setIsDarkMode(!isDarkMode);
 
   const handleOnboardingComplete = async (data: any) => {
-    // Persiste les infos d'onboarding sur le profil, puis rafraîchit l'utilisateur
-    // pour que le gate (user.title) bascule et qu'on entre dans l'app.
+    // Persiste les infos d'onboarding sur le profil, puis rafraîchit l'utilisateur.
+    //
+    // ⚠️ Le gate d'entrée dans l'app est `!!user?.title`. Avant, si la requête
+    // échouait (réseau mobile, cookie tiers bloqué, 4xx), l'erreur était avalée
+    // en silence : on appelait quand même navigate('/home'), le gate restait
+    // fermé et l'écran d'onboarding se réaffichait aussitôt. L'utilisateur
+    // cliquait « Enregistrer mon profil » et il ne se passait rien.
+    //
+    // Désormais : on vérifie le statut HTTP, on le dit à l'utilisateur, et on
+    // débloque l'entrée dans l'app quoi qu'il arrive — l'Accueil rappellera de
+    // compléter le profil. Personne ne reste prisonnier de cet écran.
+    let saved = false;
     try {
-      await fetch(`${import.meta.env.VITE_API_URL || ''}/api/users/me`, {
+      const res = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/users/me`, {
         method: 'PUT',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json', ...authHeaders() },
         body: JSON.stringify(data),
       });
-      await checkAuth();
+      saved = res.ok;
+      if (saved) await checkAuth();
     } catch {
-      /* en cas d'échec réseau, on laisse l'utilisateur réessayer */
+      saved = false;
     }
+
+    if (saved) {
+      toast.success('Profil enregistré !');
+    } else {
+      toast.error("Profil non enregistré. Tu peux continuer et réessayer depuis ton profil.");
+    }
+
+    // Filet de sécurité : on ouvre le gate même si l'enregistrement a échoué,
+    // sinon l'utilisateur boucle indéfiniment sur l'onboarding.
+    localStorage.setItem('joboost-onboarding-skipped', 'true');
+    setOnboardingSkipped(true);
     navigate('/home');
   };
 
