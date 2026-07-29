@@ -76,6 +76,9 @@ const Onboarding: React.FC<OnboardingProps> = ({ user, onComplete, onSkip }) => 
 
     setStep('uploading');
     setIsLoading(true);
+    // Panne momentanée du service d'analyse : on le retient pour décider, en fin
+    // de traitement, s'il faut proposer un nouvel essai ou passer à la saisie.
+    let transient = false;
 
     try {
       const fd = new FormData();
@@ -117,14 +120,25 @@ const Onboarding: React.FC<OnboardingProps> = ({ user, onComplete, onSkip }) => 
         }));
         toast.success("CV analysé ! Vérifie et complète tes infos.");
       } else {
-        toast.error(data.error || "On n'a pas pu lire ton CV. Saisis tes infos à la main.");
+        // `transient` (503) = panne momentanée du service d'analyse, le fichier
+        // est bon. On garde l'utilisateur sur l'écran d'import pour qu'il puisse
+        // relancer d'un geste, au lieu de le pousser vers la saisie manuelle.
+        transient = res.status === 503 || !!data.transient;
+        toast.error(
+          data.error || "On n'a pas pu lire ton CV. Saisis tes infos à la main.",
+          transient ? { duration: 7000 } : undefined
+        );
       }
     } catch {
-      toast.error("Erreur réseau. Saisis tes infos à la main.");
+      // Échec côté navigateur (réseau coupé, requête interrompue) : également
+      // transitoire, donc on propose de réessayer plutôt que de renoncer.
+      transient = true;
+      toast.error("Connexion interrompue. Réessaie l'import : ton fichier n'est pas en cause.", { duration: 7000 });
     } finally {
       setIsLoading(false);
-      // On bascule sur le formulaire pour que l'utilisateur vérifie/complète (zéro fausse donnée).
-      setStep('form');
+      // Succès ou fichier illisible → formulaire (l'utilisateur vérifie/complète,
+      // zéro fausse donnée). Panne passagère → on reste sur l'écran d'import.
+      setStep(transient ? 'choice' : 'form');
       if (fileInputRef.current) fileInputRef.current.value = '';
     }
   };

@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import multer from 'multer';
 import mammoth from 'mammoth';
-import { geminiService } from '../services/gemini.service';
+import { geminiService, isTransientAiError } from '../services/gemini.service';
 import { usageService } from '../services/usage.service';
 import { scraperService } from '../services/scraper.service';
 import { prisma } from '../db';
@@ -60,6 +60,18 @@ router.post('/parse-cv', upload.single('file'), async (req, res) => {
     const data = await geminiService.parseCv(text);
     res.json({ success: true, data });
   } catch (error: any) {
+    // On distingue la panne passagère du fichier illisible. Avant, une coupure
+    // réseau renvoyait le même message qu'un CV incompréhensible — l'utilisateur
+    // croyait son fichier en cause alors qu'un simple nouvel essai suffisait.
+    if (isTransientAiError(error)) {
+      console.warn('[parse-cv] echec transitoire :', `${error?.message || error}`.slice(0, 200));
+      return res.status(503).json({
+        success: false,
+        transient: true,
+        error: "Le service d'analyse est momentanément indisponible. Réessaie dans quelques secondes : ton fichier n'est pas en cause.",
+      });
+    }
+    console.error('[parse-cv] echec :', error);
     res.status(500).json({ success: false, error: error.message || "Erreur lors de l'analyse du CV." });
   }
 });

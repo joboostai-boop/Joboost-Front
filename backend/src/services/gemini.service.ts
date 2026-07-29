@@ -120,14 +120,29 @@ const ensureParagraphs = (text: string): string => {
   return paragraphs.filter(Boolean).join('\n\n');
 };
 
-// Erreurs Gemini transitoires : surcharge serveur, indisponibilité, rate-limit.
-// (NB : avec la facturation activée, le 429 vient d'une limite/minute, pas d'un quota épuisé → réessayer aide.)
-const TRANSIENT_ERROR = /\b(503|429)\b|UNAVAILABLE|RESOURCE_EXHAUSTED|overloaded|high demand|try again/i;
+// Erreurs transitoires : on réessaie. La liste couvrait initialement la seule
+// surcharge Gemini (503 / 429), ce qui laissait passer sans réessai les pannes
+// réseau et les erreurs de passerelle — précisément celles qui produisent le
+// symptôme « ça échoue, je recommence, ça marche » signalé sur l'import de CV.
+// Sont désormais couverts : surcharge et quota, erreurs 5xx de passerelle,
+// timeouts, et coupures de socket côté Node.
+const TRANSIENT_ERROR = new RegExp(
+  [
+    '\\b(429|500|502|503|504)\\b',
+    'UNAVAILABLE|RESOURCE_EXHAUSTED|INTERNAL|DEADLINE_EXCEEDED',
+    'overloaded|high demand|try again|temporarily',
+    'timed? ?out|timeout|ETIMEDOUT',
+    'ECONNRESET|ECONNREFUSED|EAI_AGAIN|ENETUNREACH|socket hang up',
+    'fetch failed|network error|premature close',
+  ].join('|'),
+  'i'
+);
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
-// Appelle l'API Gemini avec réessais automatiques (backoff) sur erreur transitoire.
-// Les autres erreurs (clé invalide, requête malformée…) sont relancées immédiatement.
-const genWithRetry = async (ai: any, params: any, attempts = 3): Promise<any> => {
+// Appelle l'API Gemini avec réessais automatiques (backoff exponentiel) sur
+// erreur transitoire. Les autres erreurs (clé invalide, requête malformée…)
+// sont relancées immédiatement : les réessayer ne servirait à rien.
+const genWithRetry = async (ai: any, params: any, attempts = 4): Promise<any> => {
   let lastErr: any;
   for (let i = 0; i < attempts; i++) {
     try {
@@ -136,19 +151,30 @@ const genWithRetry = async (ai: any, params: any, attempts = 3): Promise<any> =>
       lastErr = e;
       const msg = `${e?.message || e}`;
       if (i === attempts - 1 || !TRANSIENT_ERROR.test(msg)) throw e;
-      console.warn(`Gemini surchargé (tentative ${i + 1}/${attempts}), nouvel essai…`);
-      await sleep(700 * Math.pow(2, i)); // 700 ms puis 1400 ms
+      console.warn(`Gemini : erreur transitoire (tentative ${i + 1}/${attempts}) — ${msg.slice(0, 120)}`);
+      await sleep(800 * Math.pow(2, i)); // 800 ms, 1,6 s, 3,2 s
     }
   }
   throw lastErr;
 };
+
+/** Une erreur mérite-t-elle un « réessaie » côté utilisateur ? */
+export const isTransientAiError = (err: any): boolean =>
+  TRANSIENT_ERROR.test(`${err?.message || err}`);
 
 export const geminiService = {
   getProfileOptimizations: async (profileData: any): Promise<string[]> => {
     const ai = getAI();
     const response = await genWithRetry(ai, {
       model: 'gemini-3-flash-preview',
-      contents: `Analyse neuronale de ce profil pour optimisation de convergence : ${JSON.stringify(profileData)}. Retourne 3 vecteurs d'amélioration sous forme de liste JSON de chaînes.`,
+      // Consigne réécrite : elle demandait auparavant une « analyse neuronale pour
+      // optimisation de convergence » et des « vecteurs d'amélioration » — reste de
+      // la persona Jobix, qui produisait des suggestions incompréhensibles.
+      contents:
+        `Voici le profil d'un candidat : ${JSON.stringify(profileData)}\n\n` +
+        `Donne 3 conseils concrets pour l'améliorer. Chaque conseil : une phrase courte, ` +
+        `directement actionnable, qui dit quoi ajouter ou préciser. Pas de jargon. ` +
+        `Réponds par une liste JSON de 3 chaînes.`,
       config: {
         systemInstruction: SYSTEM_PROMPT,
         responseMimeType: "application/json",
