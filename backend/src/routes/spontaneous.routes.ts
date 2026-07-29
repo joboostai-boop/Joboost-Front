@@ -1,19 +1,26 @@
 import { Router } from 'express';
 import { spontaneousController } from '../controllers/spontaneous.controller';
 import { aiLimiter } from '../middleware/rateLimit.middleware';
+import { requireFullAccess } from '../middleware/premium.middleware';
 
 const router = Router();
 
 const asyncHandler = (fn: any) => (req: any, res: any, next: any) =>
   Promise.resolve(fn(req, res, next)).catch(next);
 
+// La CONSULTATION reste ouverte : un compte gratuit peut voir ses candidatures
+// spontanées passées. Sinon un abonné qui résilie perdrait l'accès à son propre
+// historique, ce qui serait abusif.
 router.get('/', asyncHandler(spontaneousController.list));
-// Détection d'email employeur (scraping best-effort) → rate-limité comme les routes IA.
-router.post('/detect-contact', aiLimiter, asyncHandler(spontaneousController.detectContact));
-router.post('/prepare', asyncHandler(spontaneousController.prepare));
 router.get('/:id', asyncHandler(spontaneousController.get));
-router.post('/:id/send', asyncHandler(spontaneousController.send));
-router.post('/:id/follow-up', asyncHandler(spontaneousController.followUp));
+
+// Tout ce qui CRÉE ou ENVOIE est réservé à l'abonnement (ou à l'essai en cours).
+// Le verrou est posé au niveau de la route, pas dans le contrôleur : impossible
+// de l'oublier en ajoutant une action plus tard.
+router.post('/detect-contact', requireFullAccess, aiLimiter, asyncHandler(spontaneousController.detectContact));
+router.post('/prepare', requireFullAccess, asyncHandler(spontaneousController.prepare));
+router.post('/:id/send', requireFullAccess, asyncHandler(spontaneousController.send));
+router.post('/:id/follow-up', requireFullAccess, asyncHandler(spontaneousController.followUp));
 router.post('/:id/blacklist', asyncHandler(spontaneousController.blacklist));
 
 export default router;

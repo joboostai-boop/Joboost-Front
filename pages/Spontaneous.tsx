@@ -7,7 +7,7 @@ import { authHeaders } from '../services/authToken';
 import MatchBadge from '../components/MatchBadge';
 import EmptyState from '../components/EmptyState';
 import RadiusSelect from '../components/RadiusSelect';
-import QuotaDialog from '../components/QuotaDialog';
+import UpgradeDialog from '../components/UpgradeDialog';
 
 type AutoLevel = 'AUTO_SAFE' | 'AUTO_REVIEW' | 'NO_SEND';
 
@@ -75,6 +75,8 @@ const Spontaneous: React.FC = () => {
   const [editingEmail, setEditingEmail] = useState<Record<string, boolean>>({});
   const [processing, setProcessing] = useState<Record<string, boolean>>({});
   const [quotaOpen, setQuotaOpen] = useState(false);
+  // 'feature' = fonction reservee aux abonnes (403) ; 'quota' = plus de lettres (402).
+  const [quotaReason, setQuotaReason] = useState<'quota' | 'feature'>('quota');
   const [quotaMessage, setQuotaMessage] = useState<string | undefined>();
 
   useEffect(() => {
@@ -150,9 +152,11 @@ const Spontaneous: React.FC = () => {
       });
       const prep = await prepRes.json();
       if (!prep.success) {
-        if (prep.code === 'QUOTA_EXCEEDED') {
-          // Quota atteint : on retire le toast de chargement et on PROPOSE l'offre adaptée.
+        if (prep.code === 'QUOTA_EXCEEDED' || prep.code === 'SUBSCRIPTION_REQUIRED') {
+          // Blocage commercial : on retire le toast de chargement et on ouvre la
+          // fenêtre d'abonnement, qui vend au moment exact du besoin.
           toast.dismiss(toastId);
+          setQuotaReason(prep.code === 'SUBSCRIPTION_REQUIRED' ? 'feature' : 'quota');
           setQuotaMessage(prep.error);
           setQuotaOpen(true);
           return;
@@ -198,7 +202,7 @@ const Spontaneous: React.FC = () => {
 
   return (
     <div className="p-4 md:p-8 pb-28 md:pb-8 max-w-6xl mx-auto space-y-5 md:space-y-6">
-      <QuotaDialog open={quotaOpen} onClose={() => setQuotaOpen(false)} message={quotaMessage} />
+      <UpgradeDialog open={quotaOpen} onClose={() => setQuotaOpen(false)} reason={quotaReason} message={quotaMessage} />
       <form onSubmit={handleSearch} className="surface p-5 md:p-6">
         <h3 className="text-sm font-semibold text-[#111827] dark:text-white mb-4">Critères de ciblage</h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">

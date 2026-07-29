@@ -20,6 +20,11 @@ interface UsageInfo {
   isSubscribed: boolean;
   planLabel: string;
   subscriptionEndsAt: string | null;
+  /** Essai candidat de 7 jours : accès complet, puis retour au plan Gratuit. */
+  inTrial?: boolean;
+  trialDaysLeft?: number;
+  /** Accès aux fonctions premium (spontanées, relances…) : abonné OU en essai. */
+  fullAccess?: boolean;
 }
 
 interface ProfileProps { user: UserType; }

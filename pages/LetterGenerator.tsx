@@ -7,7 +7,7 @@ import { authHeaders } from '../services/authToken';
 import TemplateGallery from '../components/TemplateGallery';
 import Collapsible from '../components/Collapsible';
 import AiLoadingOverlay from '../components/AiLoadingOverlay';
-import QuotaDialog, { isQuotaError } from '../components/QuotaDialog';
+import UpgradeDialog, { isQuotaError } from '../components/UpgradeDialog';
 import { LETTER_TEMPLATES, getLetterTemplate } from '../services/letterTemplates';
 
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -199,7 +199,7 @@ const LetterGenerator: React.FC = () => {
 
   return (
     <div className="p-5 md:p-8 max-w-6xl mx-auto space-y-8 md:space-y-6">
-      <QuotaDialog open={quotaOpen} onClose={() => setQuotaOpen(false)} message={quotaMessage} />
+      <UpgradeDialog open={quotaOpen} onClose={() => setQuotaOpen(false)} reason="quota" message={quotaMessage} />
       <AiLoadingOverlay
         show={loading}
         title="Rédaction de votre lettre…"

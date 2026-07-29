@@ -18,11 +18,49 @@ export const MONTHLY_ALLOWANCE = {
   free: 1,    // plan Gratuit
 };
 
+/**
+ * Essai candidat : accès COMPLET pendant N jours après l'inscription, sans carte
+ * bancaire. Passé ce délai, on retombe sur le plan Gratuit.
+ *
+ * Pourquoi : un plan gratuit permanent d'1 lettre/mois faisait toucher le mur
+ * AVANT d'avoir ressenti la valeur du produit — l'utilisateur partait au lieu de
+ * payer. Avec l'essai, il vit le produit complet, puis sait précisément ce qu'il
+ * perd. Même logique que la découverte de 15 jours déjà en place côté partenaire.
+ */
+export const TRIAL_DAYS = 7;
+
 const monthKey = (d: Date = new Date()): string =>
   `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
 
-const allowanceFor = (subscriptionStatus: string | null): number =>
-  subscriptionStatus === 'active' ? MONTHLY_ALLOWANCE.elite : MONTHLY_ALLOWANCE.free;
+/** Jours d'essai restants (0 si terminé). Basé sur la date d'inscription. */
+export const trialDaysLeft = (createdAt: Date | null | undefined): number => {
+  if (!createdAt) return 0;
+  const elapsed = Math.floor((Date.now() - new Date(createdAt).getTime()) / 86_400_000);
+  return Math.max(0, TRIAL_DAYS - elapsed);
+};
+
+/** L'essai est-il encore actif ? */
+export const trialActive = (createdAt: Date | null | undefined): boolean =>
+  trialDaysLeft(createdAt) > 0;
+
+/** Abonnement payant actif ? */
+export const isSubscribed = (subscriptionStatus: string | null | undefined): boolean =>
+  subscriptionStatus === 'active';
+
+/**
+ * Accès complet aux fonctions premium (lettres en volume, candidatures
+ * spontanées, relances…) : abonné OU encore en essai.
+ */
+export const hasFullAccess = (u: { subscriptionStatus?: string | null; createdAt?: Date | null }): boolean =>
+  isSubscribed(u.subscriptionStatus) || trialActive(u.createdAt);
+
+const allowanceFor = (
+  subscriptionStatus: string | null,
+  createdAt?: Date | null,
+): number =>
+  isSubscribed(subscriptionStatus) || trialActive(createdAt)
+    ? MONTHLY_ALLOWANCE.elite
+    : MONTHLY_ALLOWANCE.free;
 
 /** Emails "propriétaires" (illimités), définis dans l'env OWNER_EMAILS (séparés par des virgules). */
 const ownerEmails = (): Set<string> =>
@@ -52,7 +90,7 @@ export const usageService = {
   consumeCandidature: async (userId: string): Promise<ConsumeResult> => {
     const user = await prisma.user.findUnique({
       where: { id: userId },
-      select: { email: true, subscriptionStatus: true, credits: true, monthlyUsage: true, usageMonth: true },
+      select: { email: true, subscriptionStatus: true, credits: true, monthlyUsage: true, usageMonth: true, createdAt: true },
     });
     if (!user) return { allowed: false };
 
@@ -63,7 +101,7 @@ export const usageService = {
 
     const currentMonth = monthKey();
     const usedThisMonth = user.usageMonth === currentMonth ? user.monthlyUsage : 0;
-    const allowance = allowanceFor(user.subscriptionStatus);
+    const allowance = allowanceFor(user.subscriptionStatus, user.createdAt);
 
     // 1) Quota mensuel (reset implicite si on a changé de mois)
     if (usedThisMonth < allowance) {
@@ -127,12 +165,14 @@ export const usageService = {
       where: { id: userId },
       select: {
         email: true, subscriptionStatus: true, subscriptionEndsAt: true,
-        credits: true, monthlyUsage: true, usageMonth: true,
+        credits: true, monthlyUsage: true, usageMonth: true, createdAt: true,
       },
     });
     if (!user) return null;
 
     const isSubscribed = user.subscriptionStatus === 'active';
+    const daysLeft = trialDaysLeft(user.createdAt);
+    const inTrial = !isSubscribed && daysLeft > 0;
 
     // Compte propriétaire : illimité.
     if (isOwnerEmail(user.email)) {
@@ -146,12 +186,15 @@ export const usageService = {
         planLabel: 'Accès illimité',
         subscriptionStatus: user.subscriptionStatus,
         subscriptionEndsAt: user.subscriptionEndsAt,
+        inTrial: false,
+        trialDaysLeft: 0,
+        fullAccess: true,
       };
     }
 
     const currentMonth = monthKey();
     const usedThisMonth = user.usageMonth === currentMonth ? user.monthlyUsage : 0;
-    const allowance = allowanceFor(user.subscriptionStatus);
+    const allowance = allowanceFor(user.subscriptionStatus, user.createdAt);
     return {
       allowance,
       usedThisMonth,
@@ -159,10 +202,15 @@ export const usageService = {
       credits: user.credits,
       unlimited: false,
       isSubscribed,
-      // Libellé affiché côté front : « Élite » si abonnement actif, sinon « Gratuit ».
-      planLabel: isSubscribed ? 'Élite' : 'Gratuit',
+      // Libellé affiché côté front. Pendant l'essai on l'annonce clairement avec
+      // le décompte : c'est ce qui prépare l'utilisateur au passage payant.
+      planLabel: isSubscribed ? 'Élite' : inTrial ? `Essai · ${daysLeft} j` : 'Gratuit',
       subscriptionStatus: user.subscriptionStatus,
       subscriptionEndsAt: user.subscriptionEndsAt,
+      inTrial,
+      trialDaysLeft: daysLeft,
+      // Accès aux fonctions premium (spontanées, relances…) : abonné OU en essai.
+      fullAccess: isSubscribed || inTrial,
     };
   },
 };
