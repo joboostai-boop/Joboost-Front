@@ -88,6 +88,7 @@ const App: React.FC = () => {
     // débloque l'entrée dans l'app quoi qu'il arrive — l'Accueil rappellera de
     // compléter le profil. Personne ne reste prisonnier de cet écran.
     let saved = false;
+    let why = '';
     try {
       const res = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/users/me`, {
         method: 'PUT',
@@ -96,15 +97,30 @@ const App: React.FC = () => {
         body: JSON.stringify(data),
       });
       saved = res.ok;
-      if (saved) await checkAuth();
-    } catch {
+      if (saved) {
+        await checkAuth();
+      } else {
+        // Message serveur remonté tel quel : sans lui, un échec est indiagnosticable
+        // à distance (401 d'authentification, 404 de route, 500 de base de données…).
+        let serverMsg = '';
+        try {
+          const body = await res.json();
+          serverMsg = body?.error || '';
+        } catch {
+          serverMsg = '';
+        }
+        why = `${res.status}${serverMsg ? ' — ' + serverMsg : ''}`;
+      }
+    } catch (err: any) {
       saved = false;
+      why = `réseau — ${err?.message || 'requête bloquée'}`;
     }
 
     if (saved) {
       toast.success('Profil enregistré !');
     } else {
-      toast.error("Profil non enregistré. Tu peux continuer et réessayer depuis ton profil.");
+      console.error('[onboarding] échec enregistrement profil :', why);
+      toast.error(`Profil non enregistré (${why}). Tu peux continuer et réessayer depuis ton profil.`, { duration: 8000 });
     }
 
     // Filet de sécurité : on ouvre le gate même si l'enregistrement a échoué,
