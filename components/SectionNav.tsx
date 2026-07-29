@@ -36,7 +36,19 @@ const tabClass = (isActive: boolean) =>
 
 const SectionNav: React.FC<SectionNavProps> = ({ tabs, right }) => (
   <div className="sticky top-14 md:top-[88px] z-20 md:z-30 bg-[#F5F4FB]/85 dark:bg-[#030712]/85 backdrop-blur-md border-b border-[#ECEAF6] dark:border-[#1F2937]">
-    <div className="max-w-6xl mx-auto px-5 md:px-8 flex items-center justify-between gap-4">
+    <div className="relative max-w-6xl mx-auto px-5 md:px-8 flex items-center justify-between gap-4">
+      {/* Indice de défilement (MOBILE UNIQUEMENT — `md:hidden`).
+          La barre défile horizontalement avec `scrollbar-none` : sur téléphone,
+          seuls ~3 onglets tiennent à l'écran et les suivants (Entretien, Modèles)
+          étaient totalement invisibles, sans le moindre signal qu'ils existaient.
+          Ce dégradé en bord droit rétablit l'affordance. `pointer-events-none`
+          pour ne jamais intercepter un appui sur un onglet. */}
+      <div
+        aria-hidden="true"
+        className="md:hidden pointer-events-none absolute right-0 top-0 bottom-0 w-14 z-10
+                   bg-gradient-to-l from-[#F5F4FB] via-[#F5F4FB]/85 to-transparent
+                   dark:from-[#030712] dark:via-[#030712]/85"
+      />
       {/* overflow-y-hidden : `overflow-x-auto` force sinon `overflow-y:auto`, d'où une
           fine scrollbar verticale parasite — on la neutralise explicitement. */}
       <nav className="flex items-center gap-6 md:gap-7 overflow-x-auto overflow-y-hidden scrollbar-none">

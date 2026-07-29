@@ -1,7 +1,7 @@
 import React from 'react';
 import { PRIMARY_NAV } from '../constants';
-import { Plus, Megaphone, Users, BarChart3, LayoutDashboard } from 'lucide-react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Megaphone, Users, BarChart3, LayoutDashboard } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
 interface MobileNavProps {
@@ -22,7 +22,6 @@ const isActivePath = (currentPath: string, path: string) =>
 
 const MobileNav: React.FC<MobileNavProps> = ({ currentPath }) => {
   const { user } = useAuth();
-  const navigate = useNavigate();
   const isBusinessPartner = user?.role === 'BUSINESS_PARTNER';
 
   /* ═════════ BUSINESS : barre du bas ═════════ */
@@ -53,11 +52,14 @@ const MobileNav: React.FC<MobileNavProps> = ({ currentPath }) => {
     );
   }
 
-  /* ═════════ CANDIDAT : barre du bas + bouton d'action central ═════════ */
-  // 4 onglets de parcours + un bouton "+" central (Nouvelle candidature).
-  const [accueil, preparer, postuler, suivre] = PRIMARY_NAV;
-  const left = [accueil, preparer];
-  const right = [postuler, suivre];
+  /* ═════════ CANDIDAT : barre du bas ═════════ */
+  // 4 onglets de parcours, répartis uniformément.
+  //
+  // Le bouton « + » central a été retiré : il pointait vers /target/offers,
+  // c'est-à-dire exactement la destination de l'onglet « Postuler » situé juste
+  // à sa droite. Deux commandes d'aspect très différent menaient au même écran,
+  // et lui seul n'avait aucun libellé — les quatre autres en ont un. Source de
+  // confusion pour rien, aucune fonction perdue.
 
   const renderTab = (item: { name: string; icon: React.ReactNode; path: string }) => {
     const active = isActivePath(currentPath, `/${item.path}`);
@@ -80,21 +82,8 @@ const MobileNav: React.FC<MobileNavProps> = ({ currentPath }) => {
 
   return (
     <nav className="md:hidden fixed inset-x-0 bottom-0 z-50 px-3 pt-2 pointer-events-none" style={{ paddingBottom: 'calc(0.6rem + env(safe-area-inset-bottom))' }}>
-      <div className="pointer-events-auto mx-auto max-w-md flex items-stretch rounded-2xl bg-white/95 dark:bg-[#0B1120]/95 backdrop-blur-lg border border-slate-200 dark:border-slate-800 shadow-pop" style={{ height: '64px' }}>
-        {left.map(renderTab)}
-
-        {/* Bouton d'action central (FAB) — Nouvelle candidature */}
-        <div className="flex items-center justify-center px-1" style={{ width: '72px' }}>
-          <button
-            onClick={() => navigate('/target/offers')}
-            aria-label="Nouvelle candidature"
-            className="w-14 h-14 -mt-6 rounded-2xl bg-gradient-to-b from-[#8C6DFF] to-[#7D5CFF] text-white flex items-center justify-center shadow-lg shadow-[#7D5CFF]/40 active:scale-95 transition-transform border-4 border-[#F5F4FB] dark:border-[#030712]"
-          >
-            <Plus size={26} strokeWidth={2.75} />
-          </button>
-        </div>
-
-        {right.map(renderTab)}
+      <div className="pointer-events-auto mx-auto max-w-md flex items-stretch justify-around rounded-2xl bg-white/95 dark:bg-[#0B1120]/95 backdrop-blur-lg border border-slate-200 dark:border-slate-800 shadow-pop" style={{ height: '64px' }}>
+        {PRIMARY_NAV.map(renderTab)}
       </div>
     </nav>
   );
