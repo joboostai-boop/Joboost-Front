@@ -5,6 +5,7 @@ import crypto from 'crypto';
 import { prisma } from '../db';
 import { JWT_SECRET, FRONTEND_URL } from '../config';
 import { emailService } from '../services/email.service';
+import { isValidEmail, normalizeEmail, findUserByEmail } from '../services/userEmail.util';
 
 const hashToken = (raw: string) => crypto.createHash('sha256').update(raw).digest('hex');
 
@@ -20,18 +21,23 @@ const COOKIE_OPTIONS = {
 export const authController = {
   register: async (req: Request, res: Response) => {
     try {
-      const { email, password, name, acceptedTerms, marketingOptIn } = req.body;
+      const { email: rawEmail, password, name, acceptedTerms, marketingOptIn } = req.body;
 
-      if (!email || !password || !name) {
+      if (!rawEmail || !password || !name) {
         return res.status(400).json({ success: false, error: "Email, mot de passe et nom sont requis." });
       }
+
+      if (!isValidEmail(rawEmail)) {
+        return res.status(400).json({ success: false, error: "Cette adresse email n'est pas valide. Vérifiez le domaine (ex. nom@gmail.com)." });
+      }
+      const email = normalizeEmail(rawEmail);
 
       if (!acceptedTerms) {
         return res.status(400).json({ success: false, error: "Vous devez accepter les CGU et la politique de confidentialité." });
       }
 
       // Vérication existence
-      const existing = await prisma.user.findUnique({ where: { email } });
+      const existing = await findUserByEmail(email);
       if (existing) {
         return res.status(400).json({ success: false, error: "Cet email est déjà utilisé." });
       }
@@ -76,7 +82,7 @@ export const authController = {
         return res.status(400).json({ success: false, error: "Email et mot de passe requis." });
       }
 
-      const user = await prisma.user.findUnique({ where: { email } });
+      const user = await findUserByEmail(email);
       if (!user || !user.password) {
         return res.status(401).json({ success: false, error: "Identifiants invalides." });
       }
@@ -114,7 +120,7 @@ export const authController = {
 
       if (!email || typeof email !== 'string') return genericOk();
 
-      const user = await prisma.user.findUnique({ where: { email } });
+      const user = await findUserByEmail(email);
       // Pas de compte, ou compte OAuth-only (sans mot de passe) → on ne fait rien mais on répond pareil.
       if (!user || !user.password) return genericOk();
 
@@ -123,8 +129,10 @@ export const authController = {
       const resetTokenExpiry = new Date(Date.now() + 60 * 60 * 1000); // 1h
       await prisma.user.update({ where: { id: user.id }, data: { resetTokenHash, resetTokenExpiry } });
 
-      const resetUrl = `${FRONTEND_URL}/auth/reset?token=${rawToken}&email=${encodeURIComponent(email)}`;
-      const result = await emailService.sendPasswordReset({ to: email, name: user.name, resetUrl });
+      // On repart de l'email STOCKÉ (et non de la saisie) : le lien de réinitialisation
+      // désigne ainsi toujours le compte retrouvé, quelle que soit la casse tapée.
+      const resetUrl = `${FRONTEND_URL}/auth/reset?token=${rawToken}&email=${encodeURIComponent(user.email)}`;
+      const result = await emailService.sendPasswordReset({ to: user.email, name: user.name, resetUrl });
       if (!result.sent) {
         // Envoi impossible (aucun transport configuré) : on ne laisse pas un token pendouiller.
         await prisma.user.update({ where: { id: user.id }, data: { resetTokenHash: null, resetTokenExpiry: null } });
@@ -149,7 +157,7 @@ export const authController = {
         return res.status(400).json({ success: false, error: 'Le mot de passe doit contenir au moins 6 caractères.' });
       }
 
-      const user = await prisma.user.findUnique({ where: { email } });
+      const user = await findUserByEmail(email);
       if (!user || !user.resetTokenHash || !user.resetTokenExpiry) {
         return res.status(400).json({ success: false, error: 'Lien invalide ou déjà utilisé.' });
       }
@@ -178,11 +186,15 @@ export const authController = {
   // est nominatif et sécurisé → chaque recruteur gère SON propre espace/vivier.
   businessRegister: async (req: Request, res: Response) => {
     try {
-      const { email, password, name, companyName, acceptedTerms } = req.body;
+      const { email: rawEmail, password, name, companyName, acceptedTerms } = req.body;
 
-      if (!email || !password || !name || !companyName) {
+      if (!rawEmail || !password || !name || !companyName) {
         return res.status(400).json({ success: false, error: "Nom, société, email et mot de passe sont requis." });
       }
+      if (!isValidEmail(rawEmail)) {
+        return res.status(400).json({ success: false, error: "Cette adresse email n'est pas valide. Vérifiez le domaine (ex. nom@organisme.fr)." });
+      }
+      const email = normalizeEmail(rawEmail);
       if (!acceptedTerms) {
         return res.status(400).json({ success: false, error: "Vous devez accepter les CGU et la politique de confidentialité." });
       }
@@ -190,7 +202,7 @@ export const authController = {
         return res.status(400).json({ success: false, error: "Le mot de passe doit contenir au moins 6 caractères." });
       }
 
-      const existing = await prisma.user.findUnique({ where: { email } });
+      const existing = await findUserByEmail(email);
       if (existing) {
         return res.status(400).json({ success: false, error: "Cet email est déjà utilisé." });
       }

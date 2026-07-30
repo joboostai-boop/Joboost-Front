@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import crypto from 'crypto';
 import jwt from 'jsonwebtoken';
 import { prisma } from '../db';
+import { normalizeEmail, findUserByEmail } from '../services/userEmail.util';
 import {
   JWT_SECRET,
   APPLE_CLIENT_ID,
@@ -134,15 +135,16 @@ export const appleAuthController = {
         return res.redirect(`${FRONTEND_URL}/auth/login?error=apple_expired_token`);
       }
 
-      const email: string | undefined = payload.email;
+      const email: string | undefined = payload.email ? normalizeEmail(payload.email) : undefined;
       if (!email) {
         return res.redirect(`${FRONTEND_URL}/auth/login?error=apple_no_email`);
       }
       // Le nom n'est transmis qu'à la 1re connexion (champ POST `user`).
       const appleName = parseAppleUserName(req.body?.user);
 
-      // 3. Trouver ou créer l'utilisateur.
-      let user = await prisma.user.findUnique({ where: { email } });
+      // 3. Trouver ou créer l'utilisateur (recherche insensible à la casse : sinon un
+      //    compte existant créé avec des majuscules donnerait un doublon vide).
+      let user = await findUserByEmail(email);
       if (!user) {
         user = await prisma.user.create({
           data: {

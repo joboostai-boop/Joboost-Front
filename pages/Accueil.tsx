@@ -32,6 +32,8 @@ interface DashboardStats {
   profileCompletion: number;
   /** Libellés lisibles des champs de profil encore vides (ex. « tes langues »). */
   profileMissing?: string[];
+  /** Le profil contient-il le minimum pour générer un CV utile (métier + matière) ? */
+  canGenerateCV?: boolean;
   cvCount: number;
   letterCount: number;
   savedCount: number;
@@ -73,11 +75,24 @@ const getNextAction = (stats: DashboardStats | null) => {
   };
   if (!stats) return fallback;
 
-  if (stats.profileCompletion < 50) {
-    return { to: '/prepare/profile', icon: <UserRound size={22} />, title: 'Complète ton profil', desc: `Profil rempli à ${stats.profileCompletion}%. C’est la base pour de bons documents.` };
+  // Repli si le backend n'expose pas encore canGenerateCV (front déployé avant le back) :
+  // on déduit le minimum vital de la liste des manques.
+  const canGenerateCV = stats.canGenerateCV
+    ?? !(stats.profileMissing ?? []).includes('ton métier cible');
+
+  // Le premier CV passe AVANT la complétion du profil.
+  // Auparavant, tout profil sous 50 % renvoyait vers « complète ton profil » : un nouvel
+  // inscrit sortait de l'onboarding pour s'entendre redemander de remplir son profil, sans
+  // avoir rien vu de ce que l'outil sait faire. Le CV généré est le moment où la valeur
+  // apparaît — on y va dès qu'il y a de quoi le rédiger, le profil se complète ensuite.
+  if (!canGenerateCV) {
+    return { to: '/prepare/profile', icon: <UserRound size={22} />, title: 'Complète ton profil', desc: 'Ton métier visé et tes expériences suffisent pour générer un premier CV.' };
   }
   if (stats.cvCount === 0) {
-    return { to: '/prepare/cv', icon: <FileText size={22} />, title: 'Génère ton premier CV', desc: 'L’IA crée un CV optimisé à partir de ton profil.' };
+    return { to: '/prepare/cv', icon: <FileText size={22} />, title: 'Génère ton premier CV', desc: 'L’IA le rédige à partir de ton profil, en une minute.' };
+  }
+  if (stats.profileCompletion < 50) {
+    return { to: '/prepare/profile', icon: <UserRound size={22} />, title: 'Complète ton profil', desc: `Profil rempli à ${stats.profileCompletion}%. Plus il est complet, meilleurs sont tes documents.` };
   }
   if (stats.applications.total === 0) {
     return { to: '/target/offers', icon: <Search size={22} />, title: 'Postule à ta première offre', desc: 'Tes documents sont prêts, passe à l’action.' };

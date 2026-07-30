@@ -9,6 +9,7 @@ import {
   GOOGLE_REDIRECT_URI,
   FRONTEND_URL,
 } from '../config';
+import { normalizeEmail, findUserByEmail } from '../services/userEmail.util';
 
 const oauthClient = new OAuth2Client(
   GOOGLE_CLIENT_ID,
@@ -98,10 +99,15 @@ export const googleAuthController = {
         return res.redirect(`${FRONTEND_URL}/auth/login?error=invalid_token`);
       }
 
-      const { email, name, picture, sub: googleId } = payload;
+      const { email: rawEmail, name, picture, sub: googleId } = payload;
+      const email = normalizeEmail(rawEmail);
 
-      // Trouver ou créer l'utilisateur
-      let user = await prisma.user.findUnique({ where: { email } });
+      // Trouver ou créer l'utilisateur.
+      // Recherche insensible à la casse : Google renvoie toujours l'email en minuscules.
+      // Avec une correspondance exacte, quelqu'un inscrit par mot de passe sous
+      // « Prenom.Nom@… » se voyait créer un SECOND compte vide en passant par Google,
+      // et ses CV semblaient avoir disparu.
+      let user = await findUserByEmail(email);
 
       if (!user) {
         // Créer un nouvel utilisateur via Google (pas de mot de passe)

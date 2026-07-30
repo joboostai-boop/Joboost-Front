@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import crypto from 'crypto';
 import jwt from 'jsonwebtoken';
 import { prisma } from '../db';
+import { normalizeEmail, findUserByEmail } from '../services/userEmail.util';
 import {
   JWT_SECRET,
   LINKEDIN_CLIENT_ID,
@@ -97,7 +98,7 @@ export const linkedinAuthController = {
         return res.redirect(`${FRONTEND_URL}/auth/login?error=linkedin_profile_failed`);
       }
       const info: any = await infoRes.json();
-      const email: string | undefined = info.email;
+      const email: string | undefined = info.email ? normalizeEmail(info.email) : undefined;
       const name: string | undefined = info.name || [info.given_name, info.family_name].filter(Boolean).join(' ');
       const picture: string | undefined = info.picture;
 
@@ -105,8 +106,9 @@ export const linkedinAuthController = {
         return res.redirect(`${FRONTEND_URL}/auth/login?error=linkedin_no_email`);
       }
 
-      // 3. Trouver ou créer l'utilisateur, et synchroniser nom + photo
-      let user = await prisma.user.findUnique({ where: { email } });
+      // 3. Trouver ou créer l'utilisateur, et synchroniser nom + photo (recherche
+      //    insensible à la casse : sinon un compte existant en majuscules → doublon vide).
+      let user = await findUserByEmail(email);
       if (!user) {
         user = await prisma.user.create({
           data: {

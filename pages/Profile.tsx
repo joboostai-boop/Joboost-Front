@@ -256,8 +256,10 @@ const Profile: React.FC<ProfileProps> = ({ user }) => {
       f.contractTypes.length > 0,
       f.mobility.length > 0,
       f.drivingLicenses.length > 0,
-      !!f.portfolio,
-      !!f.github,
+      // Portfolio et GitHub volontairement HORS du calcul : presque aucun candidat n'en a,
+      // ils rendaient le 100 % inatteignable. Ils restent saisissables plus bas, en bonus.
+      // ⚠️ Cette liste doit rester alignée sur dashboard.controller.ts (mêmes 16 champs),
+      // sinon le profil et l'accueil réaffichent deux pourcentages différents.
     ];
     const filled = fields.filter(Boolean).length;
     return Math.round((filled / fields.length) * 100);
