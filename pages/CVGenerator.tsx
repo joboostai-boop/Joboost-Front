@@ -163,7 +163,10 @@ const CVGenerator: React.FC = () => {
              ...prev,
              name: u.name || 'Candidat',
              // Si on arrive depuis une offre, on cible directement son intitulé de poste.
-             title: incoming.jobTitle || u.title || 'Développeur',
+             // Pas de métier par défaut : « Développeur » s'écrivait sur le CV d'un
+             // candidat qui vise tout autre chose, et un champ pré-rempli faux se
+             // remarque moins qu'un champ vide — il partait donc tel quel.
+             title: incoming.jobTitle || u.title || '',
              email: u.email || '',
              phone: u.phone || '',
              city: u.city || '',
@@ -433,7 +436,7 @@ const CVGenerator: React.FC = () => {
             </div>
             <div>
               <label className="input-label">Poste recherché</label>
-              <input type="text" value={formData.title} onChange={(e) => setFormData({...formData, title: e.target.value})} className="input-pro" />
+              <input type="text" value={formData.title} onChange={(e) => setFormData({...formData, title: e.target.value})} className="input-pro" placeholder="Vendeur, aide-soignant, développeur…" />
             </div>
             <div>
               <label className="input-label">Email</label>
