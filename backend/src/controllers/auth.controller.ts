@@ -6,6 +6,7 @@ import { prisma } from '../db';
 import { JWT_SECRET, FRONTEND_URL } from '../config';
 import { emailService } from '../services/email.service';
 import { isValidEmail, normalizeEmail, findUserByEmail } from '../services/userEmail.util';
+import { touchLastLogin } from '../services/loginActivity.util';
 
 const hashToken = (raw: string) => crypto.createHash('sha256').update(raw).digest('hex');
 
@@ -91,6 +92,8 @@ export const authController = {
       if (!isMatch) {
         return res.status(401).json({ success: false, error: "Identifiants invalides." });
       }
+
+      touchLastLogin(user.id);
 
       // Générer JWT
       const token = jwt.sign(

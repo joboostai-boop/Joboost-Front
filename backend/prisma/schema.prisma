@@ -80,6 +80,11 @@ model User {
   resetTokenHash    String?   // SHA-256 du token envoyé par email (jamais stocké en clair)
   resetTokenExpiry  DateTime? // expiration du lien de réinitialisation (1h)
 
+  // Dernière connexion réussie (email/mdp ou OAuth). Écrite sans bloquer la réponse.
+  // Sans ce champ, rien en base ne distinguait un compte créé puis abandonné d'un compte
+  // réellement utilisé : la seule trace était les logs Render, illisibles à l'usage.
+  lastLoginAt       DateTime?
+
   // Consentements (RGPD / preuve d'acceptation)
   acceptedTermsAt   DateTime? // date d'acceptation des CGU + politique de confidentialité
   marketingOptIn    Boolean   @default(false) // consentement e-mails marketing (opt-in)

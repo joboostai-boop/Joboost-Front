@@ -4,6 +4,7 @@ import { prisma } from '../db';
 import { geminiService } from '../services/gemini.service';
 import { stripeService, BUSINESS_PLANS } from '../services/stripe.service';
 import { emailService } from '../services/email.service';
+import { isValidEmail, findUserByEmail } from '../services/userEmail.util';
 
 // Modèle SUR DEVIS (espace recruteur UNIQUEMENT — le côté candidat a son propre modèle).
 // Période de découverte de 15 JOURS à partir de la création du compte : accès complet
@@ -657,8 +658,16 @@ export const businessController = {
       // de l'organisme dans son flux Joboost. Sans email, on synthétise une adresse interne.
       let finalEmail: string;
       const provided = email ? String(email).trim().toLowerCase() : '';
+      if (provided && !isValidEmail(provided)) {
+        return res.status(400).json({ success: false, error: "Cette adresse e-mail n'est pas valide. Vérifiez le domaine (ex. nom@gmail.com)." });
+      }
       if (provided) {
-        const existing = await prisma.user.findUnique({ where: { email: provided } });
+        // Recherche insensible à la casse : la saisie est bien normalisée en minuscules,
+        // mais des comptes candidats existants sont enregistrés avec des majuscules
+        // (« Prenom.Nom@… »). Une correspondance exacte ne les retrouvait pas → on créait
+        // une fiche « candidat géré » en doublon au lieu de rattacher son vrai compte,
+        // et l'adhérent ne voyait jamais les offres de son organisme.
+        const existing = await findUserByEmail(provided);
         if (existing) {
           if (existing.role !== 'CANDIDATE') {
             return res.status(409).json({ success: false, error: 'Cet e-mail correspond à un compte non candidat (recruteur/admin).' });
@@ -777,9 +786,14 @@ export const businessController = {
       }
       if (email !== undefined && String(email).trim()) {
         const provided = String(email).trim().toLowerCase();
-        if (provided !== candidate.email) {
-          const clash = await prisma.user.findUnique({ where: { email: provided } });
-          if (clash) {
+        if (!isValidEmail(provided)) {
+          return res.status(400).json({ success: false, error: "Cette adresse e-mail n'est pas valide. Vérifiez le domaine (ex. nom@gmail.com)." });
+        }
+        if (provided !== candidate.email.toLowerCase()) {
+          // Insensible à la casse, et on s'exclut soi-même : sinon un candidat dont
+          // l'email diffère seulement par la casse se déclarerait en conflit avec lui-même.
+          const clash = await findUserByEmail(provided);
+          if (clash && clash.id !== candidate.id) {
             return res.status(409).json({ success: false, error: 'Un profil avec cet e-mail existe déjà.' });
           }
           data.email = provided;

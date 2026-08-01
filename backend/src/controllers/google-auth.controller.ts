@@ -10,6 +10,7 @@ import {
   FRONTEND_URL,
 } from '../config';
 import { normalizeEmail, findUserByEmail } from '../services/userEmail.util';
+import { touchLastLogin } from '../services/loginActivity.util';
 
 const oauthClient = new OAuth2Client(
   GOOGLE_CLIENT_ID,
@@ -125,6 +126,8 @@ export const googleAuthController = {
           data: { photoUrl: picture },
         });
       }
+
+      touchLastLogin(user.id);
 
       // Générer le JWT JobBoost
       const jwtToken = jwt.sign(

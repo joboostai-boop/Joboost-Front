@@ -3,6 +3,7 @@ import crypto from 'crypto';
 import jwt from 'jsonwebtoken';
 import { prisma } from '../db';
 import { normalizeEmail, findUserByEmail } from '../services/userEmail.util';
+import { touchLastLogin } from '../services/loginActivity.util';
 import {
   JWT_SECRET,
   APPLE_CLIENT_ID,
@@ -158,6 +159,8 @@ export const appleAuthController = {
         user = await prisma.user.update({ where: { id: user.id }, data: { name: appleName } });
       }
 
+      touchLastLogin(user.id);
+
       // 4. Session JobBoost (JWT en cookie + fragment d'URL pour le mobile).
       const jwtToken = jwt.sign(
         { userId: user.id, role: user.role, organizationId: user.organizationId },
@@ -165,7 +168,9 @@ export const appleAuthController = {
         { expiresIn: '7d' },
       );
       res.cookie('token', jwtToken, COOKIE_OPTIONS);
-      res.redirect(`${FRONTEND_URL}/dashboard?oauth=apple#token=${jwtToken}`);
+      // ⚠️ /home et non /dashboard : route inexistante côté front (cf. le même correctif
+      // appliqué à Google) — elle renvoyait l'utilisateur sur l'écran d'authentification.
+      res.redirect(`${FRONTEND_URL}/home?oauth=apple#token=${jwtToken}`);
     } catch (error: unknown) {
       console.error('Apple OAuth callback error:', error);
       res.redirect(`${FRONTEND_URL}/auth/login?error=apple_oauth_failed`);

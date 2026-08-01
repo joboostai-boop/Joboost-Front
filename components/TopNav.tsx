@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Crown, UserRound, Settings2, Building2, ChevronDown, LogOut } from 'lucide-react';
 import { PRIMARY_NAV, BUSINESS_NAVIGATION } from '../constants';
 import Logo from './Logo';
+import PlanBadge from './PlanBadge';
 import { User } from '../types';
 import { useAuth } from '../context/AuthContext';
 import { businessAccountApi } from '../services/business';
@@ -37,7 +38,6 @@ const TopNav: React.FC<TopNavProps> = ({ user, currentPath }) => {
   const [menuOpen, setMenuOpen] = useState(false);
 
   const isBusiness = user?.role === 'BUSINESS_PARTNER';
-  const isFree = !isBusiness && (!user?.plan || user.plan === 'Gratuit');
   const items = isBusiness ? BUSINESS_NAVIGATION : PRIMARY_NAV;
   const homeLink = isBusiness ? '/business/dashboard' : '/home';
 
@@ -90,14 +90,9 @@ const TopNav: React.FC<TopNavProps> = ({ user, currentPath }) => {
 
         {/* Actions compte */}
         <div className="flex items-center gap-2 shrink-0">
-          {isFree && (
-            <Link
-              to="/pricing"
-              className="press inline-flex items-center gap-1.5 text-xs font-semibold text-[#7D5CFF] border border-[#7D5CFF]/25 bg-[#7D5CFF]/[0.06] hover:bg-[#7D5CFF]/12 rounded-full px-3 py-2 transition-colors"
-            >
-              <Crown size={14} /> <span className="hidden lg:inline">Passer à Élite</span>
-            </Link>
-          )}
+          {/* Pastille de plan : essai en cours, solde restant ou abonnement. Remplace
+              l'ancien « Passer à Élite » fixe, qui s'affichait même pendant l'essai. */}
+          {!isBusiness && <PlanBadge />}
 
           {/* Menu déroulant compte */}
           <div className="relative">

@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Crown } from 'lucide-react';
 import Logo from './Logo';
+import PlanBadge from './PlanBadge';
 import { User } from '../types';
 
 interface TopbarProps {
@@ -22,7 +22,6 @@ const initials = (name?: string) =>
    - à droite : pastille d'upgrade (plan gratuit) + avatar vers le compte. */
 const Topbar: React.FC<TopbarProps> = ({ user }) => {
   const isBusiness = user?.role === 'BUSINESS_PARTNER';
-  const isFree = !isBusiness && (!user?.plan || user.plan === 'Gratuit');
 
   return (
     <header className="md:hidden sticky top-0 z-30 h-14 flex items-center justify-between gap-3 px-4 bg-white/85 dark:bg-[#0B1120]/85 backdrop-blur border-b border-slate-200 dark:border-slate-800">
@@ -34,14 +33,9 @@ const Topbar: React.FC<TopbarProps> = ({ user }) => {
       <div className="hidden md:block" />
 
       <div className="flex items-center gap-2 sm:gap-3">
-        {isFree && (
-          <Link
-            to="/pricing"
-            className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#7D5CFF] border border-[#7D5CFF]/25 bg-[#7D5CFF]/[0.06] hover:bg-[#7D5CFF]/10 rounded-full px-3 py-1.5 transition-colors"
-          >
-            <Crown size={14} /> Passer à Élite
-          </Link>
-        )}
+        {/* Pastille de plan : essai en cours, solde restant ou abonnement. Remplace
+            l'ancien « Passer à Élite » fixe, qui s'affichait même pendant l'essai. */}
+        {!isBusiness && <PlanBadge />}
         <Link
           to="/settings"
           aria-label="Mon compte"

@@ -3,6 +3,7 @@ import crypto from 'crypto';
 import jwt from 'jsonwebtoken';
 import { prisma } from '../db';
 import { normalizeEmail, findUserByEmail } from '../services/userEmail.util';
+import { touchLastLogin } from '../services/loginActivity.util';
 import {
   JWT_SECRET,
   LINKEDIN_CLIENT_ID,
@@ -126,6 +127,8 @@ export const linkedinAuthController = {
         });
       }
 
+      touchLastLogin(user.id);
+
       // 4. Session JobBoost (JWT en cookie)
       const jwtToken = jwt.sign(
         { userId: user.id, role: user.role, organizationId: user.organizationId },
@@ -137,7 +140,11 @@ export const linkedinAuthController = {
       // Le JWT est aussi passé dans le fragment d'URL (#token=...) : sur mobile le
       // cookie tiers (SameSite=None) est bloqué, le frontend lit donc le token ici
       // et le stocke en localStorage. Le fragment n'est jamais envoyé au serveur.
-      res.redirect(`${FRONTEND_URL}/dashboard?oauth=linkedin#token=${jwtToken}`);
+      // ⚠️ /home et non /dashboard : cette dernière route n'existe PAS côté front
+      // (les vraies sont /track/dashboard et /business/dashboard). Corrigé pour Google
+      // en juillet, mais LinkedIn et Apple étaient restés sur l'URL fantôme, qui fait
+      // tomber l'utilisateur sur la page d'authentification au lieu d'entrer dans l'app.
+      res.redirect(`${FRONTEND_URL}/home?oauth=linkedin#token=${jwtToken}`);
     } catch (error: unknown) {
       console.error('LinkedIn OAuth callback error:', error);
       res.redirect(`${FRONTEND_URL}/auth/login?error=linkedin_oauth_failed`);
