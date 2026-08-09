@@ -56,6 +56,10 @@ export const authController = {
         }
       });
 
+      // L'inscription ouvre une session : elle compte comme une première connexion.
+      // Sans ça, un compte créé et utilisé le jour même affichait « jamais connecté ».
+      touchLastLogin(user.id);
+
       // Générer JWT
       const token = jwt.sign(
         { userId: user.id, role: user.role, organizationId: user.organizationId },
