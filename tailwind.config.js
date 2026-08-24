@@ -61,6 +61,11 @@ export default {
         shimmer: {
           '100%': { transform: 'translateX(100%)' },
         },
+        // Respiration lente du décor aurora du hero — ambiante, jamais au premier plan.
+        'aurora-drift': {
+          '0%, 100%': { transform: 'scale(1) rotate(0deg)' },
+          '50%': { transform: 'scale(1.09) rotate(2.5deg)' },
+        },
       },
       animation: {
         // Apparitions au montage / au scroll. `backwards` et NON `both` : `forwards`
@@ -74,6 +79,7 @@ export default {
         'scale-in': 'scale-in 0.25s cubic-bezier(0.16, 1, 0.3, 1) backwards',
         // Effet de chargement (skeleton) pour les générateurs IA.
         shimmer: 'shimmer 1.5s infinite',
+        'aurora-drift': 'aurora-drift 16s ease-in-out infinite',
       },
     },
   },

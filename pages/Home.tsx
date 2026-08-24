@@ -10,7 +10,11 @@ import {
   Search,
   LineChart,
   Check,
-  X
+  X,
+  Users,
+  Megaphone,
+  BarChart3,
+  UserPlus
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
@@ -123,6 +127,70 @@ const ProductPreview: React.FC = () => {
   );
 };
 
+/* Aperçu « Espace partenaire » : même langage visuel que ProductPreview,
+   sur fond sombre pour distinguer le discours organismes sans sortir de la
+   famille de marque. KPIs et libellés alignés mot pour mot sur ceux de
+   BusinessDashboard.tsx (Adhérents actifs, Offres publiées…) — pas de
+   fonctionnalité inventée pour la vitrine. */
+const PartnerPreview: React.FC = () => {
+  const kpis = [
+    { icon: <Users size={14} />, label: 'Adhérents actifs', value: 41 },
+    { icon: <Megaphone size={14} />, label: 'Offres publiées', value: 12 },
+    { icon: <UserPlus size={14} />, label: 'Nouveaux (30 j)', value: 6 },
+  ];
+
+  return (
+    <div className="surface !bg-[#171530] !border-[#2A2748] shadow-card p-4 sm:p-5 w-full max-w-md mx-auto animate-fade-in-up">
+      <div className="flex items-center justify-between pb-4 border-b border-white/10">
+        <div className="flex items-center gap-2">
+          <span className="w-8 h-8 rounded-lg bg-[#7D5CFF]/15 flex items-center justify-center text-[#B49CFF]">
+            <BarChart3 size={16} />
+          </span>
+          <div className="leading-tight">
+            <p className="text-[13px] font-semibold text-white">Espace partenaire</p>
+            <p className="text-[11px] text-white/40">Mis à jour à l'instant</p>
+          </div>
+        </div>
+        <span className="flex items-center gap-1.5 text-[11px] font-medium text-emerald-400">
+          <span className="relative flex h-2 w-2">
+            <span className="absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75 animate-ping" />
+            <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-400" />
+          </span>
+          Synchronisé
+        </span>
+      </div>
+
+      <div className="grid grid-cols-3 gap-2 py-4">
+        {kpis.map((k, i) => (
+          <div key={k.label} className="rounded-lg bg-white/5 border border-white/10 px-2 py-2.5 text-center animate-fade-in-up" style={{ animationDelay: `${100 + i * 70}ms` }}>
+            <p className="text-lg font-bold text-white tabular-nums">{k.value}</p>
+            <p className="text-[10px] text-white/50 mt-0.5 leading-tight">{k.label}</p>
+          </div>
+        ))}
+      </div>
+
+      <div className="space-y-2">
+        {[
+          { title: 'Alternance — Assistant RH', meta: 'Mission Mantois', tag: 'Publiée', tone: 'blue' as const },
+          { title: 'Stage — Communication', meta: 'Mission Mantois', tag: 'Brouillon', tone: 'amber' as const },
+        ].map((o, i) => (
+          <div key={o.title} className="flex items-center justify-between gap-3 rounded-lg border border-white/10 px-3 py-2.5 animate-fade-in-up" style={{ animationDelay: `${300 + i * 90}ms` }}>
+            <div className="min-w-0">
+              <p className="text-[13px] font-medium text-white truncate">{o.title}</p>
+              <p className="text-[11px] text-white/40 truncate">{o.meta}</p>
+            </div>
+            <span className={`shrink-0 text-[11px] font-medium px-2 py-0.5 rounded-full border ${
+              o.tone === 'blue' ? 'bg-blue-500/10 text-blue-300 border-blue-400/20' : 'bg-amber-500/10 text-amber-300 border-amber-400/20'
+            }`}>
+              {o.tag}
+            </span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
 const Home: React.FC<HomeProps> = ({ onStart }) => {
   const [showAuth, setShowAuth] = useState(false);
   const [isSignUp, setIsSignUp] = useState(false);
@@ -212,9 +280,21 @@ const Home: React.FC<HomeProps> = ({ onStart }) => {
           stickers ludiques + encarts flottants factuels.
           ⚠️ Éléments interactifs conservés à l'identique (boutons openAuth, slogan, ProductPreview). */}
       <section className="relative overflow-hidden px-5 sm:px-6 pt-32 sm:pt-40 pb-20 sm:pb-28">
-        {/* Décor de fond léger (purement visuel) */}
-        <div aria-hidden className="pointer-events-none absolute inset-0 -z-10">
-          <div className="absolute -top-44 -left-32 w-[42rem] h-[42rem] rounded-full bg-[#7D5CFF]/12 blur-[140px]" />
+        {/* Décor de fond : aurora mesh-gradient (préparée pour la landing), se dissout
+            en blanc là où vit le texte — image légère (WebP, 24 Ko) pour ne pas rouvrir
+            le problème de poids qu'on vient de corriger sur /home. */}
+        <div aria-hidden className="pointer-events-none absolute inset-0 z-0 overflow-hidden">
+          <div
+            className="absolute -top-32 -right-32 -left-[6%] -bottom-20 sm:left-[22%] motion-safe:animate-aurora-drift"
+            style={{
+              backgroundImage: 'url(/images/hero-aurora.webp)',
+              backgroundSize: 'cover',
+              backgroundPosition: '85% 30%',
+              filter: 'saturate(1.55) contrast(1.08)',
+              maskImage: 'radial-gradient(115% 100% at 100% 0%, #000 0%, #000 34%, transparent 66%)',
+              WebkitMaskImage: 'radial-gradient(115% 100% at 100% 0%, #000 0%, #000 34%, transparent 66%)',
+            }}
+          />
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_1px_1px,rgba(15,23,42,0.04)_1px,transparent_0)] [background-size:36px_36px] [mask-image:radial-gradient(ellipse_70%_55%_at_55%_35%,#000_50%,transparent_100%)]" />
         </div>
 
@@ -257,24 +337,24 @@ const Home: React.FC<HomeProps> = ({ onStart }) => {
 
             <div className="mt-6 flex items-center gap-2 justify-center lg:justify-start text-sm text-slate-500 animate-fade-in-up" style={{ animationDelay: '220ms' }}>
               <CheckCircle2 size={16} className="text-emerald-500" />
-              Gratuit pour commencer · sans carte bancaire
+              Essai complet de 7 jours · sans carte bancaire
             </div>
           </div>
 
           {/* Colonne droite : aperçu produit sur fond coloré LÉGER (direction vitrine pitch). */}
           <div className="relative animate-fade-in-up" style={{ animationDelay: '160ms' }}>
-            <div className="relative rounded-[2.25rem] bg-gradient-to-br from-[#7D5CFF]/[0.08] via-[#7D5CFF]/[0.05] to-emerald-400/[0.07] border border-[#7D5CFF]/10 p-6 sm:p-10 lg:p-12 overflow-hidden">
-              {/* Glow doux derrière la carte */}
-              <span aria-hidden className="pointer-events-none absolute inset-x-10 top-8 bottom-8 rounded-[2rem] bg-[#7D5CFF]/10 blur-3xl" />
-
-              {/* Carte produit existante — légère inclinaison qui se redresse au survol */}
-              <div className="relative [transform:rotate(-1.5deg)] hover:[transform:rotate(0deg)] transition-transform duration-500 drop-shadow-[0_20px_44px_rgba(20,10,60,0.18)]">
+            <div className="relative rounded-[2.25rem] p-6 sm:p-10 lg:p-12 overflow-hidden">
+              {/* Carte produit existante — légère inclinaison qui se redresse au survol,
+                  ombre teintée violet (pas neutre) pour rester dans l'ambiance du décor.
+                  Pas de halo séparé derrière : ça créait sa propre forme floue visible.
+                  La carte reste une carte, avec un bord et une ombre nets et assumés. */}
+              <div className="relative [transform:rotate(-1.5deg)] hover:[transform:rotate(0deg)] transition-transform duration-500 drop-shadow-[0_30px_60px_-10px_rgba(45,20,120,0.45)]">
                 <ProductPreview />
               </div>
             </div>
 
             {/* Encart flottant haut-gauche (capacité réelle) */}
-            <div className="absolute -left-2 sm:-left-7 top-10 z-10 hidden sm:flex items-center gap-2.5 rounded-2xl bg-white border border-slate-100 shadow-pop px-3.5 py-2.5 [transform:rotate(-3deg)] animate-fade-in-up" style={{ animationDelay: '360ms' }}>
+            <div className="absolute -left-2 sm:-left-7 top-10 z-10 hidden sm:flex items-center gap-2.5 rounded-2xl bg-white border border-white/60 shadow-[0_16px_32px_-8px_rgba(76,29,180,0.4)] px-3.5 py-2.5 [transform:rotate(-3deg)] animate-fade-in-up" style={{ animationDelay: '360ms' }}>
               <span className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0"><FileText size={15} /></span>
               <div className="leading-tight text-left">
                 <p className="text-[12px] font-bold text-slate-900">CV optimisé ATS</p>
@@ -283,7 +363,7 @@ const Home: React.FC<HomeProps> = ({ onStart }) => {
             </div>
 
             {/* Encart flottant bas-droite (capacité réelle) */}
-            <div className="absolute -right-2 sm:-right-6 bottom-12 z-10 hidden sm:flex items-center gap-2.5 rounded-2xl bg-white border border-slate-100 shadow-pop px-3.5 py-2.5 [transform:rotate(3deg)] animate-fade-in-up" style={{ animationDelay: '460ms' }}>
+            <div className="absolute -right-2 sm:-right-6 bottom-12 z-10 hidden sm:flex items-center gap-2.5 rounded-2xl bg-white border border-white/60 shadow-[0_16px_32px_-8px_rgba(76,29,180,0.4)] px-3.5 py-2.5 [transform:rotate(3deg)] animate-fade-in-up" style={{ animationDelay: '460ms' }}>
               <span className="w-8 h-8 rounded-lg bg-[#7D5CFF]/10 text-[#7D5CFF] flex items-center justify-center shrink-0"><PenLine size={15} /></span>
               <div className="leading-tight text-left">
                 <p className="text-[12px] font-bold text-slate-900">Lettre sur-mesure</p>
@@ -304,6 +384,53 @@ const Home: React.FC<HomeProps> = ({ onStart }) => {
                 <Check size={13} className="text-[#7D5CFF]" /> {c}
               </span>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Organismes — hero de même poids visuel que le hero candidat, panneau
+          sombre pour se distinguer sans sortir de la famille de marque (même
+          violet, même wordmark, même carte inclinée). Le discours candidat a
+          toujours occupé toute la page ; celui-ci n'était qu'un lien discret
+          dans le header. */}
+      <section className="px-5 sm:px-6 py-16 sm:py-20">
+        <div className="max-w-6xl mx-auto rounded-[2.25rem] bg-[#141228] px-6 py-14 sm:px-12 sm:py-16 overflow-hidden relative">
+          <span aria-hidden className="pointer-events-none absolute -right-24 -top-24 w-[26rem] h-[26rem] rounded-full bg-[#7D5CFF]/10 blur-[120px]" />
+          <div className="relative grid grid-cols-1 lg:grid-cols-[1.02fr_0.98fr] gap-12 lg:gap-12 items-center">
+            <div className="text-center lg:text-left">
+              <span className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#7D5CFF]/15 border border-[#7D5CFF]/25 text-[#C7B8FF] text-[13px] font-semibold mb-6">
+                <Building2 size={14} /> Missions locales &amp; structures d'accompagnement
+              </span>
+
+              <h2 className="font-display font-extrabold text-white tracking-[-0.03em] leading-[1.05] text-[2.35rem] sm:text-[3rem]">
+                Le vivier de vos conseillers, à jour en un clic.
+              </h2>
+
+              <p className="mt-6 text-lg text-white/60 max-w-xl mx-auto lg:mx-0 leading-relaxed">
+                Publiez vos offres, suivez chaque jeune accompagné, mesurez l'activité de votre structure — dans le même espace que vos candidats utilisent déjà.
+              </p>
+
+              <div className="mt-8 flex flex-col sm:flex-row gap-3 justify-center lg:justify-start">
+                <a
+                  href={`mailto:joboost.ai@gmail.com?subject=${encodeURIComponent('Demande de démo — espace partenaire')}`}
+                  className="press btn btn-lg bg-[#7D5CFF] text-white hover:bg-[#6B46F0] border-transparent text-base px-6 group"
+                >
+                  Demander une démo <ArrowRight size={18} className="group-hover:translate-x-0.5 transition-transform" />
+                </a>
+                <Link to="/auth/login" className="press btn btn-lg bg-transparent text-white border-white/20 hover:bg-white/5 text-base">
+                  Espace partenaire — connexion
+                </Link>
+              </div>
+
+              <div className="mt-6 flex items-center gap-2 justify-center lg:justify-start text-sm text-white/50">
+                <CheckCircle2 size={16} className="text-emerald-400" />
+                Accès de test sur demande, sans engagement
+              </div>
+            </div>
+
+            <div className="relative [transform:rotate(1deg)] hover:[transform:rotate(0deg)] transition-transform duration-500">
+              <PartnerPreview />
+            </div>
           </div>
         </div>
       </section>
@@ -361,7 +488,7 @@ const Home: React.FC<HomeProps> = ({ onStart }) => {
             />
             <FAQItem
               question="Puis-je utiliser Joboost gratuitement ?"
-              answer="Oui. Le plan gratuit permet de tester l'outil avec une candidature par mois. Vous pouvez passer à l'offre Élite ou prendre un pack de crédits selon votre rythme."
+              answer="Oui, sans carte bancaire. Vous avez d'abord un essai complet de 7 jours (CV, lettres, offres ciblées, candidatures spontanées). Passé ce délai, le plan gratuit permet de continuer avec une candidature par mois — vous pouvez passer à l'offre Élite ou prendre un pack de crédits selon votre rythme."
             />
             <FAQItem
               question="Mes données sont-elles protégées ?"
@@ -389,7 +516,7 @@ const Home: React.FC<HomeProps> = ({ onStart }) => {
               Commencer gratuitement <ArrowRight size={18} className="group-hover:translate-x-0.5 transition-transform" />
             </button>
           </div>
-          <p className="mt-4 text-sm text-white/70">Sans carte bancaire</p>
+          <p className="mt-4 text-sm text-white/70">Essai complet de 7 jours · sans carte bancaire</p>
         </Reveal>
       </section>
 
@@ -453,7 +580,7 @@ const Home: React.FC<HomeProps> = ({ onStart }) => {
                 {isSignUp ? 'Créer un compte' : 'Se connecter'}
               </h2>
               <p className="mt-1 text-sm text-slate-500">
-                {isSignUp ? 'Gratuit pour commencer, sans carte bancaire.' : 'Content de vous revoir.'}
+                {isSignUp ? 'Essai complet de 7 jours, sans carte bancaire.' : 'Content de vous revoir.'}
               </p>
             </div>
 
