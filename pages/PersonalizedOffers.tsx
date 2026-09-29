@@ -6,6 +6,7 @@ import {
 import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
 import { authHeaders } from '../services/authToken';
+import { useAuth } from '../context/AuthContext';
 import EmptyState from '../components/EmptyState';
 import ExpandableText from '../components/ExpandableText';
 import ApplyInAppModal from '../components/ApplyInAppModal';
@@ -248,17 +249,42 @@ const PersonalizedOffers: React.FC = () => {
   const [rejectedKeys, setRejectedKeys] = useState<Set<string>>(new Set()); // offres passées (cette session)
   const [applyOffer, setApplyOffer] = useState<JobOffer | null>(null); // candidature in-app en cours
   const [filtersOpen, setFiltersOpen] = useState(false);
+  const [hiddenCount, setHiddenCount] = useState(0); // offres masquées car déjà vues / déjà suivies
+  const [reloadTick, setReloadTick] = useState(0);
 
   // ── Pile de cartes ──
   const [cursor, setCursor] = useState(0);
-  const [dragX, setDragX] = useState(0);
-  const [dragging, setDragging] = useState(false);
+  const [broadened, setBroadened] = useState(false); // recherche élargie côté serveur
   // Carte en train de partir (animée à part, pendant que la pile avance déjà).
   const [leaving, setLeaving] = useState<{ offer: JobOffer; index: number; dir: 'left' | 'right'; fromX: number } | null>(null);
   // Historique des décisions de la session, pour « Revenir » sur une offre passée.
   const [history, setHistory] = useState<{ index: number; dir: 'left' | 'right' }[]>([]);
 
   const gesture = useRef({ tracking: false, dragging: false, startX: 0, startY: 0, dx: 0 });
+  // Le glissement modifie directement le style de la carte active (sans re-rendu React
+  // à chaque mouvement du doigt : c'était la cause des saccades sur téléphone).
+  const activeRef = useRef<HTMLDivElement | null>(null);
+  const applyVeilRef = useRef<HTMLDivElement | null>(null);
+  const passVeilRef = useRef<HTMLDivElement | null>(null);
+  const frame = useRef<number | null>(null);
+
+  // Offres déjà vues (passées ou postulées) : mémorisées sur l'appareil, par compte,
+  // pour qu'elles ne reviennent pas à chaque visite.
+  const { user } = useAuth();
+  const seenStorageKey = `joboost-seen-offers:${user?.id || 'anon'}`;
+  const readSeen = (): Set<string> => {
+    try { return new Set(JSON.parse(localStorage.getItem(seenStorageKey) || '[]')); } catch { return new Set(); }
+  };
+  const markSeen = (key: string) => {
+    try {
+      const list = Array.from(readSeen());
+      if (!list.includes(key)) list.push(key);
+      localStorage.setItem(seenStorageKey, JSON.stringify(list.slice(-600)));
+    } catch { /* stockage indisponible */ }
+  };
+  const unmarkSeen = (key: string) => {
+    try { localStorage.setItem(seenStorageKey, JSON.stringify(Array.from(readSeen()).filter((k) => k !== key))); } catch { /* ignore */ }
+  };
 
   const offerKey = (o: JobOffer) => `${o.title}__${o.company}`;
 
@@ -275,17 +301,26 @@ const PersonalizedOffers: React.FC = () => {
         const params = new URLSearchParams({ distance: String(radius) });
         if (debouncedQuery) params.set('q', debouncedQuery);
         if (contractType) params.set('contractType', contractType);
-        const [recRes, savedRes] = await Promise.all([
+        const [recRes, savedRes, appsRes] = await Promise.all([
           fetch(`${import.meta.env.VITE_API_URL || ''}/api/opportunities/recommendations?${params.toString()}`, { credentials: 'include', headers: { ...authHeaders() } }),
-          fetch(`${import.meta.env.VITE_API_URL || ''}/api/opportunities/saved`, { credentials: 'include', headers: { ...authHeaders() } })
+          fetch(`${import.meta.env.VITE_API_URL || ''}/api/opportunities/saved`, { credentials: 'include', headers: { ...authHeaders() } }),
+          fetch(`${import.meta.env.VITE_API_URL || ''}/api/applications?limit=100`, { credentials: 'include', headers: { ...authHeaders() } }).catch(() => null),
         ]);
 
         const recData = await recRes.json();
         const savedData = await savedRes.json();
+        const appsData = appsRes ? await appsRes.json().catch(() => null) : null;
 
         if (recData.success) {
-          setOffers(recData.recommendations);
+          const seen = readSeen();
+          const inTracking = new Set<string>(
+            (appsData?.success && Array.isArray(appsData.data) ? appsData.data : []).map((a: any) => offerKey({ title: a.title, company: a.company } as JobOffer)),
+          );
+          const all: JobOffer[] = recData.recommendations || [];
+          setOffers(all.filter((o) => !seen.has(offerKey(o)) && !inTracking.has(offerKey(o))));
+          setHiddenCount(all.filter((o) => seen.has(offerKey(o)) || inTracking.has(offerKey(o))).length);
           setSource(recData.source || 'demo');
+          setBroadened(!!recData.broadened);
         }
         if (savedData.success) {
           setSavedOffers(savedData.saved);
@@ -296,25 +331,25 @@ const PersonalizedOffers: React.FC = () => {
         setLoading(false);
         // Une nouvelle recherche repart d'une pile fraîche.
         setCursor(0);
-        setDragX(0);
         setLeaving(null);
         setHistory([]);
       }
     };
     fetchData();
-  }, [radius, debouncedQuery, contractType]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [radius, debouncedQuery, contractType, reloadTick]);
 
   const getSavedId = (offer: JobOffer) => {
     const found = savedOffers.find(s => s.title === offer.title && s.company === offer.company);
     return found ? found.id : null;
   };
 
-  // « Postuler » : on ouvre l'offre pour finaliser la candidature (l'envoi se fait sur
-  // le site de l'offre — France Travail/Adzuna ne permettent pas de soumettre via API),
-  // ET on ajoute automatiquement la candidature au Suivi (colonne « Envoyées »).
+  // « Postuler » : ajoute l'offre au Suivi. On N'OUVRE PLUS le site de l'annonce
+  // automatiquement : sur téléphone, chaque swipe faisait quitter Joboost. Un bouton
+  // « Voir l'annonce » dans la notification l'ouvre quand la personne le décide.
+  // Statut « À préparer » : la candidature n'est pas encore envoyée chez l'employeur
+  // (sauf offre d'un organisme partenaire, qui la reçoit directement dans Joboost).
   const handlePostuler = async (offer: JobOffer) => {
-    // Ouvrir AVANT l'await : sinon le bloqueur de pop-up coupe la nouvelle fenêtre.
-    if (offer.url) window.open(offer.url, '_blank', 'noopener,noreferrer');
     const key = offerKey(offer);
     if (appliedKeys.has(key)) return;
     try {
@@ -326,7 +361,7 @@ const PersonalizedOffers: React.FC = () => {
           company: offer.company,
           title: offer.title,
           source: offer.source || 'Offre',
-          status: 'SENT',
+          status: offer.partner ? 'SENT' : 'PENDING',
           notes: offer.partner
             ? `Offre de ${offer.partner.name} (organisme partenaire, via Joboost)`
             : (offer.url ? `Offre : ${offer.url}` : undefined),
@@ -337,9 +372,26 @@ const PersonalizedOffers: React.FC = () => {
         setAppliedKeys((prev) => new Set(prev).add(key));
         // Offre partenaire : pas de site externe — l'organisme voit la candidature
         // dans le profil du candidat (section Candidatures de son espace recruteur).
-        toast.success(offer.partner
-          ? `${offer.partner.name} voit ta candidature sur ton profil.`
-          : "Ajoutée à ton suivi. Termine ta candidature sur la page de l'annonce.");
+        if (offer.partner) {
+          toast.success(`${offer.partner.name} voit ta candidature sur ton profil.`);
+        } else {
+          toast((t) => (
+            <span className="flex items-center gap-3">
+              <span>Ajoutée à ton suivi</span>
+              {offer.url && (
+                <a
+                  href={offer.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={() => toast.dismiss(t.id)}
+                  className="shrink-0 font-semibold underline underline-offset-2"
+                >
+                  Voir l’annonce
+                </a>
+              )}
+            </span>
+          ), { duration: 6000 });
+        }
       } else {
         toast.error(data.error || "Impossible d'ajouter au suivi.");
       }
@@ -393,7 +445,7 @@ const PersonalizedOffers: React.FC = () => {
   // directement les offres renvoyées. `hasQuery` sert aux libellés d'état vide.
   const hasQuery = debouncedQuery.length > 0 || contractType !== '';
   const currentOffer = offers[cursor] || null;
-  const isBestOffer = (o: JobOffer) => offers.length > 0 && offerKey(offers[0]) === offerKey(o);
+  const isBestOffer = (o: JobOffer) => offers.length > 0 && offerKey(offers[0]) === offerKey(o) && Number(o.matchScore) >= 85;
   const matchScores = offers.map((o) => Number(o.matchScore)).filter((n) => !Number.isNaN(n) && n > 0);
   const avgMatch = matchScores.length ? Math.round(matchScores.reduce((a, b) => a + b, 0) / matchScores.length) : 0;
   const lastDecision = history[history.length - 1];
@@ -406,7 +458,7 @@ const PersonalizedOffers: React.FC = () => {
     setLeaving({ offer, index: cursor, dir, fromX });
     setHistory((h) => [...h, { index: cursor, dir }]);
     setCursor((c) => c + 1);
-    setDragX(0);
+    markSeen(offerKey(offer));
     if (dir === 'right') {
       if (offer.contactEmail) setApplyOffer(offer);
       else handlePostuler(offer);
@@ -422,15 +474,17 @@ const PersonalizedOffers: React.FC = () => {
     const offer = offers[lastDecision.index];
     setHistory((h) => h.slice(0, -1));
     setCursor(lastDecision.index);
+    if (offer) unmarkSeen(offerKey(offer));
     if (offer) setRejectedKeys((prev) => { const n = new Set(prev); n.delete(offerKey(offer)); return n; });
   };
 
+  // Revoir les offres déjà passées (les candidatures du suivi restent masquées).
   const restart = () => {
-    setCursor(0);
+    try { localStorage.removeItem(seenStorageKey); } catch { /* ignore */ }
     setRejectedKeys(new Set());
     setHistory([]);
-    setDragX(0);
     setLeaving(null);
+    setReloadTick((n) => n + 1);
   };
 
   // ── Geste ── Pointer Events couvre souris ET tactile.
@@ -439,6 +493,16 @@ const PersonalizedOffers: React.FC = () => {
     // Un appui sur un bouton / lien de la carte reste un simple clic.
     if ((e.target as Element).closest('button, a, input, textarea, select')) return;
     gesture.current = { tracking: true, dragging: false, startX: e.clientX, startY: e.clientY, dx: 0 };
+  };
+  // Applique la position du doigt à la carte active (une fois par image affichée).
+  const paint = (dx: number, animate: boolean) => {
+    const el = activeRef.current;
+    if (!el) return;
+    el.style.transition = animate ? 'transform 320ms cubic-bezier(.2,.8,.2,1)' : 'none';
+    el.style.transform = `translateX(${dx}px) rotate(${dx / 22}deg)`;
+    const pull = Math.min(Math.abs(dx) / SWIPE_THRESHOLD, 1);
+    if (applyVeilRef.current) applyVeilRef.current.style.opacity = dx > 0 ? String(pull) : '0';
+    if (passVeilRef.current) passVeilRef.current.style.opacity = dx < 0 ? String(pull) : '0';
   };
   const onPointerMove = (e: React.PointerEvent) => {
     const g = gesture.current;
@@ -450,22 +514,28 @@ const PersonalizedOffers: React.FC = () => {
       if (Math.abs(dy) > DRAG_START && Math.abs(dy) > Math.abs(dx)) { g.tracking = false; return; }
       if (Math.abs(dx) < DRAG_START) return;
       g.dragging = true;
-      setDragging(true);
       (e.currentTarget as HTMLElement).setPointerCapture?.(e.pointerId);
+      if (activeRef.current) activeRef.current.style.cursor = 'grabbing';
     }
     g.dx = dx;
-    setDragX(dx);
+    if (frame.current == null) {
+      frame.current = requestAnimationFrame(() => {
+        frame.current = null;
+        if (gesture.current.dragging) paint(gesture.current.dx, false);
+      });
+    }
   };
   const endGesture = (cancelled: boolean) => {
     const g = gesture.current;
     const wasDragging = g.dragging;
     const dx = g.dx;
     gesture.current = { tracking: false, dragging: false, startX: 0, startY: 0, dx: 0 };
+    if (frame.current != null) { cancelAnimationFrame(frame.current); frame.current = null; }
     if (!wasDragging) return;
-    setDragging(false);
+    if (activeRef.current) activeRef.current.style.cursor = '';
     if (!cancelled && dx > SWIPE_THRESHOLD) commit('right', dx);
     else if (!cancelled && dx < -SWIPE_THRESHOLD) commit('left', dx);
-    else setDragX(0);
+    else paint(0, true);
   };
 
   // ── Clavier : ← passer, → postuler, S sauvegarder, Z revenir ──
@@ -503,7 +573,6 @@ const PersonalizedOffers: React.FC = () => {
   // Les 3 prochaines cartes : la première est active, les deux autres forment la pile.
   const stack = offers.slice(cursor, cursor + 3);
   const progress = offers.length ? Math.min(cursor, offers.length) / offers.length : 0;
-  const pull = Math.min(Math.abs(dragX) / SWIPE_THRESHOLD, 1); // 0 → 1 pendant le glissement
   const activeFilters = (contractType ? 1 : 0) + (radius !== 30 ? 1 : 0);
 
   const CONTRACTS = [
@@ -522,7 +591,7 @@ const PersonalizedOffers: React.FC = () => {
     /* Sur téléphone, l'écran tient pile entre la barre du haut (56 px), les pastilles
        de section (53 px) et la barre d'onglets du bas (réserve de 96 px) : la carte
        remplit l'espace restant et les boutons restent toujours visibles. */
-    <div className="px-4 md:px-8 pt-3 md:pt-6 max-w-6xl mx-auto h-[calc(100dvh-205px)] md:h-[calc(100dvh-150px)] md:min-h-[600px] md:max-h-[820px]">
+    <div className="overflow-x-clip px-4 md:px-8 pt-3 md:pt-6 max-w-6xl mx-auto h-[calc(100dvh-205px)] md:h-[calc(100dvh-150px)] md:min-h-[600px] md:max-h-[820px]">
       <div className="max-w-md mx-auto h-full flex flex-col gap-3">
         {/* Recherche + filtres */}
         <div className="shrink-0 space-y-2.5">
@@ -583,6 +652,9 @@ const PersonalizedOffers: React.FC = () => {
               </span>
             </div>
           )}
+          {!loading && broadened && offers.length > 0 && cursor === 0 && (
+            <p className="text-xs text-faint">Recherche élargie à des intitulés proches pour te montrer plus d’offres.</p>
+          )}
         </div>
 
         {/* Pile de cartes. `isolate` : ses z-index restent confinés ici et la carte
@@ -607,12 +679,14 @@ const PersonalizedOffers: React.FC = () => {
                 const active = depth === 0;
                 const style: React.CSSProperties = active
                   ? {
-                      transform: `translateX(${dragX}px) rotate(${dragX / 22}deg)`,
-                      transition: dragging ? 'none' : 'transform 320ms cubic-bezier(.2,.8,.2,1)',
+                      transform: 'translateX(0px) rotate(0deg)',
+                      transition: 'transform 320ms cubic-bezier(.2,.8,.2,1)',
                       touchAction: 'pan-y',
+                      WebkitTouchCallout: 'none',
+                      WebkitUserSelect: 'none',
                     }
                   : {
-                      transform: `translateY(${depth * 10 - pull * 5}px) scale(${1 - depth * 0.04 + pull * 0.02})`,
+                      transform: `translateY(${depth * 10}px) scale(${1 - depth * 0.04})`,
                       opacity: depth === 1 ? 1 : 0.55,
                       transition: 'transform 320ms cubic-bezier(.2,.8,.2,1), opacity 320ms',
                     };
@@ -622,7 +696,8 @@ const PersonalizedOffers: React.FC = () => {
                     aria-hidden={!active}
                     className={`absolute inset-x-0 top-0 bottom-5 surface overflow-hidden select-none origin-bottom ${
                       active ? 'z-30 shadow-pop' : `pointer-events-none ${depth === 1 ? 'z-20 shadow-card' : 'z-10'}`
-                    } ${active && dragging ? 'cursor-grabbing' : active ? 'cursor-grab' : ''}`}
+                    } ${active ? 'cursor-grab' : ''}`}
+                    ref={active ? activeRef : undefined}
                     style={style}
                     onPointerDown={active ? onPointerDown : undefined}
                     onPointerMove={active ? onPointerMove : undefined}
@@ -636,17 +711,20 @@ const PersonalizedOffers: React.FC = () => {
                       isBookmarked={!!getSavedId(offer)}
                       {...cardHandlers(offer)}
                     />
-                    {/* Voile de décision pendant le glissement */}
-                    {active && dragX !== 0 && (
-                      <div
-                        aria-hidden
-                        className={`absolute inset-0 pointer-events-none grid place-items-center ${dragX > 0 ? 'bg-emerald-500/15' : 'bg-rose-500/15'}`}
-                        style={{ opacity: pull }}
-                      >
-                        <span className={`inline-flex items-center gap-2 h-12 px-5 rounded-full text-white font-semibold shadow-pop ${dragX > 0 ? 'bg-emerald-500' : 'bg-rose-500'}`} style={{ transform: `scale(${0.8 + pull * 0.2}) rotate(${dragX > 0 ? -8 : 8}deg)` }}>
-                          {dragX > 0 ? <><Send size={18} /> Postuler</> : <><X size={18} strokeWidth={2.5} /> Passer</>}
-                        </span>
-                      </div>
+                    {/* Voiles de décision : opacité pilotée par le geste (0 au repos). */}
+                    {active && (
+                      <>
+                        <div ref={applyVeilRef} aria-hidden className="absolute inset-0 pointer-events-none grid place-items-center bg-emerald-500/15" style={{ opacity: 0 }}>
+                          <span className="inline-flex items-center gap-2 h-12 px-5 rounded-full text-white font-semibold shadow-pop bg-emerald-500 -rotate-6">
+                            <Send size={18} /> Postuler
+                          </span>
+                        </div>
+                        <div ref={passVeilRef} aria-hidden className="absolute inset-0 pointer-events-none grid place-items-center bg-rose-500/15" style={{ opacity: 0 }}>
+                          <span className="inline-flex items-center gap-2 h-12 px-5 rounded-full text-white font-semibold shadow-pop bg-rose-500 rotate-6">
+                            <X size={18} strokeWidth={2.5} /> Passer
+                          </span>
+                        </div>
+                      </>
                     )}
                   </div>
                 );
@@ -679,10 +757,10 @@ const PersonalizedOffers: React.FC = () => {
               <EmptyState
                 variant="offers"
                 title="Tu as vu toutes les offres"
-                description={`${appliedKeys.size} candidature${appliedKeys.size > 1 ? 's' : ''} envoyée${appliedKeys.size > 1 ? 's' : ''}, ${rejectedKeys.size} passée${rejectedKeys.size > 1 ? 's' : ''}. Augmente la distance ou cherche un autre métier pour en voir d’autres.`}
+                description={`${appliedKeys.size} ajoutée${appliedKeys.size > 1 ? 's' : ''} à ton suivi, ${rejectedKeys.size} passée${rejectedKeys.size > 1 ? 's' : ''}${hiddenCount ? `, ${hiddenCount} déjà vue${hiddenCount > 1 ? 's' : ''} avant` : ''}. Augmente la distance ou cherche un autre métier pour en voir d’autres.`}
                 action={
                   <button onClick={restart} className="btn btn-secondary">
-                    <RotateCcw size={15} /> Revoir depuis le début
+                    <RotateCcw size={15} /> Revoir les offres passées
                   </button>
                 }
               />

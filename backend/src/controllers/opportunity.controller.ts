@@ -2,19 +2,34 @@ import { Request, Response } from 'express';
 import { prisma } from '../db';
 import { franceTravailService, isFranceTravailConfigured, FtOffer } from '../services/francetravail.service';
 import { adzunaService, isAdzunaConfigured } from '../services/adzuna.service';
+import { scoreOffer, dedupeKey, keywords } from '../services/offerScoring';
 
-// Déduplique des offres venant de plusieurs sources (clé = titre + entreprise normalisés).
+// Déduplique des offres venant de plusieurs sources. La clé ignore accents, casse,
+// écriture inclusive, mentions (H/F) et formes juridiques (SAS, SARL…) : la même
+// annonce publiée sur France Travail ET Adzuna n'apparaît qu'une fois.
 const dedupeOffers = (offers: FtOffer[]): FtOffer[] => {
   const seen = new Set<string>();
   const out: FtOffer[] = [];
   for (const o of offers) {
-    const key = `${(o.title || '').toLowerCase().trim()}|${(o.company || '').toLowerCase().trim()}`;
+    const key = dedupeKey(o.title || '', o.company || '');
     if (seen.has(key)) continue;
     seen.add(key);
     out.push(o);
   }
   return out;
 };
+
+// Intitulé réduit à ses mots utiles, pour construire une requête élargie.
+const normalizeForSearch = (t: string): string =>
+  (t || '')
+    .toLowerCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .replace(/\(.*?\)/g, ' ')
+    .replace(/[^a-z0-9]+/g, ' ')
+    .split(' ')
+    .filter((w) => w.length > 2 && !['des', 'les', 'une', 'pour', 'avec'].includes(w))
+    .join(' ')
+    .trim();
 
 // Libellé relatif FR pour la date de publication d'une offre partenaire.
 const relativeLabel = (d?: Date | null): string => {
@@ -130,31 +145,67 @@ export const opportunityController = {
         .catch((e: any) => { console.error('Offres partenaires indisponibles :', e?.message || e); return [] as any[]; });
 
       // 1. Vraies offres : France Travail + Adzuna interrogés en parallèle (chacun protégé).
-      const sources: Promise<FtOffer[]>[] = [];
-      if (isFranceTravailConfigured()) {
-        sources.push(
-          franceTravailService.searchOffers(title, location, 100, distance, contractType)
-            .catch((e: any) => { console.error('France Travail indisponible (offres) :', e?.message || e); return [] as FtOffer[]; })
-        );
-      }
-      if (isAdzunaConfigured()) {
-        sources.push(
-          adzunaService.searchOffers(title, location, 50, distance, contractType)
-            .catch((e: any) => { console.error('Adzuna indisponible (offres) :', e?.message || e); return [] as FtOffer[]; })
-        );
-      }
+      const searchAll = (what: string, km: number): Promise<FtOffer[]>[] => {
+        const list: Promise<FtOffer[]>[] = [];
+        if (isFranceTravailConfigured()) {
+          list.push(
+            franceTravailService.searchOffers(what, location, 100, km, contractType)
+              .catch((e: any) => { console.error('France Travail indisponible (offres) :', e?.message || e); return [] as FtOffer[]; })
+          );
+        }
+        if (isAdzunaConfigured()) {
+          list.push(
+            adzunaService.searchOffers(what, location, 50, km, contractType)
+              .catch((e: any) => { console.error('Adzuna indisponible (offres) :', e?.message || e); return [] as FtOffer[]; })
+          );
+        }
+        return list;
+      };
+
+      // Score RÉEL de compatibilité (métier visé, compétences, contrat) — voir offerScoring.ts.
+      const profile = {
+        targetTitle: title,
+        skills: Array.isArray(user.skills) ? (user.skills as any[]).map((sk) => (typeof sk === 'string' ? sk : sk?.name)).filter(Boolean) : [],
+        contractTypes: Array.isArray((user as any).contractTypes) ? (user as any).contractTypes : [],
+      };
+      const rank = (list: FtOffer[]) =>
+        dedupeOffers(list)
+          .map((o) => { const r = scoreOffer(o, profile); return { o: { ...o, matchScore: r.score }, relevant: r.relevant }; })
+          .sort((a, b) => b.o.matchScore - a.o.matchScore);
+
+      const sources = searchAll(title, distance);
 
       if (sources.length > 0) {
-        const settled = await Promise.all(sources);
-        const merged = dedupeOffers(settled.flat()).sort((a, b) => b.matchScore - a.matchScore);
+        let ranked = rank((await Promise.all(sources)).flat());
+        let broadened = false;
+
+        // Élargissement automatique : un intitulé très précis (« Vendeuse en prêt-à-porter »)
+        // ramène peu d'offres. Sous 25 offres pertinentes, on relance avec le mot principal
+        // du métier et un rayon doublé ; le score remet ensuite les plus proches en tête.
+        const relevantCount = ranked.filter((r) => r.relevant).length;
+        const mainWord = (normalizeForSearch(title).split(' ').find((w) => keywords(w).length > 0) || '');
+        if (relevantCount < 25 && mainWord && normalizeForSearch(title) !== mainWord) {
+          const extra = (await Promise.all(searchAll(mainWord, Math.min(100, distance * 2)))).flat();
+          if (extra.length) {
+            ranked = rank([...ranked.map((r) => r.o), ...extra]);
+            broadened = true;
+          }
+        }
+
+        // Hors-sujet : retirés s'il reste assez d'offres pertinentes, sinon relégués en fin de pile.
+        const relevant = ranked.filter((r) => r.relevant).map((r) => r.o);
+        const offTopic = ranked.filter((r) => !r.relevant).map((r) => r.o);
+        const merged = relevant.length >= 15 ? relevant : [...relevant, ...offTopic];
+
         if (merged.length > 0 || partnerOffers.length > 0) {
           const usedSources = Array.from(new Set(merged.map((o) => o.source)));
           return res.json({
             success: true,
             source: usedSources.length > 1 ? 'mixed' : (usedSources[0] === 'Adzuna' ? 'adzuna' : 'francetravail'),
             sources: partnerOffers.length > 0 ? ['Partenaire', ...usedSources] : usedSources,
+            broadened,
             // Les offres de l'organisme du candidat passent devant les offres externes.
-            recommendations: [...partnerOffers, ...merged].slice(0, 150),
+            recommendations: [...partnerOffers, ...merged].slice(0, 200),
           });
         }
         // Des sources réelles SONT configurées mais ne renvoient rien → vrai « aucun résultat ».
