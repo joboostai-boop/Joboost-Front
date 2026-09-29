@@ -5,7 +5,8 @@
 //  Une seule colonne, polices standard, titres de sections classiques.
 // ====================================================================
 import React from 'react';
-import { Document, Page, Text, View, StyleSheet, pdf } from '@react-pdf/renderer';
+import { Document, Page, Text, View, Image, StyleSheet, pdf } from '@react-pdf/renderer';
+import { PHOTO_TEMPLATE_IDS } from './cvTemplates';
 import {
   Document as DocxDocument,
   Packer,
@@ -27,6 +28,8 @@ export interface CvData {
   experiences?: CvExperience[];
   education?: CvEducation[];
   template?: string;
+  /** Photo (data URL). N'est rendue que pour les modèles « avec photo ». */
+  photoUrl?: string;
 }
 
 export interface LetterData {
@@ -112,7 +115,11 @@ const CvPdfDoc: React.FC<{ data: CvData }> = ({ data }) => {
     expPeriod: { fontSize: 9, color: '#666666' },
     expCompany: { fontFamily: t.fontBold, fontSize: 10, color: t.accent, marginBottom: 1 },
     skills: { fontSize: 10, color: '#222222' },
+    header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+    headerText: { flexGrow: 1, flexShrink: 1, paddingRight: 16 },
+    photo: { width: 72, height: 72, borderRadius: 36, objectFit: 'cover' },
   });
+  const showPhoto = !!data.photoUrl && data.photoUrl.startsWith('data:image') && PHOTO_TEMPLATE_IDS.includes(data.template || '');
 
   const exps = (data.experiences || []).filter((e) => e && (e.role || e.company || e.desc));
   const edu = (data.education || []).filter((e) => e && (e.school || e.degree));
@@ -120,9 +127,14 @@ const CvPdfDoc: React.FC<{ data: CvData }> = ({ data }) => {
   return (
     <Document>
       <Page size="A4" style={s.page}>
-        <Text style={s.name}>{safe(data.name) || 'Nom Prénom'}</Text>
-        {!!safe(data.title) && <Text style={s.title}>{data.title}</Text>}
-        {!!contactLine(data) && <Text style={s.contact}>{contactLine(data)}</Text>}
+        <View style={s.header}>
+          <View style={s.headerText}>
+            <Text style={s.name}>{safe(data.name) || 'Nom Prénom'}</Text>
+            {!!safe(data.title) && <Text style={s.title}>{data.title}</Text>}
+            {!!contactLine(data) && <Text style={s.contact}>{contactLine(data)}</Text>}
+          </View>
+          {showPhoto && <Image src={data.photoUrl!} style={s.photo} />}
+        </View>
 
         {!!safe(data.summary) && (
           <View>
@@ -174,8 +186,27 @@ const CvPdfDoc: React.FC<{ data: CvData }> = ({ data }) => {
   );
 };
 
+// Photo distante (Google / LinkedIn) → data URL, pour que le PDF puisse l'intégrer.
+// En cas d'échec (CORS, lien expiré), le CV part simplement sans photo.
+const photoAsDataUrl = async (url?: string): Promise<string | undefined> => {
+  if (!url) return undefined;
+  if (url.startsWith('data:image')) return url;
+  try {
+    const blob = await (await fetch(url, { mode: 'cors' })).blob();
+    return await new Promise((resolve, reject) => {
+      const r = new FileReader();
+      r.onload = () => resolve(r.result as string);
+      r.onerror = reject;
+      r.readAsDataURL(blob);
+    });
+  } catch {
+    return undefined;
+  }
+};
+
 export const exportCvPdf = async (data: CvData) => {
-  const blob = await pdf(<CvPdfDoc data={data} />).toBlob();
+  const photoUrl = PHOTO_TEMPLATE_IDS.includes(data.template || '') ? await photoAsDataUrl(data.photoUrl) : undefined;
+  const blob = await pdf(<CvPdfDoc data={{ ...data, photoUrl }} />).toBlob();
   downloadBlob(blob, `CV_${fileSafe(data.name)}.pdf`);
 };
 

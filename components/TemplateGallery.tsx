@@ -1,11 +1,13 @@
 import React, { useMemo, useState, useEffect } from 'react';
-import { ChevronLeft, ChevronRight, Check, ShieldCheck, Sparkles, LayoutGrid, GalleryHorizontal } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Check, ShieldCheck, Palette, LayoutGrid, GalleryHorizontal, Camera } from 'lucide-react';
 import { PreviewModeContext } from '../services/previewMode';
 
 export interface GalleryItem {
   id: string;
   name: string;
   ats: boolean;
+  /** Le modèle affiche la photo du candidat. */
+  photo?: boolean;
   node: React.ReactNode; // aperçu déjà rendu avec les données de l'utilisateur
 }
 
@@ -64,11 +66,18 @@ const TemplateGallery: React.FC<Props> = ({ items, selectedId, onSelect }) => {
   );
 
   // Pastille ATS / Créatif, réutilisée dans les deux vues.
-  const AtsBadge: React.FC<{ ats: boolean }> = ({ ats }) => (
-    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider shadow ${
-      ats ? 'bg-emerald-500 text-white' : 'bg-brand text-white'
-    }`}>
-      {ats ? <><ShieldCheck size={11} /> ATS</> : <><Sparkles size={11} /> Créatif</>}
+  const AtsBadge: React.FC<{ ats: boolean; photo?: boolean }> = ({ ats, photo }) => (
+    <span className="inline-flex gap-1">
+      <span className={`inline-flex items-center gap-1 px-1.5 h-5 rounded-md text-[10px] font-semibold shadow-sm ${
+        ats ? 'bg-emerald-600 text-white' : 'bg-ink text-canvas'
+      }`}>
+        {ats ? <><ShieldCheck size={11} /> ATS</> : <><Palette size={11} /> Créatif</>}
+      </span>
+      {photo && (
+        <span className="inline-flex items-center gap-1 px-1.5 h-5 rounded-md text-[10px] font-semibold shadow-sm bg-white text-ink border border-line">
+          <Camera size={11} /> Photo
+        </span>
+      )}
     </span>
   );
 
@@ -80,7 +89,7 @@ const TemplateGallery: React.FC<Props> = ({ items, selectedId, onSelect }) => {
         <div className="flex items-center gap-2">
           <FilterBtn id="all" label="Tous" />
           <FilterBtn id="ats" label="ATS" icon={<ShieldCheck size={13} />} />
-          <FilterBtn id="creative" label="Créatifs" icon={<Sparkles size={13} />} />
+          <FilterBtn id="creative" label="Créatifs" icon={<Palette size={13} />} />
         </div>
         <div className="flex items-center gap-1 p-1 rounded-xl bg-surface border border-line shadow-xs shrink-0">
           <ViewBtn id="carousel" label="Vue carrousel" icon={<GalleryHorizontal size={16} />} />
@@ -101,7 +110,7 @@ const TemplateGallery: React.FC<Props> = ({ items, selectedId, onSelect }) => {
               >
                 <div className={`relative aspect-[210/297] bg-white rounded-xl overflow-hidden ring-2 transition-all ${sel ? 'ring-brand shadow-xl' : 'ring-slate-200 dark:ring-slate-700 shadow-sm group-hover:ring-brand/50 group-hover:shadow-md'}`}>
                   <div className="absolute inset-x-0 top-0">{it.node}</div>
-                  <span className="absolute top-2 left-2"><AtsBadge ats={it.ats} /></span>
+                  <span className="absolute top-2 left-2"><AtsBadge ats={it.ats} photo={it.photo} /></span>
                   {sel && (
                     <span className="absolute top-2 right-2 w-6 h-6 rounded-full bg-brand text-white flex items-center justify-center shadow"><Check size={14} /></span>
                   )}
@@ -124,7 +133,7 @@ const TemplateGallery: React.FC<Props> = ({ items, selectedId, onSelect }) => {
               <div className={`rounded-xl overflow-hidden ring-2 transition-shadow ${isSelected ? 'ring-brand shadow-xl' : 'ring-slate-200 dark:ring-slate-700 shadow-md'}`}>
                 {current.node}
               </div>
-              <span className="absolute top-2 left-2"><AtsBadge ats={current.ats} /></span>
+              <span className="absolute top-2 left-2"><AtsBadge ats={current.ats} photo={current.photo} /></span>
               {isSelected && (
                 <span className="absolute top-2 right-2 w-6 h-6 rounded-full bg-brand text-white flex items-center justify-center shadow"><Check size={14} /></span>
               )}

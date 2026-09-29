@@ -306,11 +306,16 @@ export interface CvTemplate {
   id: string;
   name: string;
   ats: boolean;
+  /** Le modèle affiche-t-il la photo du candidat ? */
+  photo: boolean;
   Preview: React.FC<{ data: CvData }>;
 }
 
+// Modèles qui affichent la photo (aperçu ET export PDF). Source unique de vérité.
+export const PHOTO_TEMPLATE_IDS = ['cobalt', 'aero', 'onyx', 'crest'];
+
 const make = (id: string, name: string, ats: boolean, L: React.FC<{ d: CvData; accent: string }>, accent: string): CvTemplate => ({
-  id, name, ats, Preview: ({ data }) => <L d={data} accent={accent} />,
+  id, name, ats, photo: PHOTO_TEMPLATE_IDS.includes(id), Preview: ({ data }) => <L d={data} accent={accent} />,
 });
 
 /* 9 modèles fidèles aux références ATS fournies. IDs conservés (compat CV sauvegardés). */

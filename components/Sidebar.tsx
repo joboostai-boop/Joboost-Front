@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Link, NavLink, useNavigate } from 'react-router-dom';
 import { ChevronsUpDown, LogOut, Settings2, Crown, UserRound, Search, Moon, Sun } from 'lucide-react';
 import Logo from './Logo';
+import Avatar from './Avatar';
 import PlanBadge from './PlanBadge';
 import { CANDIDATE_NAV_GROUPS } from '../constants';
 import { User } from '../types';
@@ -124,9 +125,7 @@ const Sidebar: React.FC<SidebarProps> = ({ user, isDarkMode, toggleDarkMode, onO
             aria-expanded={menuOpen}
             className="w-full flex items-center gap-2.5 rounded-lg p-2 hover:bg-subtle transition-colors outline-none focus-visible:ring-2 focus-visible:ring-brand/40"
           >
-            <span className="w-8 h-8 rounded-full bg-brand/10 text-brand dark:text-brand-300 text-xs font-semibold grid place-items-center shrink-0">
-              {initials(user?.name)}
-            </span>
+            <Avatar name={user?.name} photoUrl={user?.photoUrl} size={32} />
             <span className="min-w-0 flex-1 text-left">
               <span className="block text-[13px] font-medium text-ink truncate">{user?.name || 'Mon compte'}</span>
               <span className="block text-xs text-faint truncate">{user?.email}</span>

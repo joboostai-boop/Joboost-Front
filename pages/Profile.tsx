@@ -7,6 +7,7 @@ import {
 import { Link } from 'react-router-dom';
 import { User as UserType } from '../types';
 import toast from 'react-hot-toast';
+import ProfilePhotoPicker from '../components/ProfilePhotoPicker';
 import { useAuth } from '../context/AuthContext';
 import { authHeaders } from '../services/authToken';
 import { rewriteSection, detailExperience } from '../services/gemini';
@@ -421,27 +422,22 @@ const Profile: React.FC<ProfileProps> = ({ user }) => {
       <section className="card-pro !p-5 md:!p-6">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex items-center gap-4 min-w-0">
-            <div
-              className="relative w-20 h-20 rounded-full grid place-items-center shrink-0"
-              style={{ background: `conic-gradient(#7D5CFF ${completion * 3.6}deg, rgba(125,92,255,0.15) ${completion * 3.6}deg)` }}
-              title={`Profil complété à ${completion}%`}
-            >
-              <div className="w-[68px] h-[68px] rounded-full bg-[#F3F4F6] dark:bg-subtle flex items-center justify-center text-2xl font-bold text-brand overflow-hidden border-2 border-white dark:border-[#111827] shadow-sm">
-                {user.photoUrl ? <img src={user.photoUrl} alt={user.name} className="w-full h-full object-cover" referrerPolicy="no-referrer" /> : <span>{(f.firstName || '?').charAt(0).toUpperCase()}</span>}
-              </div>
-            </div>
+            <ProfilePhotoPicker layout="avatar" size={76} />
             <div className="min-w-0">
-              <h2 className="text-xl font-bold tracking-tight text-ink truncate">{[f.firstName, f.lastName].filter(Boolean).join(' ') || 'Mon profil'}</h2>
-              <p className="text-sm text-muted truncate">{f.title || 'Plus ton profil est complet, meilleurs sont tes CV et lettres.'}</p>
-              <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 mt-1.5 text-xs font-semibold">
-                <span className="text-brand tabular-nums">Profil complété à {completion}%</span>
-                {completion < 100 && <span className="text-faint font-medium">· termine-le pour de meilleurs CV &amp; lettres</span>}
+              <h2 className="text-xl truncate">{[f.firstName, f.lastName].filter(Boolean).join(' ') || 'Mon profil'}</h2>
+              <p className="text-sm text-muted truncate">{f.title || 'Indique le poste que tu recherches.'}</p>
+              <div className="flex items-center gap-2.5 mt-2">
+                <div className="w-28 h-1.5 rounded-full bg-subtle overflow-hidden">
+                  <div className={`h-full rounded-full ${completion >= 100 ? 'bg-emerald-500' : 'bg-brand'}`} style={{ width: `${completion}%` }} />
+                </div>
+                <span className="text-xs text-muted tabular-nums">Complet à {completion} %</span>
               </div>
+              <p className="mt-1.5 text-xs text-faint">{user.photoUrl ? 'Clique sur ta photo pour la changer.' : 'Clique sur le rond pour ajouter ta photo.'}</p>
             </div>
           </div>
           <div className="flex items-center gap-2 shrink-0">
             <input type="file" ref={fileInputRef} accept=".pdf,.doc,.docx" className="hidden" onChange={handleImportCv} />
-            <button onClick={() => fileInputRef.current?.click()} disabled={importing} className="press btn btn-secondary text-brand disabled:opacity-60 flex-1 sm:flex-none">
+            <button onClick={() => fileInputRef.current?.click()} disabled={importing} className="btn btn-secondary flex-1 sm:flex-none">
               {importing ? <RefreshCw size={16} className="animate-spin" /> : <Upload size={16} />}
               <span>Importer mon CV</span>
             </button>

@@ -3,6 +3,8 @@ import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
 import { Printer, FileDown, Wand2, FileText, RefreshCw, Layout, Save, Clock, Loader2, Plus, Trash2, X, Files, Target, Camera, ImageOff } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { readAndResizePhoto, saveProfilePhoto } from '../services/photo';
+import { useAuth } from '../context/AuthContext';
 import { generateCVSummary, detailExperience } from '../services/gemini';
 // Import dynamique au clic (les libs PDF/Word sont lourdes — ~1,8 Mo — on ne les charge
 // que lors d'un export, pas à l'ouverture de l'éditeur).
@@ -19,34 +21,6 @@ import { CvExample } from '../services/cvExamples';
 
 const uid = () => Math.random().toString(36).slice(2, 10);
 
-// Lit une image locale, la recadre en carré et la réduit à ~256px (JPEG qualité 0.82).
-// Objectif : une photo d'identité nette pour le CV, SANS stocker un base64 énorme
-// (le CV est sauvegardé en JSON — une image brute de plusieurs Mo le rendrait lourd).
-const readAndResizePhoto = (file: File): Promise<string> =>
-  new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => {
-      const img = new Image();
-      img.onload = () => {
-        const SIZE = 256;
-        const canvas = document.createElement('canvas');
-        canvas.width = SIZE;
-        canvas.height = SIZE;
-        const ctx = canvas.getContext('2d');
-        if (!ctx) { reject(new Error('canvas')); return; }
-        // Recadrage carré centré (cover) pour une photo ronde propre dans les modèles.
-        const side = Math.min(img.width, img.height);
-        const sx = (img.width - side) / 2;
-        const sy = (img.height - side) / 2;
-        ctx.drawImage(img, sx, sy, side, side, 0, 0, SIZE, SIZE);
-        resolve(canvas.toDataURL('image/jpeg', 0.82));
-      };
-      img.onerror = () => reject(new Error('image'));
-      img.src = reader.result as string;
-    };
-    reader.onerror = () => reject(new Error('read'));
-    reader.readAsDataURL(file);
-  });
 
 interface ExperienceItem { id: string; role: string; company: string; period: string; desc: string; }
 interface EducationItem { id: string; degree: string; school: string; date: string; city: string; }
@@ -84,6 +58,7 @@ const SkillsEditor: React.FC<{ value: string[]; onChange: (v: string[]) => void 
 };
 
 const CVGenerator: React.FC = () => {
+  const { user, checkAuth } = useAuth();
   const location = useLocation();
   const incoming = (location.state as any) || {};
   // Modèle pré-sélectionné depuis la page « Modèles » (navigation avec state).
@@ -124,7 +99,19 @@ const CVGenerator: React.FC = () => {
     try {
       const dataUrl = await readAndResizePhoto(file);
       setFormData((p) => ({ ...p, photoUrl: dataUrl }));
-      toast.success('Photo ajoutée — visible sur les modèles avec photo.');
+      // Première photo du compte : elle devient aussi la photo de profil
+      // (navigation, Accueil). Les suivantes ne touchent qu'au CV.
+      if (!user?.photoUrl) {
+        try {
+          await saveProfilePhoto(dataUrl);
+          await checkAuth();
+          toast.success('Photo ajoutée au CV et à ton profil');
+        } catch {
+          toast.success('Photo ajoutée au CV');
+        }
+      } else {
+        toast.success('Photo ajoutée au CV');
+      }
     } catch { toast.error("Impossible de lire cette image."); }
   };
 
@@ -479,7 +466,7 @@ const CVGenerator: React.FC = () => {
         {/* Choix du modèle */}
         <Collapsible title="Modèle de CV" icon={<Layout size={16} />} subtitle={`Sélectionné : ${getCvTemplate(formData.template).name}`}>
           <TemplateGallery
-            items={CV_TEMPLATES.map((t) => ({ id: t.id, name: t.name, ats: t.ats, node: <t.Preview data={formData} /> }))}
+            items={CV_TEMPLATES.map((t) => ({ id: t.id, name: t.name, ats: t.ats, photo: t.photo, node: <t.Preview data={formData} /> }))}
             selectedId={formData.template}
             onSelect={(id) => setFormData({ ...formData, template: id })}
           />
@@ -488,28 +475,65 @@ const CVGenerator: React.FC = () => {
         {/* Coordonnées + résumé */}
         <Collapsible defaultOpen step={1} title="Coordonnées & résumé" bodyClassName="px-4 md:px-5 pb-5 space-y-5">
           {/* Photo (optionnelle) — n'apparaît que sur les modèles « avec photo ». */}
-          <div className="flex items-center gap-4">
-            <div className="w-16 h-16 rounded-full overflow-hidden shrink-0 flex items-center justify-center bg-brand-50 dark:bg-brand/10 text-brand ring-1 ring-brand/20">
-              {formData.photoUrl
-                ? <img src={formData.photoUrl} alt="Photo du CV" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
-                : <Camera size={22} />}
-            </div>
-            <div className="min-w-0">
-              <div className="flex flex-wrap items-center gap-2">
-                <button type="button" onClick={() => photoInputRef.current?.click()} className="press btn btn-secondary !min-h-0 !py-1.5 !px-3 text-xs">
-                  <Camera size={14} /> {formData.photoUrl ? 'Changer la photo' : 'Ajouter une photo'}
-                </button>
-                {formData.photoUrl && (
-                  <button type="button" onClick={() => setFormData((p) => ({ ...p, photoUrl: '' }))} className="press btn btn-secondary !min-h-0 !py-1.5 !px-3 text-xs !text-red-500 !border-red-200 hover:!bg-red-50">
-                    <ImageOff size={14} /> Retirer
+          <div className="rounded-xl border border-line p-4 space-y-3">
+            <div className="flex items-center gap-4">
+              <button
+                type="button"
+                onClick={() => photoInputRef.current?.click()}
+                className="group relative w-16 h-16 rounded-full overflow-hidden shrink-0 grid place-items-center bg-subtle text-faint outline-none focus-visible:ring-2 focus-visible:ring-brand/40"
+                aria-label={formData.photoUrl ? 'Changer la photo du CV' : 'Ajouter une photo au CV'}
+              >
+                {formData.photoUrl
+                  ? <img src={formData.photoUrl} alt="Photo du CV" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                  : <Camera size={22} />}
+                <span className="absolute inset-0 grid place-items-center bg-black/45 text-white opacity-0 group-hover:opacity-100 transition-opacity">
+                  <Camera size={18} />
+                </span>
+              </button>
+              <div className="min-w-0">
+                <p className="text-sm font-medium text-ink">Photo</p>
+                <div className="flex flex-wrap items-center gap-1.5 mt-1.5">
+                  <button type="button" onClick={() => photoInputRef.current?.click()} className="btn btn-secondary !min-h-[32px] !px-3 text-[13px]">
+                    <Camera size={14} /> {formData.photoUrl ? 'Changer' : 'Ajouter'}
                   </button>
-                )}
+                  {user?.photoUrl && formData.photoUrl !== user.photoUrl && (
+                    <button type="button" onClick={() => setFormData((p) => ({ ...p, photoUrl: user.photoUrl || '' }))} className="btn btn-ghost !min-h-[32px] !px-2.5 text-[13px]">
+                      Utiliser ma photo de profil
+                    </button>
+                  )}
+                  {formData.photoUrl && (
+                    <button type="button" onClick={() => setFormData((p) => ({ ...p, photoUrl: '' }))} className="btn btn-ghost !min-h-[32px] !px-2.5 text-[13px] hover:!text-red-600">
+                      <ImageOff size={14} /> Retirer
+                    </button>
+                  )}
+                </div>
               </div>
-              <p className="text-[11px] text-faint mt-1.5 leading-snug">
-                Optionnel. Visible uniquement sur les modèles « avec photo ». Astuce : un CV sans photo passe mieux les filtres automatiques (ATS).
-              </p>
+              <input ref={photoInputRef} type="file" accept="image/jpeg,image/png,image/webp" onChange={handlePhotoChange} className="hidden" />
             </div>
-            <input ref={photoInputRef} type="file" accept="image/*" onChange={handlePhotoChange} className="hidden" />
+
+            {formData.photoUrl && !getCvTemplate(formData.template).photo ? (
+              <div className="rounded-lg bg-amber-50 dark:bg-amber-500/10 px-3 py-2.5">
+                <p className="text-[13px] text-amber-800 dark:text-amber-300">
+                  Le modèle « {getCvTemplate(formData.template).name} » n’affiche pas de photo. Choisis un modèle avec photo :
+                </p>
+                <div className="flex flex-wrap gap-1.5 mt-2">
+                  {CV_TEMPLATES.filter((t) => t.photo).map((t) => (
+                    <button
+                      key={t.id}
+                      type="button"
+                      onClick={() => setFormData((p) => ({ ...p, template: t.id }))}
+                      className="chip hover:border-line-strong hover:text-ink transition-colors"
+                    >
+                      {t.name}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <p className="text-xs text-faint leading-snug">
+                Optionnelle. Visible sur les modèles avec photo, à l’écran comme dans le PDF téléchargé. Les CV envoyés à de grandes entreprises passent souvent mieux sans photo.
+              </p>
+            )}
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

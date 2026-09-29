@@ -68,6 +68,23 @@ export const userController = {
           mappedData.email = nextEmail;
         }
       }
+      // Photo de profil : téléversée (data URL JPEG/PNG/WebP déjà réduite côté navigateur,
+      // ~256-320 px) ou URL https (Google / LinkedIn). Chaîne vide ou null = suppression.
+      // Plafond de taille : la photo voyage avec /auth/me, elle doit rester légère.
+      if (req.body.photoUrl !== undefined) {
+        const photo = req.body.photoUrl;
+        if (photo === null || photo === '') {
+          mappedData.photoUrl = null;
+        } else if (
+          typeof photo === 'string' &&
+          photo.length <= 90_000 &&
+          (/^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+/=]+$/.test(photo) || /^https:\/\/\S+$/.test(photo))
+        ) {
+          mappedData.photoUrl = photo;
+        } else {
+          return res.status(400).json({ success: false, error: "Photo invalide ou trop lourde. Choisis une image JPEG ou PNG." });
+        }
+      }
       if (req.body.phone !== undefined) mappedData.phone = req.body.phone;
       if (req.body.title !== undefined) mappedData.title = req.body.title;
       if (req.body.summary !== undefined) mappedData.summary = req.body.summary;

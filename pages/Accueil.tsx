@@ -3,9 +3,10 @@ import { Link } from 'react-router-dom';
 import { User } from '../types';
 import { authHeaders } from '../services/authToken';
 import CountUp from '../components/CountUp';
+import ProfilePhotoPicker from '../components/ProfilePhotoPicker';
 import {
   UserRound, Plus, ArrowRight, FileText, Search, Bell, Loader2, PenLine, Bookmark,
-  Building2, MapPin, Briefcase, Check, ChevronRight, BellRing
+  Building2, MapPin, Briefcase, Check, ChevronRight, BellRing, Target
 } from 'lucide-react';
 
 interface AccueilProps {
@@ -101,8 +102,22 @@ const weeklyCounts = (apps: AppLite[]) => {
   });
 };
 
+/* Dernière visite de l'Accueil (lue une fois au montage, puis mise à jour). */
+const readLastVisit = (): number | null => {
+  try {
+    const v = Number(localStorage.getItem('joboost-last-visit'));
+    return Number.isFinite(v) && v > 0 ? v : null;
+  } catch {
+    return null;
+  }
+};
+
 const Accueil: React.FC<AccueilProps> = ({ user }) => {
   const firstName = user?.name?.split(' ')[0] || '';
+  const [lastVisit] = useState<number | null>(readLastVisit);
+  useEffect(() => {
+    try { localStorage.setItem('joboost-last-visit', String(Date.now())); } catch { /* stockage indisponible */ }
+  }, []);
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [partnerOffers, setPartnerOffers] = useState<PartnerOffer[]>([]);
@@ -186,7 +201,12 @@ const Accueil: React.FC<AccueilProps> = ({ user }) => {
   const pct = stats?.profileCompletion ?? 0;
 
   const hour = new Date().getHours();
-  const greeting = hour >= 5 && hour < 18 ? 'Bonjour' : 'Bonsoir';
+  const awayHours = lastVisit ? (Date.now() - lastVisit) / 3_600_000 : 0;
+  // Salutation : « Te revoilà » après une absence, sinon selon l'heure.
+  const greeting = awayHours >= 20 ? 'Te revoilà' : hour >= 5 && hour < 18 ? 'Bonjour' : 'Bonsoir';
+  const greetingLine = `${greeting}${firstName ? ` ${firstName}` : ''}`;
+  // Ce que la personne cherche, tel qu'indiqué dans son profil.
+  const target = [user?.title, user?.city?.split(',')[0]].filter(Boolean).join(' · ');
   const today = new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' });
 
   const showUpgrade = !loading && usage && !usage.isSubscribed && !usage.unlimited;
@@ -206,11 +226,21 @@ const Accueil: React.FC<AccueilProps> = ({ user }) => {
 
     return (
       <div className="max-w-2xl mx-auto px-5 md:px-8 pt-10 md:pt-16 pb-16 animate-fade-in">
-        <p className="eyebrow capitalize">{today}</p>
-        <h1 className="mt-2 text-[28px] md:text-[34px] leading-tight">{greeting}{firstName ? ` ${firstName}` : ''}</h1>
-        <p className="mt-2 text-[15px] text-muted">
-          Trois étapes pour envoyer ta première candidature. Compte une dizaine de minutes.
+        <div className="flex items-center gap-4">
+          <ProfilePhotoPicker layout="avatar" size={64} />
+          <div className="min-w-0">
+            <p className="eyebrow capitalize">{today}</p>
+            <h1 className="mt-1 text-[28px] md:text-[34px] leading-tight">Bienvenue{firstName ? ` ${firstName}` : ''}</h1>
+          </div>
+        </div>
+        <p className="mt-5 text-[15px] text-muted">
+          {user?.title
+            ? <>Trouvons ton prochain poste de <span className="text-ink font-medium">{user.title.toLowerCase()}</span>. Trois étapes pour envoyer ta première candidature, compte une dizaine de minutes.</>
+            : 'Trois étapes pour envoyer ta première candidature. Compte une dizaine de minutes.'}
         </p>
+        {!user?.photoUrl && (
+          <p className="mt-2 text-[13px] text-faint">Astuce : clique sur le rond pour ajouter ta photo. Elle apparaîtra aussi sur tes CV avec photo.</p>
+        )}
 
         <ol className="mt-8 surface divide-y divide-line">
           {steps.map((st, i) => {
@@ -255,6 +285,17 @@ const Accueil: React.FC<AccueilProps> = ({ user }) => {
     .filter((a) => a.status === 'SENT' && Date.now() - new Date(a.appliedAt).getTime() >= 7 * DAY)
     .sort((a, b) => new Date(a.appliedAt).getTime() - new Date(b.appliedAt).getTime())
     .slice(0, 3);
+  // Une phrase qui parle de SA recherche, pas une formule générique.
+  const interviews = appStats?.interview ?? 0;
+  const dailyLine = (() => {
+    if (interviews > 0) return `Tu as ${interviews} entretien${interviews > 1 ? 's' : ''} en cours. C’est le moment de bien te préparer.`;
+    if (followUps.length > 0) return `${followUps.length} candidature${followUps.length > 1 ? 's attendent' : ' attend'} une relance depuis plus d’une semaine.`;
+    if (thisWeek > 0) return `${thisWeek} candidature${thisWeek > 1 ? 's envoyées' : ' envoyée'} cette semaine. Continue sur ce rythme.`;
+    if (usage?.inTrial && usage.trialDaysLeft <= 2) return `Ton essai se termine dans ${usage.trialDaysLeft} jour${usage.trialDaysLeft > 1 ? 's' : ''}.`;
+    if (awayHours >= 72) return 'De nouvelles offres sont arrivées depuis ta dernière visite.';
+    return 'Voici où en est ta recherche aujourd’hui.';
+  })();
+
   const kpis = [
     { label: 'Candidatures', value: appStats?.total ?? 0 },
     { label: 'En attente', value: appStats?.pending ?? 0 },
@@ -269,14 +310,29 @@ const Accueil: React.FC<AccueilProps> = ({ user }) => {
 
   return (
     <div className="max-w-6xl mx-auto px-5 md:px-8 pt-8 md:pt-10 pb-16 animate-fade-in">
-      <header className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
-        <div>
-          <p className="eyebrow capitalize">{today}</p>
-          <h1 className="mt-1.5 text-[28px] md:text-[32px] leading-tight">{greeting}{firstName ? ` ${firstName}` : ''}</h1>
+      <header className="flex flex-col md:flex-row md:items-center md:justify-between gap-5">
+        <div className="flex items-center gap-4 min-w-0">
+          <ProfilePhotoPicker layout="avatar" size={64} />
+          <div className="min-w-0">
+            <p className="eyebrow capitalize">{today}</p>
+            <h1 className="mt-1 text-[26px] md:text-[30px] leading-tight truncate">{greetingLine}</h1>
+            <p className="mt-1 text-[15px] text-muted">{loading ? '\u00a0' : dailyLine}</p>
+          </div>
         </div>
-        <Link to="/target/offers" className="btn btn-secondary self-start sm:self-auto">
-          <Search size={16} /> Chercher des offres
-        </Link>
+        <div className="flex flex-wrap items-center gap-2 md:justify-end">
+          {target ? (
+            <Link to="/prepare/profile" className="chip hover:border-line-strong hover:text-ink transition-colors" title="Modifier ce que tu recherches">
+              <Target size={13} className="text-brand dark:text-brand-300" /> {target}
+            </Link>
+          ) : (
+            <Link to="/prepare/profile" className="chip hover:border-line-strong hover:text-ink transition-colors">
+              <Target size={13} /> Indiquer le poste recherché
+            </Link>
+          )}
+          <Link to="/target/offers" className="btn btn-secondary">
+            <Search size={16} /> Chercher des offres
+          </Link>
+        </div>
       </header>
 
       <div className="mt-8 grid lg:grid-cols-3 gap-5 items-start">

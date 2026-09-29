@@ -2,6 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Search } from 'lucide-react';
 import Logo from './Logo';
+import Avatar from './Avatar';
 import PlanBadge from './PlanBadge';
 import { User } from '../types';
 
@@ -47,9 +48,8 @@ const Topbar: React.FC<TopbarProps> = ({ user, onOpenSearch }) => {
         <Link
           to="/settings"
           aria-label="Mon compte"
-          className="w-9 h-9 rounded-full bg-brand/10 text-brand dark:text-brand-300 flex items-center justify-center text-xs font-semibold"
-        >
-          {initials(user?.name)}
+          className="rounded-full">
+          <Avatar name={user?.name} photoUrl={user?.photoUrl} size={32} />
         </Link>
       </div>
     </header>
