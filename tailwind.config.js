@@ -17,33 +17,43 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        sans: ['Inter', 'ui-sans-serif', 'system-ui', '-apple-system', 'Segoe UI', 'sans-serif'],
-        // Titres : sans-serif moderne neutre & légèrement arrondie (Manrope ≈ Graphik/SF Pro),
-        // plus premium qu'Inter brut, fidèle à la vitrine pitch.com.
-        display: ['Manrope', 'Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+        // Refonte 09/2026 : Geist partout (UI + titres). Grotesque nette et
+        // contemporaine, très lisible en petite taille, chiffres réguliers.
+        sans: ['Geist', 'Inter', 'ui-sans-serif', 'system-ui', '-apple-system', 'Segoe UI', 'sans-serif'],
+        display: ['Geist', 'Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'],
       },
       colors: {
-        // Identité Joboost — violet #7D5CFF décliné en échelle.
-        // `brand` (DEFAULT = 500) sert d'alias court ; les pages peuvent
-        // aussi continuer d'utiliser les valeurs hex existantes.
+        // Violet Joboost. DEFAULT (#6E50F5) est un cran plus profond que le violet
+        // du logo (#7D5CFF) : il passe le contraste AA en texte sur fond blanc,
+        // ce que #7D5CFF ne faisait pas (4,3:1).
         brand: {
-          DEFAULT: '#7D5CFF',
-          50: '#F3F0FF',
-          100: '#E8E1FF',
-          200: '#D4C7FF',
-          300: '#B9A3FF',
-          400: '#9B7BFF',
+          DEFAULT: '#6E50F5',
+          50: '#F4F2FF',
+          100: '#EAE5FF',
+          200: '#D6CCFF',
+          300: '#B6A5FF',
+          400: '#9479FF',
           500: '#7D5CFF',
-          600: '#6023C0',
-          700: '#4F46E5',
+          600: '#6E50F5',
+          700: '#5A3DDB',
+          800: '#4830B0',
         },
+        // Neutres sémantiques pilotés par variables CSS (index.css) : ils basculent
+        // tout seuls en mode sombre, sans variante `dark:` à répéter partout.
+        canvas: 'rgb(var(--c-canvas) / <alpha-value>)',
+        surface: 'rgb(var(--c-surface) / <alpha-value>)',
+        subtle: 'rgb(var(--c-subtle) / <alpha-value>)',
+        line: 'rgb(var(--c-line) / <alpha-value>)',
+        'line-strong': 'rgb(var(--c-line-strong) / <alpha-value>)',
+        ink: 'rgb(var(--c-ink) / <alpha-value>)',
+        muted: 'rgb(var(--c-muted) / <alpha-value>)',
+        faint: 'rgb(var(--c-faint) / <alpha-value>)',
       },
-      // Échelle d'ombres douces et présentes (élévation aérée façon pitch.com).
       boxShadow: {
-        xs: '0 1px 2px 0 rgb(16 24 40 / 0.05)',
-        'card': '0 1px 2px 0 rgb(16 24 40 / 0.04), 0 6px 16px -6px rgb(16 24 40 / 0.10)',
-        'card-hover': '0 8px 24px -8px rgb(124 92 255 / 0.22), 0 4px 10px -4px rgb(16 24 40 / 0.08)',
-        'pop': '0 20px 48px -12px rgb(16 24 40 / 0.22)',
+        xs: '0 1px 2px 0 rgb(16 16 24 / 0.05)',
+        card: '0 1px 2px 0 rgb(16 16 24 / 0.04)',
+        'card-hover': '0 1px 2px 0 rgb(16 16 24 / 0.04), 0 4px 12px -4px rgb(16 16 24 / 0.08)',
+        pop: '0 12px 32px -8px rgb(16 16 24 / 0.18), 0 2px 6px -2px rgb(16 16 24 / 0.06)',
       },
       keyframes: {
         'fade-in-up': {

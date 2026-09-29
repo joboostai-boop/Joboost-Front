@@ -41,7 +41,7 @@ const Collapsible: React.FC<CollapsibleProps> = ({
   const [open, setOpen] = useState(defaultOpen);
 
   const Pill = (step !== undefined || icon) ? (
-    <span className="shrink-0 w-8 h-8 rounded-lg surface-accent text-[#7D5CFF] flex items-center justify-center text-sm font-bold">
+    <span className="shrink-0 w-8 h-8 rounded-lg surface-accent text-brand flex items-center justify-center text-sm font-bold">
       {icon ?? step}
     </span>
   ) : null;
@@ -50,8 +50,8 @@ const Collapsible: React.FC<CollapsibleProps> = ({
     <>
       {Pill}
       <span className="flex-1 min-w-0">
-        <span className="block text-sm font-semibold text-[#111827] dark:text-white truncate">{title}</span>
-        {subtitle && <span className="block text-xs text-[#9CA3AF] truncate mt-0.5">{subtitle}</span>}
+        <span className="block text-sm font-semibold text-ink truncate">{title}</span>
+        {subtitle && <span className="block text-xs text-faint truncate mt-0.5">{subtitle}</span>}
       </span>
       {badge}
     </>
@@ -75,12 +75,12 @@ const Collapsible: React.FC<CollapsibleProps> = ({
         type="button"
         onClick={() => setOpen((o) => !o)}
         aria-expanded={open}
-        className="press w-full flex items-center gap-3 p-4 md:p-5 text-left outline-none focus-visible:ring-2 focus-visible:ring-[#7D5CFF]/40"
+        className="press w-full flex items-center gap-3 p-4 md:p-5 text-left outline-none focus-visible:ring-2 focus-visible:ring-brand/40"
       >
         {Heading}
         <ChevronDown
           size={18}
-          className={`shrink-0 text-[#9CA3AF] transition-transform duration-300 ${open ? 'rotate-180' : ''}`}
+          className={`shrink-0 text-faint transition-transform duration-300 ${open ? 'rotate-180' : ''}`}
         />
       </button>
 
@@ -98,7 +98,7 @@ const Collapsible: React.FC<CollapsibleProps> = ({
 
 /** Pastille compteur réutilisable pour le `badge` d'un Collapsible. */
 export const CountBadge: React.FC<{ n: number }> = ({ n }) => (
-  <span className="shrink-0 min-w-[22px] h-[22px] px-1.5 rounded-full bg-[#F3F0FF] dark:bg-[#7D5CFF]/10 text-[#7D5CFF] text-xs font-bold flex items-center justify-center tabular-nums">
+  <span className="shrink-0 min-w-[22px] h-[22px] px-1.5 rounded-full bg-brand-50 dark:bg-brand/10 text-brand text-xs font-bold flex items-center justify-center tabular-nums">
     {n}
   </span>
 );

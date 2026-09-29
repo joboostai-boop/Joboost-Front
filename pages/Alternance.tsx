@@ -120,14 +120,14 @@ const Alternance: React.FC = () => {
         <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 sm:p-4" onClick={() => setConfirmTarget(null)}>
           <div className="surface p-5 sm:p-6 w-full sm:max-w-md space-y-4 rounded-t-2xl sm:rounded-2xl animate-fade-in-up pb-8 sm:pb-6" onClick={(e) => e.stopPropagation()}>
             <div className="sm:hidden w-10 h-1 rounded-full bg-slate-300 dark:bg-slate-600 mx-auto -mt-1 mb-1" />
-            <h3 className="text-lg font-semibold text-[#111827] dark:text-white flex items-center gap-2">
-              <Send size={18} className="text-[#7D5CFF]" /> Envoyer votre candidature ?
+            <h3 className="text-lg font-semibold text-ink flex items-center gap-2">
+              <Send size={18} className="text-brand" /> Envoyer votre candidature ?
             </h3>
-            <p className="text-sm text-[#4B5563] dark:text-[#D1D5DB]">
+            <p className="text-sm text-muted dark:text-[#D1D5DB]">
               Votre <strong>CV</strong> et un message de motivation seront transmis à <strong>{confirmTarget.company}</strong> pour
               le poste « {confirmTarget.title} ».
             </p>
-            <p className="text-xs text-[#6B7280] bg-[#F3F4F6] dark:bg-[#1F2937] rounded p-3">
+            <p className="text-xs text-muted bg-[#F3F4F6] dark:bg-subtle rounded p-3">
               L'envoi est effectué par La Bonne Alternance (service public). Le recruteur vous répondra directement par email.
             </p>
             <div className="flex gap-3 pt-1">
@@ -139,35 +139,35 @@ const Alternance: React.FC = () => {
       )}
 
       {/* Bandeau explicatif */}
-      <div className="surface p-4 flex items-start gap-3 border-l-4 border-[#7D5CFF]">
-        <Sparkles className="text-[#7D5CFF] shrink-0 mt-0.5" size={18} />
-        <p className="text-sm text-[#4B5563] dark:text-[#D1D5DB]">
-          <strong className="text-[#111827] dark:text-white">Postulez en 1 clic.</strong> Offres et entreprises qui recrutent
+      <div className="surface p-4 flex items-start gap-3 border-l-4 border-brand">
+        <Sparkles className="text-brand shrink-0 mt-0.5" size={18} />
+        <p className="text-sm text-muted dark:text-[#D1D5DB]">
+          <strong className="text-ink">Postulez en 1 clic.</strong> Offres et entreprises qui recrutent
           en alternance, via le service public. Votre CV est envoyé directement au recruteur — sans quitter Joboost.
         </p>
       </div>
 
       <form onSubmit={handleSearch} className="surface p-5 md:p-6">
-        <h3 className="text-sm font-semibold text-[#111827] dark:text-white mb-4">Votre recherche d'alternance</h3>
+        <h3 className="text-sm font-semibold text-ink mb-4">Votre recherche d'alternance</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <div>
             <label className="input-label">Métier visé</label>
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-[#9CA3AF]" size={16} />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-faint" size={16} />
               <input type="text" value={jobTitle} onChange={(e) => setJobTitle(e.target.value)} className="input-pro pl-10" placeholder="Ex: Vendeur" />
             </div>
           </div>
           <div>
             <label className="input-label">Localisation</label>
             <div className="relative">
-              <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 text-[#9CA3AF]" size={16} />
+              <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 text-faint" size={16} />
               <input type="text" value={location} onChange={(e) => setLocation(e.target.value)} className="input-pro pl-10" placeholder="Ex: Mantes-la-Jolie" />
             </div>
           </div>
           <div>
             <label className="input-label">Niveau visé</label>
             <div className="relative">
-              <GraduationCap className="absolute left-3 top-1/2 -translate-y-1/2 text-[#9CA3AF]" size={16} />
+              <GraduationCap className="absolute left-3 top-1/2 -translate-y-1/2 text-faint" size={16} />
               <select value={diploma} onChange={(e) => setDiploma(e.target.value)} className="input-pro pl-10">
                 {DIPLOMAS.map((d) => <option key={d.value} value={d.value}>{d.label}</option>)}
               </select>
@@ -198,7 +198,7 @@ const Alternance: React.FC = () => {
       {!loading && results.length > 0 && widened && (
         <div className="surface p-3.5 flex items-start gap-2.5 border-l-4 border-amber-400">
           <Info className="text-amber-500 shrink-0 mt-0.5" size={16} />
-          <p className="text-sm text-[#4B5563] dark:text-[#D1D5DB]">
+          <p className="text-sm text-muted dark:text-[#D1D5DB]">
             {widened === 'radius'
               ? <>Peu d'alternances sur ce métier tout près de chez vous — nous avons élargi la recherche à <strong>{radiusUsed} km</strong>.</>
               : <>Aucune alternance sur ce métier précis dans la zone — voici <strong>toutes les alternances</strong> dans un rayon de {radiusUsed} km.</>}
@@ -213,39 +213,39 @@ const Alternance: React.FC = () => {
             const done = sentIds[item.id];
             const canApply = !!item.recipientId;
             return (
-              <div key={item.id} className={`surface p-4 md:p-5 flex flex-col md:flex-row gap-4 md:gap-6 transition-all duration-200 animate-fade-in-up ${busy ? 'opacity-70 pointer-events-none ring-1 ring-[#7D5CFF]' : 'hover:shadow-card-hover md:hover:-translate-y-0.5'}`}>
+              <div key={item.id} className={`surface p-4 md:p-5 flex flex-col md:flex-row gap-4 md:gap-6 transition-all duration-200 animate-fade-in-up ${busy ? 'opacity-70 pointer-events-none ring-1 ring-brand' : 'hover:shadow-card-hover md:'}`}>
                 <div className="flex-1 space-y-3 min-w-0">
                   <div className="flex items-start gap-3">
-                    <span className="w-10 h-10 rounded-lg bg-[#F3F0FF] dark:bg-[#7D5CFF]/10 text-[#7D5CFF] flex items-center justify-center font-semibold text-sm shrink-0">
+                    <span className="w-10 h-10 rounded-lg bg-brand-50 dark:bg-brand/10 text-brand flex items-center justify-center font-semibold text-sm shrink-0">
                       {item.company?.charAt(0) || <Building2 size={18} />}
                     </span>
                     <div className="min-w-0">
-                      <h2 className="text-base font-semibold text-[#111827] dark:text-white leading-tight">{item.title}</h2>
-                      <p className="text-[#6B7280] text-xs mt-0.5">{item.company}</p>
-                      {item.location && <p className="text-[#6B7280] text-xs flex items-center gap-1.5 mt-1"><MapPin size={13} /> {item.location}</p>}
+                      <h2 className="text-base font-semibold text-ink leading-tight">{item.title}</h2>
+                      <p className="text-muted text-xs mt-0.5">{item.company}</p>
+                      {item.location && <p className="text-muted text-xs flex items-center gap-1.5 mt-1"><MapPin size={13} /> {item.location}</p>}
                     </div>
                   </div>
 
                   <div className="flex flex-wrap gap-2 text-xs font-medium">
-                    <span className="px-2 py-1 bg-[#F3F0FF] dark:bg-[#7D5CFF]/10 border border-[#7D5CFF] text-[#7D5CFF] rounded">
+                    <span className="px-2 py-1 bg-brand-50 dark:bg-brand/10 border border-brand text-brand rounded">
                       {item.contractType || 'Alternance'}
                     </span>
-                    <span className="px-2 py-1 bg-[#F3F4F6] dark:bg-[#1F2937] border border-[#E5E7EB] dark:border-[#374151] text-[#4B5563] dark:text-[#D1D5DB] rounded">
+                    <span className="px-2 py-1 bg-[#F3F4F6] dark:bg-subtle border border-[#E5E7EB] dark:border-[#374151] text-muted dark:text-[#D1D5DB] rounded">
                       {item.kind === 'offre' ? 'Offre publiée' : 'Candidature spontanée'}
                     </span>
                   </div>
 
                   {item.description && (
-                    <p className="text-sm text-[#4B5563] dark:text-[#9CA3AF] line-clamp-3">{item.description}</p>
+                    <p className="text-sm text-muted dark:text-faint line-clamp-3">{item.description}</p>
                   )}
                 </div>
 
-                <div className="md:w-60 flex flex-col gap-3 justify-center shrink-0 border-t md:border-t-0 md:border-l border-[#E5E7EB] dark:border-[#1F2937] pt-4 md:pt-0 md:pl-6">
+                <div className="md:w-60 flex flex-col gap-3 justify-center shrink-0 border-t md:border-t-0 md:border-l border-[#E5E7EB] pt-4 md:pt-0 md:pl-6">
                   {done ? (
                     <div className="flex flex-col items-center gap-2 text-emerald-600 dark:text-emerald-400">
                       <CheckCircle2 size={22} />
                       <span className="text-sm font-semibold">Candidature envoyée</span>
-                      <button onClick={() => navigate('/track/applications')} className="text-xs text-[#7D5CFF] hover:underline">Voir mon suivi</button>
+                      <button onClick={() => navigate('/track/applications')} className="text-xs text-brand hover:underline">Voir mon suivi</button>
                     </div>
                   ) : (
                     <>
@@ -256,7 +256,7 @@ const Alternance: React.FC = () => {
                         </div>
                       </button>
                       {!canApply && (
-                        <p className="text-xs text-[#6B7280] flex items-start gap-1.5">
+                        <p className="text-xs text-muted flex items-start gap-1.5">
                           <Info size={12} className="mt-0.5 shrink-0" /> Candidature à faire sur l'annonce.
                         </p>
                       )}

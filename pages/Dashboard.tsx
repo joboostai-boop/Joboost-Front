@@ -20,9 +20,9 @@ const API = import.meta.env.VITE_API_URL || '';
 const CustomTooltip = ({ active, payload, label }: any) => {
   if (active && payload && payload.length) {
     return (
-      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-3 rounded-xl shadow-xl">
+      <div className="bg-surface border border-line p-3 rounded-xl shadow-xl">
         <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">{label}</p>
-        <p className="text-sm font-extrabold text-[#7D5CFF]">
+        <p className="text-sm font-extrabold text-brand">
           {payload[0].value} <span className="text-slate-500 font-medium">candidature(s)</span>
         </p>
       </div>
@@ -179,7 +179,7 @@ const Dashboard: React.FC = () => {
             <span className={`w-1.5 h-1.5 rounded-full ${profileComplete ? 'bg-emerald-500' : 'bg-amber-500'}`} />
             Profil {profileCompletion}%
           </span>
-          <span className="hidden sm:inline text-sm text-slate-500 dark:text-slate-400">
+          <span className="hidden sm:inline text-sm text-muted">
             Votre activité + le pouls du marché de l'emploi.
           </span>
         </div>
@@ -248,19 +248,19 @@ const Dashboard: React.FC = () => {
                   <button
                     key={company}
                     onClick={() => navigate('/target/offers')}
-                    className="press w-full flex items-center gap-3 p-2.5 rounded-xl hover:bg-[#F5F4FB] dark:hover:bg-[#1F2937] transition-colors text-left group outline-none"
+                    className="press w-full flex items-center gap-3 p-2.5 rounded-xl hover:bg-subtle transition-colors text-left group outline-none"
                   >
                     <span className="w-7 text-center text-sm font-extrabold tabular-nums text-slate-300 dark:text-slate-600 shrink-0">{i + 1}</span>
-                    <span className="w-9 h-9 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 flex items-center justify-center font-bold text-sm shrink-0">
+                    <span className="w-9 h-9 rounded-lg bg-subtle text-muted flex items-center justify-center font-bold text-sm shrink-0">
                       {company.charAt(0).toUpperCase()}
                     </span>
-                    <span className="min-w-0 flex-1 flex items-center gap-1.5 text-sm font-semibold text-[#111827] dark:text-white truncate">
+                    <span className="min-w-0 flex-1 flex items-center gap-1.5 text-sm font-semibold text-ink truncate">
                       <Building2 size={13} className="text-slate-400 shrink-0" /> <span className="truncate">{company}</span>
                     </span>
-                    <span className="shrink-0 inline-flex items-center px-2 py-0.5 rounded-full bg-[#7D5CFF]/10 text-[#7D5CFF] text-xs font-bold tabular-nums">
+                    <span className="shrink-0 inline-flex items-center px-2 py-0.5 rounded-full bg-brand/10 text-brand text-xs font-bold tabular-nums">
                       {n} offre{n > 1 ? 's' : ''}
                     </span>
-                    <ArrowRight size={15} className="text-slate-300 group-hover:text-[#7D5CFF] group-hover:translate-x-0.5 transition-all shrink-0" />
+                    <ArrowRight size={15} className="text-slate-300 group-hover:text-brand transition-all shrink-0" />
                   </button>
                 ))}
               </div>
@@ -284,13 +284,13 @@ const Dashboard: React.FC = () => {
                 className="relative w-16 h-16 rounded-full grid place-items-center shrink-0"
                 style={{ background: `conic-gradient(#7D5CFF ${profileCompletion * 3.6}deg, rgba(125,92,255,0.15) ${profileCompletion * 3.6}deg)` }}
               >
-                <div className="w-[52px] h-[52px] rounded-full bg-white dark:bg-[#111827] grid place-items-center text-sm font-bold text-[#111827] dark:text-white tabular-nums">
+                <div className="w-[52px] h-[52px] rounded-full bg-surface grid place-items-center text-sm font-bold text-ink tabular-nums">
                   {profileCompletion}%
                 </div>
               </div>
               <div className="min-w-0">
-                <p className="text-sm font-semibold text-[#111827] dark:text-white">{profileComplete ? 'Profil complet' : 'Profil à compléter'}</p>
-                <p className="text-xs text-slate-500 dark:text-slate-400">{profileComplete ? 'Bravo, tout est rempli !' : "Améliore le ciblage de l'IA."}</p>
+                <p className="text-sm font-semibold text-ink">{profileComplete ? 'Profil complet' : 'Profil à compléter'}</p>
+                <p className="text-xs text-muted">{profileComplete ? 'Bravo, tout est rempli !' : "Améliore le ciblage de l'IA."}</p>
               </div>
             </div>
             <button onClick={() => navigate('/prepare/profile')} className="press btn btn-primary w-full">
@@ -300,12 +300,12 @@ const Dashboard: React.FC = () => {
 
           {/* Compétences les plus demandées (marché) */}
           {market.skills.length > 0 && (
-            <SectionCard title="Compétences les plus demandées" caption={<span className="inline-flex items-center gap-1.5"><Sparkles size={14} className="text-[#7D5CFF]" /> D'après les offres en cours</span>}>
+            <SectionCard title="Compétences les plus demandées" caption={<span className="inline-flex items-center gap-1.5"><Sparkles size={14} className="text-brand" /> D'après les offres en cours</span>}>
               <div className="flex flex-wrap gap-2">
                 {market.skills.map(([skill, n]) => (
-                  <span key={skill} className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#F3F0FF] dark:bg-[#7D5CFF]/10 text-[#7D5CFF] text-xs font-semibold">
+                  <span key={skill} className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-brand-50 dark:bg-brand/10 text-brand text-xs font-semibold">
                     {skill}
-                    <span className="text-[10px] font-bold text-[#7D5CFF]/60 tabular-nums">{n}</span>
+                    <span className="text-[10px] font-bold text-brand/60 tabular-nums">{n}</span>
                   </span>
                 ))}
               </div>
@@ -321,13 +321,13 @@ const Dashboard: React.FC = () => {
                   return (
                     <div key={loc} className="space-y-1">
                       <div className="flex items-center justify-between text-sm">
-                        <span className="inline-flex items-center gap-1.5 text-[#111827] dark:text-white font-medium truncate">
+                        <span className="inline-flex items-center gap-1.5 text-ink font-medium truncate">
                           <MapPin size={13} className="text-slate-400 shrink-0" /> <span className="truncate">{loc}</span>
                         </span>
                         <span className="text-xs font-bold text-slate-400 tabular-nums shrink-0">{n}</span>
                       </div>
-                      <div className="h-1.5 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
-                        <div className="h-full rounded-full bg-gradient-to-r from-[#7D5CFF] to-[#B9A3FF]" style={{ width: `${Math.round((n / max) * 100)}%` }} />
+                      <div className="h-1.5 rounded-full bg-subtle overflow-hidden">
+                        <div className="h-full rounded-full bg-gradient-to-r from-brand to-[#B9A3FF]" style={{ width: `${Math.round((n / max) * 100)}%` }} />
                       </div>
                     </div>
                   );

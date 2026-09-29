@@ -39,7 +39,7 @@ const mentionsLegales: Section[] = [
           <li>Siège social / adresse : 4 allée de Vendée, 78200 Magnanville, France</li>
           <li>SIREN : 105 996 334 — SIRET : 105 996 334 00014</li>
           <li>TVA : TVA non applicable, article 293 B du CGI (franchise en base)</li>
-          <li>Adresse e-mail : <a href={`mailto:${CONTACT_EMAIL}`} className="text-[#7D5CFF] font-bold hover:underline">{CONTACT_EMAIL}</a></li>
+          <li>Adresse e-mail : <a href={`mailto:${CONTACT_EMAIL}`} className="text-brand font-bold hover:underline">{CONTACT_EMAIL}</a></li>
           <li>Directeur de la publication : Sana Anger</li>
         </ul>
       </>
@@ -71,7 +71,7 @@ const mentionsLegales: Section[] = [
   },
   {
     heading: '4. Contact',
-    body: <p>Pour toute question : <a href={`mailto:${CONTACT_EMAIL}`} className="text-[#7D5CFF] font-bold hover:underline">{CONTACT_EMAIL}</a>.</p>,
+    body: <p>Pour toute question : <a href={`mailto:${CONTACT_EMAIL}`} className="text-brand font-bold hover:underline">{CONTACT_EMAIL}</a>.</p>,
   },
 ];
 
@@ -82,7 +82,7 @@ const confidentialite: Section[] = [
       <p>
         Le responsable du traitement des données est l'éditeur du site (voir Mentions légales) :{' '}
         <strong>Sana Anger (BOOST)</strong>, entrepreneur individuel. Pour toute question relative à vos données,
-        vous pouvez écrire à <a href={`mailto:${CONTACT_EMAIL}`} className="text-[#7D5CFF] font-bold hover:underline">{CONTACT_EMAIL}</a>.
+        vous pouvez écrire à <a href={`mailto:${CONTACT_EMAIL}`} className="text-brand font-bold hover:underline">{CONTACT_EMAIL}</a>.
       </p>
     ),
   },
@@ -144,7 +144,7 @@ const confidentialite: Section[] = [
           <li>Droit de retirer votre consentement à tout moment.</li>
         </ul>
         <p className="mt-2">
-          Pour exercer ces droits : <a href={`mailto:${CONTACT_EMAIL}`} className="text-[#7D5CFF] font-bold hover:underline">{CONTACT_EMAIL}</a>. Vous pouvez également introduire une réclamation
+          Pour exercer ces droits : <a href={`mailto:${CONTACT_EMAIL}`} className="text-brand font-bold hover:underline">{CONTACT_EMAIL}</a>. Vous pouvez également introduire une réclamation
           auprès de la CNIL (www.cnil.fr).
         </p>
       </>
@@ -274,7 +274,7 @@ const cgv: Section[] = [
     heading: '5. Réclamations et médiation',
     body: (
       <p>
-        Toute réclamation peut être adressée à <a href={`mailto:${CONTACT_EMAIL}`} className="text-[#7D5CFF] font-bold hover:underline">{CONTACT_EMAIL}</a>. Conformément à l'article L612-1 du
+        Toute réclamation peut être adressée à <a href={`mailto:${CONTACT_EMAIL}`} className="text-brand font-bold hover:underline">{CONTACT_EMAIL}</a>. Conformément à l'article L612-1 du
         Code de la consommation, le consommateur peut recourir gratuitement à un médiateur de la consommation :{' '}
         <TODO>[Adhésion en cours auprès de CM2C (cm2c.net) — les coordonnées complètes du médiateur seront
         publiées ici dès validation de l'adhésion.]</TODO>
@@ -327,16 +327,16 @@ const Legal: React.FC = () => {
   const current = PAGES[page];
 
   return (
-    <div className="min-h-screen bg-white dark:bg-[#030712] text-slate-900 dark:text-slate-100">
+    <div className="min-h-screen bg-white dark:bg-canvas text-slate-900 dark:text-slate-100">
       {/* Header */}
-      <nav className="border-b border-slate-100 dark:border-slate-800 px-6 py-4">
+      <nav className="border-b border-line px-6 py-4">
         <div className="max-w-4xl mx-auto flex items-center justify-between">
           <Link to="/" className="flex items-center">
             <Logo />
           </Link>
           <Link
             to="/"
-            className="flex items-center gap-2 text-slate-500 hover:text-[#7D5CFF] transition-colors text-sm font-bold"
+            className="flex items-center gap-2 text-slate-500 hover:text-brand transition-colors text-sm font-bold"
           >
             <ArrowLeft size={16} /> Retour à l'accueil
           </Link>
@@ -344,26 +344,26 @@ const Legal: React.FC = () => {
       </nav>
 
       <div className="max-w-4xl mx-auto px-6 py-12 md:py-16">
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#7D5CFF]/5 dark:bg-[#7D5CFF]/10 text-[#7D5CFF] dark:text-[#A78BFA] text-[10px] font-black uppercase tracking-[0.2em] border border-[#7D5CFF]/15 dark:border-[#7D5CFF]/20 mb-6">
+        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand/5 dark:bg-brand/10 text-brand dark:text-brand-300 text-[10px] font-black uppercase tracking-[0.2em] border border-brand/15 dark:border-brand/20 mb-6">
           <ShieldCheck size={14} /> Informations légales
         </div>
 
         <h1 className="text-3xl md:text-5xl font-black tracking-tight mb-3">{current.title}</h1>
-        <p className="text-slate-500 dark:text-slate-400 font-medium mb-2">{current.intro}</p>
+        <p className="text-muted font-medium mb-2">{current.intro}</p>
         <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-8">
           Dernière mise à jour : {LAST_UPDATE}
         </p>
 
         {/* Tabs */}
-        <div className="flex flex-wrap gap-2 mb-12 border-b border-slate-100 dark:border-slate-800 pb-4">
+        <div className="flex flex-wrap gap-2 mb-12 border-b border-line pb-4">
           {TABS.map((t) => (
             <Link
               key={t.key}
               to={`/legal/${t.key}`}
               className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
                 page === t.key
-                  ? 'bg-[#7D5CFF] text-white shadow-lg shadow-[#7D5CFF]/20 dark:shadow-none'
-                  : 'bg-slate-50 dark:bg-slate-900 text-slate-500 hover:text-[#7D5CFF]'
+                  ? 'bg-brand text-white shadow-lg shadow-brand/20 dark:shadow-none'
+                  : 'bg-slate-50 dark:bg-slate-900 text-slate-500 hover:text-brand'
               }`}
             >
               {t.label}
@@ -375,15 +375,15 @@ const Legal: React.FC = () => {
         <div className="space-y-10">
           {current.sections.map((s, i) => (
             <section key={i} className="space-y-3">
-              <h2 className="text-lg md:text-xl font-black text-slate-900 dark:text-white">{s.heading}</h2>
-              <div className="text-sm md:text-base text-slate-600 dark:text-slate-300 leading-relaxed font-medium space-y-2">
+              <h2 className="text-lg md:text-xl font-black text-ink">{s.heading}</h2>
+              <div className="text-sm md:text-base text-muted leading-relaxed font-medium space-y-2">
                 {s.body}
               </div>
             </section>
           ))}
         </div>
 
-        <div className="mt-16 p-6 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 text-xs text-slate-500 leading-relaxed">
+        <div className="mt-16 p-6 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-line text-xs text-slate-500 leading-relaxed">
           Ces documents constituent une base de conformité. Les éléments surlignés restent à compléter par
           l'éditeur et il est recommandé de les faire valider par un professionnel du droit avant la mise en ligne
           définitive.

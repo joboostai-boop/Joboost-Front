@@ -3,6 +3,8 @@ import { Routes, Route, useLocation, Navigate, useNavigate } from 'react-router-
 import { useAuth } from './context/AuthContext';
 import { authHeaders, getToken } from './services/authToken';
 import TopNav from './components/TopNav';
+import Sidebar from './components/Sidebar';
+import CommandPalette from './components/CommandPalette';
 import Topbar from './components/Topbar';
 import MobileNav from './components/MobileNav';
 import PageSkeleton from './components/PageSkeleton';
@@ -41,6 +43,18 @@ const BusinessOffers = React.lazy(() => import('./pages/BusinessOffers'));
 const BusinessJobseekers = React.lazy(() => import('./pages/BusinessJobseekers'));
 const BusinessStatsPage = React.lazy(() => import('./pages/BusinessStats'));
 
+// Notifications sobres, alignées sur les surfaces de l'app.
+const TOAST_OPTIONS = {
+  style: {
+    background: 'rgb(var(--c-ink))',
+    color: 'rgb(var(--c-canvas))',
+    fontSize: '14px',
+    borderRadius: '10px',
+    padding: '10px 14px',
+    boxShadow: '0 8px 24px -8px rgb(0 0 0 / 0.3)',
+  },
+};
+
 const App: React.FC = () => {
   const { user, loading: isAppLoading, checkAuth } = useAuth();
   const isAuthenticated = !!user;
@@ -73,7 +87,22 @@ const App: React.FC = () => {
     document.documentElement.classList.toggle('dark', applyDark);
   }, [isDarkMode, isAuthenticated]);
 
-  const toggleDarkMode = () => setIsDarkMode(!isDarkMode);
+  const toggleDarkMode = () => setIsDarkMode((v) => !v);
+
+  // Palette de commandes (Ctrl+K / ⌘K) — espace candidat connecté uniquement.
+  const [paletteOpen, setPaletteOpen] = useState(false);
+  const paletteEnabled = isAuthenticated && !isBusinessPartner && hasCompletedOnboarding;
+  useEffect(() => {
+    if (!paletteEnabled) return;
+    const onKey = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        setPaletteOpen((v) => !v);
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [paletteEnabled]);
 
   const handleOnboardingComplete = async (data: any) => {
     // Persiste les infos d'onboarding sur le profil, puis rafraîchit l'utilisateur.
@@ -144,15 +173,15 @@ const App: React.FC = () => {
   // /api/auth/me, qui peut être lent si le backend Render gratuit s'est endormi (~50s).
   const hasStoredSession = !!getToken();
   if (isAppLoading && hasStoredSession) {
-    return <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex items-center justify-center text-[#7D5CFF]"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#7D5CFF]"></div></div>;
+    return <div className="min-h-screen bg-canvas flex items-center justify-center text-brand"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand"></div></div>;
   }
 
   // Permettre l'accès aux pages d'authentification
   if (!isAuthenticated && location.pathname.startsWith('/auth/')) {
     return (
-      <div className="min-h-screen bg-white dark:bg-slate-950 transition-colors duration-300">
-         <Toaster position="top-right" />
-         <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#7D5CFF]"></div></div>}>
+      <div className="min-h-screen bg-canvas">
+         <Toaster position="top-center" toastOptions={TOAST_OPTIONS} />
+         <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand"></div></div>}>
            <Routes>
               <Route path="/auth/login" element={<Login />} />
               <Route path="/auth/register" element={<Register />} />
@@ -167,9 +196,9 @@ const App: React.FC = () => {
 
   if (!isAuthenticated) {
     return (
-      <div className="min-h-screen bg-white dark:bg-slate-950 selection:bg-[#7D5CFF]/15 selection:text-[#4F46E5] transition-colors duration-300">
-        <Toaster position="top-right" />
-        <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#7D5CFF]"></div></div>}>
+      <div className="min-h-screen bg-canvas">
+        <Toaster position="top-center" toastOptions={TOAST_OPTIONS} />
+        <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand"></div></div>}>
           <Routes>
             <Route path="/" element={<Home onStart={() => navigate('/auth/register')} />} />
             <Route path="/tarifs" element={<PublicPricing />} />
@@ -186,9 +215,9 @@ const App: React.FC = () => {
 
   if (!isBusinessPartner && !hasCompletedOnboarding) {
     return (
-      <div className="min-h-screen bg-slate-50 dark:bg-slate-950 transition-colors duration-300">
-        <Toaster position="top-right" />
-        <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#7D5CFF]"></div></div>}>
+      <div className="min-h-screen bg-canvas">
+        <Toaster position="top-center" toastOptions={TOAST_OPTIONS} />
+        <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand"></div></div>}>
           <Onboarding user={user} onComplete={handleOnboardingComplete} onSkip={handleSkipOnboarding} />
         </Suspense>
       </div>
@@ -196,17 +225,22 @@ const App: React.FC = () => {
   }
 
   return (
-    <div className="app-shell min-h-screen flex flex-col bg-[#F5F4FB] dark:bg-[#030712] text-slate-900 dark:text-slate-100 selection:bg-[#7D5CFF]/15 selection:text-[#4F46E5] transition-colors duration-300">
-      <Toaster position="top-right" />
+    <div className="app-shell min-h-screen flex flex-col bg-canvas text-ink">
+      <Toaster position="top-center" toastOptions={TOAST_OPTIONS} />
 
-      {/* Navigation : dock flottant en haut (desktop) — barre mobile flottante en bas.
-          Le dock est commun candidat/partenaire : il vit hors de `.animate-page`,
-          seul endroit où son `sticky` tient réellement au scroll. */}
-      <TopNav user={user} currentPath={location.pathname} />
-      <Topbar user={user} />
+      {/* Navigation. Candidat : barre latérale fixe (ordinateur) — refonte 09/2026.
+          Partenaire : dock en haut, inchangé. Les deux vivent hors de `.animate-page`,
+          seul endroit où `fixed`/`sticky` tiennent réellement au scroll. */}
+      {isBusinessPartner
+        ? <TopNav user={user} currentPath={location.pathname} />
+        : <Sidebar user={user} isDarkMode={isDarkMode} toggleDarkMode={toggleDarkMode} onOpenSearch={() => setPaletteOpen(true)} />}
+      <Topbar user={user} onOpenSearch={isBusinessPartner ? undefined : () => setPaletteOpen(true)} />
+      {!isBusinessPartner && (
+        <CommandPalette open={paletteOpen} onClose={() => setPaletteOpen(false)} isDarkMode={isDarkMode} toggleDarkMode={toggleDarkMode} />
+      )}
 
       {/* Contenu fluide */}
-      <main className="flex-1 min-w-0 pb-28 md:pb-12">
+      <main className={`flex-1 min-w-0 pb-24 md:pb-12 ${isBusinessPartner ? '' : 'md:pl-[248px]'}`}>
         <div key={location.pathname} className="min-h-full animate-page">
           <Suspense fallback={<PageSkeleton />}>
           <Routes>

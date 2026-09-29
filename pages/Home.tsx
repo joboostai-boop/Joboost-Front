@@ -41,7 +41,7 @@ const FAQItem: React.FC<{ question: string; answer: string }> = ({ question, ans
         className="w-full flex items-center justify-between gap-4 p-5 text-left hover:bg-slate-50 transition-colors"
       >
         <span className="font-semibold text-slate-900 text-sm">{question}</span>
-        <ChevronDown size={18} className={`text-slate-400 shrink-0 transition-transform duration-300 ${isOpen ? 'rotate-180 text-[#7D5CFF]' : ''}`} />
+        <ChevronDown size={18} className={`text-slate-400 shrink-0 transition-transform duration-300 ${isOpen ? 'rotate-180 text-brand' : ''}`} />
       </button>
       <div className={`grid transition-all duration-300 ease-in-out ${isOpen ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'}`}>
         <div className="overflow-hidden">
@@ -77,7 +77,7 @@ const ProductPreview: React.FC = () => {
       {/* En-tête du panneau */}
       <div className="flex items-center justify-between pb-4 border-b border-slate-100">
         <div className="flex items-center gap-2">
-          <span className="w-8 h-8 rounded-lg surface-accent flex items-center justify-center text-[#7D5CFF]">
+          <span className="w-8 h-8 rounded-lg surface-accent flex items-center justify-center text-brand">
             <LineChart size={16} />
           </span>
           <div className="leading-tight">
@@ -149,7 +149,7 @@ const PartnerPreview: React.FC = () => {
     <div className="surface !bg-[#171530] !border-[#2A2748] shadow-card p-4 sm:p-5 w-full max-w-md mx-auto animate-fade-in-up">
       <div className="flex items-center justify-between pb-4 border-b border-white/10">
         <div className="flex items-center gap-2">
-          <span className="w-8 h-8 rounded-lg bg-[#7D5CFF]/15 flex items-center justify-center text-[#B49CFF]">
+          <span className="w-8 h-8 rounded-lg bg-brand/15 flex items-center justify-center text-brand-300">
             <BarChart3 size={16} />
           </span>
           <div className="leading-tight">
@@ -267,7 +267,7 @@ const Home: React.FC<HomeProps> = ({ onStart }) => {
   ];
 
   return (
-    <div className="min-h-screen bg-white text-slate-900 selection:bg-[#7D5CFF]/15 selection:text-[#4F46E5]">
+    <div className="min-h-screen bg-white text-slate-900 selection:bg-brand/15 selection:text-brand-700">
       {/* Header */}
       <nav className={`fixed top-0 left-0 right-0 z-50 bg-white/85 backdrop-blur-md px-5 sm:px-6 py-3.5 transition-shadow duration-200 ${scrolled ? 'border-b border-slate-200 shadow-xs' : 'border-b border-transparent'}`}>
         <div className="max-w-6xl mx-auto flex justify-between items-center">
@@ -276,10 +276,10 @@ const Home: React.FC<HomeProps> = ({ onStart }) => {
           </button>
 
           <div className="flex items-center gap-1.5 sm:gap-3">
-            <Link to="/tarifs" className="hidden sm:block text-slate-500 font-medium text-sm px-3 py-2 hover:text-[#7D5CFF] transition-colors rounded-lg hover:bg-slate-50">
+            <Link to="/tarifs" className="hidden sm:block text-slate-500 font-medium text-sm px-3 py-2 hover:text-brand transition-colors rounded-lg hover:bg-slate-50">
               Tarifs
             </Link>
-            <Link to="/auth/login" className="hidden sm:flex items-center gap-1.5 text-slate-500 font-medium text-sm px-3 py-2 hover:text-[#7D5CFF] transition-colors rounded-lg hover:bg-slate-50">
+            <Link to="/auth/login" className="hidden sm:flex items-center gap-1.5 text-slate-500 font-medium text-sm px-3 py-2 hover:text-brand transition-colors rounded-lg hover:bg-slate-50">
               <Building2 size={15} />
               Espace partenaire
             </Link>
@@ -320,19 +320,19 @@ const Home: React.FC<HomeProps> = ({ onStart }) => {
           {/* Colonne gauche : message */}
           <div className="text-center lg:text-left">
             {/* Slogan exact conservé, mis en valeur en badge au-dessus du titre bénéfice */}
-            <span className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#7D5CFF]/[0.08] border border-[#7D5CFF]/20 text-[#6023C0] text-[13px] font-semibold mb-7 animate-fade-in-up">
+            <span className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-brand/[0.08] border border-brand/20 text-brand-700 text-[13px] font-semibold mb-7 animate-fade-in-up">
               <span className="relative flex h-2 w-2">
-                <span className="absolute inline-flex h-full w-full rounded-full bg-[#7D5CFF] opacity-75 animate-ping" />
-                <span className="relative inline-flex h-2 w-2 rounded-full bg-[#7D5CFF]" />
+                <span className="absolute inline-flex h-full w-full rounded-full bg-brand opacity-75 animate-ping" />
+                <span className="relative inline-flex h-2 w-2 rounded-full bg-brand" />
               </span>
               L'IA au service de votre carrière
             </span>
 
-            <h1 className="font-display font-extrabold text-[#0B0B14] dark:text-white tracking-[-0.035em] leading-[1.0] text-[2.85rem] sm:text-[3.75rem] lg:text-[4.5rem] animate-fade-in-up" style={{ animationDelay: '60ms' }}>
+            <h1 className="font-display font-extrabold text-ink tracking-[-0.035em] leading-[1.0] text-[2.85rem] sm:text-[3.75rem] lg:text-[4.5rem] animate-fade-in-up" style={{ animationDelay: '60ms' }}>
               Décrochez{' '}
-              <span className="relative inline-block text-[#7D5CFF]">
+              <span className="relative inline-block text-brand">
                 plus d'entretiens
-                <svg aria-hidden viewBox="0 0 300 16" className="absolute left-0 -bottom-1 w-full h-3 text-[#7D5CFF]/40" preserveAspectRatio="none">
+                <svg aria-hidden viewBox="0 0 300 16" className="absolute left-0 -bottom-1 w-full h-3 text-brand/40" preserveAspectRatio="none">
                   <path d="M3 11 C 90 3, 210 3, 297 9" fill="none" stroke="currentColor" strokeWidth="5" strokeLinecap="round" />
                 </svg>
               </span>
@@ -344,9 +344,9 @@ const Home: React.FC<HomeProps> = ({ onStart }) => {
             </p>
 
             <div className="mt-9 flex flex-col sm:flex-row gap-3 justify-center lg:justify-start animate-fade-in-up" style={{ animationDelay: '180ms' }}>
-              <button onClick={() => openAuth(true)} className="press btn btn-primary btn-lg group text-base px-7 shadow-[0_10px_28px_-8px_rgba(124,92,255,0.6)]">
+              <button onClick={() => openAuth(true)} className="press btn btn-primary btn-lg group text-base px-7">
                 Commencer gratuitement
-                <ArrowRight size={18} className="group-hover:translate-x-0.5 transition-transform" />
+                <ArrowRight size={18} className=" transition-transform" />
               </button>
               <a href="#features" className="press btn btn-secondary btn-lg text-base">
                 Découvrir les fonctionnalités
@@ -382,7 +382,7 @@ const Home: React.FC<HomeProps> = ({ onStart }) => {
 
             {/* Encart flottant bas-droite (capacité réelle) */}
             <div className="absolute -right-2 sm:-right-6 bottom-12 z-10 hidden sm:flex items-center gap-2.5 rounded-2xl bg-white border border-white/60 shadow-[0_16px_32px_-8px_rgba(76,29,180,0.4)] px-3.5 py-2.5 [transform:rotate(3deg)] animate-fade-in-up" style={{ animationDelay: '460ms' }}>
-              <span className="w-8 h-8 rounded-lg bg-[#7D5CFF]/10 text-[#7D5CFF] flex items-center justify-center shrink-0"><PenLine size={15} /></span>
+              <span className="w-8 h-8 rounded-lg bg-brand/10 text-brand flex items-center justify-center shrink-0"><PenLine size={15} /></span>
               <div className="leading-tight text-left">
                 <p className="text-[12px] font-bold text-slate-900">Lettre sur-mesure</p>
                 <p className="text-[11px] text-slate-400">Adaptée à chaque offre</p>
@@ -399,8 +399,8 @@ const Home: React.FC<HomeProps> = ({ onStart }) => {
           format) pour ne pas dominer un petit écran. */}
       <div className="relative overflow-hidden">
         <div aria-hidden className="pointer-events-none absolute inset-0 z-0">
-          <span className="absolute -top-20 left-[8%] w-72 h-72 sm:w-[30rem] sm:h-[30rem] rounded-full bg-[#7D5CFF]/[0.26] blur-[70px] sm:blur-[85px]" />
-          <span className="absolute top-[38%] -right-24 w-64 h-64 sm:w-[26rem] sm:h-[26rem] rounded-full bg-[#7D5CFF]/[0.22] blur-[70px] sm:blur-[85px]" />
+          <span className="absolute -top-20 left-[8%] w-72 h-72 sm:w-[30rem] sm:h-[30rem] rounded-full bg-brand/[0.26] blur-[70px] sm:blur-[85px]" />
+          <span className="absolute top-[38%] -right-24 w-64 h-64 sm:w-[26rem] sm:h-[26rem] rounded-full bg-brand/[0.22] blur-[70px] sm:blur-[85px]" />
           <span className="absolute bottom-0 left-[5%] w-60 h-60 sm:w-96 sm:h-96 rounded-full bg-emerald-400/[0.18] blur-[65px] sm:blur-[80px]" />
         </div>
 
@@ -411,7 +411,7 @@ const Home: React.FC<HomeProps> = ({ onStart }) => {
             <div className="flex flex-wrap gap-2">
               {capabilities.map((c) => (
                 <span key={c} className="inline-flex items-center gap-1.5 text-sm font-medium text-slate-600 bg-white border border-slate-200 rounded-full px-3 py-1.5">
-                  <Check size={13} className="text-[#7D5CFF]" /> {c}
+                  <Check size={13} className="text-brand" /> {c}
                 </span>
               ))}
             </div>
@@ -424,10 +424,10 @@ const Home: React.FC<HomeProps> = ({ onStart }) => {
         <section className="relative z-10 px-5 sm:px-6 py-20 sm:py-24">
           <div className="max-w-6xl mx-auto">
             <Reveal className="max-w-2xl mx-auto mb-14 text-center">
-              <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#7D5CFF]/[0.08] border border-[#7D5CFF]/20 text-[#6023C0] text-xs font-semibold">
+              <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand/[0.08] border border-brand/20 text-brand-700 text-xs font-semibold">
                 Le parcours
               </span>
-              <h2 className="mt-4 text-3xl sm:text-4xl font-extrabold text-[#0B0B14] dark:text-white tracking-tight">De l'inscription au premier entretien</h2>
+              <h2 className="mt-4 text-3xl sm:text-4xl font-extrabold text-ink tracking-tight">De l'inscription au premier entretien</h2>
               <p className="mt-4 text-lg text-slate-500">Trois étapes, au même endroit — pas cinquante onglets.</p>
             </Reveal>
 
@@ -436,10 +436,10 @@ const Home: React.FC<HomeProps> = ({ onStart }) => {
                 <Reveal as="div" key={s.title} delay={i * 90}>
                   <div className="surface h-full p-7 relative">
                     <span className="absolute top-6 right-6 text-[11px] font-black text-slate-300">0{i + 1}</span>
-                    <span className="w-11 h-11 rounded-xl bg-[#7D5CFF]/10 text-[#7D5CFF] flex items-center justify-center mb-5">
+                    <span className="w-11 h-11 rounded-xl bg-brand/10 text-brand flex items-center justify-center mb-5">
                       {s.icon}
                     </span>
-                    <h3 className="text-lg font-semibold text-[#0B0B14] dark:text-white">{s.title}</h3>
+                    <h3 className="text-lg font-semibold text-ink">{s.title}</h3>
                     <p className="mt-2 text-[15px] text-slate-500 leading-relaxed">{s.desc}</p>
                   </div>
                 </Reveal>
@@ -455,15 +455,15 @@ const Home: React.FC<HomeProps> = ({ onStart }) => {
             dans les posts de la campagne de juillet. */}
         <section className="relative z-10 px-5 sm:px-6 pb-20 sm:pb-24">
           <div className="max-w-6xl mx-auto">
-            <Reveal className="rounded-[2rem] border border-[#7D5CFF]/20 bg-white/70 backdrop-blur-sm p-8 sm:p-12 flex flex-col sm:flex-row items-center gap-8 text-center sm:text-left">
-              <span className="w-16 h-16 rounded-2xl bg-[#7D5CFF]/10 text-[#7D5CFF] flex items-center justify-center shrink-0">
+            <Reveal className="rounded-[2rem] border border-brand/20 bg-white/70 backdrop-blur-sm p-8 sm:p-12 flex flex-col sm:flex-row items-center gap-8 text-center sm:text-left">
+              <span className="w-16 h-16 rounded-2xl bg-brand/10 text-brand flex items-center justify-center shrink-0">
                 <GraduationCap size={30} />
               </span>
               <div className="flex-1">
-                <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#7D5CFF]/[0.08] border border-[#7D5CFF]/20 text-[#6023C0] text-xs font-semibold mb-3">
+                <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand/[0.08] border border-brand/20 text-brand-700 text-xs font-semibold mb-3">
                   Spécial rentrée
                 </span>
-                <h3 className="text-xl sm:text-2xl font-extrabold text-[#0B0B14] dark:text-white tracking-tight">En alternance, la candidature part en un clic. Pour de vrai.</h3>
+                <h3 className="text-xl sm:text-2xl font-extrabold text-ink tracking-tight">En alternance, la candidature part en un clic. Pour de vrai.</h3>
                 <p className="mt-3 text-[15px] sm:text-base text-slate-500 leading-relaxed max-w-2xl">
                   Sur la plupart des offres, aucun outil ne peut postuler à votre place — il faut passer par le site de l'entreprise. L'alternance fait exception : Joboost s'appuie sur La Bonne Alternance, le service public, pour envoyer votre candidature directement au recruteur.
                 </p>
@@ -483,10 +483,10 @@ const Home: React.FC<HomeProps> = ({ onStart }) => {
           dans le header. */}
       <section className="px-5 sm:px-6 py-16 sm:py-20">
         <div className="max-w-6xl mx-auto rounded-[2.25rem] bg-[#141228] px-6 py-14 sm:px-12 sm:py-16 overflow-hidden relative">
-          <span aria-hidden className="pointer-events-none absolute -right-24 -top-24 w-[26rem] h-[26rem] rounded-full bg-[#7D5CFF]/10 blur-[120px]" />
+          <span aria-hidden className="pointer-events-none absolute -right-24 -top-24 w-[26rem] h-[26rem] rounded-full bg-brand/10 blur-[120px]" />
           <div className="relative grid grid-cols-1 lg:grid-cols-[1.02fr_0.98fr] gap-12 lg:gap-12 items-center">
             <div className="text-center lg:text-left">
-              <span className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#7D5CFF]/15 border border-[#7D5CFF]/25 text-[#C7B8FF] text-[13px] font-semibold mb-6">
+              <span className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-brand/15 border border-brand/25 text-[#C7B8FF] text-[13px] font-semibold mb-6">
                 <Building2 size={14} /> Missions locales &amp; structures d'accompagnement
               </span>
 
@@ -501,9 +501,9 @@ const Home: React.FC<HomeProps> = ({ onStart }) => {
               <div className="mt-8 flex flex-col sm:flex-row gap-3 justify-center lg:justify-start">
                 <a
                   href={`mailto:joboost.ai@gmail.com?subject=${encodeURIComponent('Demande de démo — espace partenaire')}`}
-                  className="press btn btn-lg bg-[#7D5CFF] text-white hover:bg-[#6B46F0] border-transparent text-base px-6 group"
+                  className="press btn btn-lg bg-brand text-white hover:bg-[#6B46F0] border-transparent text-base px-6 group"
                 >
-                  Demander une démo <ArrowRight size={18} className="group-hover:translate-x-0.5 transition-transform" />
+                  Demander une démo <ArrowRight size={18} className=" transition-transform" />
                 </a>
                 <Link to="/auth/login" className="press btn btn-lg bg-transparent text-white border-white/20 hover:bg-white/5 text-base">
                   Espace partenaire — connexion
@@ -528,35 +528,35 @@ const Home: React.FC<HomeProps> = ({ onStart }) => {
           fond gris entre les trois. */}
       <div className="relative overflow-hidden">
         <div aria-hidden className="pointer-events-none absolute inset-0 z-0">
-          <span className="absolute -top-16 -left-28 w-72 h-72 sm:w-[28rem] sm:h-[28rem] rounded-full bg-[#7D5CFF]/[0.24] blur-[70px] sm:blur-[85px]" />
+          <span className="absolute -top-16 -left-28 w-72 h-72 sm:w-[28rem] sm:h-[28rem] rounded-full bg-brand/[0.24] blur-[70px] sm:blur-[85px]" />
           <span className="absolute top-[30%] -right-24 w-64 h-64 sm:w-96 sm:h-96 rounded-full bg-blue-400/[0.20] blur-[70px] sm:blur-[85px]" />
-          <span className="absolute top-[58%] left-[12%] w-64 h-64 sm:w-96 sm:h-96 rounded-full bg-[#7D5CFF]/[0.22] blur-[70px] sm:blur-[90px]" />
-          <span className="absolute bottom-0 -right-16 w-60 h-60 sm:w-80 sm:h-80 rounded-full bg-[#7D5CFF]/[0.20] blur-[65px] sm:blur-[85px]" />
+          <span className="absolute top-[58%] left-[12%] w-64 h-64 sm:w-96 sm:h-96 rounded-full bg-brand/[0.22] blur-[70px] sm:blur-[90px]" />
+          <span className="absolute bottom-0 -right-16 w-60 h-60 sm:w-80 sm:h-80 rounded-full bg-brand/[0.20] blur-[65px] sm:blur-[85px]" />
         </div>
 
         {/* Fonctionnalités */}
         <section id="features" className="relative z-10 px-5 sm:px-6 py-24 sm:py-28">
           <div className="max-w-6xl mx-auto">
             <Reveal className="max-w-2xl mx-auto mb-14 text-center">
-              <h2 className="text-3xl sm:text-4xl font-extrabold text-[#0B0B14] dark:text-white tracking-tight">Un outil complet, du CV à l'entretien</h2>
+              <h2 className="text-3xl sm:text-4xl font-extrabold text-ink tracking-tight">Un outil complet, du CV à l'entretien</h2>
               <p className="mt-4 text-lg text-slate-500">Chaque étape de votre recherche, dans une interface claire et structurée.</p>
             </Reveal>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
               {features.map((f, i) => {
                 const tints = [
-                  'bg-[#7D5CFF]/10 text-[#7D5CFF]',
+                  'bg-brand/10 text-brand',
                   'bg-blue-500/10 text-blue-600',
                   'bg-emerald-500/10 text-emerald-600',
                   'bg-amber-500/10 text-amber-600',
                 ];
                 return (
                   <Reveal as="div" key={f.title} delay={i * 70}>
-                    <div className="surface h-full p-7 hover:shadow-card-hover hover:-translate-y-1 transition-all duration-200">
+                    <div className="surface h-full p-7 hover:shadow-card-hover transition-all duration-200">
                       <span className={`w-11 h-11 rounded-xl flex items-center justify-center mb-5 ${tints[i % tints.length]}`}>
                         {f.icon}
                       </span>
-                      <h3 className="text-lg font-semibold text-[#0B0B14] dark:text-white">{f.title}</h3>
+                      <h3 className="text-lg font-semibold text-ink">{f.title}</h3>
                       <p className="mt-2 text-[15px] text-slate-500 leading-relaxed">{f.desc}</p>
                     </div>
                   </Reveal>
@@ -573,7 +573,7 @@ const Home: React.FC<HomeProps> = ({ onStart }) => {
             <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white border border-slate-200 text-slate-500 text-xs font-medium">
               <ShieldCheck size={14} /> Sources
             </span>
-            <h2 className="mt-4 text-2xl sm:text-3xl font-extrabold text-[#0B0B14] dark:text-white tracking-tight">Connecté aux vraies offres, pas à une base figée</h2>
+            <h2 className="mt-4 text-2xl sm:text-3xl font-extrabold text-ink tracking-tight">Connecté aux vraies offres, pas à une base figée</h2>
             <p className="mt-4 text-base sm:text-lg text-slate-500 leading-relaxed">
               Les offres viennent de France Travail, La Bonne Boîte et La Bonne Alternance — les mêmes services publics que vous consulteriez seul, mais centralisés et filtrés pour vous.
             </p>
@@ -590,7 +590,7 @@ const Home: React.FC<HomeProps> = ({ onStart }) => {
             <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white border border-slate-200 text-slate-500 text-xs font-medium">
               <HelpCircle size={14} /> Questions fréquentes
             </span>
-            <h2 className="mt-4 text-3xl sm:text-4xl font-extrabold text-[#0B0B14] dark:text-white tracking-tight">Vous vous demandez peut-être…</h2>
+            <h2 className="mt-4 text-3xl sm:text-4xl font-extrabold text-ink tracking-tight">Vous vous demandez peut-être…</h2>
           </Reveal>
 
           <div className="space-y-3">
@@ -629,7 +629,7 @@ const Home: React.FC<HomeProps> = ({ onStart }) => {
 
       {/* CTA — bande pleine couleur (signature pitch) */}
       <section className="px-5 sm:px-6 py-24 sm:py-28">
-        <Reveal className="max-w-5xl mx-auto rounded-3xl bg-[#7D5CFF] px-6 py-14 sm:px-12 sm:py-20 text-center">
+        <Reveal className="max-w-5xl mx-auto rounded-3xl bg-brand px-6 py-14 sm:px-12 sm:py-20 text-center">
           <h2 className="text-3xl sm:text-5xl font-extrabold text-white tracking-tight leading-[1.1]">
             Prêt à décrocher plus d'entretiens ?
           </h2>
@@ -637,8 +637,8 @@ const Home: React.FC<HomeProps> = ({ onStart }) => {
             Créez votre profil en quelques minutes et générez votre première candidature dès aujourd'hui.
           </p>
           <div className="mt-8 flex flex-col sm:flex-row gap-3 justify-center">
-            <button onClick={() => openAuth(true)} className="press btn btn-lg bg-white text-[#7D5CFF] hover:bg-white/90 border-transparent text-base px-6 group">
-              Commencer gratuitement <ArrowRight size={18} className="group-hover:translate-x-0.5 transition-transform" />
+            <button onClick={() => openAuth(true)} className="press btn btn-lg bg-white text-brand hover:bg-white/90 border-transparent text-base px-6 group">
+              Commencer gratuitement <ArrowRight size={18} className=" transition-transform" />
             </button>
           </div>
           <p className="mt-4 text-sm text-white/70">Essai complet de 7 jours · sans carte bancaire</p>
@@ -660,29 +660,29 @@ const Home: React.FC<HomeProps> = ({ onStart }) => {
           <div className="space-y-3">
             <p className="text-xs font-semibold text-slate-900 uppercase tracking-wider">Produit</p>
             <ul className="space-y-2.5 text-sm text-slate-500">
-              <li><Link to="/auth/register" className="hover:text-[#7D5CFF] transition-colors">CV optimisé ATS</Link></li>
-              <li><Link to="/auth/register" className="hover:text-[#7D5CFF] transition-colors">Lettres de motivation</Link></li>
-              <li><Link to="/auth/register" className="hover:text-[#7D5CFF] transition-colors">Suivi des candidatures</Link></li>
+              <li><Link to="/auth/register" className="hover:text-brand transition-colors">CV optimisé ATS</Link></li>
+              <li><Link to="/auth/register" className="hover:text-brand transition-colors">Lettres de motivation</Link></li>
+              <li><Link to="/auth/register" className="hover:text-brand transition-colors">Suivi des candidatures</Link></li>
             </ul>
           </div>
 
           <div className="space-y-3">
             <p className="text-xs font-semibold text-slate-900 uppercase tracking-wider">Entreprise</p>
             <ul className="space-y-2.5 text-sm text-slate-500">
-              <li><Link to="/legal/mentions" className="hover:text-[#7D5CFF] transition-colors">À propos</Link></li>
-              <li><Link to="/tarifs" className="hover:text-[#7D5CFF] transition-colors">Tarifs</Link></li>
-              <li><a href="#faq" className="hover:text-[#7D5CFF] transition-colors">FAQ</a></li>
-              <li><a href="mailto:joboost.ai@gmail.com" className="hover:text-[#7D5CFF] transition-colors">Contact</a></li>
+              <li><Link to="/legal/mentions" className="hover:text-brand transition-colors">À propos</Link></li>
+              <li><Link to="/tarifs" className="hover:text-brand transition-colors">Tarifs</Link></li>
+              <li><a href="#faq" className="hover:text-brand transition-colors">FAQ</a></li>
+              <li><a href="mailto:joboost.ai@gmail.com" className="hover:text-brand transition-colors">Contact</a></li>
             </ul>
           </div>
 
           <div className="space-y-3">
             <p className="text-xs font-semibold text-slate-900 uppercase tracking-wider">Légal</p>
             <ul className="space-y-2.5 text-sm text-slate-500">
-              <li><Link to="/legal/mentions" className="hover:text-[#7D5CFF] transition-colors">Mentions légales</Link></li>
-              <li><Link to="/legal/confidentialite" className="hover:text-[#7D5CFF] transition-colors">Confidentialité</Link></li>
-              <li><Link to="/legal/cgu" className="hover:text-[#7D5CFF] transition-colors">CGU</Link></li>
-              <li><Link to="/legal/cgv" className="hover:text-[#7D5CFF] transition-colors">CGV</Link></li>
+              <li><Link to="/legal/mentions" className="hover:text-brand transition-colors">Mentions légales</Link></li>
+              <li><Link to="/legal/confidentialite" className="hover:text-brand transition-colors">Confidentialité</Link></li>
+              <li><Link to="/legal/cgu" className="hover:text-brand transition-colors">CGU</Link></li>
+              <li><Link to="/legal/cgv" className="hover:text-brand transition-colors">CGV</Link></li>
             </ul>
           </div>
         </div>
@@ -723,7 +723,7 @@ const Home: React.FC<HomeProps> = ({ onStart }) => {
 
               <div className="space-y-1.5">
                 <label className="text-sm font-medium text-slate-700">Adresse e-mail</label>
-                <input type="email" placeholder="vous@exemple.com" className="w-full px-4 py-3 bg-white border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-[#7D5CFF]/40 focus:border-[#7D5CFF] outline-none transition-all" />
+                <input type="email" placeholder="vous@exemple.com" className="w-full px-4 py-3 bg-white border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-brand/40 focus:border-brand outline-none transition-all" />
               </div>
 
               <button onClick={onStart} className="press btn btn-primary w-full mt-2">
@@ -733,13 +733,13 @@ const Home: React.FC<HomeProps> = ({ onStart }) => {
               {isSignUp && (
                 <p className="text-xs text-slate-400 text-center leading-relaxed mt-3">
                   En créant un compte, vous acceptez les{' '}
-                  <Link to="/legal/cgu" className="font-medium text-[#7D5CFF] hover:underline">conditions générales</Link>
+                  <Link to="/legal/cgu" className="font-medium text-brand hover:underline">conditions générales</Link>
                   {' '}et la{' '}
-                  <Link to="/legal/confidentialite" className="font-medium text-[#7D5CFF] hover:underline">politique de confidentialité</Link>.
+                  <Link to="/legal/confidentialite" className="font-medium text-brand hover:underline">politique de confidentialité</Link>.
                 </p>
               )}
 
-              <button onClick={() => setIsSignUp(!isSignUp)} className="w-full text-sm font-medium text-[#7D5CFF] hover:underline mt-4">
+              <button onClick={() => setIsSignUp(!isSignUp)} className="w-full text-sm font-medium text-brand hover:underline mt-4">
                 {isSignUp ? 'Déjà un compte ? Se connecter' : 'Pas encore de compte ? S\'inscrire'}
               </button>
             </div>

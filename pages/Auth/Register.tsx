@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { Sparkles, User as UserIcon, Building2 } from 'lucide-react';
+import { User as UserIcon, Building2 } from 'lucide-react';
+import AuthShell from './AuthShell';
 
 type Account = 'candidate' | 'business';
 
@@ -63,151 +64,85 @@ const Register = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
-      <div className="max-w-md w-full space-y-8 card-pro p-8 bg-white">
-        
-        <div className="text-center">
-          <Link to="/" className="flex justify-center items-center gap-2 mb-4" aria-label="Retour à l'accueil Joboost">
-            <Sparkles className="w-8 h-8 text-[#7D5CFF]" />
-            <h1 className="text-3xl font-bold bg-gradient-to-r from-[#7D5CFF] to-violet-800 bg-clip-text text-transparent">
-              Joboost
-            </h1>
-          </Link>
-          <h2 className="mt-2 text-2xl font-bold text-gray-900">
-            {isBusiness ? 'Créez votre espace partenaire' : 'Créez votre compte gratuit'}
-          </h2>
-          <p className="mt-2 text-sm text-gray-600">
-            Déjà inscrit ?{' '}
-            <Link to="/auth/login" className="font-medium text-[#7D5CFF] hover:text-violet-700">
-              Connectez-vous ici
-            </Link>
-          </p>
-        </div>
-
-        {/* Choix du type de compte */}
-        <div className="grid grid-cols-2 gap-2 p-1 rounded-xl bg-gray-100">
-          <button
-            type="button"
-            onClick={() => { setAccount('candidate'); setError(''); }}
-            className={`flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-bold transition-colors ${!isBusiness ? 'bg-white text-[#7D5CFF] shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
-          >
-            <UserIcon size={16} /> Candidat
-          </button>
-          <button
-            type="button"
-            onClick={() => { setAccount('business'); setError(''); }}
-            className={`flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-bold transition-colors ${isBusiness ? 'bg-white text-[#7D5CFF] shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
-          >
-            <Building2 size={16} /> Partenaire
-          </button>
-        </div>
-
-        <form className="mt-6 space-y-6" onSubmit={handleSubmit}>
-          {error && (
-             <div className="bg-red-50 text-red-600 p-3 rounded-md text-sm border border-red-100">
-              {error}
-            </div>
-          )}
-
-          <div className="space-y-4">
-            <div>
-              <label htmlFor="name" className="input-label">{isBusiness ? 'Votre nom' : 'Prénom & Nom'}</label>
-              <input
-                id="name"
-                name="name"
-                type="text"
-                required
-                className="input-pro"
-                placeholder="Jean Dupont"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-              />
-            </div>
-            {isBusiness && (
-              <div>
-                <label htmlFor="companyName" className="input-label">Nom de l'organisation</label>
-                <input
-                  id="companyName"
-                  name="companyName"
-                  type="text"
-                  required
-                  className="input-pro"
-                  placeholder="Ex : Mission Locale de Paris"
-                  value={companyName}
-                  onChange={(e) => setCompanyName(e.target.value)}
-                />
-              </div>
-            )}
-            <div>
-              <label htmlFor="email" className="input-label">Email</label>
-              <input
-                id="email"
-                name="email"
-                type="email"
-                required
-                className="input-pro"
-                placeholder="jean.dupont@email.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-              />
-            </div>
-            <div>
-              <label htmlFor="password" className="input-label">Mot de passe</label>
-              <input
-                id="password"
-                name="password"
-                type="password"
-                required
-                minLength={6}
-                autoComplete="new-password"
-                className="input-pro"
-                placeholder="6 caractères minimum"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-              />
-            </div>
-          </div>
-
-          <div className="space-y-3">
-            <label className="flex items-start gap-3 text-xs text-gray-600 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={acceptedTerms}
-                onChange={(e) => setAcceptedTerms(e.target.checked)}
-                className="mt-0.5 w-4 h-4 accent-[#4F46E5] shrink-0"
-              />
-              <span>
-                J'ai lu et j'accepte les{' '}
-                <Link to="/legal/cgu" target="_blank" className="font-medium text-[#7D5CFF] hover:underline">conditions générales</Link>
-                {' '}et la{' '}
-                <Link to="/legal/confidentialite" target="_blank" className="font-medium text-[#7D5CFF] hover:underline">politique de confidentialité</Link>.
-              </span>
-            </label>
-            {!isBusiness && (
-              <label className="flex items-start gap-3 text-xs text-gray-500 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={marketingOptIn}
-                  onChange={(e) => setMarketingOptIn(e.target.checked)}
-                  className="mt-0.5 w-4 h-4 accent-[#4F46E5] shrink-0"
-                />
-                <span>J'accepte de recevoir des conseils et actualités Joboost par e-mail (facultatif, désinscription à tout moment).</span>
-              </label>
-            )}
-          </div>
-
-          <div>
+    <AuthShell
+      title={isBusiness ? 'Créer un espace partenaire' : 'Créer un compte'}
+      subtitle={<>Déjà inscrit ? <Link to="/auth/login" className="font-medium text-brand hover:underline">Se connecter</Link></>}
+    >
+      {/* Choix du type de compte */}
+      <div className="grid grid-cols-2 gap-1 p-1 rounded-[10px] bg-subtle mb-6" role="tablist" aria-label="Type de compte">
+        {([
+          { key: 'candidate', label: 'Candidat', icon: <UserIcon size={15} /> },
+          { key: 'business', label: 'Structure', icon: <Building2 size={15} /> },
+        ] as const).map((o) => {
+          const active = (o.key === 'business') === isBusiness;
+          return (
             <button
-              type="submit"
-              disabled={isLoading || !acceptedTerms}
-              className="btn-primary w-full flex justify-center py-3 disabled:opacity-50 disabled:cursor-not-allowed"
+              key={o.key}
+              type="button"
+              role="tab"
+              aria-selected={active}
+              onClick={() => { setAccount(o.key); setError(''); }}
+              className={`flex items-center justify-center gap-2 h-9 rounded-lg text-sm font-medium transition-colors ${
+                active ? 'bg-surface text-ink shadow-xs' : 'text-muted hover:text-ink'
+              }`}
             >
-              {isLoading ? 'Création...' : isBusiness ? "Créer mon espace partenaire" : "S'inscrire"}
+              {o.icon} {o.label}
             </button>
-          </div>
-        </form>
+          );
+        })}
       </div>
-    </div>
+
+      <form className="space-y-5" onSubmit={handleSubmit}>
+        {error && (
+          <div role="alert" className="rounded-[10px] border border-red-200 dark:border-red-900 bg-red-50 dark:bg-red-950/40 text-red-700 dark:text-red-300 px-3.5 py-2.5 text-sm">
+            {error}
+          </div>
+        )}
+
+        <div>
+          <label htmlFor="name" className="input-label">{isBusiness ? 'Votre nom' : 'Prénom et nom'}</label>
+          <input id="name" name="name" type="text" autoComplete="name" required className="input-pro" value={name} onChange={(e) => setName(e.target.value)} />
+        </div>
+        {isBusiness && (
+          <div>
+            <label htmlFor="companyName" className="input-label">Nom de la structure</label>
+            <input id="companyName" name="companyName" type="text" required className="input-pro" placeholder="Mission Locale de Paris" value={companyName} onChange={(e) => setCompanyName(e.target.value)} />
+          </div>
+        )}
+        <div>
+          <label htmlFor="email" className="input-label">Adresse e-mail</label>
+          <input id="email" name="email" type="email" autoComplete="email" required className="input-pro" placeholder="prenom.nom@email.com" value={email} onChange={(e) => setEmail(e.target.value)} />
+        </div>
+        <div>
+          <label htmlFor="password" className="input-label">Mot de passe</label>
+          <input id="password" name="password" type="password" required minLength={6} autoComplete="new-password" className="input-pro" value={password} onChange={(e) => setPassword(e.target.value)} />
+          <p className="mt-1.5 text-xs text-faint">6 caractères minimum.</p>
+        </div>
+
+        <div className="space-y-3 pt-1">
+          <label className="flex items-start gap-3 text-[13px] text-muted cursor-pointer">
+            <input type="checkbox" checked={acceptedTerms} onChange={(e) => setAcceptedTerms(e.target.checked)} className="mt-0.5 w-4 h-4 accent-brand shrink-0" />
+            <span>
+              J’accepte les{' '}
+              <Link to="/legal/cgu" target="_blank" className="text-ink underline underline-offset-2">conditions générales</Link>
+              {' '}et la{' '}
+              <Link to="/legal/confidentialite" target="_blank" className="text-ink underline underline-offset-2">politique de confidentialité</Link>.
+            </span>
+          </label>
+          {!isBusiness && (
+            <label className="flex items-start gap-3 text-[13px] text-muted cursor-pointer">
+              <input type="checkbox" checked={marketingOptIn} onChange={(e) => setMarketingOptIn(e.target.checked)} className="mt-0.5 w-4 h-4 accent-brand shrink-0" />
+              <span>Recevoir des conseils de recherche d’emploi par e-mail (facultatif).</span>
+            </label>
+          )}
+        </div>
+
+        <button type="submit" disabled={isLoading || !acceptedTerms} className="btn btn-primary btn-lg w-full">
+          {isLoading ? 'Création du compte…' : isBusiness ? 'Créer l’espace partenaire' : 'Créer mon compte'}
+        </button>
+        {!isBusiness && <p className="text-center text-xs text-faint">7 jours d’essai complet, sans carte bancaire.</p>}
+      </form>
+    </AuthShell>
   );
 };
 

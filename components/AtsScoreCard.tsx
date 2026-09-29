@@ -42,11 +42,11 @@ const AtsScoreCard: React.FC<{ result: AtsResult }> = ({ result }) => {
       <div className="flex items-center gap-4">
         <Gauge score={result.score} color={lvl.color} />
         <div className="min-w-0">
-          <div className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-[#9CA3AF]">
+          <div className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-faint">
             <ShieldCheck size={13} /> Score ATS
           </div>
           <p className="text-lg font-bold mt-0.5" style={{ color: lvl.color }}>{lvl.label}</p>
-          <p className="text-xs text-[#6B7280] dark:text-slate-400 leading-relaxed mt-0.5">
+          <p className="text-xs text-muted leading-relaxed mt-0.5">
             Indicateur de lisibilité par les robots de recrutement, basé sur les bonnes pratiques.
           </p>
         </div>
@@ -61,10 +61,10 @@ const AtsScoreCard: React.FC<{ result: AtsResult }> = ({ result }) => {
               {c.ok ? <Check size={11} strokeWidth={3} /> : <AlertCircle size={11} />}
             </span>
             <div className="min-w-0">
-              <p className={`text-[13px] font-semibold ${c.ok ? 'text-[#374151] dark:text-slate-300' : 'text-[#111827] dark:text-white'}`}>
+              <p className={`text-[13px] font-semibold ${c.ok ? 'text-ink' : 'text-ink'}`}>
                 {c.label}
               </p>
-              {!c.ok && c.tip && <p className="text-[12px] text-[#6B7280] dark:text-slate-400 leading-snug">{c.tip}</p>}
+              {!c.ok && c.tip && <p className="text-[12px] text-muted leading-snug">{c.tip}</p>}
             </div>
           </li>
         ))}

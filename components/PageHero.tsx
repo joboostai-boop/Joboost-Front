@@ -18,11 +18,11 @@ import React from 'react';
 type Tone = 'violet' | 'indigo' | 'emerald' | 'amber' | 'slate';
 
 const ACCENT: Record<Tone, string> = {
-  violet: 'bg-[#7D5CFF]/10 text-[#7D5CFF]',
+  violet: 'bg-brand/10 text-brand',
   indigo: 'bg-[#6366F1]/10 text-[#6366F1]',
   emerald: 'bg-[#10B981]/12 text-[#0EA371]',
   amber: 'bg-[#F59E0B]/12 text-[#D97706]',
-  slate: 'bg-slate-500/10 text-slate-600 dark:text-slate-300',
+  slate: 'bg-slate-500/10 text-muted',
 };
 
 export interface PageHeroProps {
@@ -64,16 +64,16 @@ const PageHero: React.FC<PageHeroProps> = ({
         {eyebrow && (
           <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-400 mb-1">{eyebrow}</p>
         )}
-        <h1 className="text-[1.9rem] md:text-[2.4rem] md:leading-[1.04] font-extrabold tracking-[-0.03em] text-[#0B0B14] dark:text-white">
+        <h1 className="text-[1.9rem] md:text-[2.4rem] md:leading-[1.04] font-extrabold tracking-[-0.03em] text-ink">
           {title}
         </h1>
-        {subtitle && <p className="text-slate-500 dark:text-slate-400 text-[15px] mt-1.5 max-w-2xl leading-relaxed">{subtitle}</p>}
+        {subtitle && <p className="text-muted text-[15px] mt-1.5 max-w-2xl leading-relaxed">{subtitle}</p>}
       </div>
       {actions && <div className="flex items-center gap-2 shrink-0">{actions}</div>}
     </div>
 
     {tabs && (
-      <div className="relative z-10 mt-6 flex gap-1 p-1 rounded-xl bg-white dark:bg-[#111827] border border-[#ECEAF6] dark:border-[#1F2937] shadow-xs w-fit max-w-full overflow-x-auto scrollbar-none">
+      <div className="relative z-10 mt-6 flex gap-1 p-1 rounded-xl bg-surface border border-line shadow-xs w-fit max-w-full overflow-x-auto scrollbar-none">
         {tabs}
       </div>
     )}
@@ -85,8 +85,8 @@ const PageHero: React.FC<PageHeroProps> = ({
 export const heroTab = (isActive: boolean) =>
   `press flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold whitespace-nowrap outline-none transition-all shrink-0 ${
     isActive
-      ? 'tab-shine bg-gradient-to-b from-[#8C6DFF] to-[#7D5CFF] text-white shadow-[0_4px_14px_-3px_rgba(124,92,255,0.6)]'
-      : 'text-slate-500 dark:text-slate-400 hover:text-[#7D5CFF] hover:bg-[#F5F4FB] dark:hover:bg-[#1F2937]'
+      ? 'tab-shine bg-brand text-white'
+      : 'text-muted hover:text-brand hover:bg-subtle'
   }`;
 
 export default PageHero;

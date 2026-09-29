@@ -214,17 +214,17 @@ const LetterGenerator: React.FC = () => {
 
       {letters.length > 0 && (
          <section className="space-y-3">
-             <h3 className="text-xs font-bold uppercase tracking-widest text-[#6B7280]">Vos lettres sauvegardées</h3>
+             <h3 className="text-xs font-bold uppercase tracking-widest text-muted">Vos lettres sauvegardées</h3>
              <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-none">
                {letters.map(letter => (
-                 <div key={letter.id} onClick={() => loadLetter(letter)} className={`press shrink-0 cursor-pointer p-4 rounded-xl w-52 transition-all duration-200 hover:shadow-card-hover hover:-translate-y-0.5 hover:border-[#7D5CFF]/30 ${currentLetterId === letter.id ? 'surface-accent ring-1 ring-[#7D5CFF]/40' : 'surface'}`}>
+                 <div key={letter.id} onClick={() => loadLetter(letter)} className={`press shrink-0 cursor-pointer p-4 rounded-xl w-52 transition-all duration-200 hover:shadow-card-hover hover:border-brand/30 ${currentLetterId === letter.id ? 'surface-accent ring-1 ring-brand/40' : 'surface'}`}>
                    <div className="flex items-start gap-2.5">
-                     <span className={`w-8 h-8 rounded-lg grid place-items-center shrink-0 ${currentLetterId === letter.id ? 'bg-gradient-to-b from-[#8C6DFF] to-[#7D5CFF] text-white shadow-[0_2px_8px_rgba(125,92,255,0.35)]' : 'bg-[#7D5CFF]/10 text-[#7D5CFF]'}`}>
+                     <span className={`w-8 h-8 rounded-lg grid place-items-center shrink-0 ${currentLetterId === letter.id ? 'bg-brand text-white' : 'bg-brand/10 text-brand'}`}>
                        <PenLine size={14} />
                      </span>
                      <div className="min-w-0">
-                       <p className="text-sm font-semibold text-[#111827] dark:text-white truncate">{letter.title}</p>
-                       <p className="text-[10px] text-[#9CA3AF] flex items-center gap-1 mt-1"><Clock size={10} /> {new Date(letter.updatedAt).toLocaleDateString()}</p>
+                       <p className="text-sm font-semibold text-ink truncate">{letter.title}</p>
+                       <p className="text-[10px] text-faint flex items-center gap-1 mt-1"><Clock size={10} /> {new Date(letter.updatedAt).toLocaleDateString()}</p>
                      </div>
                    </div>
                  </div>
@@ -239,19 +239,19 @@ const LetterGenerator: React.FC = () => {
           <div className="surface p-5 md:p-6 space-y-6">
             {/* En-tête de l'atelier */}
             <div className="flex items-center gap-3">
-              <span className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#8C6DFF] to-[#6D28D9] text-white grid place-items-center shadow-[0_4px_14px_rgba(125,92,255,0.35)]">
+              <span className="w-10 h-10 rounded-xl bg-brand text-white grid place-items-center">
                 <Wand2 size={19} />
               </span>
               <div>
-                <h2 className="text-base font-bold text-[#111827] dark:text-white leading-tight">Composer ma lettre</h2>
-                <p className="text-xs text-[#9CA3AF]">Ciblée sur l'offre, écrite depuis ton profil.</p>
+                <h2 className="text-base font-bold text-ink leading-tight">Composer ma lettre</h2>
+                <p className="text-xs text-faint">Ciblée sur l'offre, écrite depuis ton profil.</p>
               </div>
             </div>
 
             {/* Étape 1 — badge numéroté violet */}
             <div className="flex items-center gap-2.5">
-              <span className="w-6 h-6 rounded-full bg-gradient-to-b from-[#8C6DFF] to-[#7D5CFF] text-white text-[11px] font-black grid place-items-center shadow-[0_2px_8px_rgba(125,92,255,0.35)]">1</span>
-              <h3 className="text-sm font-bold text-[#111827] dark:text-white">Informations de l'offre</h3>
+              <span className="w-6 h-6 rounded-full bg-brand text-white text-[11px] font-black grid place-items-center">1</span>
+              <h3 className="text-sm font-bold text-ink">Informations de l'offre</h3>
             </div>
             <div className="space-y-4">
               <div>
@@ -266,8 +266,8 @@ const LetterGenerator: React.FC = () => {
 
             {/* Étape 2 */}
             <div className="flex items-center gap-2.5 pt-1">
-              <span className="w-6 h-6 rounded-full bg-gradient-to-b from-[#8C6DFF] to-[#7D5CFF] text-white text-[11px] font-black grid place-items-center shadow-[0_2px_8px_rgba(125,92,255,0.35)]">2</span>
-              <h3 className="text-sm font-bold text-[#111827] dark:text-white">Contexte de personnalisation</h3>
+              <span className="w-6 h-6 rounded-full bg-brand text-white text-[11px] font-black grid place-items-center">2</span>
+              <h3 className="text-sm font-bold text-ink">Contexte de personnalisation</h3>
             </div>
             <div className="grid grid-cols-3 gap-2">
               {([
@@ -281,18 +281,18 @@ const LetterGenerator: React.FC = () => {
                   aria-pressed={mode === m.key}
                   className={`press relative flex flex-col items-center justify-center gap-1 px-2 py-3 rounded-xl border-2 transition-all outline-none ${
                     mode === m.key
-                      ? 'border-[#7D5CFF] bg-[#7D5CFF]/[0.06] dark:bg-[#7D5CFF]/10 text-[#7D5CFF] shadow-[0_4px_14px_-4px_rgba(125,92,255,0.4)]'
-                      : 'border-[#E5E7EB] dark:border-[#1F2937] text-[#6B7280] hover:border-[#7D5CFF]/35 hover:text-[#7D5CFF] hover:bg-[#F5F4FB] dark:hover:bg-[#1F2937]'
+                      ? 'border-brand bg-brand/[0.06] dark:bg-brand/10 text-brand'
+                      : 'border-[#E5E7EB] text-muted hover:border-brand/35 hover:text-brand hover:bg-subtle'
                   }`}
                 >
                   {mode === m.key && (
-                    <span className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-[#7D5CFF] text-white grid place-items-center">
+                    <span className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-brand text-white grid place-items-center">
                       <Check size={10} strokeWidth={3.5} />
                     </span>
                   )}
                   {m.icon}
                   <span className="text-[10px] font-bold leading-tight text-center">{m.label}</span>
-                  <span className={`text-[9px] leading-none ${mode === m.key ? 'text-[#7D5CFF]/70' : 'text-[#9CA3AF]'}`}>{m.hint}</span>
+                  <span className={`text-[9px] leading-none ${mode === m.key ? 'text-brand/70' : 'text-faint'}`}>{m.hint}</span>
                 </button>
               ))}
             </div>
@@ -308,14 +308,14 @@ const LetterGenerator: React.FC = () => {
               <div className="space-y-1.5 animate-fade-in">
                 <label className="input-label">Lien de l'offre (URL)</label>
                 <input type="text" value={offerUrl} onChange={(e) => setOfferUrl(e.target.value)} className="input-pro" placeholder="https://entreprise.com/carrieres/..." />
-                <p className="text-[10px] text-[#9CA3AF] leading-relaxed">On tente de lire automatiquement la page. Les grands sites (LinkedIn, Indeed) bloquent souvent l'accès : si c'est le cas, copiez-collez le texte de l'offre via l'onglet « Texte de l'offre » pour une lettre mieux ciblée.</p>
+                <p className="text-[10px] text-faint leading-relaxed">On tente de lire automatiquement la page. Les grands sites (LinkedIn, Indeed) bloquent souvent l'accès : si c'est le cas, copiez-collez le texte de l'offre via l'onglet « Texte de l'offre » pour une lettre mieux ciblée.</p>
               </div>
             )}
 
             {/* Étape 3 — ton de la lettre (le réglage existait, il n'était juste pas exposé) */}
             <div className="flex items-center gap-2.5 pt-1">
-              <span className="w-6 h-6 rounded-full bg-gradient-to-b from-[#8C6DFF] to-[#7D5CFF] text-white text-[11px] font-black grid place-items-center shadow-[0_2px_8px_rgba(125,92,255,0.35)]">3</span>
-              <h3 className="text-sm font-bold text-[#111827] dark:text-white">Ton de la lettre</h3>
+              <span className="w-6 h-6 rounded-full bg-brand text-white text-[11px] font-black grid place-items-center">3</span>
+              <h3 className="text-sm font-bold text-ink">Ton de la lettre</h3>
             </div>
             <div className="flex flex-wrap gap-1.5">
               {TONES.map((t) => (
@@ -326,8 +326,8 @@ const LetterGenerator: React.FC = () => {
                   title={t.hint}
                   className={`press px-3 py-1.5 rounded-full text-xs font-bold border transition-all outline-none ${
                     tone === t.id
-                      ? 'bg-gradient-to-b from-[#8C6DFF] to-[#7D5CFF] text-white border-[#5B21B6]/40 shadow-[0_2px_10px_rgba(125,92,255,0.35)]'
-                      : 'bg-white dark:bg-[#111827] text-[#6B7280] dark:text-slate-400 border-[#E5E7EB] dark:border-[#1F2937] hover:border-[#7D5CFF]/35 hover:text-[#7D5CFF]'
+                      ? 'bg-brand text-white border-brand-800/40'
+                      : 'bg-surface text-muted border-[#E5E7EB] hover:border-brand/35 hover:text-brand'
                   }`}
                 >
                   {t.label}
@@ -346,7 +346,7 @@ const LetterGenerator: React.FC = () => {
         <div className="lg:col-span-8 space-y-4">
           {/* Barre d'outils : bascule Aperçu/Éditer + actions document réunies */}
           <div className="surface p-2.5 flex flex-wrap items-center gap-2">
-            <div className="flex gap-1 p-1 rounded-xl bg-[#F5F4FB] dark:bg-[#0B1220] border border-[#ECEAF6] dark:border-[#1F2937]">
+            <div className="flex gap-1 p-1 rounded-xl bg-subtle dark:bg-[#0B1220] border border-line">
               {([
                 { key: 'apercu' as const, icon: <Eye size={14} />, label: 'Aperçu' },
                 { key: 'editer' as const, icon: <Edit3 size={14} />, label: 'Éditer' },
@@ -357,8 +357,8 @@ const LetterGenerator: React.FC = () => {
                   aria-pressed={view === v.key}
                   className={`press flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all outline-none ${
                     view === v.key
-                      ? 'bg-white dark:bg-[#111827] text-[#7D5CFF] shadow-xs'
-                      : 'text-[#6B7280] dark:text-slate-400 hover:text-[#7D5CFF]'
+                      ? 'bg-surface text-brand shadow-xs'
+                      : 'text-muted hover:text-brand'
                   }`}
                 >
                   {v.icon} {v.label}
@@ -376,7 +376,7 @@ const LetterGenerator: React.FC = () => {
               <button onClick={handleExportPDF} disabled={exporting || !hasLetter} className="press btn btn-primary !min-h-[38px] disabled:opacity-40">
                 {exporting ? <RefreshCw size={14} className="animate-spin" /> : <FileDown size={14} />} PDF
               </button>
-              <button onClick={handleExportDocx} disabled={exporting || !hasLetter} className="press btn btn-secondary !min-h-[38px] text-[#7D5CFF] disabled:opacity-40">
+              <button onClick={handleExportDocx} disabled={exporting || !hasLetter} className="press btn btn-secondary !min-h-[38px] text-brand disabled:opacity-40">
                 {exporting ? <RefreshCw size={14} className="animate-spin" /> : <FileDown size={14} />} Word
               </button>
             </div>
@@ -386,7 +386,7 @@ const LetterGenerator: React.FC = () => {
               parcours (CV adapté à la même offre) au lieu de laisser l'utilisateur
               deviner quoi faire. */}
           {hasLetter && jobTitle && company && (
-            <div className="relative overflow-hidden rounded-2xl p-4 bg-gradient-to-r from-[#8C6DFF] to-[#6D28D9] text-white flex flex-col sm:flex-row sm:items-center gap-3 animate-fade-in">
+            <div className="relative overflow-hidden rounded-2xl p-4 bg-brand text-white flex flex-col sm:flex-row sm:items-center gap-3 animate-fade-in">
               <span
                 aria-hidden
                 className="pointer-events-none absolute inset-0 opacity-[0.12]"
@@ -401,7 +401,7 @@ const LetterGenerator: React.FC = () => {
               </div>
               <button
                 onClick={() => navigate('/prepare/cv', { state: { jobTitle, company, targetContext: (mode === 'text' && offerText) ? offerText : `Poste visé : ${jobTitle} chez ${company}` } })}
-                className="press relative shrink-0 inline-flex items-center justify-center gap-2 bg-white text-[#6D28D9] font-semibold text-xs rounded-xl px-4 py-2.5 hover:gap-2.5 transition-all shadow-[0_4px_14px_rgba(0,0,0,0.15)]"
+                className="press relative shrink-0 inline-flex items-center justify-center gap-2 bg-white text-brand-700 font-semibold text-xs rounded-xl px-4 py-2.5 hover:gap-2.5 transition-all shadow-[0_4px_14px_rgba(0,0,0,0.15)]"
               >
                 <FileText size={14} /> Adapter mon CV <ArrowRight size={14} />
               </button>
@@ -426,11 +426,11 @@ const LetterGenerator: React.FC = () => {
                 onChange={(e) => setGeneratedText(e.target.value)}
                 placeholder="Génère ta lettre avec l'IA à gauche, ou écris-la directement ici."
               />
-              <p className="text-[11px] text-[#9CA3AF] mt-2 text-right">Tes retouches apparaissent aussitôt dans l'Aperçu.</p>
+              <p className="text-[11px] text-faint mt-2 text-right">Tes retouches apparaissent aussitôt dans l'Aperçu.</p>
             </div>
           ) : hasLetter ? (
             /* Mode aperçu : le document posé sur un « bureau » teinté */
-            <div className="animate-fade-in rounded-2xl p-4 md:p-8 bg-gradient-to-b from-[#EEEBFA] to-[#E4E0F5] dark:from-[#0B1220] dark:to-[#030712] border border-[#E2DEF2] dark:border-[#1F2937]">
+            <div className="animate-fade-in rounded-2xl p-4 md:p-8 bg-gradient-to-b from-[#EEEBFA] to-[#E4E0F5] dark:from-[#0B1220] dark:to-[#030712] border border-[#E2DEF2]">
               <div id="letter-preview" className="rounded-xl overflow-hidden shadow-pop ring-1 ring-slate-200 dark:ring-slate-700 max-w-[800px] mx-auto">
                 <SelectedLetterPreview data={previewData} />
               </div>
@@ -439,15 +439,15 @@ const LetterGenerator: React.FC = () => {
             /* État vide : guide vers le rail de composition */
             <div className="surface p-10 md:p-14 flex flex-col items-center text-center gap-3 animate-fade-in">
               <span className="relative">
-                <span aria-hidden className="pointer-events-none absolute inset-0 m-auto w-16 h-16 rounded-full bg-[#7D5CFF]/20 blur-2xl" />
-                <span className="relative w-14 h-14 rounded-2xl bg-gradient-to-br from-[#8C6DFF] to-[#6D28D9] text-white grid place-items-center shadow-[0_6px_20px_rgba(125,92,255,0.35)]">
+                <span aria-hidden className="pointer-events-none absolute inset-0 m-auto w-16 h-16 rounded-full bg-brand/20 blur-2xl" />
+                <span className="relative w-14 h-14 rounded-2xl bg-brand text-white grid place-items-center">
                   <Wand2 size={24} />
                 </span>
               </span>
-              <h3 className="text-base font-bold text-[#111827] dark:text-white mt-1">Ta lettre apparaîtra ici</h3>
-              <p className="text-sm text-[#6B7280] dark:text-slate-400 max-w-sm leading-relaxed">
+              <h3 className="text-base font-bold text-ink mt-1">Ta lettre apparaîtra ici</h3>
+              <p className="text-sm text-muted max-w-sm leading-relaxed">
                 Renseigne le poste et l'entreprise dans le panneau de gauche, choisis ton contexte et ton ton, puis clique sur
-                <span className="font-semibold text-[#7D5CFF]"> « Rédiger la lettre magique »</span>. Tu pourras la retoucher, changer de modèle et l'exporter en PDF ou Word.
+                <span className="font-semibold text-brand"> « Rédiger la lettre magique »</span>. Tu pourras la retoucher, changer de modèle et l'exporter en PDF ou Word.
               </p>
             </div>
           )}

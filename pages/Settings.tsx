@@ -112,10 +112,10 @@ const compressLogo = (file: File): Promise<string> =>
 /* Carte de section réutilisable */
 const Card: React.FC<{ title: string; icon: React.ReactNode; children: React.ReactNode; desc?: string }> = ({ title, icon, children, desc }) => (
   <section className="card-pro !p-0 overflow-hidden">
-    <div className="px-5 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center gap-3">
-      <span className="w-8 h-8 rounded-lg bg-[#F3F0FF] text-[#7D5CFF] dark:bg-[#7D5CFF]/10 flex items-center justify-center">{icon}</span>
+    <div className="px-5 py-4 border-b border-line flex items-center gap-3">
+      <span className="w-8 h-8 rounded-lg bg-brand-50 text-brand dark:bg-brand/10 flex items-center justify-center">{icon}</span>
       <div>
-        <h3 className="text-sm font-bold text-[#111827] dark:text-white">{title}</h3>
+        <h3 className="text-sm font-bold text-ink">{title}</h3>
         {desc && <p className="text-xs text-slate-400">{desc}</p>}
       </div>
     </div>
@@ -137,7 +137,7 @@ const Row: React.FC<{ children: React.ReactNode; onClick?: () => void; href?: st
 };
 
 const Toggle: React.FC<{ on: boolean; onChange: () => void }> = ({ on, onChange }) => (
-  <button onClick={onChange} className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors shrink-0 ${on ? 'bg-[#7D5CFF]' : 'bg-slate-200 dark:bg-slate-700'}`}>
+  <button onClick={onChange} className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors shrink-0 ${on ? 'bg-brand' : 'bg-slate-200 dark:bg-slate-700'}`}>
     <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${on ? 'translate-x-6' : 'translate-x-1'}`} />
   </button>
 );
@@ -366,12 +366,12 @@ const Settings: React.FC<SettingsProps> = ({ user, isDarkMode, toggleDarkMode })
                       onClick={() => logoInputRef.current?.click()}
                       disabled={uploadingLogo}
                       title={companyLogo ? 'Changer le logo' : 'Ajouter le logo de votre organisation'}
-                      className="group relative w-14 h-14 rounded-2xl shrink-0 bg-white dark:bg-[#111827] border border-[#ECEAF6] dark:border-[#1F2937] shadow-sm overflow-hidden flex items-center justify-center transition-transform hover:scale-[1.03] outline-none"
+                      className="group relative w-14 h-14 rounded-2xl shrink-0 bg-surface border border-line shadow-sm overflow-hidden flex items-center justify-center transition-transform hover:scale-[1.03] outline-none"
                     >
                       {companyLogo ? (
                         <img src={companyLogo} alt={companyName || 'Logo'} className="w-full h-full object-contain p-1.5" />
                       ) : (
-                        <span className="w-full h-full flex items-center justify-center bg-[#7D5CFF]/10 text-[#7D5CFF]">
+                        <span className="w-full h-full flex items-center justify-center bg-brand/10 text-brand">
                           <Building2 size={20} />
                         </span>
                       )}
@@ -383,7 +383,7 @@ const Settings: React.FC<SettingsProps> = ({ user, isDarkMode, toggleDarkMode })
                       <button
                         onClick={() => logoInputRef.current?.click()}
                         disabled={uploadingLogo}
-                        className="text-sm font-semibold text-[#7D5CFF] hover:underline disabled:opacity-40"
+                        className="text-sm font-semibold text-brand hover:underline disabled:opacity-40"
                       >
                         {companyLogo ? 'Changer le logo' : 'Ajouter un logo'}
                       </button>
@@ -422,12 +422,12 @@ const Settings: React.FC<SettingsProps> = ({ user, isDarkMode, toggleDarkMode })
             <Row onClick={() => setShowPwd(true)}>
               <div className="flex items-center gap-3">
                 <KeyRound size={18} className="text-slate-400" />
-                <span className="text-sm font-semibold text-[#111827] dark:text-white">Mot de passe</span>
+                <span className="text-sm font-semibold text-ink">Mot de passe</span>
               </div>
-              <span className="text-sm font-semibold text-[#7D5CFF]">Modifier</span>
+              <span className="text-sm font-semibold text-brand">Modifier</span>
             </Row>
             <Row onClick={() => navigate('/prepare/profile')}>
-              <span className="text-sm text-slate-600 dark:text-slate-300">Mon profil & préférences de recherche</span>
+              <span className="text-sm text-muted">Mon profil & préférences de recherche</span>
               <ChevronRight size={18} className="text-slate-300 shrink-0" />
             </Row>
           </Card>
@@ -436,15 +436,15 @@ const Settings: React.FC<SettingsProps> = ({ user, isDarkMode, toggleDarkMode })
           <Card title="Notifications" icon={<Bell size={16} />}>
             <Row>
               <div>
-                <p className="text-sm font-semibold text-[#111827] dark:text-white">Alertes emploi par email</p>
+                <p className="text-sm font-semibold text-ink">Alertes emploi par email</p>
                 <p className="text-xs text-slate-400">Reçois par email une sélection d'offres qui correspondent à ton profil</p>
               </div>
               <Toggle on={jobAlert.optIn} onChange={() => saveJobAlert({ ...jobAlert, optIn: !jobAlert.optIn })} />
             </Row>
             {jobAlert.optIn && (
-              <div className="px-5 py-4 border-t border-slate-100 dark:border-slate-800">
+              <div className="px-5 py-4 border-t border-line">
                 <p className="text-xs font-semibold text-slate-500 mb-2">Fréquence</p>
-                <div className="inline-flex rounded-lg bg-slate-100 dark:bg-slate-800 p-1">
+                <div className="inline-flex rounded-lg bg-subtle p-1">
                   {([['daily', 'Quotidienne'], ['weekly', 'Hebdomadaire']] as const).map(([val, label]) => (
                     <button
                       key={val}
@@ -452,7 +452,7 @@ const Settings: React.FC<SettingsProps> = ({ user, isDarkMode, toggleDarkMode })
                       onClick={() => jobAlert.frequency !== val && saveJobAlert({ ...jobAlert, frequency: val })}
                       className={`px-3 py-1.5 rounded-md text-sm font-semibold transition-colors disabled:opacity-60 ${
                         jobAlert.frequency === val
-                          ? 'bg-white dark:bg-slate-700 text-[#7D5CFF] shadow-sm'
+                          ? 'bg-white dark:bg-slate-700 text-brand shadow-sm'
                           : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
                       }`}
                     >
@@ -471,7 +471,7 @@ const Settings: React.FC<SettingsProps> = ({ user, isDarkMode, toggleDarkMode })
           <Card title="Apparence" icon={isDarkMode ? <Moon size={16} /> : <Sun size={16} />}>
             <Row>
               <div>
-                <p className="text-sm font-semibold text-[#111827] dark:text-white">Mode sombre</p>
+                <p className="text-sm font-semibold text-ink">Mode sombre</p>
                 <p className="text-xs text-slate-400">Confort visuel en faible luminosité</p>
               </div>
               <Toggle on={isDarkMode} onChange={toggleDarkMode} />
@@ -484,7 +484,7 @@ const Settings: React.FC<SettingsProps> = ({ user, isDarkMode, toggleDarkMode })
               <div className="flex items-center gap-3">
                 <span className="w-9 h-9 rounded-lg bg-[#0A66C2] text-white flex items-center justify-center"><Linkedin size={18} /></span>
                 <div>
-                  <p className="text-sm font-semibold text-[#111827] dark:text-white">LinkedIn</p>
+                  <p className="text-sm font-semibold text-ink">LinkedIn</p>
                   <p className="text-xs text-slate-400">Connecte ton compte pour récupérer ta photo et ton identité</p>
                 </div>
               </div>
@@ -494,9 +494,9 @@ const Settings: React.FC<SettingsProps> = ({ user, isDarkMode, toggleDarkMode })
             </Row>
             <Row>
               <div className="flex items-center gap-3">
-                <span className="w-9 h-9 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-500 flex items-center justify-center"><Calendar size={18} /></span>
+                <span className="w-9 h-9 rounded-lg bg-subtle text-slate-500 flex items-center justify-center"><Calendar size={18} /></span>
                 <div>
-                  <p className="text-sm font-semibold text-[#111827] dark:text-white">Google Calendar</p>
+                  <p className="text-sm font-semibold text-ink">Google Calendar</p>
                   <p className="text-xs text-slate-400">Planifier tes entretiens</p>
                 </div>
               </div>
@@ -508,7 +508,7 @@ const Settings: React.FC<SettingsProps> = ({ user, isDarkMode, toggleDarkMode })
           <Card title="Abonnement" icon={<Crown size={16} />}>
             <Row onClick={() => navigate('/pricing')}>
               <div>
-                <p className="text-sm font-semibold text-[#111827] dark:text-white">{planLabel}</p>
+                <p className="text-sm font-semibold text-ink">{planLabel}</p>
                 <p className="text-xs text-slate-400">Voir les forfaits et gérer mon abonnement</p>
               </div>
               <ChevronRight size={18} className="text-slate-300 shrink-0" />
@@ -519,13 +519,13 @@ const Settings: React.FC<SettingsProps> = ({ user, isDarkMode, toggleDarkMode })
           <Card title="Aide & support" icon={<LifeBuoy size={16} />}>
             <Row href={`mailto:${SUPPORT_EMAIL}`}>
               <div className="flex items-center gap-3 min-w-0">
-                <span className="w-9 h-9 rounded-lg bg-[#7D5CFF]/10 text-[#7D5CFF] flex items-center justify-center shrink-0"><Mail size={18} /></span>
+                <span className="w-9 h-9 rounded-lg bg-brand/10 text-brand flex items-center justify-center shrink-0"><Mail size={18} /></span>
                 <div className="min-w-0">
-                  <p className="text-sm font-semibold text-[#111827] dark:text-white">Contacter le support</p>
+                  <p className="text-sm font-semibold text-ink">Contacter le support</p>
                   <p className="text-xs text-slate-400 truncate">Une question, un souci ? On répond à {SUPPORT_EMAIL}</p>
                 </div>
               </div>
-              <ChevronRight size={18} className="text-slate-300 shrink-0 group-hover:text-[#7D5CFF] transition-colors" />
+              <ChevronRight size={18} className="text-slate-300 shrink-0 group-hover:text-brand transition-colors" />
             </Row>
           </Card>
 
@@ -533,7 +533,7 @@ const Settings: React.FC<SettingsProps> = ({ user, isDarkMode, toggleDarkMode })
           <Card title="Confidentialité & données" icon={<Download size={16} />}>
             <Row onClick={handleExportData}>
               <div>
-                <p className="text-sm font-semibold text-[#111827] dark:text-white">Exporter mes données</p>
+                <p className="text-sm font-semibold text-ink">Exporter mes données</p>
                 <p className="text-xs text-slate-400">Télécharge tout ton compte au format JSON (RGPD)</p>
               </div>
               <ChevronRight size={18} className="text-slate-300 shrink-0" />
@@ -566,11 +566,11 @@ const Settings: React.FC<SettingsProps> = ({ user, isDarkMode, toggleDarkMode })
       {/* Modal mot de passe */}
       {showPwd && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4">
-          <div className="bg-white dark:bg-[#111827] w-full max-w-md p-6 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 space-y-4">
+          <div className="bg-surface w-full max-w-md p-6 rounded-2xl shadow-2xl border border-line space-y-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <span className="w-10 h-10 rounded-xl bg-[#F3F0FF] text-[#7D5CFF] flex items-center justify-center"><KeyRound size={20} /></span>
-                <h2 className="text-lg font-bold text-[#111827] dark:text-white">Changer mon mot de passe</h2>
+                <span className="w-10 h-10 rounded-xl bg-brand-50 text-brand flex items-center justify-center"><KeyRound size={20} /></span>
+                <h2 className="text-lg font-bold text-ink">Changer mon mot de passe</h2>
               </div>
               <button onClick={() => setShowPwd(false)} className="text-slate-400 hover:text-slate-600"><X size={20} /></button>
             </div>
@@ -597,11 +597,11 @@ const Settings: React.FC<SettingsProps> = ({ user, isDarkMode, toggleDarkMode })
       {/* Modal suppression */}
       {showDelete && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4">
-          <div className="bg-white dark:bg-[#111827] w-full max-w-md p-6 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 space-y-5">
+          <div className="bg-surface w-full max-w-md p-6 rounded-2xl shadow-2xl border border-line space-y-5">
             <div className="flex items-start justify-between">
               <div className="flex items-center gap-3">
                 <span className="w-10 h-10 rounded-xl bg-red-50 dark:bg-red-900/20 text-red-600 flex items-center justify-center"><ShieldAlert size={20} /></span>
-                <h2 className="text-lg font-bold text-[#111827] dark:text-white">Supprimer ton compte ?</h2>
+                <h2 className="text-lg font-bold text-ink">Supprimer ton compte ?</h2>
               </div>
               <button onClick={() => setShowDelete(false)} className="text-slate-400 hover:text-slate-600"><X size={20} /></button>
             </div>

@@ -128,7 +128,7 @@ const BusinessDashboard: React.FC = () => {
            partenaire, rien d'autre : la palette reste celle de Joboost, sur le
            même violet que la carte « prochaine étape » de l'Accueil candidat. ── */}
       {account?.logoUrl && (
-        <div className="relative overflow-hidden rounded-2xl p-5 md:p-6 text-white bg-gradient-to-br from-[#9B7BFF] via-[#7D5CFF] to-[#6D28D9] shadow-card">
+        <div className="relative overflow-hidden rounded-2xl p-5 md:p-6 text-white bg-brand shadow-card">
           {/* Halo décoratif clair */}
           <div
             aria-hidden
@@ -160,15 +160,15 @@ const BusinessDashboard: React.FC = () => {
 
       {/* ── Checklist de démarrage (tant que tout n'est pas fait) ── */}
       {!checklist.complete && (
-        <div className="card-pro border-l-[3px] border-l-[#7D5CFF]">
+        <div className="card-pro border-l-[3px] border-l-brand">
           <div className="flex items-center gap-2 mb-3">
-            <Sparkles size={16} className="text-[#7D5CFF]" />
-            <h3 className="text-sm font-bold text-slate-900 dark:text-white">Bien démarrer</h3>
-            <span className="ml-auto text-xs font-bold text-[#7D5CFF]">{checklist.doneCount}/{checklist.steps.length}</span>
+            <Sparkles size={16} className="text-brand" />
+            <h3 className="text-sm font-bold text-ink">Bien démarrer</h3>
+            <span className="ml-auto text-xs font-bold text-brand">{checklist.doneCount}/{checklist.steps.length}</span>
           </div>
-          <div className="h-1.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden mb-4">
+          <div className="h-1.5 bg-subtle rounded-full overflow-hidden mb-4">
             <div
-              className="h-full bg-[#7D5CFF] rounded-full transition-all duration-500"
+              className="h-full bg-brand rounded-full transition-all duration-500"
               style={{ width: `${(checklist.doneCount / checklist.steps.length) * 100}%` }}
             />
           </div>
@@ -181,7 +181,7 @@ const BusinessDashboard: React.FC = () => {
                 className={`flex items-center gap-2.5 p-2.5 rounded-xl text-left text-sm transition-colors ${
                   step.done
                     ? 'text-slate-400 cursor-default'
-                    : 'text-slate-700 dark:text-slate-200 hover:bg-[#7D5CFF]/5 dark:hover:bg-[#7D5CFF]/10 font-medium'
+                    : 'text-slate-700 dark:text-slate-200 hover:bg-brand/5 dark:hover:bg-brand/10 font-medium'
                 }`}
               >
                 {step.done
@@ -213,8 +213,8 @@ const BusinessDashboard: React.FC = () => {
           {/* Activité du vivier */}
           <div className="card-pro">
             <div className="flex items-center gap-2 mb-4">
-              <TrendingUp size={16} className="text-[#7D5CFF]" />
-              <h3 className="text-sm font-bold text-slate-900 dark:text-white">Activité du vivier</h3>
+              <TrendingUp size={16} className="text-brand" />
+              <h3 className="text-sm font-bold text-ink">Activité du vivier</h3>
               <span className="text-[10px] text-slate-400 font-medium ml-auto uppercase">30 derniers jours</span>
             </div>
             {hasActivity ? (
@@ -242,7 +242,7 @@ const BusinessDashboard: React.FC = () => {
               <div className="h-[160px] flex flex-col items-center justify-center text-center px-4">
                 <BarChart3 size={32} className="text-slate-200 dark:text-slate-700 mb-2" />
                 <p className="text-sm text-slate-500">Aucune entrée dans le vivier ces 30 derniers jours.</p>
-                <Link to="/business/jobseekers?new=1" className="text-xs font-bold text-[#7D5CFF] hover:underline mt-1">
+                <Link to="/business/jobseekers?new=1" className="text-xs font-bold text-brand hover:underline mt-1">
                   Ajouter un candidat →
                 </Link>
               </div>
@@ -252,10 +252,10 @@ const BusinessDashboard: React.FC = () => {
           {/* Derniers candidats */}
           <div className="card-pro">
             <div className="flex items-center gap-2 mb-3">
-              <Users size={16} className="text-[#7D5CFF]" />
-              <h3 className="text-sm font-bold text-slate-900 dark:text-white">Derniers candidats ajoutés</h3>
+              <Users size={16} className="text-brand" />
+              <h3 className="text-sm font-bold text-ink">Derniers candidats ajoutés</h3>
               {vivierTotal > 0 && (
-                <Link to="/business/jobseekers" className="ml-auto text-xs font-bold text-[#7D5CFF] hover:underline flex items-center gap-1">
+                <Link to="/business/jobseekers" className="ml-auto text-xs font-bold text-brand hover:underline flex items-center gap-1">
                   Tout le vivier ({vivierTotal}) <ArrowRight size={12} />
                 </Link>
               )}
@@ -275,22 +275,22 @@ const BusinessDashboard: React.FC = () => {
                       onClick={() => navigate(`/business/jobseekers?open=${js.id}`)}
                       className="w-full flex items-center gap-3 px-2 py-2.5 text-left hover:bg-slate-50 dark:hover:bg-slate-800/50 rounded-lg transition-colors group"
                     >
-                      <div className="w-9 h-9 rounded-full bg-[#EFEBFF] dark:bg-[#7D5CFF]/15 text-[#5B3FD6] dark:text-[#B9A7FF] flex items-center justify-center text-xs font-bold shrink-0">
+                      <div className="w-9 h-9 rounded-full bg-[#EFEBFF] dark:bg-brand/15 text-brand-700 dark:text-brand-300 flex items-center justify-center text-xs font-bold shrink-0">
                         {(js.name || '?').charAt(0).toUpperCase()}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-semibold text-slate-900 dark:text-white truncate">{js.name}</p>
+                        <p className="text-sm font-semibold text-ink truncate">{js.name}</p>
                         <p className="text-xs text-slate-500 truncate">{js.title || js.city || '—'}</p>
                       </div>
                       <div className="hidden sm:flex flex-wrap gap-1 max-w-[180px] justify-end">
                         {(js.skills || []).slice(0, 2).map((s) => (
-                          <span key={s} className="text-[10px] px-1.5 py-0.5 rounded bg-[#7D5CFF]/10 text-[#7D5CFF] font-medium">{s}</span>
+                          <span key={s} className="text-[10px] px-1.5 py-0.5 rounded bg-brand/10 text-brand font-medium">{s}</span>
                         ))}
                       </div>
                       <span className="text-[11px] text-slate-400 shrink-0 hidden md:block">
                         {new Date(js.affiliatedAt).toLocaleDateString('fr-FR')}
                       </span>
-                      <ChevronRight size={15} className="text-slate-300 group-hover:text-[#7D5CFF] transition-colors shrink-0" />
+                      <ChevronRight size={15} className="text-slate-300 group-hover:text-brand transition-colors shrink-0" />
                     </button>
                   </li>
                 ))}
@@ -304,7 +304,7 @@ const BusinessDashboard: React.FC = () => {
 
           {/* Actions rapides */}
           <div className="card-pro">
-            <h3 className="text-sm font-bold text-slate-900 dark:text-white mb-3">Actions rapides</h3>
+            <h3 className="text-sm font-bold text-ink mb-3">Actions rapides</h3>
             <div className="space-y-2">
               <QuickAction icon={<Plus size={16} />} label="Nouvelle offre d'emploi" onClick={() => navigate('/business/offers?new=1')} primary />
               <QuickAction icon={<UserPlus size={16} />} label="Ajouter un candidat" onClick={() => navigate('/business/jobseekers?new=1')} />
@@ -315,7 +315,7 @@ const BusinessDashboard: React.FC = () => {
 
           {/* À surveiller */}
           <div className="card-pro">
-            <h3 className="text-sm font-bold text-slate-900 dark:text-white mb-3">À surveiller</h3>
+            <h3 className="text-sm font-bold text-ink mb-3">À surveiller</h3>
             {attention.drafts.length === 0 && attention.expired.length === 0 &&
              attention.expiringSoon.length === 0 && attention.noSkills.length === 0 ? (
               <div className="flex items-center gap-2.5 text-sm text-slate-500 py-2">
@@ -373,7 +373,7 @@ const BusinessDashboard: React.FC = () => {
 // --- Carte KPI (même registre corporate que la page Statistiques) ---
 type KpiTone = 'violet' | 'emerald' | 'blue' | 'amber';
 const KPI_TONES: Record<KpiTone, { border: string; chip: string }> = {
-  violet:  { border: 'border-l-[#7D5CFF]',  chip: 'bg-[#7D5CFF]/15 text-[#7D5CFF] dark:text-[#B9A7FF]' },
+  violet:  { border: 'border-l-brand',  chip: 'bg-brand/15 text-brand dark:text-brand-300' },
   emerald: { border: 'border-l-emerald-500', chip: 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400' },
   blue:    { border: 'border-l-blue-500',    chip: 'bg-blue-500/15 text-blue-600 dark:text-blue-400' },
   amber:   { border: 'border-l-amber-500',   chip: 'bg-amber-500/15 text-amber-600 dark:text-amber-400' },
@@ -382,7 +382,7 @@ const KPI_TONES: Record<KpiTone, { border: string; chip: string }> = {
 const KpiCard: React.FC<{ icon: React.ReactNode; label: string; value: number | string; tone: KpiTone; delta?: number | null }> = ({ icon, label, value, tone, delta }) => {
   const t = KPI_TONES[tone];
   return (
-    <div className={`bg-white dark:bg-[#111827] border border-slate-200 dark:border-slate-800 border-l-[3px] ${t.border} rounded-lg p-4 hover:shadow-sm dark:hover:border-slate-700 transition-all`}>
+    <div className={`bg-surface border border-line border-l-[3px] ${t.border} rounded-lg p-4 hover:shadow-sm dark:hover:border-slate-700 transition-all`}>
       <div className="flex items-center justify-between mb-3">
         <div className={`w-9 h-9 rounded-lg flex items-center justify-center ${t.chip}`}>{icon}</div>
         {delta !== undefined && delta !== null && (
@@ -392,7 +392,7 @@ const KpiCard: React.FC<{ icon: React.ReactNode; label: string; value: number | 
           </span>
         )}
       </div>
-      <p className="font-extrabold text-slate-900 dark:text-white leading-none tracking-tight" style={{ fontSize: 'clamp(1.4rem, 3.5vw, 2rem)' }}>{value}</p>
+      <p className="font-extrabold text-ink leading-none tracking-tight" style={{ fontSize: 'clamp(1.4rem, 3.5vw, 2rem)' }}>{value}</p>
       <p className="text-[11px] font-semibold text-slate-500 mt-2 uppercase tracking-wider">{label}</p>
     </div>
   );
@@ -403,8 +403,8 @@ const QuickAction: React.FC<{ icon: React.ReactNode; label: string; onClick: () 
     onClick={onClick}
     className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm font-semibold transition-colors min-h-[44px] ${
       primary
-        ? 'bg-[#7D5CFF] text-white hover:bg-[#6B4AE8] shadow-[0_2px_10px_-2px_rgba(124,92,255,0.5)]'
-        : 'bg-slate-50 dark:bg-slate-800/60 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800'
+        ? 'bg-brand text-white hover:bg-[#6B4AE8]'
+        : 'bg-subtle/60 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800'
     }`}
   >
     {icon}
@@ -415,8 +415,8 @@ const QuickAction: React.FC<{ icon: React.ReactNode; label: string; onClick: () 
 
 const WATCH_TONES: Record<string, string> = {
   amber: 'bg-amber-500/10 text-amber-600 dark:text-amber-400',
-  slate: 'bg-slate-500/10 text-slate-500 dark:text-slate-400',
-  violet: 'bg-[#7D5CFF]/10 text-[#7D5CFF] dark:text-[#B9A7FF]',
+  slate: 'bg-slate-500/10 text-muted',
+  violet: 'bg-brand/10 text-brand dark:text-brand-300',
 };
 
 const WatchItem: React.FC<{ icon: React.ReactNode; tone: string; label: string; hint: string; onClick: () => void }> = ({ icon, tone, label, hint, onClick }) => (
@@ -429,7 +429,7 @@ const WatchItem: React.FC<{ icon: React.ReactNode; tone: string; label: string; 
       <span className="block text-sm font-semibold text-slate-800 dark:text-slate-100 leading-snug">{label}</span>
       <span className="block text-[11px] text-slate-400 mt-0.5 leading-snug">{hint}</span>
     </span>
-    <ChevronRight size={14} className="text-slate-300 group-hover:text-[#7D5CFF] transition-colors shrink-0 mt-1.5" />
+    <ChevronRight size={14} className="text-slate-300 group-hover:text-brand transition-colors shrink-0 mt-1.5" />
   </button>
 );
 

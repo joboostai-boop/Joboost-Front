@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
-import { Printer, FileDown, Wand2, RefreshCw, Layout, Save, Clock, Loader2, Plus, Trash2, X, Files, Target, Camera, ImageOff, Sparkles } from 'lucide-react';
+import { Printer, FileDown, Wand2, FileText, RefreshCw, Layout, Save, Clock, Loader2, Plus, Trash2, X, Files, Target, Camera, ImageOff } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { generateCVSummary, detailExperience } from '../services/gemini';
 // Import dynamique au clic (les libs PDF/Word sont lourdes — ~1,8 Mo — on ne les charge
@@ -12,7 +12,6 @@ import { CV_TEMPLATES, getCvTemplate } from '../services/cvTemplates';
 import { computeAtsScore } from '../services/atsScore';
 import AtsScoreCard from '../components/AtsScoreCard';
 import CvExamplesModal from '../components/CvExamplesModal';
-import Tilt from '../components/Tilt';
 import Collapsible, { CountBadge } from '../components/Collapsible';
 import ActionMenu from '../components/ActionMenu';
 import AiLoadingOverlay from '../components/AiLoadingOverlay';
@@ -65,9 +64,9 @@ const SkillsEditor: React.FC<{ value: string[]; onChange: (v: string[]) => void 
       {value.length > 0 && (
         <div className="flex flex-wrap gap-2">
           {value.map((v) => (
-            <span key={v} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#F3F0FF] text-[#7D5CFF] text-sm font-semibold dark:bg-[#7D5CFF]/10">
+            <span key={v} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-brand-50 text-brand text-sm font-semibold dark:bg-brand/10">
               {v}
-              <button type="button" onClick={() => onChange(value.filter((x) => x !== v))} className="hover:text-[#6023C0]"><X size={13} /></button>
+              <button type="button" onClick={() => onChange(value.filter((x) => x !== v))} className="hover:text-brand-700"><X size={13} /></button>
             </span>
           ))}
         </div>
@@ -216,7 +215,7 @@ const CVGenerator: React.FC = () => {
   // enchaîne résumé + détail de chaque expérience (celles qui ont un intitulé mais
   // encore une note brute, pour ne jamais écraser un paragraphe déjà rédigé), puis
   // amène l'œil sur l'aperçu. Avant ce bouton, produire un CV complet demandait de
-  // cliquer « Aider à rédiger » puis « Détailler avec l'IA » section par section —
+  // cliquer « Aider à rédiger » puis « Détailler » section par section —
   // rien ne correspondait à la promesse « l'IA le rédige en une minute ».
   const handleGenerateFullCV = async () => {
     if (!formData.title.trim()) {
@@ -256,9 +255,9 @@ const CVGenerator: React.FC = () => {
       // Un échec ponctuel de l'IA (modèle saturé, réseau) ne doit jamais se déguiser en
       // succès : sinon la personne croit son CV prêt alors que rien n'a été généré.
       if (!summaryOk && detailedCount === 0) {
-        toast.error("L'IA est momentanément indisponible. Réessaie dans une minute.");
+        toast.error("La rédaction est momentanément indisponible. Réessaie dans une minute.");
       } else {
-        toast.success('CV généré ! Relis et ajuste ce qui doit l\'être.');
+        toast.success('CV prêt. Relis-le et ajuste ce qui doit l\'être.');
       }
       document.getElementById('cv-preview')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     } catch {
@@ -274,7 +273,7 @@ const CVGenerator: React.FC = () => {
       const summary = await generateCVSummary(formData.title, formData.skills, formData.experiences, target?.context);
       if (summary) {
         setFormData({ ...formData, summary });
-        toast.success("Résumé généré avec succès !");
+        toast.success("Résumé rédigé.");
       }
     } catch (error) { toast.error("Erreur lors de la génération."); }
     finally { setLoadingSummary(false); }
@@ -294,10 +293,10 @@ const CVGenerator: React.FC = () => {
       });
       if (txt) {
         updExperience(exp.id, { desc: txt });
-        toast.success("Expérience détaillée par l'IA — relis et ajuste si besoin.");
+        toast.success("Expérience détaillée. Relis et ajuste si besoin.");
       }
     } catch (error: any) {
-      toast.error(error?.message || "Erreur de l'IA.");
+      toast.error(error?.message || "La rédaction a échoué, réessaie.");
     } finally { setAiExpId(null); }
   };
 
@@ -319,7 +318,7 @@ const CVGenerator: React.FC = () => {
       });
       const data = await res.json();
       if(data.success) {
-         toast.success("CV sauvegardé !");
+         toast.success("CV enregistré");
          setCurrentCvId(data.cv.id);
          const cvRes = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/cvs`, { credentials: 'include', headers: { ...authHeaders() } });
          const cvData = await cvRes.json();
@@ -368,7 +367,7 @@ const CVGenerator: React.FC = () => {
     try {
       const { exportCvPdf } = await import('../services/atsExport');
       await exportCvPdf(exportData());
-      toast.success("CV PDF (ATS) téléchargé !");
+      toast.success("CV téléchargé en PDF");
     } catch (e) {
       console.error(e);
       toast.error("Erreur lors de l'export PDF.");
@@ -380,7 +379,7 @@ const CVGenerator: React.FC = () => {
     try {
       const { exportCvDocx } = await import('../services/atsExport');
       await exportCvDocx(exportData());
-      toast.success("CV Word (.docx) téléchargé !");
+      toast.success("CV téléchargé en Word");
     } catch (e) {
       console.error(e);
       toast.error("Erreur lors de l'export Word.");
@@ -425,30 +424,30 @@ const CVGenerator: React.FC = () => {
           type="button"
           onClick={handleGenerateFullCV}
           disabled={globalGenerating}
-          className="press w-full flex items-center justify-center gap-2.5 rounded-2xl px-6 py-4 bg-gradient-to-br from-[#9B7BFF] via-[#7D5CFF] to-[#6D28D9] text-white font-bold text-base shadow-card hover:shadow-card-hover hover:-translate-y-0.5 transition-all disabled:opacity-70 disabled:translate-y-0"
+          className="press w-full flex items-center justify-center gap-2.5 rounded-2xl px-6 py-4 bg-brand text-white font-bold text-base shadow-card hover:shadow-card-hover transition-all disabled:opacity-70 disabled:translate-y-0"
         >
-          {globalGenerating ? <Loader2 size={20} className="animate-spin" /> : <Sparkles size={20} />}
+          {globalGenerating ? <Loader2 size={20} className="animate-spin" /> : <FileText size={20} />}
           {globalGenerating ? 'Génération en cours…' : 'Générer mon CV'}
         </button>
 
         {target && (
-          <div className="surface-accent rounded-xl p-3.5 flex items-start gap-3 ring-1 ring-[#7D5CFF]/20">
-            <span className="w-9 h-9 rounded-lg bg-[#7D5CFF]/10 text-[#7D5CFF] flex items-center justify-center shrink-0"><Target size={18} /></span>
+          <div className="surface-accent rounded-xl p-3.5 flex items-start gap-3 ring-1 ring-brand/20">
+            <span className="w-9 h-9 rounded-lg bg-brand/10 text-brand flex items-center justify-center shrink-0"><Target size={18} /></span>
             <div className="min-w-0 flex-1">
-              <p className="text-sm font-semibold text-[#111827] dark:text-white">
+              <p className="text-sm font-semibold text-ink">
                 CV ciblé pour cette offre{target.jobTitle ? ` : ${target.jobTitle}` : ''}{target.company ? ` — ${target.company}` : ''}
               </p>
-              <p className="text-xs text-[#6B7280] dark:text-slate-400 mt-0.5">
-                « Aider à rédiger » et « Détailler avec l'IA » reprendront les mots-clés de l'offre, sans rien inventer.
+              <p className="text-xs text-muted mt-0.5">
+                « Aider à rédiger » et « Détailler » reprendront les mots-clés de l'offre, sans rien inventer.
               </p>
             </div>
-            <button onClick={() => setTarget(null)} aria-label="Retirer le ciblage de l'offre" className="press text-slate-400 hover:text-[#7D5CFF] shrink-0">
+            <button onClick={() => setTarget(null)} aria-label="Retirer le ciblage de l'offre" className="press text-slate-400 hover:text-brand shrink-0">
               <X size={16} />
             </button>
           </div>
         )}
         <header className="flex flex-col md:flex-row justify-between md:items-center gap-4">
-          <p className="text-sm text-[#6B7280] dark:text-slate-400 flex items-center gap-1.5">
+          <p className="text-sm text-muted flex items-center gap-1.5">
             <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-500" />
             Modifie chaque section ici — l'aperçu et l'export se mettent à jour en direct.
           </p>
@@ -465,12 +464,12 @@ const CVGenerator: React.FC = () => {
 
         {cvs.length > 0 && (
            <section className="space-y-3">
-               <h3 className="text-xs font-semibold uppercase tracking-wider text-[#9CA3AF]">Vos CV sauvegardés</h3>
+               <h3 className="text-xs font-semibold uppercase tracking-wider text-faint">Vos CV sauvegardés</h3>
                <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-none">
                  {cvs.map(cv => (
-                   <div key={cv.id} onClick={() => loadCv(cv)} className={`press shrink-0 cursor-pointer p-4 rounded-xl w-48 transition-all duration-200 hover:shadow-card-hover hover:-translate-y-0.5 ${currentCvId === cv.id ? 'surface-accent ring-1 ring-[#7D5CFF]/40' : 'surface'}`}>
-                     <p className="text-sm font-semibold text-[#111827] dark:text-white truncate">{cv.title}</p>
-                     <p className="text-[10px] text-[#9CA3AF] flex items-center gap-1 mt-1"><Clock size={10} /> {new Date(cv.updatedAt).toLocaleDateString()}</p>
+                   <div key={cv.id} onClick={() => loadCv(cv)} className={`press shrink-0 cursor-pointer p-4 rounded-xl w-48 transition-all duration-200 hover:shadow-card-hover ${currentCvId === cv.id ? 'surface-accent ring-1 ring-brand/40' : 'surface'}`}>
+                     <p className="text-sm font-semibold text-ink truncate">{cv.title}</p>
+                     <p className="text-[10px] text-faint flex items-center gap-1 mt-1"><Clock size={10} /> {new Date(cv.updatedAt).toLocaleDateString()}</p>
                    </div>
                  ))}
                </div>
@@ -490,7 +489,7 @@ const CVGenerator: React.FC = () => {
         <Collapsible defaultOpen step={1} title="Coordonnées & résumé" bodyClassName="px-4 md:px-5 pb-5 space-y-5">
           {/* Photo (optionnelle) — n'apparaît que sur les modèles « avec photo ». */}
           <div className="flex items-center gap-4">
-            <div className="w-16 h-16 rounded-full overflow-hidden shrink-0 flex items-center justify-center bg-[#F3F0FF] dark:bg-[#7D5CFF]/10 text-[#7D5CFF] ring-1 ring-[#7D5CFF]/20">
+            <div className="w-16 h-16 rounded-full overflow-hidden shrink-0 flex items-center justify-center bg-brand-50 dark:bg-brand/10 text-brand ring-1 ring-brand/20">
               {formData.photoUrl
                 ? <img src={formData.photoUrl} alt="Photo du CV" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                 : <Camera size={22} />}
@@ -506,7 +505,7 @@ const CVGenerator: React.FC = () => {
                   </button>
                 )}
               </div>
-              <p className="text-[11px] text-[#9CA3AF] mt-1.5 leading-snug">
+              <p className="text-[11px] text-faint mt-1.5 leading-snug">
                 Optionnel. Visible uniquement sur les modèles « avec photo ». Astuce : un CV sans photo passe mieux les filtres automatiques (ATS).
               </p>
             </div>
@@ -539,7 +538,7 @@ const CVGenerator: React.FC = () => {
           <div>
             <div className="flex justify-between items-center mb-1.5">
               <label className="input-label mb-0">Résumé du profil</label>
-              <button onClick={handleGenerateSummary} disabled={globalGenerating} className="text-[#7D5CFF] text-xs font-semibold flex items-center gap-1 hover:underline outline-none disabled:opacity-50">
+              <button onClick={handleGenerateSummary} disabled={globalGenerating} className="text-brand text-xs font-semibold flex items-center gap-1 hover:underline outline-none disabled:opacity-50">
                 {loadingSummary ? <RefreshCw className="animate-spin" size={12} /> : <Wand2 size={12} />}
                 Aider à rédiger
               </button>
@@ -556,7 +555,7 @@ const CVGenerator: React.FC = () => {
         {/* Expériences */}
         <Collapsible step={3} title="Expériences" badge={<CountBadge n={formData.experiences.length} />} bodyClassName="px-4 md:px-5 pb-5 space-y-4">
           {formData.experiences.map((exp) => (
-            <div key={exp.id} className="rounded-2xl border border-slate-200 dark:border-slate-700 p-4 space-y-3">
+            <div key={exp.id} className="rounded-2xl border border-line p-4 space-y-3">
               <div className="flex justify-between items-center">
                 <span className="text-xs font-bold uppercase tracking-wider text-slate-400">Expérience</span>
                 <button onClick={() => delExperience(exp.id)} className="text-slate-400 hover:text-red-500" aria-label="Supprimer l'expérience"><Trash2 size={16} /></button>
@@ -569,11 +568,11 @@ const CVGenerator: React.FC = () => {
               <div className="flex justify-between items-center">
                 <span className="text-xs font-semibold text-slate-500">Missions & résultats</span>
                 <button type="button" onClick={() => handleDetailExperience(exp)} disabled={aiExpId === exp.id || globalGenerating}
-                  className="flex items-center gap-1 text-[#7D5CFF] text-xs font-bold hover:underline disabled:opacity-50">
-                  {aiExpId === exp.id ? <RefreshCw className="animate-spin" size={13} /> : <Wand2 size={13} />} Détailler avec l'IA
+                  className="flex items-center gap-1 text-brand text-xs font-bold hover:underline disabled:opacity-50">
+                  {aiExpId === exp.id ? <RefreshCw className="animate-spin" size={13} /> : <Wand2 size={13} />} Détailler
                 </button>
               </div>
-              <textarea className="textarea-pro !min-h-[80px]" value={exp.desc} onChange={(e) => updExperience(exp.id, { desc: e.target.value })} placeholder="Décris en quelques mots, puis clique « Détailler avec l'IA » — ex : accueil clients, gestion des stocks…" />
+              <textarea className="textarea-pro !min-h-[80px]" value={exp.desc} onChange={(e) => updExperience(exp.id, { desc: e.target.value })} placeholder="Décris en quelques mots, puis clique « Détailler » — ex : accueil clients, gestion des stocks…" />
             </div>
           ))}
           <button onClick={addExperience} className="press btn btn-secondary w-full"><Plus size={16} /> Ajouter une expérience</button>
@@ -582,7 +581,7 @@ const CVGenerator: React.FC = () => {
         {/* Formations */}
         <Collapsible step={4} title="Formations" badge={<CountBadge n={formData.education.length} />} bodyClassName="px-4 md:px-5 pb-5 space-y-4">
           {formData.education.map((ed) => (
-            <div key={ed.id} className="rounded-2xl border border-slate-200 dark:border-slate-700 p-4 space-y-3">
+            <div key={ed.id} className="rounded-2xl border border-line p-4 space-y-3">
               <div className="flex justify-between items-center">
                 <span className="text-xs font-bold uppercase tracking-wider text-slate-400">Formation</span>
                 <button onClick={() => delEducation(ed.id)} className="text-slate-400 hover:text-red-500" aria-label="Supprimer la formation"><Trash2 size={16} /></button>
@@ -604,23 +603,19 @@ const CVGenerator: React.FC = () => {
           <button onClick={handleExportPDF} disabled={exporting} className="press btn btn-primary flex-1 disabled:opacity-60">
             {exporting ? <Loader2 size={16} className="animate-spin" /> : <FileDown size={16} />} PDF ATS
           </button>
-          <button onClick={handleExportDocx} disabled={exporting} className="press btn btn-secondary flex-1 text-[#7D5CFF] disabled:opacity-60">
+          <button onClick={handleExportDocx} disabled={exporting} className="press btn btn-secondary flex-1 text-brand disabled:opacity-60">
             {exporting ? <Loader2 size={16} className="animate-spin" /> : <FileDown size={16} />} Word .docx
           </button>
         </div>
 
         {/* Score ATS indicatif (calculé en direct depuis le contenu édité) */}
-        <Tilt max={6} glare>
           <AtsScoreCard result={atsResult} />
-        </Tilt>
-
+        
         {/* Aperçu du modèle sélectionné (grand format) */}
-        <Tilt max={4}>
         <div id="cv-preview" className="rounded-xl overflow-hidden shadow-pop ring-1 ring-slate-200 dark:ring-slate-700">
           <SelectedPreview data={formData} />
         </div>
-        </Tilt>
-      </div>
+              </div>
 
       <CvExamplesModal open={showExamples} onClose={() => setShowExamples(false)} onPick={loadExample} />
     </div>

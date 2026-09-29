@@ -53,22 +53,22 @@ const TopNav: React.FC<TopNavProps> = ({ user, currentPath }) => {
   }, [isBusiness]);
 
   return (
-    <header className="hidden md:block sticky top-0 z-40 px-6 pt-4 pb-2 bg-[#F5F4FB]/70 dark:bg-[#030712]/70 backdrop-blur-md">
-      <div className="max-w-6xl mx-auto h-16 rounded-2xl bg-white/90 dark:bg-[#111827]/90 backdrop-blur border border-[#ECEAF6] dark:border-[#1F2937] shadow-card px-3 flex items-center justify-between gap-3">
+    <header className="hidden md:block sticky top-0 z-40 px-6 pt-4 pb-2 bg-subtle/70 dark:bg-canvas/70 backdrop-blur-md">
+      <div className="max-w-6xl mx-auto h-16 rounded-2xl bg-white/90 dark:bg-surface/90 backdrop-blur border border-line shadow-card px-3 flex items-center justify-between gap-3">
         {/* Marque — badge « Espace recruteur » pour bien distinguer le portail business */}
         <div className="flex items-center gap-2.5 shrink-0">
           <Link to={homeLink} className="flex items-center pl-1" aria-label="Accueil Joboost">
             <Logo variant="full" className="h-7" />
           </Link>
           {isBusiness && (
-            <span className="hidden lg:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#7D5CFF]/10 border border-[#7D5CFF]/20 text-[#6023C0] dark:text-[#A78BFA] text-[11px] font-bold">
+            <span className="hidden lg:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-brand/10 border border-brand/20 text-brand-700 dark:text-brand-300 text-[11px] font-bold">
               <Building2 size={12} /> Espace partenaire
             </span>
           )}
         </div>
 
         {/* Navigation centrale — segmented control en pilules */}
-        <nav className="flex items-center gap-1 rounded-xl bg-[#F5F4FB] dark:bg-[#0B1120] p-1">
+        <nav className="flex items-center gap-1 rounded-xl bg-subtle p-1">
           {items.map((item) => {
             const active = isItemActive(currentPath, item.path);
             return (
@@ -78,8 +78,8 @@ const TopNav: React.FC<TopNavProps> = ({ user, currentPath }) => {
                 title={item.name}
                 className={`press relative flex items-center gap-2 rounded-lg px-3 lg:px-4 py-2 text-sm font-semibold transition-all duration-150 outline-none
                   ${active
-                    ? 'bg-gradient-to-b from-[#8C6DFF] to-[#7D5CFF] text-white shadow-[0_4px_14px_-3px_rgba(124,92,255,0.6)]'
-                    : 'text-slate-500 dark:text-slate-400 hover:text-[#7D5CFF] hover:bg-white dark:hover:bg-[#1F2937]'}`}
+                    ? 'bg-brand text-white'
+                    : 'text-muted hover:text-brand hover:bg-white dark:hover:bg-subtle'}`}
               >
                 <span className="flex items-center justify-center w-[18px] h-[18px] shrink-0">{item.icon}</span>
                 <span className="hidden lg:inline whitespace-nowrap">{item.name}</span>
@@ -100,17 +100,17 @@ const TopNav: React.FC<TopNavProps> = ({ user, currentPath }) => {
               onClick={() => setMenuOpen((v) => !v)}
               aria-haspopup="menu"
               aria-expanded={menuOpen}
-              className="press flex items-center gap-1.5 rounded-full pl-1 pr-2 py-1 hover:bg-[#F5F4FB] dark:hover:bg-[#1F2937] transition-colors outline-none"
+              className="press flex items-center gap-1.5 rounded-full pl-1 pr-2 py-1 hover:bg-subtle transition-colors outline-none"
             >
               {isBusiness && bizLogo ? (
-                <span className="w-8 h-8 rounded-full overflow-hidden bg-white border border-[#ECEAF6] dark:border-[#1F2937] flex items-center justify-center shrink-0">
+                <span className="w-8 h-8 rounded-full overflow-hidden bg-white border border-line flex items-center justify-center shrink-0">
                   <img src={bizLogo} alt="Logo entreprise" className="w-full h-full object-contain p-0.5" />
                 </span>
               ) : (
                 <span className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${
                   isBusiness
-                    ? 'bg-gradient-to-br from-[#7D5CFF] to-[#4F46E5] text-white'
-                    : 'bg-[#7D5CFF]/10 text-[#7D5CFF] dark:text-[#A78BFA] border border-[#7D5CFF]/20'
+                    ? 'bg-brand text-white'
+                    : 'bg-brand/10 text-brand dark:text-brand-300 border border-brand/20'
                 }`}>
                   {isBusiness ? <Building2 size={15} /> : initials(user?.name)}
                 </span>
@@ -122,29 +122,29 @@ const TopNav: React.FC<TopNavProps> = ({ user, currentPath }) => {
               <>
                 {/* Voile de fermeture au clic extérieur */}
                 <button className="fixed inset-0 z-40 cursor-default" aria-hidden onClick={() => setMenuOpen(false)} tabIndex={-1} />
-                <div role="menu" className="absolute right-0 top-[calc(100%+8px)] z-50 w-56 rounded-2xl bg-white dark:bg-[#111827] border border-[#ECEAF6] dark:border-[#1F2937] shadow-pop p-1.5 animate-scale-in origin-top-right">
-                  <div className="px-3 py-2.5 mb-1 border-b border-[#ECEAF6] dark:border-[#1F2937]">
-                    <p className="text-sm font-bold text-slate-900 dark:text-white truncate">{user?.name || (isBusiness ? 'Partenaire' : 'Mon compte')}</p>
+                <div role="menu" className="absolute right-0 top-[calc(100%+8px)] z-50 w-56 rounded-2xl bg-surface border border-line shadow-pop p-1.5 animate-scale-in origin-top-right">
+                  <div className="px-3 py-2.5 mb-1 border-b border-line">
+                    <p className="text-sm font-bold text-ink truncate">{user?.name || (isBusiness ? 'Partenaire' : 'Mon compte')}</p>
                     <p className="text-xs text-slate-400 truncate">{user?.email || (isBusiness ? 'Espace partenaire' : 'Candidat')}</p>
                   </div>
 
                   {!isBusiness && (
-                    <Link to="/prepare/profile" role="menuitem" onClick={() => setMenuOpen(false)} className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium text-slate-600 dark:text-slate-300 hover:bg-[#F5F4FB] dark:hover:bg-[#1F2937] hover:text-[#7D5CFF] transition-colors">
+                    <Link to="/prepare/profile" role="menuitem" onClick={() => setMenuOpen(false)} className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium text-muted hover:bg-subtle hover:text-brand transition-colors">
                       <UserRound size={16} /> Mon profil
                     </Link>
                   )}
-                  <Link to={isBusiness ? '/business/billing' : '/pricing'} role="menuitem" onClick={() => setMenuOpen(false)} className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium text-slate-600 dark:text-slate-300 hover:bg-[#F5F4FB] dark:hover:bg-[#1F2937] hover:text-[#7D5CFF] transition-colors">
+                  <Link to={isBusiness ? '/business/billing' : '/pricing'} role="menuitem" onClick={() => setMenuOpen(false)} className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium text-muted hover:bg-subtle hover:text-brand transition-colors">
                     <Crown size={16} /> Abonnement
                   </Link>
-                  <Link to="/settings" role="menuitem" onClick={() => setMenuOpen(false)} className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium text-slate-600 dark:text-slate-300 hover:bg-[#F5F4FB] dark:hover:bg-[#1F2937] hover:text-[#7D5CFF] transition-colors">
+                  <Link to="/settings" role="menuitem" onClick={() => setMenuOpen(false)} className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium text-muted hover:bg-subtle hover:text-brand transition-colors">
                     <Settings2 size={16} /> Paramètres
                   </Link>
 
-                  <div className="my-1 border-t border-[#ECEAF6] dark:border-[#1F2937]" />
+                  <div className="my-1 border-t border-line" />
                   <button
                     role="menuitem"
                     onClick={async () => { setMenuOpen(false); await logout?.(); navigate('/'); }}
-                    className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium text-slate-500 dark:text-slate-400 hover:bg-red-50 dark:hover:bg-red-500/10 hover:text-red-600 transition-colors"
+                    className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium text-muted hover:bg-red-50 dark:hover:bg-red-500/10 hover:text-red-600 transition-colors"
                   >
                     <LogOut size={16} /> Se déconnecter
                   </button>

@@ -1,13 +1,11 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { createPortal } from 'react-dom';
-import { Building2, Calendar, Search, RefreshCw, Inbox, ArrowRight, Navigation, Briefcase, Send, CalendarCheck, Award, ChevronDown, Check, Sparkles, X, Copy, BellRing, ExternalLink, FileText } from 'lucide-react';
+import { Search, RefreshCw, Inbox, ArrowRight, Navigation, ChevronDown, Check, X, Copy, BellRing, ExternalLink, FileText, Mail } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
 import { authHeaders } from '../services/authToken';
 import { generateFollowUpMessage } from '../services/gemini';
-import { companyGradient } from '../services/visual';
 import EmptyState from '../components/EmptyState';
-import StatCard from '../components/StatCard';
 
 interface Application {
   id: string;
@@ -87,27 +85,24 @@ const FollowUpModal: React.FC<{ app: Application; onClose: () => void }> = ({ ap
   const copy = async () => {
     try {
       await navigator.clipboard.writeText(text);
-      toast.success('Message copié ! Colle-le dans ton email.');
+      toast.success('Message copié. Colle-le dans ton e-mail.');
     } catch {
-      toast.error('Copie impossible — sélectionne le texte à la main.');
+      toast.error('Copie impossible. Sélectionne le texte à la main.');
     }
   };
 
   return (
     <div className="fixed inset-0 z-[80] flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-slate-900/45 backdrop-blur-sm animate-fade-in" onClick={onClose} />
-      <div role="dialog" aria-modal="true" aria-label="Message de relance" className="relative w-full max-w-lg bg-white dark:bg-[#111827] rounded-2xl shadow-pop border border-[#ECEAF6] dark:border-[#1F2937] p-5 md:p-6 animate-scale-in">
-        <button onClick={onClose} aria-label="Fermer" className="press absolute top-4 right-4 w-8 h-8 rounded-lg grid place-items-center text-slate-400 hover:bg-[#F5F4FB] dark:hover:bg-[#1F2937] hover:text-[#7D5CFF] transition-colors">
+      <div className="absolute inset-0 bg-black/40 animate-fade-in" onClick={onClose} />
+      <div role="dialog" aria-modal="true" aria-label="Message de relance" className="relative w-full max-w-lg bg-surface rounded-2xl shadow-pop border border-line p-6 animate-scale-in">
+        <button onClick={onClose} aria-label="Fermer" className="absolute top-4 right-4 w-8 h-8 rounded-lg grid place-items-center text-faint hover:bg-subtle hover:text-ink transition-colors">
           <X size={17} />
         </button>
 
         <div className="flex items-center gap-3 mb-4">
-          <span className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#8C6DFF] to-[#6D28D9] text-white grid place-items-center shadow-[0_4px_14px_rgba(125,92,255,0.35)]">
-            <Send size={18} />
-          </span>
-          <div className="min-w-0">
-            <h2 className="text-base font-bold text-[#111827] dark:text-white leading-tight">Message de relance</h2>
-            <p className="text-xs text-[#9CA3AF] truncate">{app.title} · {app.company} · envoyée il y a {daysSince(app.appliedAt)} j</p>
+          <div className="min-w-0 pr-8">
+            <h2 className="text-lg leading-tight">Message de relance</h2>
+            <p className="text-xs text-faint truncate">{app.title} · {app.company} · envoyée il y a {daysSince(app.appliedAt)} j</p>
           </div>
         </div>
 
@@ -118,7 +113,7 @@ const FollowUpModal: React.FC<{ app: Application; onClose: () => void }> = ({ ap
             <div className="skeleton h-3.5 w-full rounded" />
             <div className="skeleton h-3.5 w-5/6 rounded" />
             <div className="skeleton h-3.5 w-1/2 rounded" />
-            <p className="text-xs text-[#9CA3AF] pt-1 flex items-center gap-1.5"><Sparkles size={12} className="text-[#7D5CFF]" /> L'IA rédige ta relance…</p>
+            <p className="text-xs text-faint pt-1">Rédaction en cours…</p>
           </div>
         ) : (
           <>
@@ -129,7 +124,7 @@ const FollowUpModal: React.FC<{ app: Application; onClose: () => void }> = ({ ap
               aria-label="Texte du message de relance"
             />
             <div className="flex items-center justify-between gap-2 mt-4">
-              <p className="text-[11px] text-[#9CA3AF]">Relis, ajuste si besoin, puis envoie-le par email au recruteur.</p>
+              <p className="text-xs text-faint">Relis-le, ajuste si besoin, puis envoie-le au recruteur.</p>
               <button onClick={copy} className="press btn btn-primary shrink-0">
                 <Copy size={15} /> Copier le message
               </button>
@@ -270,7 +265,7 @@ const Applications: React.FC = () => {
         </button>
 
         {open && pos && createPortal(
-          <div ref={menuRef} role="listbox" style={{ position: 'fixed', top: pos.top, right: pos.right }} className="z-[9999] w-44 rounded-2xl bg-white dark:bg-[#111827] border border-[#ECEAF6] dark:border-[#1F2937] shadow-pop p-1.5 animate-scale-in origin-top-right">
+          <div ref={menuRef} role="listbox" style={{ position: 'fixed', top: pos.top, right: pos.right }} className="z-[9999] w-44 rounded-2xl bg-surface border border-line shadow-pop p-1.5 animate-scale-in origin-top-right">
             {STATUS.map((o) => {
               const active = o.id === app.status;
               return (
@@ -281,12 +276,12 @@ const Applications: React.FC = () => {
                   aria-selected={active}
                   onClick={() => { setOpen(false); moveTo(app.id, o.id); }}
                   className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-semibold text-left transition-colors ${
-                    active ? 'bg-[#7D5CFF]/10 text-[#7D5CFF]' : 'text-slate-600 dark:text-slate-300 hover:bg-[#F5F4FB] dark:hover:bg-[#1F2937] hover:text-[#7D5CFF]'
+                    active ? 'bg-brand/10 text-brand' : 'text-muted hover:bg-subtle hover:text-brand'
                   }`}
                 >
                   <span className={`w-2 h-2 rounded-full shrink-0 ${o.dot}`} />
                   <span className="flex-1 truncate">{o.label}</span>
-                  {active && <Check size={15} className="shrink-0 text-[#7D5CFF]" />}
+                  {active && <Check size={15} className="shrink-0 text-brand" />}
                 </button>
               );
             })}
@@ -307,7 +302,7 @@ const Applications: React.FC = () => {
     const letter = letters[app.id];
 
     return (
-    <div className={`surface overflow-hidden transition-all duration-200 ${open ? 'shadow-card-hover' : 'hover:shadow-card-hover hover:-translate-y-0.5'} ${followUp ? 'ring-1 ring-amber-300/60 dark:ring-amber-500/30' : ''}`}>
+    <div className={`transition-colors ${open ? 'bg-subtle/40' : 'hover:bg-subtle/40'}`}>
       {/* En-tête cliquable */}
       <div
         role="button"
@@ -315,30 +310,28 @@ const Applications: React.FC = () => {
         aria-expanded={open}
         onClick={() => toggleExpand(app.id)}
         onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleExpand(app.id); } }}
-        className="flex items-start gap-3 md:gap-3.5 p-3.5 md:p-4 cursor-pointer select-none"
+        className="flex items-start gap-3.5 px-4 md:px-5 py-4 cursor-pointer select-none outline-none focus-visible:bg-subtle/60"
       >
-        <span className={`w-10 h-10 rounded-xl bg-gradient-to-br ${companyGradient(app.company)} text-white flex items-center justify-center font-bold text-sm shrink-0 shadow-[0_2px_8px_rgba(16,24,40,0.16)]`}>
+        <span className="w-10 h-10 rounded-lg bg-subtle text-muted flex items-center justify-center font-semibold text-sm shrink-0">
           {app.company?.charAt(0)?.toUpperCase() || '?'}
         </span>
         <div className="min-w-0 flex-1">
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
               <div className="flex items-center gap-1.5 flex-wrap">
-                <p className="font-semibold text-sm md:text-[15px] text-[#111827] dark:text-white leading-tight truncate">{app.title}</p>
+                <p className="font-medium text-[15px] text-ink leading-tight truncate">{app.title}</p>
                 {app.isSpontaneous && (
-                  <span className="shrink-0 inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-[#F3F0FF] text-[#7D5CFF] border border-[#7D5CFF]/30" title="Candidature spontanée">
+                  <span className="shrink-0 inline-flex items-center gap-1 px-1.5 h-5 rounded text-[11px] font-medium bg-subtle text-muted" title="Candidature spontanée">
                     <Navigation size={9} /> Spontanée
                   </span>
                 )}
                 {followUp && (
-                  <span className="shrink-0 inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-600 border border-amber-200 dark:bg-amber-500/10 dark:text-amber-400 dark:border-amber-500/25" title={`Sans réponse depuis ${daysSince(app.appliedAt)} jours — pense à relancer`}>
+                  <span className="shrink-0 inline-flex items-center gap-1 px-1.5 h-5 rounded text-[11px] font-medium bg-amber-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400" title={`Sans réponse depuis ${daysSince(app.appliedAt)} jours — pense à relancer`}>
                     <BellRing size={9} /> À relancer
                   </span>
                 )}
               </div>
-              <p className="flex items-center gap-1.5 text-xs text-[#6B7280] dark:text-slate-400 mt-0.5">
-                <Building2 size={13} className="shrink-0" /> <span className="truncate">{app.company}</span>
-              </p>
+              <p className="text-[13px] text-muted mt-0.5 truncate">{app.company}</p>
             </div>
             {/* Le sélecteur de statut ne doit pas déclencher le dépliage */}
             <div className="shrink-0" onClick={(e) => e.stopPropagation()}>
@@ -346,17 +339,15 @@ const Applications: React.FC = () => {
             </div>
           </div>
 
-          <div className="flex items-center gap-2.5 mt-2 text-[11px] text-slate-400 dark:text-slate-500">
-            <span className="inline-flex items-center gap-1 shrink-0">
-              <Calendar size={12} /> {formatDate(app.appliedAt)}
-            </span>
+          <div className="flex items-center gap-2 mt-1.5 text-xs text-faint">
+            <span className="shrink-0">{formatDate(app.appliedAt)}</span>
             {note && (
               <>
-                <span className="text-slate-300 dark:text-slate-600">·</span>
-                <span className="truncate italic">{note}</span>
+                <span>·</span>
+                <span className="truncate">{note}</span>
               </>
             )}
-            <span className="ml-auto shrink-0 inline-flex items-center gap-1 font-semibold text-[#7D5CFF]/85">
+            <span className="ml-auto shrink-0 inline-flex items-center gap-1 text-muted">
               {open ? 'Masquer' : 'Détails'}
               <ChevronDown size={13} className={`transition-transform duration-200 ${open ? 'rotate-180' : ''}`} />
             </span>
@@ -366,25 +357,25 @@ const Applications: React.FC = () => {
 
       {/* Panneau de détails */}
       {open && (
-        <div className="px-3.5 md:px-4 pb-4 pt-0.5 animate-fade-in">
-          <div className="rounded-xl border border-[#ECEAF6] dark:border-[#1F2937] bg-[#FAFAFE] dark:bg-[#0E1524] p-3.5 md:p-4 space-y-3.5 md:ml-[52px]">
+        <div className="px-4 md:px-5 pb-5 animate-fade-in">
+          <div className="rounded-xl border border-line bg-surface p-4 space-y-4 md:ml-[54px]">
             {/* Informations connues */}
             <dl className="grid grid-cols-2 gap-x-4 gap-y-2.5 text-xs">
               <div>
-                <dt className="text-slate-400 dark:text-slate-500 font-medium mb-0.5">Source</dt>
-                <dd className="text-[#111827] dark:text-slate-200 font-semibold truncate">{app.source || '—'}</dd>
+                <dt className="text-faint mb-0.5">Source</dt>
+                <dd className="text-ink font-medium truncate">{app.source || '—'}</dd>
               </div>
               <div>
-                <dt className="text-slate-400 dark:text-slate-500 font-medium mb-0.5">Date de candidature</dt>
-                <dd className="text-[#111827] dark:text-slate-200 font-semibold">{formatDate(app.appliedAt)}</dd>
+                <dt className="text-faint mb-0.5">Date de candidature</dt>
+                <dd className="text-ink font-medium">{formatDate(app.appliedAt)}</dd>
               </div>
               <div>
-                <dt className="text-slate-400 dark:text-slate-500 font-medium mb-0.5">Type</dt>
-                <dd className="text-[#111827] dark:text-slate-200 font-semibold">{app.isSpontaneous ? 'Candidature spontanée' : 'Candidature sur offre'}</dd>
+                <dt className="text-faint mb-0.5">Type</dt>
+                <dd className="text-ink font-medium">{app.isSpontaneous ? 'Candidature spontanée' : 'Candidature sur offre'}</dd>
               </div>
               <div>
-                <dt className="text-slate-400 dark:text-slate-500 font-medium mb-0.5">Statut</dt>
-                <dd className="inline-flex items-center gap-1.5 text-[#111827] dark:text-slate-200 font-semibold">
+                <dt className="text-faint mb-0.5">Statut</dt>
+                <dd className="inline-flex items-center gap-1.5 text-ink font-medium">
                   <span className={`w-1.5 h-1.5 rounded-full ${statusMeta(app.status).dot}`} /> {statusMeta(app.status).label}
                 </dd>
               </div>
@@ -393,8 +384,8 @@ const Applications: React.FC = () => {
             {/* Note libre éventuelle */}
             {note && (
               <div className="text-xs">
-                <p className="text-slate-400 dark:text-slate-500 font-medium mb-0.5">Note</p>
-                <p className="text-slate-600 dark:text-slate-300 italic">{note}</p>
+                <p className="text-faint font-medium mb-0.5">Note</p>
+                <p className="text-muted">{note}</p>
               </div>
             )}
 
@@ -402,15 +393,15 @@ const Applications: React.FC = () => {
             {letter && (
               <div className="text-xs">
                 <div className="flex items-center justify-between gap-2 mb-1">
-                  <p className="text-slate-400 dark:text-slate-500 font-medium inline-flex items-center gap-1.5"><FileText size={12} /> Lettre envoyée</p>
+                  <p className="text-faint font-medium inline-flex items-center gap-1.5"><FileText size={12} /> Lettre envoyée</p>
                   <button
-                    onClick={async () => { try { await navigator.clipboard.writeText(letter); toast.success('Lettre copiée !'); } catch { toast.error('Copie impossible.'); } }}
-                    className="press inline-flex items-center gap-1 text-[11px] font-bold text-[#7D5CFF] hover:opacity-80"
+                    onClick={async () => { try { await navigator.clipboard.writeText(letter); toast.success('Lettre copiée'); } catch { toast.error('Copie impossible.'); } }}
+                    className="inline-flex items-center gap-1 text-xs font-medium text-muted hover:text-ink"
                   >
                     <Copy size={12} /> Copier
                   </button>
                 </div>
-                <div className="max-h-40 overflow-y-auto rounded-lg bg-white dark:bg-[#111827] border border-[#ECEAF6] dark:border-[#1F2937] p-2.5 text-slate-600 dark:text-slate-300 whitespace-pre-wrap leading-relaxed">
+                <div className="max-h-40 overflow-y-auto rounded-lg bg-subtle/60 p-3 text-muted whitespace-pre-wrap leading-relaxed">
                   {letter}
                 </div>
               </div>
@@ -419,17 +410,17 @@ const Applications: React.FC = () => {
             {/* Actions : ouvrir l'offre + générer une relance */}
             <div className="flex flex-wrap items-center gap-2 pt-0.5">
               {offerUrl && (
-                <a href={offerUrl} target="_blank" rel="noopener noreferrer" className="press btn btn-secondary !py-1.5 !px-3 text-xs">
+                <a href={offerUrl} target="_blank" rel="noopener noreferrer" className="btn btn-secondary !min-h-[34px] !px-3 text-[13px]">
                   <ExternalLink size={14} /> Voir l'offre
                 </a>
               )}
               {canFollowUp && (
                 <button
                   onClick={() => setFollowUpApp(app)}
-                  className="press btn btn-primary !py-1.5 !px-3 text-xs"
-                  title="L'IA rédige un message de relance prêt à envoyer"
+                  className="btn btn-primary !min-h-[34px] !px-3 text-[13px]"
+                  title="Un message de relance prêt à envoyer, que tu pourras modifier"
                 >
-                  <Sparkles size={14} /> Générer une relance
+                  <Mail size={14} /> Rédiger une relance
                 </button>
               )}
             </div>
@@ -441,8 +432,8 @@ const Applications: React.FC = () => {
   };
 
   const RowSkeleton: React.FC = () => (
-    <div className="surface p-3.5 md:p-4 flex items-center gap-3.5">
-      <div className="skeleton w-10 h-10 rounded-xl shrink-0" />
+    <div className="px-5 py-4 flex items-center gap-3.5">
+      <div className="skeleton w-10 h-10 rounded-lg shrink-0" />
       <div className="flex-1 space-y-2">
         <div className="skeleton h-3.5 w-1/2 rounded" />
         <div className="skeleton h-3 w-1/3 rounded" />
@@ -458,88 +449,71 @@ const Applications: React.FC = () => {
       <button
         type="button"
         onClick={() => setStatusFilter(id)}
-        className={`press shrink-0 inline-flex items-center gap-2 pl-3 pr-2.5 py-1.5 rounded-full text-[13px] font-semibold border transition-colors ${
+        className={`shrink-0 inline-flex items-center gap-2 h-8 px-3 rounded-full text-[13px] font-medium transition-colors ${
           active
-            ? 'bg-[#7D5CFF] text-white border-[#7D5CFF] shadow-[0_4px_14px_-3px_rgba(124,92,255,0.6)]'
-            : 'bg-white dark:bg-[#111827] border-[#E2E0EF] dark:border-[#374151] text-slate-600 dark:text-slate-300 hover:border-[#7D5CFF]/45 hover:text-[#7D5CFF]'
+            ? 'bg-ink text-canvas'
+            : 'text-muted hover:text-ink hover:bg-subtle'
         }`}
       >
-        {dot && <span className={`w-1.5 h-1.5 rounded-full ${active ? 'bg-white/80' : dot}`} />}
+        {dot && <span className={`w-1.5 h-1.5 rounded-full ${dot}`} />}
         {label}
-        <span className={`text-xs tabular-nums ${active ? 'text-white/80' : 'text-slate-400'}`}>{count}</span>
+        <span className={`text-xs tabular-nums ${active ? 'opacity-70' : 'text-faint'}`}>{count}</span>
       </button>
     );
   };
 
   return (
-    <div className="p-5 md:p-8 max-w-6xl mx-auto space-y-8 md:space-y-6">
-      {/* Barre d'outils (le titre est porté par la nav de section) */}
-      <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div className="flex items-center gap-2 text-sm text-[#6B7280] dark:text-slate-400">
-          <span className="inline-flex items-center justify-center min-w-7 h-7 px-2 rounded-lg bg-[#7D5CFF]/10 text-[#7D5CFF] font-bold tabular-nums">{loading ? '–' : total}</span>
-          candidature{total > 1 ? 's' : ''} suivie{total > 1 ? 's' : ''}
-        </div>
-        <div className="flex items-center gap-2 w-full md:w-auto">
-          <div className="flex-1 md:w-64 relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-[#9CA3AF]" size={16} />
-            <input type="text" placeholder="Filtrer entreprise, poste…" value={search} onChange={(e) => setSearch(e.target.value)} className="input-pro pl-9 w-full" />
-          </div>
-          <button onClick={fetchApplications} className="press btn btn-secondary px-3 shrink-0" title="Actualiser">
-            <RefreshCw size={18} className={loading ? 'animate-spin text-[#7D5CFF]' : ''} />
-          </button>
-        </div>
-      </header>
-
-      {/* Synthèse — funnel des candidatures (cohérent avec l'Accueil / Dashboard) */}
+    <div className="px-5 md:px-8 pt-4 md:pt-6 pb-10 max-w-6xl mx-auto space-y-5">
       {(loading || total > 0) && (
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
-          <StatCard label="Candidatures" value={loading ? '–' : total} icon={<Briefcase size={20} strokeWidth={2.4} />} tone="violet" />
-          <StatCard label="Envoyées" value={loading ? '–' : applications.filter((a) => a.status === 'SENT').length} icon={<Send size={20} strokeWidth={2.4} />} tone="blue" />
-          <StatCard label="Entretiens" value={loading ? '–' : applications.filter((a) => a.status === 'INTERVIEW').length} icon={<CalendarCheck size={20} strokeWidth={2.4} />} tone="amber" />
-          <StatCard label="Offres" value={loading ? '–' : applications.filter((a) => a.status === 'OFFER').length} icon={<Award size={20} strokeWidth={2.4} />} tone="emerald" />
-        </div>
-      )}
-
-      {/* Liste des candidatures (filtre par statut + tri date décroissante) */}
-      {(loading || total > 0) && (
-        <div className="space-y-4">
-          {/* Filtres par statut */}
-          <div className="flex gap-2 overflow-x-auto scrollbar-none -mx-1 px-1 pb-0.5">
-            <FilterPill id="ALL" label="Toutes" count={filtered.length} />
-            {STATUS.map((s) => (
-              <FilterPill key={s.id} id={s.id} label={s.label} count={byStatus(s.id).length} dot={s.dot} />
-            ))}
+        <>
+          {/* Barre d'outils : filtres par statut + recherche */}
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+            <div className="flex gap-1 overflow-x-auto scrollbar-none -mx-1 px-1">
+              <FilterPill id="ALL" label="Toutes" count={filtered.length} />
+              {STATUS.map((s) => (
+                <FilterPill key={s.id} id={s.id} label={s.label} count={byStatus(s.id).length} dot={s.dot} />
+              ))}
+            </div>
+            <div className="flex items-center gap-2 w-full lg:w-auto">
+              <div className="flex-1 lg:w-64 relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-faint" size={16} />
+                <input type="search" placeholder="Entreprise ou poste…" value={search} onChange={(e) => setSearch(e.target.value)} className="input-pro pl-9 w-full" aria-label="Filtrer les candidatures" />
+              </div>
+              <button onClick={fetchApplications} className="btn btn-secondary !px-3 shrink-0" title="Actualiser" aria-label="Actualiser">
+                <RefreshCw size={16} className={loading ? 'animate-spin' : ''} />
+              </button>
+            </div>
           </div>
 
-          {/* Liste */}
-          <div className="space-y-2.5">
+          {/* Liste (tri par date décroissante) */}
+          <div className="surface divide-y divide-line overflow-hidden">
             {loading ? (
               <><RowSkeleton /><RowSkeleton /><RowSkeleton /><RowSkeleton /></>
             ) : visible.length > 0 ? (
               visible.map((app) => <Row key={app.id} app={app} />)
             ) : (
-              <div className="surface flex flex-col items-center justify-center text-center gap-2 py-12">
-                <Inbox size={26} className="text-slate-300 dark:text-slate-600" />
-                <p className="text-sm font-medium text-slate-400 dark:text-slate-500">
+              <div className="flex flex-col items-center justify-center text-center gap-2 py-14">
+                <Inbox size={24} className="text-faint" />
+                <p className="text-sm text-muted">
                   {statusFilter === 'ALL'
-                    ? 'Aucune candidature ne correspond à votre recherche.'
+                    ? 'Aucune candidature ne correspond à ta recherche.'
                     : `Aucune candidature dans « ${statusMeta(statusFilter).label} ».`}
                 </p>
               </div>
             )}
           </div>
-        </div>
+        </>
       )}
 
       {/* État vide illustré quand aucune candidature */}
       {!loading && total === 0 && (
         <EmptyState
           variant="applications"
-          title="Aucune candidature pour l'instant"
-          description="Dès que tu postules, tes candidatures apparaissent ici et tu suis leur avancement — de l'envoi à l'offre."
+          title="Aucune candidature pour l’instant"
+          description="Chaque offre à laquelle tu postules arrive ici. Tu pourras suivre son avancement, de l’envoi jusqu’à la réponse."
           action={
-            <button onClick={() => navigate('/target/offers')} className="press btn btn-primary">
-              Trouver des offres <ArrowRight size={16} />
+            <button onClick={() => navigate('/target/offers')} className="btn btn-primary">
+              Voir les offres <ArrowRight size={16} />
             </button>
           }
         />

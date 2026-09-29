@@ -15,7 +15,16 @@ import {
   BarChart3,
   Send,
   LineChart,
-  LayoutDashboard
+  LayoutDashboard,
+  Search,
+  GraduationCap,
+  Building,
+  Bookmark,
+  FileText,
+  Mail,
+  LayoutGrid,
+  SquareKanban,
+  FolderOpen,
 } from 'lucide-react';
 
 // Fix: Added missing junoGradient property used in Home.tsx
@@ -29,13 +38,44 @@ export const COLORS = {
   junoGradient: 'linear-gradient(135deg, #4F46E5 0%, #06B6D4 100%)',
 };
 
-// Navigation candidat (jobseeker) — PARCOURS principal.
-// Libellés courts et humains (verbes), c'est le coeur de la nav (sidebar PC/tablette + bottom-bar mobile).
+// Navigation candidat — barre du bas MOBILE (4 onglets). Refonte 09/2026 :
+// libellés par OBJET (ce qu'on y trouve) plutôt que par verbe d'étape, plus
+// faciles à scanner. Les routes restent inchangées.
 export const PRIMARY_NAV = [
   { name: 'Accueil', icon: <Home size={18} />, path: 'home' },
-  { name: 'Préparer', icon: <UserRound size={18} />, path: 'prepare' },
-  { name: 'Postuler', icon: <Send size={18} />, path: 'target' },
-  { name: 'Suivre', icon: <LineChart size={18} />, path: 'track' },
+  { name: 'Offres', icon: <Search size={18} />, path: 'target' },
+  { name: 'Documents', icon: <FolderOpen size={18} />, path: 'prepare' },
+  { name: 'Suivi', icon: <SquareKanban size={18} />, path: 'track' },
+];
+
+// Navigation candidat — barre latérale ORDINATEUR : toutes les pages sur un seul niveau.
+export const CANDIDATE_NAV_GROUPS: { label?: string; items: { name: string; path: string; icon: React.ReactNode }[] }[] = [
+  { items: [{ name: 'Accueil', path: '/home', icon: <Home size={17} /> }] },
+  {
+    label: 'Chercher',
+    items: [
+      { name: 'Offres pour moi', path: '/target/offers', icon: <Search size={17} /> },
+      { name: 'Alternance', path: '/target/alternance', icon: <GraduationCap size={17} /> },
+      { name: 'Candidatures spontanées', path: '/target/lbb', icon: <Building size={17} /> },
+      { name: 'Sauvegardées', path: '/target/saved', icon: <Bookmark size={17} /> },
+    ],
+  },
+  {
+    label: 'Documents',
+    items: [
+      { name: 'Mon profil', path: '/prepare/profile', icon: <UserRound size={17} /> },
+      { name: 'Mon CV', path: '/prepare/cv', icon: <FileText size={17} /> },
+      { name: 'Lettre de motivation', path: '/prepare/letter', icon: <Mail size={17} /> },
+      { name: 'Modèles', path: '/prepare/templates', icon: <LayoutGrid size={17} /> },
+    ],
+  },
+  {
+    label: 'Suivi',
+    items: [
+      { name: 'Candidatures', path: '/track/applications', icon: <SquareKanban size={17} /> },
+      { name: 'Statistiques', path: '/track/dashboard', icon: <LineChart size={17} /> },
+    ],
+  },
 ];
 
 // Navigation candidat — entrées SYSTÈME (séparées du parcours, en bas de sidebar / dans le compte).

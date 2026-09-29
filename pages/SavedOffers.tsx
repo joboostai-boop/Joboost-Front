@@ -102,8 +102,8 @@ const SavedOffers: React.FC = () => {
 
   return (
     <div className="p-5 md:p-8 max-w-6xl mx-auto space-y-8 md:space-y-6">
-      <header className="flex items-center gap-2 text-sm text-[#6B7280] dark:text-slate-400">
-        <span className="inline-flex items-center justify-center min-w-7 h-7 px-2 rounded-lg bg-[#7D5CFF]/10 text-[#7D5CFF] font-bold tabular-nums">{loading ? '–' : savedOffers.length}</span>
+      <header className="flex items-center gap-2 text-sm text-muted">
+        <span className="inline-flex items-center justify-center min-w-7 h-7 px-2 rounded-lg bg-brand/10 text-brand font-bold tabular-nums">{loading ? '–' : savedOffers.length}</span>
         opportunité{savedOffers.length > 1 ? 's' : ''} mise{savedOffers.length > 1 ? 's' : ''} de côté
       </header>
 
@@ -124,37 +124,37 @@ const SavedOffers: React.FC = () => {
             <article
               key={offer.id}
               style={{ animationDelay: `${Math.min(index, 6) * 50}ms` }}
-              className="surface p-5 hover:shadow-card-hover hover:-translate-y-0.5 transition-all duration-200 animate-fade-in-up"
+              className="surface p-5 hover:shadow-card-hover transition-all duration-200 animate-fade-in-up"
             >
               <div className="flex items-start justify-between gap-4">
                 <div className="flex items-start gap-3 min-w-0">
-                  <span className="w-10 h-10 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 flex items-center justify-center font-semibold text-sm shrink-0">
+                  <span className="w-10 h-10 rounded-lg bg-subtle text-muted flex items-center justify-center font-semibold text-sm shrink-0">
                     {offer.company?.charAt(0) || '?'}
                   </span>
                   <div className="min-w-0">
-                    <h2 className="text-base font-semibold text-slate-900 dark:text-white leading-tight">{offer.title}</h2>
-                    <p className="text-sm text-[#7D5CFF] font-medium truncate">{offer.company}</p>
+                    <h2 className="text-base font-semibold text-ink leading-tight">{offer.title}</h2>
+                    <p className="text-sm text-brand font-medium truncate">{offer.company}</p>
                   </div>
                 </div>
                 {offer.matchScore ? <MatchBadge score={offer.matchScore} detailed /> : null}
               </div>
 
-              <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 mt-3 text-xs font-medium text-[#6B7280] dark:text-slate-400">
-                {offer.location && <span className="flex items-center gap-1.5"><MapPin size={13} className="text-[#9CA3AF]" /> {offer.location}</span>}
-                {offer.salary && <span className="flex items-center gap-1.5"><Euro size={13} className="text-[#9CA3AF]" /> {formatSalary(offer.salary)}</span>}
-                {offer.postedDate && <span className="flex items-center gap-1.5"><Clock size={13} className="text-[#9CA3AF]" /> {offer.postedDate}</span>}
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 mt-3 text-xs font-medium text-muted">
+                {offer.location && <span className="flex items-center gap-1.5"><MapPin size={13} className="text-faint" /> {offer.location}</span>}
+                {offer.salary && <span className="flex items-center gap-1.5"><Euro size={13} className="text-faint" /> {formatSalary(offer.salary)}</span>}
+                {offer.postedDate && <span className="flex items-center gap-1.5"><Clock size={13} className="text-faint" /> {offer.postedDate}</span>}
               </div>
 
               {offer.aiInsight && (
                 <div className="mt-3 surface-accent rounded-lg p-3">
-                  <p className="flex items-center gap-1.5 text-[11px] font-semibold text-[#7D5CFF] uppercase tracking-wide mb-1">
+                  <p className="flex items-center gap-1.5 text-[11px] font-semibold text-brand uppercase tracking-wide mb-1">
                     <Sparkles size={12} /> Pourquoi ça matche
                   </p>
-                  <ExpandableText className="text-sm text-[#4B5563] dark:text-slate-300 leading-relaxed" text={offer.aiInsight} />
+                  <ExpandableText className="text-sm text-muted dark:text-slate-300 leading-relaxed" text={offer.aiInsight} />
                 </div>
               )}
 
-              <div className="flex flex-wrap items-center gap-2 mt-4 pt-3.5 border-t border-slate-100 dark:border-slate-800">
+              <div className="flex flex-wrap items-center gap-2 mt-4 pt-3.5 border-t border-line">
                 {(() => {
                   const isApplied = appliedKeys.has(offerKey(offer));
                   return (

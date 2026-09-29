@@ -25,7 +25,7 @@ const BUSINESS_PAGES = [
 // découverte, avec le compte à rebours des 15 jours (ambre, rouge une fois expirée).
 const planBadge = (account: BusinessAccount | null): { label: string; cls: string } => {
   if (account?.isPaid || account?.plan?.startsWith('Business')) {
-    return { label: 'Plan Business', cls: 'bg-[#7D5CFF] text-white border-transparent' };
+    return { label: 'Plan Business', cls: 'bg-brand text-white border-transparent' };
   }
   const days = account?.discoveryDaysLeft ?? null;
   if (days !== null && days <= 0) {

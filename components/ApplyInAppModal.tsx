@@ -113,18 +113,18 @@ const ApplyInAppModal: React.FC<Props> = ({ offer, onClose, onSent }) => {
   return (
     <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4">
       <div className="absolute inset-0 bg-slate-900/50 backdrop-blur-sm animate-fade-in" onClick={onClose} />
-      <div className="relative w-full sm:max-w-lg max-h-[92vh] flex flex-col bg-white dark:bg-[#0B1120] rounded-t-2xl sm:rounded-2xl shadow-pop border border-[#ECEAF6] dark:border-[#1F2937] animate-fade-in-up overflow-hidden">
+      <div className="relative w-full sm:max-w-lg max-h-[92vh] flex flex-col bg-surface rounded-t-2xl sm:rounded-2xl shadow-pop border border-line animate-fade-in-up overflow-hidden">
         {/* En-tête */}
-        <div className="flex items-start justify-between gap-4 p-5 border-b border-[#ECEAF6] dark:border-[#1F2937]">
+        <div className="flex items-start justify-between gap-4 p-5 border-b border-line">
           <div className="min-w-0">
-            <h2 className="text-lg font-bold text-[#111827] dark:text-white flex items-center gap-2">
-              <Send size={18} className="text-[#7D5CFF]" /> Postuler depuis Joboost
+            <h2 className="text-lg font-bold text-ink flex items-center gap-2">
+              <Send size={18} className="text-brand" /> Postuler depuis Joboost
             </h2>
-            <p className="text-[13px] text-[#6B7280] dark:text-slate-400 mt-0.5 truncate">
-              {offer.title} — <span className="text-[#7D5CFF] font-medium">{offer.company}</span>
+            <p className="text-[13px] text-muted mt-0.5 truncate">
+              {offer.title} — <span className="text-brand font-medium">{offer.company}</span>
             </p>
           </div>
-          <button onClick={onClose} aria-label="Fermer" className="press shrink-0 w-9 h-9 rounded-lg flex items-center justify-center text-slate-400 hover:bg-[#F5F4FB] dark:hover:bg-[#1F2937]">
+          <button onClick={onClose} aria-label="Fermer" className="press shrink-0 w-9 h-9 rounded-lg flex items-center justify-center text-slate-400 hover:bg-subtle">
             <X size={18} />
           </button>
         </div>
@@ -133,16 +133,16 @@ const ApplyInAppModal: React.FC<Props> = ({ offer, onClose, onSent }) => {
         <div className="flex-1 overflow-y-auto p-5 space-y-4">
           {phase === 'preparing' && (
             <div className="flex flex-col items-center justify-center gap-3 py-10 text-center">
-              <Loader2 size={26} className="animate-spin text-[#7D5CFF]" />
-              <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Préparation de ta candidature…<br />L'IA rédige ta lettre à partir de l'offre.</p>
+              <Loader2 size={26} className="animate-spin text-brand" />
+              <p className="text-sm font-medium text-muted">Préparation de ta candidature…<br />L'IA rédige ta lettre à partir de l'offre.</p>
             </div>
           )}
 
           {phase === 'quota' && (
             <div className="flex flex-col items-center justify-center gap-3 py-8 text-center">
-              <span className="w-12 h-12 rounded-full bg-[#7D5CFF]/10 text-[#7D5CFF] flex items-center justify-center"><Crown size={24} /></span>
-              <p className="text-sm font-semibold text-[#111827] dark:text-white">Limite de candidatures atteinte ce mois-ci</p>
-              <p className="text-xs text-slate-500 dark:text-slate-400 max-w-xs">Passe à l'abonnement Élite ou ajoute un pack de crédits pour continuer à postuler.</p>
+              <span className="w-12 h-12 rounded-full bg-brand/10 text-brand flex items-center justify-center"><Crown size={24} /></span>
+              <p className="text-sm font-semibold text-ink">Limite de candidatures atteinte ce mois-ci</p>
+              <p className="text-xs text-muted max-w-xs">Passe à l'abonnement Élite ou ajoute un pack de crédits pour continuer à postuler.</p>
               <button onClick={() => { onClose(); navigate('/pricing'); }} className="press btn btn-primary mt-1">Voir les forfaits</button>
             </div>
           )}
@@ -163,22 +163,22 @@ const ApplyInAppModal: React.FC<Props> = ({ offer, onClose, onSent }) => {
               {/* Destinataire + pièces jointes */}
               <div className="surface-accent rounded-xl p-3.5 space-y-2">
                 <div className="flex items-center gap-2 text-sm">
-                  <Mail size={15} className="text-[#7D5CFF] shrink-0" />
-                  <span className="text-slate-500 dark:text-slate-400">Envoyée à</span>
-                  <span className="font-semibold text-[#111827] dark:text-white truncate">{offer.contactEmail}</span>
+                  <Mail size={15} className="text-brand shrink-0" />
+                  <span className="text-muted">Envoyée à</span>
+                  <span className="font-semibold text-ink truncate">{offer.contactEmail}</span>
                 </div>
-                <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
+                <div className="flex items-center gap-2 text-xs text-muted">
                   <Paperclip size={13} className="shrink-0" />
-                  Ton <b className="font-semibold text-slate-600 dark:text-slate-300">CV</b> et ta <b className="font-semibold text-slate-600 dark:text-slate-300">lettre</b> sont joints automatiquement en PDF.
+                  Ton <b className="font-semibold text-muted">CV</b> et ta <b className="font-semibold text-muted">lettre</b> sont joints automatiquement en PDF.
                 </div>
               </div>
 
               {/* Aperçu de la lettre (générée par l'IA) */}
               <div>
-                <p className="flex items-center gap-1.5 text-[11px] font-semibold text-[#7D5CFF] uppercase tracking-wide mb-1.5">
+                <p className="flex items-center gap-1.5 text-[11px] font-semibold text-brand uppercase tracking-wide mb-1.5">
                   <Sparkles size={12} /> Lettre générée par l'IA
                 </p>
-                <div className="rounded-xl border border-[#ECEAF6] dark:border-[#1F2937] bg-white dark:bg-[#0B1120] p-3.5 max-h-56 overflow-y-auto text-sm text-[#374151] dark:text-slate-300 leading-relaxed whitespace-pre-line">
+                <div className="rounded-xl border border-line bg-surface p-3.5 max-h-56 overflow-y-auto text-sm text-ink leading-relaxed whitespace-pre-line">
                   {letter || 'Bonjour,\n\nJe me permets de vous adresser ma candidature pour ce poste.\n\nCordialement.'}
                 </div>
                 <p className="text-[11px] text-slate-400 mt-1.5">Tu peux affiner ta lettre depuis l'onglet « Lettre » avant d'envoyer, si tu le souhaites.</p>
@@ -194,7 +194,7 @@ const ApplyInAppModal: React.FC<Props> = ({ offer, onClose, onSent }) => {
 
         {/* Pied : action d'envoi */}
         {(phase === 'ready' || phase === 'sending') && (
-          <div className="p-4 border-t border-[#ECEAF6] dark:border-[#1F2937] flex gap-2">
+          <div className="p-4 border-t border-line flex gap-2">
             <button onClick={onClose} className="press btn btn-secondary flex-1">Annuler</button>
             <button onClick={handleSend} disabled={phase === 'sending'} className="press btn btn-primary flex-1 disabled:opacity-60">
               {phase === 'sending' ? <><Loader2 size={16} className="animate-spin" /> Envoi…</> : <><Send size={16} /> Envoyer ma candidature</>}

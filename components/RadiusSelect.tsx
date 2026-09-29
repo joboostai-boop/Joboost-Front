@@ -39,9 +39,9 @@ const RadiusSelect: React.FC<RadiusSelectProps> = ({
   return (
     <div>
       <div className="input-label flex items-center gap-1.5">
-        <Navigation size={13} className="text-[#9CA3AF]" />
+        <Navigation size={13} className="text-faint" />
         {label}
-        <span className="ml-auto text-xs font-bold tabular-nums text-[#7D5CFF]">{value} km</span>
+        <span className="ml-auto text-xs font-bold tabular-nums text-brand">{value} km</span>
       </div>
 
       <div
@@ -52,7 +52,7 @@ const RadiusSelect: React.FC<RadiusSelectProps> = ({
           if (e.key === 'ArrowRight' || e.key === 'ArrowUp') { e.preventDefault(); move(1); }
           if (e.key === 'ArrowLeft' || e.key === 'ArrowDown') { e.preventDefault(); move(-1); }
         }}
-        className={`grid grid-cols-5 gap-1 p-1 min-h-[44px] rounded-xl bg-white dark:bg-[#111827] border border-[#E2E0EF] dark:border-[#374151] shadow-xs transition-opacity ${
+        className={`grid grid-cols-5 gap-1 p-1 min-h-[44px] rounded-xl bg-surface border border-line-strong dark:border-[#374151] shadow-xs transition-opacity ${
           disabled ? 'opacity-50 pointer-events-none' : ''
         }`}
       >
@@ -68,10 +68,10 @@ const RadiusSelect: React.FC<RadiusSelectProps> = ({
               tabIndex={active ? 0 : -1}
               disabled={disabled}
               onClick={() => onChange(km)}
-              className={`press tab-shine relative flex items-center justify-center rounded-lg text-sm font-semibold tabular-nums outline-none transition-all focus-visible:ring-2 focus-visible:ring-[#7D5CFF]/40 ${
+              className={`press tab-shine relative flex items-center justify-center rounded-lg text-sm font-semibold tabular-nums outline-none transition-all focus-visible:ring-2 focus-visible:ring-brand/40 ${
                 active
-                  ? 'bg-gradient-to-b from-[#8C6DFF] to-[#7D5CFF] text-white shadow-[0_4px_14px_-3px_rgba(124,92,255,0.6)]'
-                  : 'text-slate-500 dark:text-slate-400 hover:text-[#7D5CFF] hover:bg-[#F5F4FB] dark:hover:bg-[#1F2937]'
+                  ? 'bg-brand text-white'
+                  : 'text-muted hover:text-brand hover:bg-subtle'
               }`}
             >
               <span id={`${groupId}-${km}`}>{km}</span>

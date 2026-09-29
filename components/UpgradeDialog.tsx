@@ -71,7 +71,7 @@ const UpgradeDialog: React.FC<Props> = ({ open, onClose, reason = 'quota', messa
         role="dialog"
         aria-modal="true"
         aria-label={titre}
-        className="relative w-full sm:max-w-lg bg-white dark:bg-[#111827] rounded-t-3xl sm:rounded-3xl shadow-2xl
+        className="relative w-full sm:max-w-lg bg-surface rounded-t-3xl sm:rounded-3xl shadow-2xl
                    p-6 sm:p-8 animate-fade-in-up max-h-[92vh] overflow-y-auto"
       >
         <button
@@ -82,15 +82,15 @@ const UpgradeDialog: React.FC<Props> = ({ open, onClose, reason = 'quota', messa
           <X size={20} />
         </button>
 
-        <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#F3F0FF] dark:bg-[#7D5CFF]/10 text-[#7D5CFF] text-xs font-black uppercase tracking-widest">
+        <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-brand-50 dark:bg-brand/10 text-brand text-xs font-black uppercase tracking-widest">
           <Zap size={13} strokeWidth={2.8} /> Élite
         </span>
 
-        <h2 className="mt-4 text-2xl sm:text-[28px] font-black tracking-tight text-slate-900 dark:text-white leading-tight">
+        <h2 className="mt-4 text-2xl sm:text-[28px] font-black tracking-tight text-ink leading-tight">
           {titre}
         </h2>
 
-        {message && <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">{message}</p>}
+        {message && <p className="mt-2 text-sm text-muted">{message}</p>}
 
         {/* Ce qu'on gagne, AVANT le prix. */}
         <ul className="mt-6 space-y-3">
@@ -105,15 +105,15 @@ const UpgradeDialog: React.FC<Props> = ({ open, onClose, reason = 'quota', messa
         </ul>
 
         {/* Le prix, ensuite — avec la levée d'objection collée dessus. */}
-        <div className="mt-6 p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60">
+        <div className="mt-6 p-4 rounded-2xl bg-subtle/60">
           <div className="flex items-baseline gap-1.5">
-            <span className="text-3xl font-black text-slate-900 dark:text-white">14,99 €</span>
+            <span className="text-3xl font-black text-ink">14,99 €</span>
             <span className="text-sm font-semibold text-slate-500">/ mois</span>
           </div>
           <p className="mt-1 text-[13px] font-semibold text-emerald-600">
             Résiliable en un clic, à tout moment
           </p>
-          <p className="mt-2 text-[13px] text-slate-500 dark:text-slate-400 leading-relaxed">
+          <p className="mt-2 text-[13px] text-muted leading-relaxed">
             Un mois d'abonnement coûte moins qu'une heure payée au SMIC. Vous cherchez un poste à
             plusieurs milliers d'euros par mois.
           </p>

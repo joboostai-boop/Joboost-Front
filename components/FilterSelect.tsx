@@ -85,21 +85,21 @@ const FilterSelect: React.FC<FilterSelectProps> = ({
         aria-haspopup="listbox"
         aria-expanded={open}
         aria-label={ariaLabel}
-        className={`press group min-h-[44px] w-full inline-flex items-center gap-2 rounded-xl border bg-white dark:bg-[#111827] pl-3.5 pr-2.5 py-2 text-sm font-semibold text-[#111827] dark:text-white shadow-xs transition-all outline-none ${
+        className={`press group min-h-[44px] w-full inline-flex items-center gap-2 rounded-xl border bg-surface pl-3.5 pr-2.5 py-2 text-sm font-semibold text-ink shadow-xs transition-all outline-none ${
           open
-            ? 'border-[#7D5CFF] ring-4 ring-[#7D5CFF]/15'
-            : 'border-[#E2E0EF] dark:border-[#374151] hover:border-[#7D5CFF]/45'
+            ? 'border-brand ring-4 ring-brand/15'
+            : 'border-line-strong dark:border-[#374151] hover:border-brand/45'
         }`}
       >
         {icon && (
-          <span className={`shrink-0 transition-colors ${open ? 'text-[#7D5CFF]' : 'text-[#9CA3AF] group-hover:text-[#7D5CFF]'}`}>
+          <span className={`shrink-0 transition-colors ${open ? 'text-brand' : 'text-faint group-hover:text-brand'}`}>
             {icon}
           </span>
         )}
         <span className="truncate">{label}</span>
         <ChevronDown
           size={16}
-          className={`ml-auto shrink-0 text-slate-400 transition-transform duration-200 ${open ? 'rotate-180 text-[#7D5CFF]' : ''}`}
+          className={`ml-auto shrink-0 text-slate-400 transition-transform duration-200 ${open ? 'rotate-180 text-brand' : ''}`}
         />
       </button>
 
@@ -109,7 +109,7 @@ const FilterSelect: React.FC<FilterSelectProps> = ({
           role="listbox"
           aria-label={ariaLabel}
           style={{ position: 'fixed', top: pos.top, left: pos.left, minWidth: pos.width }}
-          className="z-[9999] w-max max-w-[16rem] rounded-2xl bg-white dark:bg-[#111827] border border-[#ECEAF6] dark:border-[#1F2937] shadow-pop p-1.5 animate-scale-in origin-top max-h-72 overflow-auto scrollbar-none"
+          className="z-[9999] w-max max-w-[16rem] rounded-2xl bg-surface border border-line shadow-pop p-1.5 animate-scale-in origin-top max-h-72 overflow-auto scrollbar-none"
         >
           {options.map((opt) => {
             const active = opt.value === value;
@@ -125,8 +125,8 @@ const FilterSelect: React.FC<FilterSelectProps> = ({
                 }}
                 className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-semibold text-left transition-colors ${
                   active
-                    ? 'bg-[#7D5CFF]/10 text-[#7D5CFF]'
-                    : 'text-slate-600 dark:text-slate-300 hover:bg-[#F5F4FB] dark:hover:bg-[#1F2937] hover:text-[#7D5CFF]'
+                    ? 'bg-brand/10 text-brand'
+                    : 'text-muted hover:bg-subtle hover:text-brand'
                 }`}
               >
                 <span className="flex-1 truncate">{opt.label}</span>

@@ -5,8 +5,8 @@ import SectionNav, { SectionTab } from '../components/SectionNav';
 
 const TrackLayout: React.FC = () => {
   const tabs: SectionTab[] = [
-    { name: 'Mes candidatures', path: '/track/applications', icon: <Briefcase size={17} /> },
-    { name: 'Statistiques', path: '/track/dashboard', icon: <LayoutDashboard size={17} /> },
+    { name: 'Candidatures', path: '/track/applications', icon: <Briefcase size={17} />, description: 'Où en est chacune de tes candidatures.' },
+    { name: 'Statistiques', path: '/track/dashboard', icon: <LayoutDashboard size={17} />, description: 'Ton rythme de candidature et tes taux de réponse.' },
   ];
 
   return (

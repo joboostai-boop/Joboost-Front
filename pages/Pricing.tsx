@@ -148,26 +148,26 @@ const Pricing: React.FC<PricingProps> = ({ user }) => {
 
       {/* Hero */}
       <header className="text-center space-y-4 md:space-y-6 max-w-3xl mx-auto animate-fade-in-up">
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#7D5CFF]/5 dark:bg-[#7D5CFF]/10 border border-[#7D5CFF]/15 dark:border-[#7D5CFF]/20 text-[#7D5CFF] dark:text-[#A78BFA] text-[10px] font-black uppercase tracking-[0.2em]">
+        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand/5 dark:bg-brand/10 border border-brand/15 dark:border-brand/20 text-brand dark:text-brand-300 text-[10px] font-black uppercase tracking-[0.2em]">
           <Sparkles size={12} /> Une recherche d'emploi assistée par l'IA
         </div>
-        <h1 className="text-3xl md:text-6xl font-black text-slate-900 dark:text-white tracking-tighter leading-tight md:leading-[1.1]">
+        <h1 className="text-3xl md:text-6xl font-black text-ink tracking-tighter leading-tight md:leading-[1.1]">
           Passez de candidat à <br />
-          <span className="text-[#7D5CFF]">Recruté d'élite.</span>
+          <span className="text-brand">Recruté d'élite.</span>
         </h1>
-        <p className="text-slate-500 dark:text-slate-400 text-base md:text-lg font-medium">
+        <p className="text-muted text-base md:text-lg font-medium">
           Abonnez-vous pour une recherche intensive, ou prenez un pack ponctuel.
-          <span className="block text-[#7D5CFF] dark:text-[#A78BFA] font-bold">Vous payez selon votre rythme de recherche.</span>
+          <span className="block text-brand dark:text-brand-300 font-bold">Vous payez selon votre rythme de recherche.</span>
         </p>
 
         {/* Toggle Mensuel / Annuel */}
-        <div className="inline-flex items-center gap-1 p-1 rounded-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
+        <div className="inline-flex items-center gap-1 p-1 rounded-full bg-subtle border border-line">
           {(['monthly', 'annual'] as BillingPeriod[]).map((p) => (
             <button
               key={p}
               onClick={() => setBilling(p)}
               className={`px-4 py-2 rounded-full text-xs font-black uppercase tracking-wider transition-all ${
-                billing === p ? 'bg-white dark:bg-slate-950 text-[#7D5CFF] shadow-sm' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-300'
+                billing === p ? 'bg-white dark:bg-slate-950 text-brand shadow-sm' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-300'
               }`}
             >
               {p === 'monthly' ? 'Mensuel' : 'Annuel'}
@@ -187,20 +187,20 @@ const Pricing: React.FC<PricingProps> = ({ user }) => {
               key={plan.name}
               className={`relative flex flex-col rounded-2xl transition-all duration-300 group ${
                 plan.popular
-                  ? 'bg-[#7D5CFF] p-[2px] shadow-2xl shadow-[#7D5CFF]/25 md:scale-105 z-10 hover:-translate-y-1'
-                  : 'bg-slate-200 dark:bg-slate-800 p-[1px] md:mt-4 md:mb-4 hover:-translate-y-1'
+                  ? 'bg-brand p-[2px] shadow-2xl shadow-brand/25 md:scale-105 z-10'
+                  : 'bg-slate-200 dark:bg-slate-800 p-[1px] md:mt-4 md:mb-4'
               }`}
             >
               {plan.popular && (
-                <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-[#7D5CFF] text-white px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest shadow-xl flex items-center gap-2 border border-[#9B7BFF]">
+                <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-brand text-white px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest shadow-xl flex items-center gap-2 border border-brand-400">
                   <Target size={12} /> Recommandé
                 </div>
               )}
 
-              <div className={`flex flex-col h-full bg-white dark:bg-[#030712] p-6 md:p-10 rounded-[14px] transition-all duration-300 ${plan.popular ? 'dark:bg-slate-950/90' : ''}`}>
+              <div className={`flex flex-col h-full bg-white dark:bg-canvas p-6 md:p-10 rounded-[14px] transition-all duration-300 ${plan.popular ? 'dark:bg-slate-950/90' : ''}`}>
                 <div className="flex justify-between items-start mb-6 md:mb-8">
                   <div className={`w-12 h-12 md:w-14 md:h-14 rounded-2xl flex items-center justify-center border shadow-inner ${
-                    plan.popular ? 'bg-[#7D5CFF] text-white border-[#9B7BFF]' : 'bg-slate-50 dark:bg-slate-900 text-slate-400 border-slate-100 dark:border-slate-800'
+                    plan.popular ? 'bg-brand text-white border-brand-400' : 'bg-slate-50 dark:bg-slate-900 text-slate-400 border-line'
                   }`}>
                     {plan.icon}
                   </div>
@@ -212,13 +212,13 @@ const Pricing: React.FC<PricingProps> = ({ user }) => {
                 </div>
 
                 <div className="space-y-2 mb-6 md:mb-8">
-                  <h3 className="text-xl md:text-2xl font-black text-slate-900 dark:text-white tracking-tight">{plan.displayName}</h3>
+                  <h3 className="text-xl md:text-2xl font-black text-ink tracking-tight">{plan.displayName}</h3>
                   <p className="text-xs text-slate-500 font-medium leading-relaxed italic">{plan.description}</p>
                 </div>
 
                 <div className="mb-8 md:mb-10">
                   <div className="flex items-baseline gap-1">
-                    <span className="text-5xl md:text-6xl font-black text-slate-900 dark:text-white tracking-tighter">
+                    <span className="text-5xl md:text-6xl font-black text-ink tracking-tighter">
                       {price === 0 ? '0' : price.toString().replace('.', ',')}€
                     </span>
                     <span className="text-slate-400 text-[10px] font-black uppercase tracking-widest">{suffix}</span>
@@ -227,14 +227,14 @@ const Pricing: React.FC<PricingProps> = ({ user }) => {
                     <p className="text-[9px] font-bold text-emerald-600 mt-2 uppercase tracking-wider">Soit ~9,92 €/mois • 2 mois offerts</p>
                   )}
                   {plan.monthlyPrice > 0 && billing === 'monthly' && (
-                    <p className="text-[9px] font-bold text-[#7D5CFF] mt-2 uppercase tracking-wider">Sans engagement • Annulable à tout moment</p>
+                    <p className="text-[9px] font-bold text-brand mt-2 uppercase tracking-wider">Sans engagement • Annulable à tout moment</p>
                   )}
                 </div>
 
                 <ul className="space-y-4 mb-12 flex-1">
                   {plan.features.map((feature, i) => (
-                    <li key={i} className="flex items-start gap-3 text-sm text-slate-700 dark:text-slate-300 font-bold">
-                      <div className={`mt-0.5 rounded-full p-1 ${plan.popular ? 'bg-[#7D5CFF] text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-400'}`}>
+                    <li key={i} className="flex items-start gap-3 text-sm text-ink font-bold">
+                      <div className={`mt-0.5 rounded-full p-1 ${plan.popular ? 'bg-brand text-white' : 'bg-subtle text-slate-400'}`}>
                         <Check size={12} strokeWidth={4} />
                       </div>
                       <span>{feature}</span>
@@ -249,9 +249,9 @@ const Pricing: React.FC<PricingProps> = ({ user }) => {
                     plan.current
                       ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 border border-emerald-200 dark:border-emerald-800 cursor-default'
                       : plan.monthlyPrice === 0
-                        ? 'bg-slate-50 dark:bg-slate-900 text-slate-400 border border-slate-100 dark:border-slate-800 cursor-default'
+                        ? 'bg-slate-50 dark:bg-slate-900 text-slate-400 border border-line cursor-default'
                         : plan.popular
-                          ? 'press bg-[#7D5CFF] text-white hover:bg-[#6023C0] shadow-xl shadow-[#7D5CFF]/25 hover:-translate-y-1'
+                          ? 'press bg-brand text-white hover:bg-brand-700 shadow-xl shadow-brand/25'
                           : 'press bg-slate-900 dark:bg-slate-800 text-white hover:bg-black dark:hover:bg-slate-700'
                   }`}
                 >
@@ -270,7 +270,7 @@ const Pricing: React.FC<PricingProps> = ({ user }) => {
                   <p className="text-[9px] text-slate-400 leading-relaxed mt-4 text-center px-2">
                     Abonnement sans engagement, résiliable à tout moment. En activant l'accès immédiat, vous acceptez de
                     renoncer à votre droit de rétractation de 14&nbsp;jours (art. L221-28 C. conso). Voir les{' '}
-                    <Link to="/legal/cgv" className="font-bold text-[#7D5CFF] hover:underline">CGV</Link>.
+                    <Link to="/legal/cgv" className="font-bold text-brand hover:underline">CGV</Link>.
                   </p>
                 )}
               </div>
@@ -282,9 +282,9 @@ const Pricing: React.FC<PricingProps> = ({ user }) => {
       {/* Packs de crédits */}
       <section className="space-y-8">
         <div className="text-center space-y-3 max-w-2xl mx-auto">
-          <h2 className="text-2xl md:text-3xl font-black text-slate-900 dark:text-white tracking-tight">Pas envie de vous abonner&nbsp;?</h2>
+          <h2 className="text-2xl md:text-3xl font-black text-ink tracking-tight">Pas envie de vous abonner&nbsp;?</h2>
           <p className="text-sm text-slate-500 font-medium">
-            Prenez un <span className="font-bold text-[#7D5CFF]">pack de crédits</span>, payez une fois, utilisez quand vous voulez.
+            Prenez un <span className="font-bold text-brand">pack de crédits</span>, payez une fois, utilisez quand vous voulez.
             <span className="block text-[11px] text-slate-400 mt-1">Crédits valables 12 mois. Au-delà de votre quota d'abonnement&nbsp;: 0,99 € / candidature.</span>
           </p>
         </div>
@@ -293,28 +293,28 @@ const Pricing: React.FC<PricingProps> = ({ user }) => {
           {packs.map((pack) => (
             <div
               key={pack.name}
-              className={`relative card-modern p-6 md:p-8 flex flex-col items-center text-center border transition-all duration-300 hover:-translate-y-1 hover:shadow-xl ${
-                pack.popular ? 'border-[#7D5CFF]/40 dark:border-[#7D5CFF]/30 shadow-xl shadow-[#7D5CFF]/10' : 'border-slate-100 dark:border-slate-800'
+              className={`relative card-modern p-6 md:p-8 flex flex-col items-center text-center border transition-all duration-300 hover:shadow-xl ${
+                pack.popular ? 'border-brand/40 dark:border-brand/30 shadow-xl shadow-brand/10' : 'border-line'
               }`}
             >
               {pack.popular && (
-                <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-[#7D5CFF] text-white px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest shadow-lg">
+                <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-brand text-white px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest shadow-lg">
                   Meilleur rapport
                 </span>
               )}
-              <div className="w-12 h-12 rounded-2xl bg-[#7D5CFF]/5 dark:bg-[#7D5CFF]/10 text-[#7D5CFF] flex items-center justify-center mb-4">
+              <div className="w-12 h-12 rounded-2xl bg-brand/5 dark:bg-brand/10 text-brand flex items-center justify-center mb-4">
                 {pack.icon}
               </div>
-              <h3 className="text-lg font-black text-slate-900 dark:text-white">{pack.name}</h3>
+              <h3 className="text-lg font-black text-ink">{pack.name}</h3>
               <p className="text-sm text-slate-500 font-bold mt-1">{pack.credits} candidatures</p>
               <div className="my-5">
-                <span className="text-4xl font-black text-slate-900 dark:text-white tracking-tighter">{pack.price.toString().replace('.', ',')}€</span>
+                <span className="text-4xl font-black text-ink tracking-tighter">{pack.price.toString().replace('.', ',')}€</span>
                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mt-1">soit {pack.unit} / candidature</p>
               </div>
               <button
                 onClick={() => handleBuyPack(pack)}
                 className={`press w-full py-4 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] transition-all flex items-center justify-center gap-2 ${
-                  pack.popular ? 'bg-[#7D5CFF] text-white hover:bg-[#6023C0]' : 'bg-slate-900 dark:bg-slate-800 text-white hover:bg-black dark:hover:bg-slate-700'
+                  pack.popular ? 'bg-brand text-white hover:bg-brand-700' : 'bg-slate-900 dark:bg-slate-800 text-white hover:bg-black dark:hover:bg-slate-700'
                 }`}
               >
                 Choisir ce pack
@@ -329,7 +329,7 @@ const Pricing: React.FC<PricingProps> = ({ user }) => {
       <section className="max-w-5xl mx-auto">
         <div className="relative overflow-hidden rounded-2xl bg-slate-900 dark:bg-slate-950 border border-slate-800 p-8 md:p-12 text-white flex flex-col md:flex-row items-start md:items-center gap-8">
           <div className="relative z-10 flex-1 space-y-3">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 text-[#A78BFA] text-[10px] font-black uppercase tracking-[0.2em]">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 text-brand-300 text-[10px] font-black uppercase tracking-[0.2em]">
               <Building2 size={12} /> Organismes & partenaires
             </div>
             <h3 className="text-2xl md:text-3xl font-black tracking-tight">Votre propre espace dédié, adapté à votre organisation.</h3>
@@ -341,7 +341,7 @@ const Pricing: React.FC<PricingProps> = ({ user }) => {
           <div className="relative z-10 shrink-0 flex flex-col gap-3">
             <a
               href="/auth/register"
-              className="inline-flex items-center justify-center gap-2 px-8 py-5 bg-white text-slate-900 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] hover:bg-[#7D5CFF]/5 transition-all shadow-xl hover:-translate-y-1"
+              className="inline-flex items-center justify-center gap-2 px-8 py-5 bg-white text-slate-900 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] hover:bg-brand/5 transition-all shadow-xl"
             >
               <Building2 size={16} /> Créer un espace partenaire
             </a>
@@ -358,18 +358,18 @@ const Pricing: React.FC<PricingProps> = ({ user }) => {
       {/* Comparaison Gratuit vs Élite */}
       <section className="space-y-8 md:space-y-12">
         <div className="text-center space-y-3">
-          <h2 className="text-2xl md:text-3xl font-black text-slate-900 dark:text-white tracking-tight">Gratuit ou Élite&nbsp;?</h2>
+          <h2 className="text-2xl md:text-3xl font-black text-ink tracking-tight">Gratuit ou Élite&nbsp;?</h2>
           <p className="text-sm text-slate-400 font-bold uppercase tracking-[0.2em]">Comparatif détaillé</p>
         </div>
 
-        <div className="card-modern overflow-x-auto border-none shadow-2xl bg-white dark:bg-slate-900/50">
+        <div className="card-modern overflow-x-auto border-none shadow-2xl bg-surface/50">
           <div className="min-w-[480px]">
             <table className="w-full text-left border-collapse">
               <thead>
-                <tr className="bg-slate-50 dark:bg-slate-800/50">
+                <tr className="bg-subtle">
                   <th className="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Capacité</th>
                   <th className="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] text-center">Gratuit</th>
-                  <th className="px-8 py-6 text-[10px] font-black text-[#7D5CFF] uppercase tracking-[0.2em] text-center">Élite</th>
+                  <th className="px-8 py-6 text-[10px] font-black text-brand uppercase tracking-[0.2em] text-center">Élite</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
@@ -383,9 +383,9 @@ const Pricing: React.FC<PricingProps> = ({ user }) => {
                   ['Support prioritaire', '—', '24h'],
                 ].map((row, i) => (
                   <tr key={i} className="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors">
-                    <td className="px-8 py-6 text-sm font-bold text-slate-700 dark:text-slate-300">{row[0]}</td>
+                    <td className="px-8 py-6 text-sm font-bold text-ink">{row[0]}</td>
                     <td className="px-8 py-6 text-xs font-bold text-slate-400 text-center">{row[1]}</td>
-                    <td className="px-8 py-6 text-xs font-black text-[#7D5CFF] text-center">{row[2]}</td>
+                    <td className="px-8 py-6 text-xs font-black text-brand text-center">{row[2]}</td>
                   </tr>
                 ))}
               </tbody>
@@ -397,16 +397,16 @@ const Pricing: React.FC<PricingProps> = ({ user }) => {
       {/* Trust */}
       <footer className="grid grid-cols-1 md:grid-cols-3 gap-8">
         {[
-          { icon: <Lock className="text-[#7D5CFF]" />, title: 'Paiement Sécurisé', desc: 'Paiements traités de façon sécurisée par Stripe.' },
+          { icon: <Lock className="text-brand" />, title: 'Paiement Sécurisé', desc: 'Paiements traités de façon sécurisée par Stripe.' },
           { icon: <TrendingUp className="text-emerald-500" />, title: 'Candidatures optimisées', desc: 'Des CV et lettres conçus pour passer les filtres ATS.' },
           { icon: <ShieldCheck className="text-blue-500" />, title: 'Respect du RGPD', desc: 'Vos données vous appartiennent et ne sont jamais revendues.' },
         ].map((item, i) => (
           <div key={i} className="card-modern p-6 flex items-start gap-4">
-            <div className="shrink-0 p-3 bg-slate-50 dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-700">
+            <div className="shrink-0 p-3 bg-subtle rounded-xl border border-slate-100 dark:border-slate-700">
               {item.icon}
             </div>
             <div>
-              <h4 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-wider mb-1">{item.title}</h4>
+              <h4 className="text-sm font-black text-ink uppercase tracking-wider mb-1">{item.title}</h4>
               <p className="text-xs text-slate-500 font-medium leading-relaxed">{item.desc}</p>
             </div>
           </div>

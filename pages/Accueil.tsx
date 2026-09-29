@@ -2,15 +2,10 @@ import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { User } from '../types';
 import { authHeaders } from '../services/authToken';
-import PageHero from '../components/PageHero';
-import HeroDecor from '../components/HeroDecor';
-import Tilt from '../components/Tilt';
 import CountUp from '../components/CountUp';
-import StatCard, { StatTone } from '../components/StatCard';
 import {
-  UserRound, Send, LineChart, Plus, ArrowRight,
-  FileText, Search, Bell, Loader2, Clock, CalendarCheck, Award, PenLine, Sparkles, Bookmark,
-  Building2, MapPin, Briefcase, Rocket, Crown
+  UserRound, Plus, ArrowRight, FileText, Search, Bell, Loader2, PenLine, Bookmark,
+  Building2, MapPin, Briefcase, Check, ChevronRight, BellRing
 } from 'lucide-react';
 
 interface AccueilProps {
@@ -47,62 +42,72 @@ interface DashboardStats {
   };
 }
 
-/* Parcours en 3 étapes — chaque espace a sa teinte (repère visuel), le numéro
-   d'étape matérialise la progression Préparer → Postuler → Suivre. */
-const spaces = [
-  { to: '/prepare/profile', icon: <UserRound size={20} />, title: 'Préparer', desc: 'Ton profil, ton CV et ta lettre type.',
-    iconCls: 'bg-[#7D5CFF]/10 text-[#7D5CFF] border border-[#7D5CFF]/15' },
-  { to: '/target/offers', icon: <Send size={20} />, title: 'Postuler', desc: 'Trouve des offres et candidate avec l’IA.',
-    iconCls: 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/15' },
-  { to: '/track/applications', icon: <LineChart size={20} />, title: 'Suivre', desc: 'Tes candidatures et tes réponses.',
-    iconCls: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/15' },
-];
-
 // Détermine LA prochaine action la plus pertinente selon l'état du compte.
 const getNextAction = (stats: DashboardStats | null) => {
   const fallback = {
     to: '/target/offers',
-    icon: <Plus size={22} strokeWidth={2.5} />,
+    icon: <Plus size={20} />,
     title: 'Nouvelle candidature',
-    desc: 'Lance-toi : trouve une offre et postule.',
+    desc: 'Parcours les offres sélectionnées pour toi.',
   };
   if (!stats) return fallback;
 
-  // Repli si le backend n'expose pas encore canGenerateCV (front déployé avant le back) :
-  // on déduit le minimum vital de la liste des manques.
+  // Repli si le backend n'expose pas encore canGenerateCV : on déduit le minimum
+  // vital de la liste des manques.
   const canGenerateCV = stats.canGenerateCV
     ?? !(stats.profileMissing ?? []).includes('ton métier cible');
 
-  // Le premier CV passe AVANT la complétion du profil.
-  // Auparavant, tout profil sous 50 % renvoyait vers « complète ton profil » : un nouvel
-  // inscrit sortait de l'onboarding pour s'entendre redemander de remplir son profil, sans
-  // avoir rien vu de ce que l'outil sait faire. Le CV généré est le moment où la valeur
-  // apparaît — on y va dès qu'il y a de quoi le rédiger, le profil se complète ensuite.
+  // Le premier CV passe AVANT la complétion du profil : c'est le moment où la
+  // valeur apparaît. Le profil se complète ensuite.
   if (!canGenerateCV) {
-    return { to: '/prepare/profile', icon: <UserRound size={22} />, title: 'Complète ton profil', desc: 'Ton métier visé et tes expériences suffisent pour générer un premier CV.' };
+    return { to: '/prepare/profile', icon: <UserRound size={20} />, title: 'Complète ton profil', desc: 'Ton métier visé et quelques lignes sur ton parcours suffisent pour un premier CV.' };
   }
   if (stats.cvCount === 0) {
-    return { to: '/prepare/cv', icon: <FileText size={22} />, title: 'Génère ton premier CV', desc: 'L’IA le rédige à partir de ton profil, en une minute.' };
+    return { to: '/prepare/cv', icon: <FileText size={20} />, title: 'Crée ton premier CV', desc: 'Il est rédigé à partir de ton profil. Compte une minute, tu pourras tout modifier ensuite.' };
   }
   if (stats.profileCompletion < 50) {
-    return { to: '/prepare/profile', icon: <UserRound size={22} />, title: 'Complète ton profil', desc: `Profil rempli à ${stats.profileCompletion}%. Plus il est complet, meilleurs sont tes documents.` };
+    return { to: '/prepare/profile', icon: <UserRound size={20} />, title: 'Complète ton profil', desc: `Rempli à ${stats.profileCompletion} %. Plus il est précis, plus tes documents le seront.` };
   }
   if (stats.applications.total === 0) {
-    return { to: '/target/offers', icon: <Search size={22} />, title: 'Postule à ta première offre', desc: 'Tes documents sont prêts, passe à l’action.' };
+    return { to: '/target/offers', icon: <Search size={20} />, title: 'Postule à ta première offre', desc: 'Ton CV est prêt. Les offres qui correspondent à ton profil t’attendent.' };
   }
   if (stats.applications.pending > 0) {
-    return { to: '/track/applications', icon: <Bell size={22} />, title: `Relance ${stats.applications.pending} candidature${stats.applications.pending > 1 ? 's' : ''}`, desc: 'Une relance double souvent tes chances de réponse.' };
+    const n = stats.applications.pending;
+    return { to: '/track/applications', icon: <Bell size={20} />, title: `Relance ${n} candidature${n > 1 ? 's' : ''}`, desc: 'Sans nouvelles après une semaine, une relance polie augmente nettement les chances de réponse.' };
   }
-  return { to: '/target/offers', icon: <Plus size={22} strokeWidth={2.5} />, title: 'Trouve de nouvelles offres', desc: 'Continue sur ta lancée, vise plus large.' };
+  return { to: '/target/offers', icon: <Plus size={20} />, title: 'Trouve de nouvelles offres', desc: 'De nouvelles annonces arrivent chaque jour.' };
+};
+
+interface AppLite {
+  id: string;
+  company: string;
+  title: string;
+  status: 'PENDING' | 'SENT' | 'INTERVIEW' | 'OFFER' | 'REJECTED';
+  appliedAt: string;
+}
+
+const DAY = 86_400_000;
+const WEEKS = 8;
+
+/* Candidatures par semaine sur les 8 dernières semaines (lundi → dimanche). */
+const weeklyCounts = (apps: AppLite[]) => {
+  const now = new Date();
+  const monday = new Date(now.getFullYear(), now.getMonth(), now.getDate() - ((now.getDay() + 6) % 7));
+  return Array.from({ length: WEEKS }, (_, i) => {
+    const start = monday.getTime() - (WEEKS - 1 - i) * 7 * DAY;
+    const end = start + 7 * DAY;
+    const count = apps.filter((a) => { const t = new Date(a.appliedAt).getTime(); return t >= start && t < end; }).length;
+    return { start: new Date(start), count, current: i === WEEKS - 1 };
+  });
 };
 
 const Accueil: React.FC<AccueilProps> = ({ user }) => {
-  const firstName = user?.name?.split(' ')[0] || 'à toi';
+  const firstName = user?.name?.split(' ')[0] || '';
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [partnerOffers, setPartnerOffers] = useState<PartnerOffer[]>([]);
-  // Abonnement (pour le bandeau de paiement mis en avant — voir plus bas). Chargé à
-  // part de /dashboard/stats, qui ne connaît pas le plan.
+  const [apps, setApps] = useState<AppLite[]>([]);
+  // Abonnement (encart « Passer à Élite ») — chargé à part de /dashboard/stats, qui ne connaît pas le plan.
   const [usage, setUsage] = useState<{ isSubscribed: boolean; unlimited: boolean; inTrial: boolean; trialDaysLeft: number } | null>(null);
 
   useEffect(() => {
@@ -116,7 +121,7 @@ const Accueil: React.FC<AccueilProps> = ({ user }) => {
         const data = await res.json();
         if (alive && data.success) setUsage(data.usage);
       } catch {
-        /* silencieux : pas de bandeau plutôt qu'une erreur visible */
+        /* silencieux : pas d'encart plutôt qu'une erreur visible */
       }
     })();
     return () => { alive = false; };
@@ -159,334 +164,342 @@ const Accueil: React.FC<AccueilProps> = ({ user }) => {
     return () => { alive = false; };
   }, []);
 
+  // Candidatures (graphique d'activité + relances) : chargées à part, sans bloquer.
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      try {
+        const res = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/applications?limit=100`, {
+          credentials: 'include',
+          headers: { ...authHeaders() },
+        });
+        const data = await res.json();
+        if (alive && data.success) setApps(data.data || []);
+      } catch {
+        /* silencieux : les deux blocs ne s'affichent simplement pas */
+      }
+    })();
+    return () => { alive = false; };
+  }, []);
+
   const next = getNextAction(stats);
   const pct = stats?.profileCompletion ?? 0;
 
-  // Salutation vivante : varie selon l'heure + date du jour en français.
   const hour = new Date().getHours();
   const greeting = hour >= 5 && hour < 18 ? 'Bonjour' : 'Bonsoir';
   const today = new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' });
 
-  // Arsenal du candidat : documents & favoris déjà comptés par /dashboard/stats
-  // mais jusqu'ici jamais montrés sur l'Accueil. Chips compactes → richesse utile.
-  const arsenal = [
-    { to: '/prepare/cv', icon: <FileText size={14} />, count: stats?.cvCount ?? 0, label: 'CV' },
-    { to: '/prepare/letter', icon: <PenLine size={14} />, count: stats?.letterCount ?? 0, label: stats?.letterCount === 1 ? 'lettre' : 'lettres' },
-    { to: '/target/saved', icon: <Bookmark size={14} />, count: stats?.savedCount ?? 0, label: stats?.savedCount === 1 ? 'sauvegardée' : 'sauvegardées' },
-  ];
+  const showUpgrade = !loading && usage && !usage.isSubscribed && !usage.unlimited;
 
-  // KPIs alignés sur les statuts du suivi (mêmes couleurs que le Kanban).
-  // Même composant StatCard que le Dashboard → cohérence visuelle inter-pages.
-  // `hint` : légende contextuelle. Un compteur à 0 devient une invitation plutôt
-  // qu'un « vide » (ex. « Relance pour en décrocher » au lieu d'un 0 muet).
-  const kpis: { label: string; value: number; icon: React.ReactNode; tone: StatTone; hint: string }[] = [
-    { label: 'Candidatures', value: stats?.applications.total ?? 0, icon: <Send size={20} strokeWidth={2.4} />, tone: 'violet',
-      hint: (stats?.applications.total ?? 0) > 0 ? 'Total envoyé' : 'Postule pour démarrer' },
-    { label: 'En attente', value: stats?.applications.pending ?? 0, icon: <Clock size={20} strokeWidth={2.4} />, tone: 'blue',
-      hint: (stats?.applications.pending ?? 0) > 0 ? 'Réponse en cours' : 'Rien en attente' },
-    { label: 'Entretiens', value: stats?.applications.interview ?? 0, icon: <CalendarCheck size={20} strokeWidth={2.4} />, tone: 'amber',
-      hint: (stats?.applications.interview ?? 0) > 0 ? 'Décrochés 🎉' : 'Relance pour en décrocher' },
-    { label: 'Offres', value: stats?.applications.offer ?? 0, icon: <Award size={20} strokeWidth={2.4} />, tone: 'emerald',
-      hint: (stats?.applications.offer ?? 0) > 0 ? 'Reçues 🎉' : 'Continue, ça arrive' },
-  ];
-
-  // Écran « premiers pas » — tant qu'aucun CV n'a été généré, l'Accueil habituel
-  // (8 blocs : arsenal, carte étape, anneau profil, KPIs, parcours, actions rapides,
-  // astuce) noie la seule chose qui compte sous une richesse que personne n'a encore
-  // gagnée. Revue produit du 28/09 : sur 54 inscrits, ~1 CV généré — la dispersion de
-  // cet écran y est pour beaucoup. Ici, une seule carte, une seule action ; le reste
-  // (KPIs, astuces, actions rapides) réapparaît naturellement dès le premier CV, sans
-  // rien avoir été supprimé pour les comptes actifs.
+  /* ───────── Premiers pas : aucun CV encore ─────────
+     Revue produit du 28/09 : sur 54 inscrits, ~1 CV généré. Tant qu'aucun CV
+     n'existe, on montre 3 étapes et une seule action possible : celle de
+     l'étape en cours. Le tableau de bord complet apparaît au premier CV. */
   if (!loading && stats && stats.cvCount === 0) {
-    const stepIndex = next.to === '/prepare/profile' ? 0 : 1; // « Complète ton profil » ou « Génère ton CV »
-    return (
-      <div className="min-h-[calc(100vh-64px)] flex items-center justify-center p-5 md:p-8">
-        <div className="max-w-lg w-full animate-fade-in-up">
-          <div className="relative overflow-hidden rounded-[2rem] p-8 sm:p-11 text-center bg-gradient-to-br from-[#9B7BFF] via-[#7D5CFF] to-[#6D28D9] text-white shadow-card">
-            <span aria-hidden className="pointer-events-none absolute -right-10 -bottom-14 w-52 h-52 rounded-full bg-white/10" />
-            <span aria-hidden className="pointer-events-none absolute -left-12 -top-16 w-40 h-40 rounded-full bg-white/[0.07]" />
-            <span
-              aria-hidden
-              className="pointer-events-none absolute inset-0 opacity-[0.12]"
-              style={{ backgroundImage: 'radial-gradient(rgba(255,255,255,0.9) 1px, transparent 1px)', backgroundSize: '20px 20px' }}
-            />
-            <div className="relative">
-              <span className="icon-shine inline-flex w-16 h-16 rounded-2xl bg-white/15 items-center justify-center shadow-lg">
-                <Rocket size={28} />
-              </span>
-              <h1 className="mt-6 text-2xl sm:text-[1.75rem] font-black tracking-tight !text-white">
-                {greeting} {firstName} 👋
-              </h1>
-              <p className="mt-3 text-white/85 leading-relaxed max-w-sm mx-auto">{next.desc}</p>
-              <Link
-                to={next.to}
-                className="press mt-8 inline-flex items-center gap-2 bg-white text-[#6D28D9] font-bold text-sm rounded-xl px-6 py-3.5 shadow-[0_8px_20px_-6px_rgba(0,0,0,0.3)] hover:-translate-y-0.5 hover:shadow-[0_10px_24px_-6px_rgba(0,0,0,0.35)] transition-all"
-              >
-                {next.title} <ArrowRight size={16} />
-              </Link>
-            </div>
-          </div>
+    const profileDone = next.to !== '/prepare/profile';
+    const steps = [
+      { title: 'Indique le métier que tu vises', desc: 'Et quelques lignes sur ton parcours.', done: profileDone, to: '/prepare/profile', cta: 'Compléter mon profil' },
+      { title: 'Crée ton premier CV', desc: 'Rédigé à partir de ton profil, en une minute.', done: false, to: '/prepare/cv', cta: 'Créer mon CV' },
+      { title: 'Postule à une première offre', desc: 'Des annonces choisies selon ton métier et ta ville.', done: false, to: '/target/offers', cta: 'Voir les offres' },
+    ];
+    const current = steps.findIndex((st) => !st.done);
 
-          {/* Repère du parcours — minimal, orientation seulement, pas de nouvelles cartes. */}
-          <div className="mt-7 flex items-center justify-center gap-2.5 text-xs font-semibold text-[#9CA3AF]">
-            <span className={stepIndex === 0 ? 'text-[#7D5CFF]' : ''}>1 · Préparer</span>
-            <ArrowRight size={12} />
-            <span>2 · Postuler</span>
-            <ArrowRight size={12} />
-            <span>3 · Suivre</span>
-          </div>
-        </div>
+    return (
+      <div className="max-w-2xl mx-auto px-5 md:px-8 pt-10 md:pt-16 pb-16 animate-fade-in">
+        <p className="eyebrow capitalize">{today}</p>
+        <h1 className="mt-2 text-[28px] md:text-[34px] leading-tight">{greeting}{firstName ? ` ${firstName}` : ''}</h1>
+        <p className="mt-2 text-[15px] text-muted">
+          Trois étapes pour envoyer ta première candidature. Compte une dizaine de minutes.
+        </p>
+
+        <ol className="mt-8 surface divide-y divide-line">
+          {steps.map((st, i) => {
+            const active = i === current;
+            return (
+              <li key={st.title} className={`flex gap-4 p-5 ${active || st.done ? '' : 'opacity-60'}`}>
+                <span
+                  className={`mt-0.5 w-7 h-7 rounded-full grid place-items-center text-[13px] font-semibold shrink-0 ${
+                    st.done
+                      ? 'bg-emerald-500 text-white'
+                      : active
+                        ? 'bg-brand text-white'
+                        : 'border border-line-strong text-faint'
+                  }`}
+                >
+                  {st.done ? <Check size={15} strokeWidth={3} /> : i + 1}
+                </span>
+                <div className="min-w-0 flex-1">
+                  <p className={`font-medium ${st.done ? 'text-muted' : 'text-ink'}`}>{st.title}</p>
+                  <p className="text-sm text-muted mt-0.5">{st.done ? 'Fait.' : st.desc}</p>
+                  {active && (
+                    <Link to={st.to} className="btn btn-primary mt-4">
+                      {st.cta} <ArrowRight size={16} />
+                    </Link>
+                  )}
+                </div>
+              </li>
+            );
+          })}
+        </ol>
       </div>
     );
   }
 
+  /* ───────── Compte actif ───────── */
+  const appStats = stats?.applications;
+  const weeks = weeklyCounts(apps);
+  const maxWeek = Math.max(1, ...weeks.map((w) => w.count));
+  const thisWeek = weeks[WEEKS - 1].count;
+  const lastWeek = weeks[WEEKS - 2].count;
+  const followUps = apps
+    .filter((a) => a.status === 'SENT' && Date.now() - new Date(a.appliedAt).getTime() >= 7 * DAY)
+    .sort((a, b) => new Date(a.appliedAt).getTime() - new Date(b.appliedAt).getTime())
+    .slice(0, 3);
+  const kpis = [
+    { label: 'Candidatures', value: appStats?.total ?? 0 },
+    { label: 'En attente', value: appStats?.pending ?? 0 },
+    { label: 'Entretiens', value: appStats?.interview ?? 0 },
+    { label: 'Offres reçues', value: appStats?.offer ?? 0 },
+  ];
+  const docs = [
+    { to: '/prepare/cv', icon: <FileText size={16} />, label: 'CV', count: stats?.cvCount ?? 0 },
+    { to: '/prepare/letter', icon: <PenLine size={16} />, label: 'Lettres', count: stats?.letterCount ?? 0 },
+    { to: '/target/saved', icon: <Bookmark size={16} />, label: 'Offres sauvegardées', count: stats?.savedCount ?? 0 },
+  ];
+
   return (
-    <>
-      <PageHero
-        tone="violet"
-        eyebrow={<span className="capitalize">{today}</span>}
-        icon={<Sparkles size={22} />}
-        decor={<HeroDecor variant="accueil" />}
-        title={<>{greeting} <span className="bg-gradient-to-r from-[#7D5CFF] via-[#8C6DFF] to-[#B49CFF] bg-clip-text text-transparent">{firstName}</span> <span className="inline-block origin-[70%_70%] animate-[wave_1.8s_ease-in-out_1]">👋</span></>}
-        subtitle="Voici l'état de ta recherche aujourd'hui."
-        actions={
-          !loading && stats ? (
-            <div className="flex flex-wrap items-center gap-2">
-              {arsenal.map((a) => (
-                <Link
-                  key={a.to}
-                  to={a.to}
-                  className="press inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/70 dark:bg-white/5 backdrop-blur border border-[#ECEAF6] dark:border-[#1F2937] text-xs font-semibold text-[#374151] dark:text-slate-300 hover:border-[#7D5CFF]/40 hover:text-[#7D5CFF] transition-colors"
-                >
-                  <span className="text-[#7D5CFF]">{a.icon}</span>
-                  <span className="tabular-nums">{a.count}</span> {a.label}
-                </Link>
-              ))}
-            </div>
-          ) : undefined
-        }
-      />
-
-      <div className="p-5 md:p-8 max-w-6xl mx-auto space-y-8 md:space-y-6 pb-28 md:pb-10">
-        {/* Bloc focal : grande carte « prochaine étape » + anneau de profil. */}
-        <div className="grid lg:grid-cols-3 gap-4 items-stretch">
-          <Tilt glare className="lg:col-span-2 h-full" max={6}>
-            <Link
-              to={next.to}
-              className="press group relative overflow-hidden h-full min-h-[160px] flex flex-col justify-between gap-5 rounded-2xl p-6 bg-gradient-to-br from-[#9B7BFF] via-[#7D5CFF] to-[#6D28D9] text-white shadow-card hover:shadow-card-hover hover:-translate-y-0.5 transition-all animate-fade-in-up"
-            >
-              {/* Décor : halos + trame de points façon pitch deck (purement décoratif) */}
-              <span aria-hidden className="pointer-events-none absolute -right-8 -bottom-12 w-44 h-44 rounded-full bg-white/10" />
-              <span aria-hidden className="pointer-events-none absolute -left-10 -top-14 w-36 h-36 rounded-full bg-white/[0.07]" />
-              <span
-                aria-hidden
-                className="pointer-events-none absolute inset-0 opacity-[0.14]"
-                style={{ backgroundImage: 'radial-gradient(rgba(255,255,255,0.9) 1px, transparent 1px)', backgroundSize: '18px 18px' }}
-              />
-              <div className="relative flex items-start gap-4 min-w-0">
-                <span className="icon-shine w-12 h-12 rounded-xl bg-white/15 flex items-center justify-center shrink-0">
-                  {loading ? <Loader2 size={22} className="animate-spin" /> : next.icon}
-                </span>
-                <div className="min-w-0">
-                  <p className="text-[11px] uppercase tracking-wider font-semibold text-white/75">Prochaine étape</p>
-                  <p className="font-bold text-lg md:text-xl leading-snug mt-0.5 !text-white">{next.title}</p>
-                  <p className="text-white/80 text-sm mt-1 max-w-md leading-relaxed">{next.desc}</p>
-                </div>
-              </div>
-              <span className="tab-shine relative self-start inline-flex items-center gap-2 bg-white text-[#6D28D9] font-semibold text-sm rounded-xl px-4 py-2.5 shadow-[0_4px_14px_rgba(0,0,0,0.12)] group-hover:gap-3 group-hover:shadow-[0_6px_20px_rgba(0,0,0,0.18)] transition-all">
-                Continuer <ArrowRight size={16} />
-              </span>
-            </Link>
-          </Tilt>
-
-          <Tilt max={6} className="h-full">
-            <Link
-              to="/prepare/profile"
-              className="press card-pro h-full flex flex-col items-center justify-center text-center gap-3 hover:-translate-y-0.5 animate-fade-in-up"
-            >
-              {/* Anneau conic : dégradé + halo doux ; vert quand le profil est complet. */}
-              <div className="relative">
-                <span aria-hidden className={`pointer-events-none absolute inset-0 m-auto w-20 h-20 rounded-full blur-2xl ${pct >= 100 ? 'bg-emerald-400/30' : 'bg-[#7D5CFF]/25'}`} />
-                <div
-                  className="relative w-[92px] h-[92px] rounded-full grid place-items-center"
-                  style={{
-                    background: pct >= 100
-                      ? `conic-gradient(#34D399, #0D9488 ${pct * 3.6}deg, rgba(16,185,129,0.15) ${pct * 3.6}deg)`
-                      : `conic-gradient(#B49CFF, #7D5CFF ${pct * 3.6}deg, rgba(125,92,255,0.14) ${pct * 3.6}deg)`,
-                  }}
-                >
-                  <div className="w-[70px] h-[70px] rounded-full bg-white dark:bg-[#111827] grid place-items-center">
-                    <span className="text-xl font-black text-[#111827] dark:text-white tabular-nums tracking-tight">
-                      {loading ? '–' : `${pct}%`}
-                    </span>
-                  </div>
-                </div>
-              </div>
-              <div>
-                <p className="text-sm font-semibold text-[#111827] dark:text-white">Profil complété</p>
-                <p className={`text-xs font-medium ${pct >= 100 ? 'text-emerald-600 dark:text-emerald-400' : 'text-[#9CA3AF]'}`}>
-                  {pct >= 100 ? 'Profil au top ✨' : pct >= 80 ? 'Presque parfait !' : pct >= 50 ? 'Bien parti, continue' : 'Pose les fondations'}
-                </p>
-                {/* Fini le pourcentage muet : on dit QUOI compléter (3 premiers manques). */}
-                {!loading && pct < 100 && (stats?.profileMissing?.length ?? 0) > 0 && (
-                  <p className="text-[11px] text-[#9CA3AF] mt-1.5 leading-snug max-w-[210px] mx-auto">
-                    Il manque&nbsp;:{' '}
-                    <span className="text-[#7D5CFF] font-semibold">
-                      {stats!.profileMissing!.slice(0, 3).join(', ')}{stats!.profileMissing!.length > 3 ? '…' : ''}
-                    </span>
-                  </p>
-                )}
-              </div>
-            </Link>
-          </Tilt>
+    <div className="max-w-6xl mx-auto px-5 md:px-8 pt-8 md:pt-10 pb-16 animate-fade-in">
+      <header className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
+        <div>
+          <p className="eyebrow capitalize">{today}</p>
+          <h1 className="mt-1.5 text-[28px] md:text-[32px] leading-tight">{greeting}{firstName ? ` ${firstName}` : ''}</h1>
         </div>
+        <Link to="/target/offers" className="btn btn-secondary self-start sm:self-auto">
+          <Search size={16} /> Chercher des offres
+        </Link>
+      </header>
 
-        {/* Bandeau paiement — mis en avant (demande explicite du 28/09 : la pastille de
-            nav ne suffisait pas). Visible pour tout compte non abonné, essai compris :
-            c'est justement pendant l'essai, quand la personne voit la valeur complète,
-            que « passer à Élite » convertit le mieux — plus facile à décider qu'après,
-            quand l'accès s'est déjà refermé. Pas de bandeau pour les comptes abonnés
-            (rien à vendre) ni les comptes illimités (internes). */}
-        {!loading && usage && !usage.isSubscribed && !usage.unlimited && (
-          <Link
-            to="/pricing"
-            className="press group relative overflow-hidden flex flex-col sm:flex-row sm:items-center gap-4 rounded-2xl p-5 bg-gradient-to-r from-[#8C6DFF] to-[#6D28D9] text-white shadow-card hover:shadow-card-hover hover:-translate-y-0.5 transition-all animate-fade-in-up"
-          >
-            <span aria-hidden className="pointer-events-none absolute -right-10 -top-10 w-40 h-40 rounded-full bg-white/10" />
-            <span className="relative w-11 h-11 rounded-xl bg-white/15 flex items-center justify-center shrink-0">
-              <Crown size={22} />
-            </span>
-            <div className="relative min-w-0 flex-1">
-              <p className="font-bold !text-white leading-tight">
-                {usage.inTrial ? `Essai Élite · ${usage.trialDaysLeft} jour${usage.trialDaysLeft > 1 ? 's' : ''} restant${usage.trialDaysLeft > 1 ? 's' : ''}` : 'Passe à Élite'}
-              </p>
-              <p className="text-sm text-white/80 mt-0.5">
-                {usage.inTrial
-                  ? "Garde l'accès complet après l'essai : candidatures spontanées, CV et lettres sans limite."
-                  : '150 candidatures IA par mois, CV et lettres illimités, candidatures spontanées débloquées.'}
-              </p>
-            </div>
-            <span className="relative shrink-0 inline-flex items-center gap-2 bg-white text-[#6D28D9] font-semibold text-sm rounded-xl px-4 py-2.5 group-hover:gap-3 transition-all">
-              Voir les tarifs <ArrowRight size={16} />
-            </span>
-          </Link>
-        )}
-
-        {/* Offres de l'organisme du candidat (adhérent) — mises en avant sur l'Accueil.
-            Bandeau violet clair pour bien les distinguer des offres externes. */}
-        {partnerOffers.length > 0 && (
-          <section className="card-pro !p-5 animate-fade-in-up border border-[#7D5CFF]/20">
-            <div className="flex items-center gap-2 mb-4">
-              <span className="w-8 h-8 rounded-lg bg-[#7D5CFF]/10 text-[#7D5CFF] flex items-center justify-center shrink-0">
-                <Building2 size={16} />
-              </span>
-              <div className="min-w-0">
-                <h2 className="text-sm font-bold text-[#111827] dark:text-white leading-tight">Offres de votre organisme</h2>
-                <p className="text-xs text-[#9CA3AF]">Publiées spécialement pour vous par vos organismes partenaires.</p>
-              </div>
-              <Link to="/target/offers" className="press ml-auto hidden sm:inline-flex items-center gap-1 text-xs font-bold text-[#7D5CFF] hover:gap-1.5 transition-all shrink-0">
-                Tout voir <ArrowRight size={13} />
-              </Link>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              {partnerOffers.slice(0, 4).map((o) => (
-                <Link
-                  key={o.id}
-                  to="/target/offers"
-                  className="press group flex items-start gap-3 p-3.5 rounded-xl border border-[#ECEAF6] dark:border-[#1F2937] bg-white/60 dark:bg-[#111827]/60 hover:border-[#7D5CFF]/40 hover:bg-white dark:hover:bg-[#111827] transition-all"
-                >
-                  {o.partner?.logoUrl ? (
-                    <span className="w-11 h-11 rounded-xl bg-white dark:bg-slate-800 border border-[#ECEAF6] dark:border-slate-700 flex items-center justify-center shrink-0 overflow-hidden">
-                      <img src={o.partner.logoUrl} alt={o.partner.name} className="w-full h-full object-contain p-1" />
-                    </span>
-                  ) : (
-                    <span className="w-11 h-11 rounded-xl bg-gradient-to-br from-[#8C6DFF] to-[#5B3FD6] text-white flex items-center justify-center font-bold shrink-0">
-                      {(o.partner?.name || o.company || '?').charAt(0).toUpperCase()}
-                    </span>
-                  )}
-                  <div className="min-w-0 flex-1">
-                    <span className="inline-flex items-center gap-1 text-[10px] font-bold text-[#6D28D9] dark:text-[#B9A7FF] mb-0.5">
-                      <Building2 size={10} /> {o.partner?.name || o.company}
-                    </span>
-                    <p className="text-sm font-bold text-[#111827] dark:text-white leading-tight truncate">{o.title}</p>
-                    <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 mt-1 text-[11px] text-[#9CA3AF]">
-                      {o.type && <span className="inline-flex items-center gap-1"><Briefcase size={10} />{o.type}</span>}
-                      {o.location && <span className="inline-flex items-center gap-1"><MapPin size={10} />{o.location}</span>}
-                    </div>
-                  </div>
-                  <ArrowRight size={15} className="shrink-0 text-[#C4C4CC] group-hover:text-[#7D5CFF] group-hover:translate-x-0.5 transition-all mt-1" />
-                </Link>
-              ))}
-            </div>
-          </section>
-        )}
-
-        {/* KPIs de suivi — ou état vide encourageant tant qu'aucune candidature n'existe
-            (évite l'écran « 0 · 0 · 0 · 0 » qui paraît mort au tout premier lancement). */}
-        {!loading && stats && stats.applications.total === 0 ? (
-          <section className="card-pro !p-6 flex flex-col sm:flex-row items-center gap-5 text-center sm:text-left animate-fade-in-up">
-            <span className="w-14 h-14 rounded-2xl surface-accent text-[#7D5CFF] flex items-center justify-center shrink-0">
-              <Send size={26} strokeWidth={2.2} />
+      <div className="mt-8 grid lg:grid-cols-3 gap-5 items-start">
+        {/* Colonne principale */}
+        <div className="lg:col-span-2 space-y-5 min-w-0">
+          {/* Prochaine étape */}
+          <section className="surface p-5 md:p-6 flex flex-col sm:flex-row sm:items-center gap-5">
+            <span className="w-11 h-11 rounded-xl bg-brand/10 text-brand dark:text-brand-300 grid place-items-center shrink-0">
+              {loading ? <Loader2 size={20} className="animate-spin" /> : next.icon}
             </span>
             <div className="min-w-0 flex-1">
-              <p className="font-bold text-[#111827] dark:text-white">Ton tableau de bord t'attend</p>
-              <p className="text-sm text-[#6B7280] dark:text-slate-400 mt-0.5">
-                Candidatures, entretiens, offres… tes statistiques s'animeront ici dès ta première candidature. 🚀
-              </p>
+              <p className="eyebrow">Prochaine étape</p>
+              <p className="mt-1 text-[17px] font-semibold text-ink leading-snug">{next.title}</p>
+              <p className="text-sm text-muted mt-0.5">{next.desc}</p>
             </div>
-            <Link to="/target/offers" className="press btn btn-primary shrink-0 w-full sm:w-auto">
-              Postuler maintenant <ArrowRight size={16} />
+            <Link to={next.to} className="btn btn-primary shrink-0">
+              Continuer <ArrowRight size={16} />
             </Link>
           </section>
-        ) : (
-          <section className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
-            {kpis.map((k) => (
-              <Tilt key={k.label} className="h-full" max={9}>
-                <StatCard
-                  className="h-full"
-                  label={k.label}
-                  value={loading ? '–' : <CountUp value={k.value} />}
-                  icon={k.icon}
-                  tone={k.tone}
-                  hint={loading ? '' : k.hint}
-                />
-              </Tilt>
-            ))}
-          </section>
-        )}
 
-        {/* Mon parcours — plein largeur. Avant, ce bloc partageait l'écran avec
-            « Actions rapides » (redondant : ses 4 liens mènent dans ces 3 mêmes
-            étapes) et une « Astuce du jour » figée. Les deux retirés (28/09) —
-            rien de perdu : chaque action reste à un clic, dans l'étape qui la
-            contient déjà, sans une troisième carte permanente pour y accéder. */}
-        <section className="card-pro !p-5">
-          <h2 className="text-xs font-semibold uppercase tracking-wider text-[#9CA3AF] mb-3">Mon parcours</h2>
-          <div className="grid sm:grid-cols-3 gap-1.5">
-            {spaces.map((s, i) => (
-              <Link
-                key={s.to}
-                to={s.to}
-                className="press group relative flex items-center gap-3 rounded-xl p-2.5 hover:bg-[#F5F4FB] dark:hover:bg-[#1F2937] transition-colors"
-              >
-                <span className={`relative w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${s.iconCls}`}>
-                  {s.icon}
-                  <span className="absolute -top-1.5 -right-1.5 w-4.5 h-4.5 min-w-[18px] min-h-[18px] rounded-full bg-white dark:bg-[#111827] border border-[#ECEAF6] dark:border-[#1F2937] text-[9px] font-black text-[#9CA3AF] grid place-items-center">
-                    {i + 1}
-                  </span>
-                </span>
-                <div className="min-w-0 flex-1">
-                  <p className="text-sm font-semibold text-[#111827] dark:text-white">{s.title}</p>
-                  <p className="text-xs text-[#9CA3AF] truncate">{s.desc}</p>
-                </div>
-                <ArrowRight size={16} className="shrink-0 text-[#C4C4CC] group-hover:text-[#7D5CFF] group-hover:translate-x-0.5 transition-all" />
+          {/* Chiffres clés */}
+          <section className="surface">
+            <div className="flex items-center justify-between px-5 pt-4">
+              <h2 className="text-[15px]">Tes candidatures</h2>
+              <Link to="/track/applications" className="text-[13px] font-medium text-muted hover:text-ink inline-flex items-center gap-0.5">
+                Tout voir <ChevronRight size={15} />
               </Link>
-            ))}
-          </div>
-        </section>
+            </div>
+            <dl className="grid grid-cols-2 sm:grid-cols-4 mt-1">
+              {kpis.map((k, i) => (
+                <div
+                  key={k.label}
+                  className={`px-5 py-4 border-line ${i % 2 === 1 ? 'border-l' : ''} ${i === 2 ? 'sm:border-l' : ''} ${i > 1 ? 'border-t sm:border-t-0' : ''}`}
+                >
+                  <dt className="text-[13px] text-muted">{k.label}</dt>
+                  <dd className="mt-1 text-[28px] font-semibold tracking-tight tabular-nums text-ink">
+                    {loading ? '–' : <CountUp value={k.value} />}
+                  </dd>
+                </div>
+              ))}
+            </dl>
+            {!loading && (appStats?.total ?? 0) === 0 && (
+              <div className="border-t border-line px-5 py-3.5 flex items-center justify-between gap-4">
+                <p className="text-sm text-muted">Aucune candidature pour l’instant.</p>
+                <Link to="/target/offers" className="text-[13px] font-medium text-brand dark:text-brand-300 whitespace-nowrap">
+                  Postuler à une offre →
+                </Link>
+              </div>
+            )}
+          </section>
+
+          {/* Activité : candidatures par semaine */}
+          {apps.length > 0 && (
+            <section className="surface p-5">
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <h2 className="text-[15px]">Ton rythme</h2>
+                  <p className="text-[13px] text-muted mt-0.5">
+                    {thisWeek} candidature{thisWeek > 1 ? 's' : ''} cette semaine
+                    {lastWeek > 0 && thisWeek !== lastWeek && (
+                      <span className={thisWeek > lastWeek ? 'text-emerald-600 dark:text-emerald-400' : 'text-faint'}>
+                        {' '}· {thisWeek > lastWeek ? '+' : ''}{thisWeek - lastWeek} par rapport à la semaine dernière
+                      </span>
+                    )}
+                  </p>
+                </div>
+                <span className="eyebrow shrink-0">8 semaines</span>
+              </div>
+              <div className="mt-5 flex items-end gap-2 h-28" role="img" aria-label={`Candidatures par semaine : ${weeks.map((w) => w.count).join(', ')}`}>
+                {weeks.map((w) => (
+                  <div key={w.start.toISOString()} className="group flex-1 flex flex-col items-center justify-end h-full gap-1.5">
+                    <span className="text-[11px] tabular-nums text-faint opacity-0 group-hover:opacity-100 transition-opacity">{w.count}</span>
+                    <div
+                      className={`w-full rounded-md transition-all duration-700 ${w.current ? 'bg-brand' : w.count ? 'bg-brand/25 dark:bg-brand/35 group-hover:bg-brand/40' : 'bg-subtle'}`}
+                      style={{ height: `${Math.max(4, (w.count / maxWeek) * 100)}%` }}
+                    />
+                  </div>
+                ))}
+              </div>
+              <div className="mt-2 flex gap-2 text-[11px] text-faint">
+                {weeks.map((w) => (
+                  <span key={w.start.toISOString()} className="flex-1 text-center tabular-nums truncate">
+                    {w.current ? 'Cette sem.' : w.start.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' }).replace('.', '')}
+                  </span>
+                ))}
+              </div>
+            </section>
+          )}
+
+          {/* À relancer : envoyées depuis 7 jours ou plus, sans réponse */}
+          {followUps.length > 0 && (
+            <section className="surface">
+              <div className="flex items-center justify-between gap-3 px-5 pt-4 pb-2">
+                <div className="flex items-center gap-2">
+                  <BellRing size={16} className="text-amber-500" />
+                  <h2 className="text-[15px]">À relancer</h2>
+                </div>
+                <Link to="/track/applications" className="text-[13px] font-medium text-muted hover:text-ink inline-flex items-center gap-0.5">
+                  Suivi <ChevronRight size={15} />
+                </Link>
+              </div>
+              <ul className="divide-y divide-line">
+                {followUps.map((a) => {
+                  const days = Math.floor((Date.now() - new Date(a.appliedAt).getTime()) / DAY);
+                  return (
+                    <li key={a.id}>
+                      <Link to="/track/applications" className="flex items-center gap-3.5 px-5 py-3 hover:bg-subtle/60 transition-colors">
+                        <span className="w-9 h-9 rounded-lg bg-subtle text-muted grid place-items-center text-sm font-semibold shrink-0">
+                          {a.company?.charAt(0)?.toUpperCase() || '?'}
+                        </span>
+                        <div className="min-w-0 flex-1">
+                          <p className="text-sm font-medium text-ink truncate">{a.title}</p>
+                          <p className="text-xs text-faint truncate">{a.company}</p>
+                        </div>
+                        <span className="text-xs text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-500/10 rounded-md px-2 h-6 inline-flex items-center shrink-0 tabular-nums">
+                          {days} j sans réponse
+                        </span>
+                      </Link>
+                    </li>
+                  );
+                })}
+              </ul>
+            </section>
+          )}
+
+          {/* Offres des organismes partenaires du candidat */}
+          {partnerOffers.length > 0 && (
+            <section className="surface">
+              <div className="flex items-center justify-between gap-3 px-5 pt-4 pb-2">
+                <div className="min-w-0">
+                  <h2 className="text-[15px]">Offres de ton organisme</h2>
+                  <p className="text-[13px] text-faint">Publiées pour toi par ta structure d’accompagnement.</p>
+                </div>
+                <Link to="/target/offers" className="text-[13px] font-medium text-muted hover:text-ink inline-flex items-center gap-0.5 shrink-0">
+                  Tout voir <ChevronRight size={15} />
+                </Link>
+              </div>
+              <ul className="divide-y divide-line">
+                {partnerOffers.slice(0, 4).map((o) => (
+                  <li key={o.id}>
+                    <Link to="/target/offers" className="group flex items-center gap-3.5 px-5 py-3.5 hover:bg-subtle/60 transition-colors">
+                      {o.partner?.logoUrl ? (
+                        <span className="w-10 h-10 rounded-lg bg-white border border-line grid place-items-center shrink-0 overflow-hidden">
+                          <img src={o.partner.logoUrl} alt="" className="w-full h-full object-contain p-1" />
+                        </span>
+                      ) : (
+                        <span className="w-10 h-10 rounded-lg bg-subtle text-muted grid place-items-center font-semibold shrink-0">
+                          {(o.partner?.name || o.company || '?').charAt(0).toUpperCase()}
+                        </span>
+                      )}
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-medium text-ink truncate">{o.title}</p>
+                        <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 mt-0.5 text-xs text-faint">
+                          <span className="inline-flex items-center gap-1"><Building2 size={11} />{o.partner?.name || o.company}</span>
+                          {o.type && <span className="inline-flex items-center gap-1"><Briefcase size={11} />{o.type}</span>}
+                          {o.location && <span className="inline-flex items-center gap-1"><MapPin size={11} />{o.location}</span>}
+                        </div>
+                      </div>
+                      <ChevronRight size={16} className="shrink-0 text-faint group-hover:text-ink transition-colors" />
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
+        </div>
+
+        {/* Colonne latérale */}
+        <aside className="space-y-5 min-w-0">
+          {/* Profil */}
+          <Link to="/prepare/profile" className="card-link block p-5">
+            <div className="flex items-baseline justify-between">
+              <h2 className="text-[15px]">Ton profil</h2>
+              <span className="text-sm font-semibold tabular-nums text-ink">{loading ? '–' : `${pct} %`}</span>
+            </div>
+            <div className="mt-3 h-1.5 rounded-full bg-subtle overflow-hidden">
+              <div className={`h-full rounded-full transition-all duration-700 ${pct >= 100 ? 'bg-emerald-500' : 'bg-brand'}`} style={{ width: `${pct}%` }} />
+            </div>
+            <p className="mt-3 text-[13px] text-muted leading-snug">
+              {pct >= 100
+                ? 'Complet. Tes documents s’appuient sur toutes tes informations.'
+                : (stats?.profileMissing?.length ?? 0) > 0
+                  ? <>À ajouter : {stats!.profileMissing!.slice(0, 3).join(', ')}{stats!.profileMissing!.length > 3 ? '…' : ''}</>
+                  : 'Quelques informations manquent encore.'}
+            </p>
+          </Link>
+
+          {/* Documents */}
+          <section className="surface">
+            <h2 className="text-[15px] px-5 pt-4 pb-1">Tes documents</h2>
+            <ul className="pb-2">
+              {docs.map((d) => (
+                <li key={d.to}>
+                  <Link to={d.to} className="flex items-center gap-3 px-5 py-2.5 hover:bg-subtle/60 transition-colors">
+                    <span className="text-faint">{d.icon}</span>
+                    <span className="flex-1 text-sm text-ink">{d.label}</span>
+                    <span className="text-sm tabular-nums text-muted">{loading ? '–' : d.count}</span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </section>
+
+          {/* Abonnement — visible pour tout compte non abonné, essai compris :
+              c'est pendant l'essai, quand la valeur est visible, que l'offre se décide. */}
+          {showUpgrade && (
+            <section className="rounded-[14px] border border-brand/20 bg-brand/[0.04] dark:bg-brand/10 p-5">
+              <p className="text-[15px] font-semibold text-ink">
+                {usage!.inTrial
+                  ? `Essai Élite : encore ${usage!.trialDaysLeft} jour${usage!.trialDaysLeft > 1 ? 's' : ''}`
+                  : 'Passe à Élite'}
+              </p>
+              <p className="mt-1 text-[13px] text-muted leading-snug">
+                {usage!.inTrial
+                  ? 'Garde l’accès complet après l’essai : CV et lettres sans limite, candidatures spontanées.'
+                  : '150 candidatures par mois, CV et lettres sans limite, candidatures spontanées.'}
+              </p>
+              <Link to="/pricing" className="btn btn-primary w-full mt-4">Voir les formules</Link>
+            </section>
+          )}
+        </aside>
       </div>
-    </>
+    </div>
   );
 };
 

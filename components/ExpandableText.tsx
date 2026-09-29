@@ -25,7 +25,7 @@ const ExpandableText: React.FC<Props> = ({ text, className = '', clamp = 3 }) =>
         <button
           type="button"
           onClick={(e) => { e.stopPropagation(); setOpen((v) => !v); }}
-          className="press mt-1 text-[12px] font-semibold text-[#7D5CFF] hover:underline"
+          className="press mt-1 text-[12px] font-semibold text-brand hover:underline"
         >
           {open ? 'Voir moins' : 'Voir plus'}
         </button>

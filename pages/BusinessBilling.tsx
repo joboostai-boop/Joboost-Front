@@ -85,14 +85,14 @@ const BusinessBilling: React.FC = () => {
       {/* ── Situation actuelle ── */}
       <div className={`card-pro flex flex-col sm:flex-row sm:items-center gap-4 ${discoveryOver ? '!border-red-200 dark:!border-red-900/40' : ''}`}>
         <div className={`w-11 h-11 rounded-xl flex items-center justify-center shrink-0 ${
-          isSubscribed ? 'bg-[#7D5CFF]/15 text-[#7D5CFF] dark:text-[#B9A7FF]'
+          isSubscribed ? 'bg-brand/15 text-brand dark:text-brand-300'
             : discoveryOver ? 'bg-red-500/15 text-red-600 dark:text-red-400'
             : 'bg-amber-500/15 text-amber-600 dark:text-amber-400'
         }`}>
           <CreditCard size={20} />
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-bold text-slate-900 dark:text-white">
+          <p className="text-sm font-bold text-ink">
             {isSubscribed
               ? `Votre plan actuel : ${currentPlan.replace('Business ', '')}`
               : discoveryOver
@@ -120,9 +120,9 @@ const BusinessBilling: React.FC = () => {
       {/* Barre de progression de la découverte (tant qu'on n'est pas abonné) */}
       {!isSubscribed && daysLeft !== null && (
         <div className="-mt-3">
-          <div className="h-1.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+          <div className="h-1.5 bg-subtle rounded-full overflow-hidden">
             <div
-              className={`h-full rounded-full transition-all duration-500 ${discoveryOver ? 'bg-red-500' : 'bg-[#7D5CFF]'}`}
+              className={`h-full rounded-full transition-all duration-500 ${discoveryOver ? 'bg-red-500' : 'bg-brand'}`}
               style={{ width: `${Math.max(4, (daysLeft / 15) * 100)}%` }}
             />
           </div>
@@ -130,7 +130,7 @@ const BusinessBilling: React.FC = () => {
       )}
 
       {/* ── L'offre (sur devis) ── */}
-      <div className="relative rounded-2xl bg-white dark:bg-[#111827] border border-[#7D5CFF] ring-1 ring-[#7D5CFF]/30 shadow-[0_18px_45px_-18px_rgba(124,92,255,0.4)] p-6 md:p-8 overflow-hidden">
+      <div className="relative rounded-2xl bg-surface border border-brand ring-1 ring-brand/30 p-6 md:p-8 overflow-hidden">
         {/* Halo décoratif ancré hors-cadre */}
         <div
           aria-hidden
@@ -144,17 +144,17 @@ const BusinessBilling: React.FC = () => {
 
         <div className="relative">
           <div className="flex items-center gap-3 mb-1.5">
-            <span className="w-10 h-10 rounded-xl bg-[#7D5CFF] text-white flex items-center justify-center">
+            <span className="w-10 h-10 rounded-xl bg-brand text-white flex items-center justify-center">
               <Building2 size={19} />
             </span>
             <div>
-              <h3 className="text-xl font-extrabold text-slate-900 dark:text-white tracking-tight leading-tight">Joboost Business</h3>
+              <h3 className="text-xl font-extrabold text-ink tracking-tight leading-tight">Joboost Business</h3>
               <p className="text-xs text-slate-500">L'espace partenaire complet pour votre organisme</p>
             </div>
           </div>
 
           <p className="mt-5 flex items-baseline gap-2">
-            <span className="text-[2rem] leading-none font-extrabold tracking-tight text-slate-900 dark:text-white">Sur devis</span>
+            <span className="text-[2rem] leading-none font-extrabold tracking-tight text-ink">Sur devis</span>
           </p>
           <p className="text-[13px] text-slate-500 mt-1.5 leading-relaxed max-w-xl">
             Le tarif est construit avec vous, selon la taille de votre organisme : nombre d'adhérents
@@ -163,8 +163,8 @@ const BusinessBilling: React.FC = () => {
 
           <ul className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-3">
             {INCLUDED.map((f) => (
-              <li key={f.text} className="flex items-start gap-2.5 text-[13px] text-slate-600 dark:text-slate-300 leading-snug">
-                <span className="w-6 h-6 rounded-lg bg-[#7D5CFF]/10 text-[#7D5CFF] dark:text-[#B9A7FF] flex items-center justify-center shrink-0 mt-[-2px]">
+              <li key={f.text} className="flex items-start gap-2.5 text-[13px] text-muted leading-snug">
+                <span className="w-6 h-6 rounded-lg bg-brand/10 text-brand dark:text-brand-300 flex items-center justify-center shrink-0 mt-[-2px]">
                   {f.icon}
                 </span>
                 {f.text}
@@ -184,7 +184,7 @@ const BusinessBilling: React.FC = () => {
             )}
             <a
               href="mailto:joboost.ai@gmail.com?subject=Joboost%20Business%20—%20question"
-              className="inline-flex items-center justify-center gap-1.5 text-xs font-bold text-slate-400 hover:text-[#7D5CFF] transition-colors"
+              className="inline-flex items-center justify-center gap-1.5 text-xs font-bold text-slate-400 hover:text-brand transition-colors"
             >
               ou écrivez-nous directement
             </a>
@@ -195,21 +195,21 @@ const BusinessBilling: React.FC = () => {
       {/* ── Réassurance ── */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="card-pro">
-          <p className="text-sm font-bold text-slate-900 dark:text-white mb-1.5 flex items-center gap-2">
-            <ShieldCheck size={15} className="text-[#7D5CFF]" /> Réponse rapide
+          <p className="text-sm font-bold text-ink mb-1.5 flex items-center gap-2">
+            <ShieldCheck size={15} className="text-brand" /> Réponse rapide
           </p>
           <p className="text-xs text-slate-500 leading-relaxed">
             Votre demande arrive directement à l'équipe Joboost avec votre email de contact — la proposition revient dans votre boîte mail.
           </p>
         </div>
         <div className="card-pro">
-          <p className="text-sm font-bold text-slate-900 dark:text-white mb-1.5">Découverte gratuite</p>
+          <p className="text-sm font-bold text-ink mb-1.5">Découverte gratuite</p>
           <p className="text-xs text-slate-500 leading-relaxed">
             En attendant, votre espace reste ouvert en mode découverte : explorez le vivier, les offres et l'assistant IA sans engagement.
           </p>
         </div>
         <div className="card-pro">
-          <p className="text-sm font-bold text-slate-900 dark:text-white mb-1.5">Vos données restent à vous</p>
+          <p className="text-sm font-bold text-ink mb-1.5">Vos données restent à vous</p>
           <p className="text-xs text-slate-500 leading-relaxed">
             Vivier, offres et statistiques restent accessibles dans votre espace, quel que soit votre choix.
           </p>
@@ -220,12 +220,12 @@ const BusinessBilling: React.FC = () => {
       {quoteOpen && (
         <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center">
           <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setQuoteOpen(false)} />
-          <div className="relative bg-white dark:bg-[#111827] w-full md:max-w-lg md:mx-4 max-h-[95dvh] md:max-h-[90vh] overflow-y-auto border-t md:border border-slate-200 dark:border-slate-700 rounded-t-2xl md:rounded-xl shadow-2xl">
-            <div className="sticky top-0 bg-white dark:bg-[#111827] flex items-center justify-between p-4 md:p-5 border-b border-slate-200 dark:border-slate-700 z-10">
+          <div className="relative bg-surface w-full md:max-w-lg md:mx-4 max-h-[95dvh] md:max-h-[90vh] overflow-y-auto border-t md:border border-line rounded-t-2xl md:rounded-xl shadow-2xl">
+            <div className="sticky top-0 bg-surface flex items-center justify-between p-4 md:p-5 border-b border-line z-10">
               <div className="absolute top-2 left-1/2 -translate-x-1/2 w-10 h-1 bg-slate-200 dark:bg-slate-700 rounded-full md:hidden" />
               <div className="mt-2 md:mt-0">
-                <h2 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                  <Building2 size={18} className="text-[#7D5CFF]" /> Demande de devis
+                <h2 className="text-lg font-bold text-ink flex items-center gap-2">
+                  <Building2 size={18} className="text-brand" /> Demande de devis
                 </h2>
                 <p className="text-xs text-slate-500 mt-0.5">Nous revenons vers vous par email avec une proposition adaptée.</p>
               </div>
@@ -292,7 +292,7 @@ const BusinessBilling: React.FC = () => {
                 Votre demande est envoyée à l'équipe Joboost avec votre email de contact ({account?.email || 'votre compte'}) — la réponse arrive directement dans votre boîte mail.
               </p>
 
-              <div className="flex flex-col-reverse sm:flex-row justify-end gap-3 pt-3 border-t border-slate-200 dark:border-slate-700">
+              <div className="flex flex-col-reverse sm:flex-row justify-end gap-3 pt-3 border-t border-line">
                 <button type="button" onClick={() => setQuoteOpen(false)} className="btn btn-secondary min-h-[44px] w-full sm:w-auto">Annuler</button>
                 <button type="submit" disabled={quoteSubmitting} className="btn btn-primary min-h-[44px] w-full sm:w-auto">
                   {quoteSubmitting ? <Loader2 size={15} className="animate-spin" /> : <Send size={15} />}

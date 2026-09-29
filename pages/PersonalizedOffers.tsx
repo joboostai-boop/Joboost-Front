@@ -1,15 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Search, MapPin, Bookmark, Clock, Edit3, ExternalLink, Briefcase, Euro, Sparkles, Navigation, Send, Check, X, FileText, Building2, RotateCcw } from 'lucide-react';
+import { Search, Bookmark, Clock, Edit3, ExternalLink, Briefcase, Euro, Navigation, Send, Check, X, FileText, Building2, RotateCcw } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
 import { authHeaders } from '../services/authToken';
-import MatchBadge from '../components/MatchBadge';
 import EmptyState from '../components/EmptyState';
 import ExpandableText from '../components/ExpandableText';
 import FilterSelect from '../components/FilterSelect';
 import ApplyInAppModal from '../components/ApplyInAppModal';
 import { formatSalary } from '../services/format';
-import { companyGradient } from '../services/visual';
 
 export interface JobOffer {
   id?: string;
@@ -111,7 +109,7 @@ const PersonalizedOffers: React.FC = () => {
           setSavedOffers(savedData.saved);
         }
       } catch (e) {
-        toast.error("Erreur de récupération des offres.");
+        toast.error('Impossible de charger les offres.');
       } finally {
         setLoading(false);
         // Une nouvelle recherche repart d'une pile fraîche.
@@ -157,8 +155,8 @@ const PersonalizedOffers: React.FC = () => {
         // Offre partenaire : pas de site externe — l'organisme voit la candidature
         // dans le profil du candidat (section Candidatures de son espace recruteur).
         toast.success(offer.partner
-          ? `C'est noté ! ${offer.partner.name} voit ta candidature sur ton profil.`
-          : "Ajoutée à ton suivi (Envoyées) — finalise sur la page de l'offre.");
+          ? `${offer.partner.name} voit ta candidature sur ton profil.`
+          : "Ajoutée à ton suivi. Termine ta candidature sur la page de l'annonce.");
       } else {
         toast.error(data.error || "Impossible d'ajouter au suivi.");
       }
@@ -174,9 +172,9 @@ const PersonalizedOffers: React.FC = () => {
         const data = await res.json();
         if (data.success) {
           setSavedOffers(savedOffers.filter(s => s.id !== savedId));
-          toast.success("Offre retirée des favoris");
+          toast.success('Retirée des sauvegardées');
         }
-      } catch (e) { toast.error("Erreur système"); }
+      } catch (e) { toast.error('Une erreur est survenue, réessaie.'); }
     } else {
       try {
         const payload = {
@@ -202,9 +200,9 @@ const PersonalizedOffers: React.FC = () => {
         const data = await res.json();
         if (data.success) {
           setSavedOffers([...savedOffers, data.saved]);
-          toast.success("Offre enregistrée");
+          toast.success('Offre sauvegardée');
         }
-      } catch (e) { toast.error("Erreur système"); }
+      } catch (e) { toast.error('Une erreur est survenue, réessaie.'); }
     }
   };
 
@@ -269,123 +267,114 @@ const PersonalizedOffers: React.FC = () => {
     setExiting(null);
   };
 
-  /* Contenu détaillé d'une carte (chips, analyse IA, tags) — inchangé dans le fond,
-     seul l'agencement autour (pile + swipe) a changé. */
+  /* Contenu d'une carte d'offre. Refonte 09/2026 : hiérarchie par la typo,
+     méta en texte simple, une seule couleur d'accent (le score). */
   const renderCardContent = (offer: JobOffer, isBest: boolean) => {
     const isApplied = appliedKeys.has(offerKey(offer));
     const isBookmarked = !!getSavedId(offer);
+    const score = Number(offer.matchScore) || 0;
+    const meta = [
+      offer.type && { icon: <Briefcase size={14} />, text: offer.type },
+      offer.salary && { icon: <Euro size={14} />, text: formatSalary(offer.salary) },
+      offer.postedDate && { icon: <Clock size={14} />, text: offer.postedDate },
+    ].filter(Boolean) as { icon: React.ReactNode; text: string }[];
+
     return (
       <>
-        {isBest && (
-          <span aria-hidden className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-[#8C6DFF] via-[#7D5CFF] to-[#6D28D9]" />
-        )}
-        {isBest && (
-          <div className="inline-flex items-center gap-1.5 mb-4 px-2.5 py-1 rounded-full bg-gradient-to-r from-[#8C6DFF] to-[#7D5CFF] text-white text-[11px] font-bold uppercase tracking-wide shadow-[0_2px_10px_rgba(125,92,255,0.4)]">
-            <Sparkles size={12} /> Meilleur match pour toi
-          </div>
-        )}
-
-        {/* Offre publiée par l'organisme du candidat : attribution bien visible */}
-        {offer.partner && (
-          <div className={`inline-flex items-center gap-1.5 mb-4 px-2.5 py-1 rounded-full bg-[#7D5CFF]/10 border border-[#7D5CFF]/25 text-[#6D28D9] dark:text-[#B9A7FF] text-[11px] font-bold ${isBest ? 'ml-2' : ''}`}>
-            <Building2 size={12} /> Publiée par votre organisme · {offer.partner.name}
-          </div>
-        )}
-
-        {/* Tête : entreprise + titre + badge de compatibilité */}
-        <div className="flex items-start justify-between gap-4">
-          <div className="flex items-start gap-3.5 min-w-0">
-            {offer.partner?.logoUrl ? (
-              <span className="w-12 h-12 rounded-xl bg-white dark:bg-slate-800 border border-[#ECEAF6] dark:border-slate-700 flex items-center justify-center shrink-0 overflow-hidden shadow-[0_3px_10px_rgba(16,24,40,0.12)]">
-                <img src={offer.partner.logoUrl} alt={offer.partner.name} className="w-full h-full object-contain p-1" />
-              </span>
-            ) : (
-              <span className={`w-12 h-12 rounded-xl bg-gradient-to-br ${companyGradient(offer.company)} text-white flex items-center justify-center font-bold text-lg shrink-0 shadow-[0_3px_10px_rgba(16,24,40,0.18)]`}>
-                {offer.company?.charAt(0)?.toUpperCase() || '?'}
+        {(isBest || offer.partner) && (
+          <div className="flex flex-wrap gap-1.5 mb-4">
+            {isBest && (
+              <span className="inline-flex items-center h-6 px-2 rounded-md bg-brand/10 text-brand dark:text-brand-300 text-xs font-medium">
+                La plus proche de ton profil
               </span>
             )}
-            <div className="min-w-0">
-              <h2 className="text-lg md:text-xl font-bold text-[#111827] dark:text-white leading-tight">{offer.title}</h2>
-              <p className="text-sm text-[#7D5CFF] font-semibold truncate mt-0.5">{offer.company}</p>
-            </div>
-          </div>
-          <MatchBadge score={offer.matchScore} detailed className="hidden sm:inline-flex" />
-        </div>
-        <MatchBadge score={offer.matchScore} detailed className="sm:hidden mt-3" />
-
-        {/* Méta en chips : le salaire (vert) et le contrat (bleu) ressortent
-            au premier coup d'œil — les infos clés d'une offre. */}
-        <div className="flex flex-wrap items-center gap-1.5 mt-4">
-          {offer.salary && (
-            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-100 dark:border-emerald-500/20 text-xs font-semibold text-emerald-700 dark:text-emerald-400">
-              <Euro size={13} /> {formatSalary(offer.salary)}
-            </span>
-          )}
-          {offer.type && (
-            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-blue-50 dark:bg-blue-500/10 border border-blue-100 dark:border-blue-500/20 text-xs font-semibold text-blue-700 dark:text-blue-400">
-              <Briefcase size={13} /> {offer.type}
-            </span>
-          )}
-          {offer.location && (
-            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200/70 dark:border-slate-700 text-xs font-medium text-[#6B7280] dark:text-slate-300">
-              <MapPin size={13} className="text-[#9CA3AF]" /> {offer.location}
-            </span>
-          )}
-          {offer.postedDate && (
-            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200/70 dark:border-slate-700 text-xs font-medium text-[#6B7280] dark:text-slate-300">
-              <Clock size={13} className="text-[#9CA3AF]" /> {offer.postedDate}
-            </span>
-          )}
-        </div>
-
-        {/* Encart IA — bordure gauche dégradée : signature visuelle de l'analyse Joboost */}
-        {offer.aiInsight && (
-          <div className="relative mt-4 rounded-lg p-3 pl-4 bg-gradient-to-r from-[#7D5CFF]/[0.07] to-transparent dark:from-[#7D5CFF]/10 overflow-hidden">
-            <span aria-hidden className="absolute left-0 top-0 bottom-0 w-[3px] rounded-full bg-gradient-to-b from-[#8C6DFF] to-[#6D28D9]" />
-            <p className="flex items-center gap-1.5 text-[11px] font-bold text-[#7D5CFF] uppercase tracking-wide mb-1">
-              <Sparkles size={12} /> Pourquoi ça matche
-            </p>
-            <ExpandableText className="text-sm text-[#4B5563] dark:text-slate-300 leading-relaxed" text={offer.aiInsight} />
+            {offer.partner && (
+              <span className="inline-flex items-center gap-1 h-6 px-2 rounded-md bg-subtle text-muted text-xs font-medium">
+                <Building2 size={12} /> Publiée par {offer.partner.name}
+              </span>
+            )}
           </div>
         )}
 
-        {/* Tags — pastilles teintées marque (compétences/mots-clés de l'offre) */}
-        {offer.tags?.length > 0 && (
-          <div className="flex flex-wrap gap-1.5 mt-4">
-            {offer.tags.map(t => (
-              <span key={t} className="px-2.5 py-0.5 bg-[#7D5CFF]/[0.06] dark:bg-[#7D5CFF]/10 border border-[#7D5CFF]/15 dark:border-[#7D5CFF]/20 text-[11px] text-[#6D28D9] dark:text-[#A78BFA] rounded-full font-semibold">{t}</span>
+        {/* Tête : entreprise + titre + score */}
+        <div className="flex items-start gap-3.5">
+          {offer.partner?.logoUrl ? (
+            <span className="w-11 h-11 rounded-lg bg-white border border-line grid place-items-center shrink-0 overflow-hidden">
+              <img src={offer.partner.logoUrl} alt="" className="w-full h-full object-contain p-1" />
+            </span>
+          ) : (
+            <span className="w-11 h-11 rounded-lg bg-subtle text-muted grid place-items-center font-semibold shrink-0">
+              {offer.company?.charAt(0)?.toUpperCase() || '?'}
+            </span>
+          )}
+          <div className="min-w-0 flex-1">
+            <h2 className="text-lg md:text-xl leading-snug">{offer.title}</h2>
+            <p className="text-sm text-muted mt-0.5 truncate">
+              {offer.company}{offer.location ? <> · {offer.location}</> : null}
+            </p>
+          </div>
+          {score > 0 && (
+            <div className="text-right shrink-0">
+              <p className={`text-lg font-semibold tabular-nums leading-none ${score >= 75 ? 'text-emerald-600 dark:text-emerald-400' : score >= 50 ? 'text-ink' : 'text-muted'}`}>{score} %</p>
+              <p className="text-[11px] text-faint mt-1">compatible</p>
+            </div>
+          )}
+        </div>
+
+        {meta.length > 0 && (
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 mt-4 text-[13px] text-muted">
+            {meta.map((m) => (
+              <span key={m.text} className="inline-flex items-center gap-1.5">
+                <span className="text-faint">{m.icon}</span>{m.text}
+              </span>
             ))}
           </div>
         )}
 
-        {/* Actions secondaires — postuler/passer se font désormais par le geste ou les
-            gros boutons ✕/✓ sous la carte ; ici ne restent que les à-côtés. */}
-        <div className="flex flex-wrap items-center gap-2 mt-5 pt-4 border-t border-slate-100 dark:border-slate-800">
+        {offer.aiInsight && (
+          <div className="mt-5 rounded-[10px] bg-subtle/70 px-4 py-3">
+            <p className="text-xs font-medium text-ink mb-1">Pourquoi cette offre</p>
+            <ExpandableText className="text-sm text-muted leading-relaxed" text={offer.aiInsight} />
+          </div>
+        )}
+
+        {offer.tags?.length > 0 && (
+          <div className="flex flex-wrap gap-1.5 mt-4">
+            {offer.tags.map((t) => (
+              <span key={t} className="chip !h-6">{t}</span>
+            ))}
+          </div>
+        )}
+
+        {/* Actions secondaires : préparer les documents pour CETTE offre. */}
+        <div className="flex flex-wrap items-center gap-1 mt-5 pt-4 border-t border-line -mx-1">
           {isApplied && (
-            <span className="press btn flex-1 sm:flex-none bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-500/10 dark:border-emerald-500/30 cursor-default">
+            <span className="inline-flex items-center gap-1.5 h-9 px-2.5 text-sm font-medium text-emerald-700 dark:text-emerald-400">
               <Check size={15} /> Dans ton suivi
             </span>
           )}
-          <button onClick={() => navigate('/target/letter', { state: { jobTitle: offer.title, company: offer.company, targetContext: offer.aiInsight } })} className="press btn btn-secondary" title="Créer la lettre de motivation">
-            <Edit3 size={15} /> Lettre
-          </button>
           <button
             onClick={() => navigate('/prepare/cv', { state: { jobTitle: offer.title, company: offer.company, targetContext: [offer.aiInsight, offer.tags?.length ? `Mots-clés : ${offer.tags.join(', ')}` : '', offer.type ? `Contrat : ${offer.type}` : ''].filter(Boolean).join('\n') } })}
-            className="press btn btn-secondary"
-            title="Générer un CV adapté à cette offre"
+            className="btn btn-ghost !min-h-[36px] !px-2.5"
           >
-            <FileText size={15} /> CV
+            <FileText size={15} /> Adapter mon CV
+          </button>
+          <button
+            onClick={() => navigate('/target/letter', { state: { jobTitle: offer.title, company: offer.company, targetContext: offer.aiInsight } })}
+            className="btn btn-ghost !min-h-[36px] !px-2.5"
+          >
+            <Edit3 size={15} /> Écrire la lettre
           </button>
           {offer.url && (
-            <a href={offer.url} target="_blank" rel="noopener noreferrer" className="press btn btn-secondary !px-3" title="Voir l'offre (sans l'ajouter au suivi)">
-              <ExternalLink size={15} />
+            <a href={offer.url} target="_blank" rel="noopener noreferrer" className="btn btn-ghost !min-h-[36px] !px-2.5" title="Voir l'annonce sans l'ajouter au suivi">
+              <ExternalLink size={15} /> Annonce
             </a>
           )}
           <button
             onClick={() => toggleSave(offer)}
-            aria-label={isBookmarked ? 'Retirer des favoris' : 'Enregistrer'}
-            title={isBookmarked ? 'Retirer des favoris' : 'Enregistrer'}
-            className={`press btn !px-3 ml-auto ${isBookmarked ? 'bg-amber-50 text-amber-600 border border-amber-200 hover:bg-amber-100 dark:bg-amber-500/10 dark:border-amber-500/30' : 'btn-secondary'}`}
+            aria-label={isBookmarked ? 'Retirer des sauvegardées' : 'Sauvegarder'}
+            title={isBookmarked ? 'Retirer des sauvegardées' : 'Sauvegarder'}
+            className={`btn btn-ghost !min-h-[36px] !px-2.5 ml-auto ${isBookmarked ? '!text-brand dark:!text-brand-300' : ''}`}
           >
             <Bookmark size={16} fill={isBookmarked ? 'currentColor' : 'none'} />
           </button>
@@ -394,72 +383,65 @@ const PersonalizedOffers: React.FC = () => {
     );
   };
 
-  return (
-    <div className="p-5 md:p-8 max-w-3xl mx-auto space-y-6">
-      {/* Barre d'outils (le titre est porté par le hero du layout) */}
-      <header className="surface !rounded-2xl p-4 md:p-5 flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div className="min-w-0 space-y-2">
-          <p className="text-sm text-[#6B7280] dark:text-slate-400 flex items-center gap-1.5">
-            <span className={`inline-block w-1.5 h-1.5 rounded-full ${source === 'demo' ? 'bg-amber-500' : 'bg-emerald-500 animate-pulse'}`} />
-            {loading
-              ? 'Recherche des meilleures offres pour vous…'
-              : source === 'demo'
-                ? `Exemples illustratifs (offres réelles momentanément indisponibles) · ${offers.length}`
-                : source === 'mixed'
-                  ? `${offers.length} offres réelles (France Travail + Adzuna).`
-                  : source === 'adzuna'
-                    ? `${offers.length} offres réelles via Adzuna.`
-                    : `${offers.length} offres réelles France Travail.`}
-          </p>
-          {/* Pouls du marché : compatibilité moyenne et meilleur score du lot. */}
-          {!loading && matchScores.length > 0 && (
-            <div className="flex flex-wrap items-center gap-1.5">
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-gradient-to-r from-[#8C6DFF] to-[#7D5CFF] text-white text-[11px] font-bold shadow-[0_2px_8px_rgba(125,92,255,0.35)]">
-                <Sparkles size={11} /> Meilleur match {bestMatch}%
-              </span>
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#7D5CFF]/[0.07] dark:bg-[#7D5CFF]/10 border border-[#7D5CFF]/15 text-[#6D28D9] dark:text-[#A78BFA] text-[11px] font-bold">
-                Compatibilité moyenne {avgMatch}%
-              </span>
-            </div>
-          )}
-        </div>
+  const sourceLabel =
+    source === 'demo'
+      ? 'Exemples (les offres réelles sont momentanément indisponibles)'
+      : source === 'mixed'
+        ? 'France Travail et Adzuna'
+        : source === 'adzuna'
+          ? 'Adzuna'
+          : 'France Travail';
 
-        <div className="flex flex-col sm:flex-row items-stretch gap-2 w-full md:w-auto">
-          <FilterSelect
-            className="w-full sm:w-auto shrink-0"
-            ariaLabel="Type de contrat"
-            icon={<Briefcase size={16} />}
-            value={contractType}
-            onChange={(v) => setContractType(String(v))}
-            options={[
-              { value: '', label: 'Tous contrats' },
-              { value: 'CDI', label: 'CDI' },
-              { value: 'CDD', label: 'CDD' },
-              { value: 'MIS', label: 'Intérim' },
-              { value: 'SAI', label: 'Saisonnier' },
-              { value: 'E2', label: 'Alternance' },
-            ]}
-          />
-          <FilterSelect
-            className="w-full sm:w-auto shrink-0"
-            ariaLabel="Rayon de recherche autour de ta ville"
-            icon={<Navigation size={16} />}
-            value={radius}
-            onChange={(v) => setRadius(Number(v))}
-            options={[10, 20, 30, 50, 100].map((km) => ({ value: km, label: `${km} km` }))}
-          />
-          <div className="relative w-full sm:w-64">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-[#9CA3AF]" size={16} />
+  return (
+    <div className="px-5 md:px-8 pt-4 md:pt-6 pb-10 max-w-6xl mx-auto">
+      <div className="max-w-xl mx-auto space-y-6">
+      {/* Barre d'outils */}
+      <div className="space-y-3">
+        <div className="flex flex-col sm:flex-row gap-2">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-faint" size={16} />
             <input
-              type="text"
+              type="search"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Rechercher un autre métier…"
-              className="input-pro pl-10 w-full"
+              placeholder="Chercher un autre métier…"
+              className="input-pro pl-9 w-full"
+              aria-label="Chercher un métier"
+            />
+          </div>
+          <div className="flex gap-2">
+            <FilterSelect
+              className="flex-1 sm:flex-none"
+              ariaLabel="Type de contrat"
+              icon={<Briefcase size={16} />}
+              value={contractType}
+              onChange={(v) => setContractType(String(v))}
+              options={[
+                { value: '', label: 'Tous contrats' },
+                { value: 'CDI', label: 'CDI' },
+                { value: 'CDD', label: 'CDD' },
+                { value: 'MIS', label: 'Intérim' },
+                { value: 'SAI', label: 'Saisonnier' },
+                { value: 'E2', label: 'Alternance' },
+              ]}
+            />
+            <FilterSelect
+              className="flex-1 sm:flex-none"
+              ariaLabel="Rayon de recherche autour de ta ville"
+              icon={<Navigation size={16} />}
+              value={radius}
+              onChange={(v) => setRadius(Number(v))}
+              options={[10, 20, 30, 50, 100].map((km) => ({ value: km, label: `${km} km` }))}
             />
           </div>
         </div>
-      </header>
+        <p className="text-[13px] text-faint flex items-center gap-2">
+          <span className={`inline-block w-1.5 h-1.5 rounded-full ${source === 'demo' ? 'bg-amber-500' : 'bg-emerald-500'}`} />
+          {loading
+            ? 'Recherche en cours…'
+            : <>{offers.length} offre{offers.length > 1 ? 's' : ''} · {sourceLabel}{matchScores.length > 0 ? ` · compatibilité moyenne ${avgMatch} %` : ''}</>}
+        </p>
+      </div>
 
       {loading ? (
         <OfferSkeleton />
@@ -467,51 +449,46 @@ const PersonalizedOffers: React.FC = () => {
         <EmptyState
           variant="offers"
           title={hasQuery ? 'Aucun résultat' : 'Aucune offre pour le moment'}
-          description={hasQuery ? 'Essayez un autre métier, un autre type de contrat ou un rayon plus large.' : 'Complétez votre profil pour que l\'IA cible des offres qui vous correspondent vraiment.'}
-          action={!hasQuery ? <button onClick={() => navigate('/prepare/profile')} className="press btn btn-secondary">Compléter mon profil</button> : undefined}
+          description={hasQuery ? 'Essaie un autre métier, un autre contrat ou un rayon plus large.' : 'Indique ton métier et ta ville dans ton profil pour recevoir des offres qui te correspondent.'}
+          action={!hasQuery ? <button onClick={() => navigate('/prepare/profile')} className="btn btn-secondary">Compléter mon profil</button> : undefined}
         />
       ) : (
         <div className="space-y-5">
-          {/* Compteur de progression dans la pile */}
-          <p className="text-center text-xs font-semibold text-[#9CA3AF] uppercase tracking-wider">
-            {Math.min(cursor + 1, filtered.length)} / {filtered.length} offres
-          </p>
-
           {currentOffer ? (
-            <div className="relative max-w-xl mx-auto" style={{ minHeight: 420 }}>
-              {/* Carte suivante, en aperçu derrière — donne l'effet de pile, non interactive. */}
+            <div className="relative" style={{ minHeight: 400 }}>
+              {/* Carte suivante, en aperçu derrière : effet de pile, non interactive. */}
               {nextOffer && (
-                <div aria-hidden className="absolute inset-0 z-0 surface p-5 md:p-6 scale-[0.96] translate-y-3 opacity-60 pointer-events-none overflow-hidden">
+                <div aria-hidden className="absolute inset-0 z-0 surface p-5 md:p-6 scale-[0.96] translate-y-3 opacity-50 pointer-events-none overflow-hidden">
                   {renderCardContent(nextOffer, false)}
                 </div>
               )}
 
-              {/* Carte active — le geste de swipe vit ici. */}
+              {/* Carte active : le geste de swipe vit ici. */}
               <div
                 onPointerDown={onPointerDown}
                 onPointerMove={onPointerMove}
                 onPointerUp={onPointerUpOrLeave}
                 onPointerLeave={onPointerUpOrLeave}
                 style={{
-                  transform: `translateX(${dragX}px) rotate(${dragX / 18}deg)`,
+                  transform: `translateX(${dragX}px) rotate(${dragX / 22}deg)`,
                   transition: dragging ? 'none' : 'transform 220ms ease-out, opacity 220ms ease-out',
                   opacity: exiting ? 0 : 1,
                   touchAction: 'pan-y',
                   cursor: dragging ? 'grabbing' : 'grab',
                 }}
-                className={`relative z-10 surface p-5 md:p-6 select-none ${isBestOffer(currentOffer) ? 'ring-2 ring-[#7D5CFF]/30 shadow-[0_10px_36px_-8px_rgba(125,92,255,0.28)]' : ''}`}
+                className="relative z-10 surface shadow-card-hover p-5 md:p-6 select-none"
               >
-                {/* Étiquettes qui apparaissent pendant le glissement — retour visuel immédiat. */}
+                {/* Retour visuel pendant le glissement. */}
                 <span
                   aria-hidden
-                  className="absolute top-6 left-6 z-10 px-3 py-1.5 rounded-lg border-[3px] border-rose-500 text-rose-500 font-black text-sm uppercase tracking-wider -rotate-12"
+                  className="absolute top-5 left-5 z-10 h-7 px-2.5 inline-flex items-center rounded-md bg-rose-500 text-white text-xs font-semibold"
                   style={{ opacity: dragX < 0 ? Math.min(-dragX / 100, 1) : 0 }}
                 >
                   Passer
                 </span>
                 <span
                   aria-hidden
-                  className="absolute top-6 right-6 z-10 px-3 py-1.5 rounded-lg border-[3px] border-emerald-500 text-emerald-500 font-black text-sm uppercase tracking-wider rotate-12"
+                  className="absolute top-5 right-5 z-10 h-7 px-2.5 inline-flex items-center rounded-md bg-emerald-500 text-white text-xs font-semibold"
                   style={{ opacity: dragX > 0 ? Math.min(dragX / 100, 1) : 0 }}
                 >
                   Postuler
@@ -521,57 +498,37 @@ const PersonalizedOffers: React.FC = () => {
               </div>
             </div>
           ) : (
-            <div className="max-w-xl mx-auto">
-              <EmptyState
-                variant="offers"
-                title="Tu as vu toutes les offres"
-                description={`${appliedKeys.size} candidature${appliedKeys.size > 1 ? 's' : ''} envoyée${appliedKeys.size > 1 ? 's' : ''}, ${rejectedKeys.size} passée${rejectedKeys.size > 1 ? 's' : ''}. Élargis le rayon ou change de métier pour en voir de nouvelles.`}
-                action={
-                  <button onClick={restart} className="press btn btn-secondary">
-                    <RotateCcw size={15} /> Revoir depuis le début
-                  </button>
-                }
-              />
-            </div>
+            <EmptyState
+              variant="offers"
+              title="Tu as vu toutes les offres"
+              description={`${appliedKeys.size} candidature${appliedKeys.size > 1 ? 's' : ''} envoyée${appliedKeys.size > 1 ? 's' : ''}, ${rejectedKeys.size} passée${rejectedKeys.size > 1 ? 's' : ''}. Élargis le rayon ou cherche un autre métier pour en voir d’autres.`}
+              action={
+                <button onClick={restart} className="btn btn-secondary">
+                  <RotateCcw size={15} /> Revoir depuis le début
+                </button>
+              }
+            />
           )}
 
-          {/* Boutons de secours — même effet que le swipe, accessibles sans glisser
-              (souris précise, clavier, lecteur d'écran, ou simplement par préférence). */}
+          {/* Boutons : même effet que le swipe, pour qui ne glisse pas (souris, clavier). */}
           {currentOffer && (
-            <div className="flex items-center justify-center gap-5">
-              <button
-                onClick={() => commitSwipe('left')}
-                aria-label="Passer cette offre"
-                title="Passer"
-                className="press w-14 h-14 rounded-full bg-white dark:bg-[#111827] border-2 border-rose-200 dark:border-rose-500/30 text-rose-500 flex items-center justify-center shadow-card hover:bg-rose-50 dark:hover:bg-rose-500/10 transition-colors"
-              >
-                <X size={24} strokeWidth={2.5} />
-              </button>
-              <button
-                onClick={() => toggleSave(currentOffer)}
-                aria-label={getSavedId(currentOffer) ? 'Retirer des favoris' : 'Enregistrer pour plus tard'}
-                title={getSavedId(currentOffer) ? 'Retirer des favoris' : 'Enregistrer pour plus tard'}
-                className={`press w-11 h-11 rounded-full border-2 flex items-center justify-center shadow-card transition-colors ${
-                  getSavedId(currentOffer)
-                    ? 'bg-amber-50 border-amber-300 text-amber-600 dark:bg-amber-500/10 dark:border-amber-500/30'
-                    : 'bg-white dark:bg-[#111827] border-slate-200 dark:border-slate-700 text-slate-400 hover:text-amber-500 hover:border-amber-300'
-                }`}
-              >
-                <Bookmark size={18} fill={getSavedId(currentOffer) ? 'currentColor' : 'none'} />
-              </button>
-              <button
-                onClick={() => commitSwipe('right')}
-                aria-label="Postuler à cette offre"
-                title="Postuler"
-                className="press w-14 h-14 rounded-full bg-gradient-to-br from-[#34D399] to-[#059669] text-white flex items-center justify-center shadow-[0_8px_20px_-6px_rgba(5,150,105,0.5)] hover:-translate-y-0.5 transition-all"
-              >
-                <Send size={22} />
-              </button>
+            <div>
+              <div className="grid grid-cols-2 gap-3">
+                <button onClick={() => commitSwipe('left')} className="btn btn-secondary btn-lg">
+                  <X size={18} /> Passer
+                </button>
+                <button onClick={() => commitSwipe('right')} className="btn btn-primary btn-lg">
+                  <Send size={17} /> Postuler
+                </button>
+              </div>
+              <p className="mt-3 text-center text-xs text-faint tabular-nums">
+                Offre {Math.min(cursor + 1, filtered.length)} sur {filtered.length} · tu peux aussi glisser la carte
+              </p>
             </div>
           )}
-          <p className="text-center text-xs text-[#9CA3AF]">Glisse la carte à droite pour postuler, à gauche pour passer — ou utilise les boutons.</p>
         </div>
       )}
+      </div>
 
       {applyOffer && (
         <ApplyInAppModal

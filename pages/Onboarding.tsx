@@ -160,22 +160,22 @@ const Onboarding: React.FC<OnboardingProps> = ({ user, onComplete, onSkip }) => 
       <div className="min-h-screen flex items-center justify-center p-6 text-center">
         <div className="max-w-md w-full space-y-8 animate-scale-in">
           <div className="relative">
-            <div className="w-24 h-24 bg-[#7D5CFF]/10 rounded-3xl mx-auto flex items-center justify-center text-[#7D5CFF]">
+            <div className="w-24 h-24 bg-brand/10 rounded-3xl mx-auto flex items-center justify-center text-brand">
               <Loader2 size={48} className="animate-spin" />
             </div>
-            <div className="absolute -top-2 -right-2 w-8 h-8 bg-[#7D5CFF] rounded-full flex items-center justify-center text-white shadow-lg">
+            <div className="absolute -top-2 -right-2 w-8 h-8 bg-brand rounded-full flex items-center justify-center text-white shadow-lg">
               <Rocket size={16} />
             </div>
           </div>
           <div>
-            <h2 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight mb-2">Analyse de ton CV en cours</h2>
+            <h2 className="text-3xl font-black text-ink tracking-tight mb-2">Analyse de ton CV en cours</h2>
             <p className="text-slate-500 font-medium">On lit ton CV pour préremplir ton profil automatiquement...</p>
           </div>
           <div className="space-y-3">
-             <div className="h-2 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
-                <div className="h-full bg-[#7D5CFF] animate-[loading_2s_ease-in-out_infinite]" style={{width: '60%'}}></div>
+             <div className="h-2 w-full bg-subtle rounded-full overflow-hidden">
+                <div className="h-full bg-brand animate-[loading_2s_ease-in-out_infinite]" style={{width: '60%'}}></div>
              </div>
-             <p className="text-[10px] uppercase font-black tracking-[0.2em] text-[#7D5CFF]">Lecture en cours</p>
+             <p className="text-[10px] uppercase font-black tracking-[0.2em] text-brand">Lecture en cours</p>
           </div>
         </div>
         <style>{`
@@ -194,13 +194,13 @@ const Onboarding: React.FC<OnboardingProps> = ({ user, onComplete, onSkip }) => 
         <div className="max-w-xl w-full animate-fade-in-up">
           <header className="flex items-center justify-between mb-6">
             <div>
-              <h1 className="text-2xl font-black text-slate-900 dark:text-white">Ton profil, en 30 secondes</h1>
+              <h1 className="text-2xl font-black text-ink">Ton profil, en 30 secondes</h1>
               <p className="text-sm text-slate-500 font-medium mt-1">Le reste, tu le complètes quand tu veux — ou jamais.</p>
             </div>
             <button
               type="button"
               onClick={onSkip}
-              className="shrink-0 text-sm font-semibold text-slate-400 hover:text-[#7D5CFF] transition-colors px-3 py-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800"
+              className="shrink-0 text-sm font-semibold text-slate-400 hover:text-brand transition-colors px-3 py-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800"
             >
               Plus tard
             </button>
@@ -248,11 +248,11 @@ const Onboarding: React.FC<OnboardingProps> = ({ user, onComplete, onSkip }) => 
   return (
     <div className="min-h-screen flex items-center justify-center p-6 bg-slate-50 dark:bg-slate-950">
       <div className="max-w-lg w-full text-center animate-fade-in-up">
-        <div className="inline-flex items-center gap-3 px-4 py-2 bg-[#F3F0FF] dark:bg-[#7D5CFF]/10 rounded-full text-[#7D5CFF] dark:text-[#A78BFA] text-xs font-black uppercase tracking-widest">
+        <div className="inline-flex items-center gap-3 px-4 py-2 bg-brand-50 dark:bg-brand/10 rounded-full text-brand dark:text-brand-300 text-xs font-black uppercase tracking-widest">
           <Rocket size={16} /> Bienvenue sur Joboost
         </div>
-        <h1 className="mt-6 text-4xl sm:text-5xl font-black text-slate-900 dark:text-white leading-[1.05] tracking-tight">
-          Crée ton profil en <span className="text-[#7D5CFF]">2 minutes.</span>
+        <h1 className="mt-6 text-4xl sm:text-5xl font-black text-ink leading-[1.05] tracking-tight">
+          Crée ton profil en <span className="text-brand">2 minutes.</span>
         </h1>
         <p className="mt-5 text-base text-slate-500 font-medium leading-relaxed max-w-sm mx-auto">
           Importe ton CV, l'IA remplit le reste.
@@ -263,17 +263,17 @@ const Onboarding: React.FC<OnboardingProps> = ({ user, onComplete, onSkip }) => 
             prêt quelque part, et l'import évite toute ressaisie. */}
         <button
           onClick={() => fileInputRef.current?.click()}
-          className="press group card-modern w-full mt-9 p-8 sm:p-10 text-left border-2 border-transparent hover:border-[#7D5CFF] hover:-translate-y-0.5 transition-all bg-white dark:bg-slate-900 shadow-2xl hover:shadow-[#7D5CFF]/20 dark:hover:shadow-none relative overflow-hidden"
+          className="press group card-modern w-full mt-9 p-8 sm:p-10 text-left border-2 border-transparent hover:border-brand transition-all bg-surface shadow-2xl hover:shadow-brand/20 dark:hover:shadow-none relative overflow-hidden"
         >
-          <div className="absolute top-0 right-0 w-32 h-32 bg-[#F3F0FF] dark:bg-[#7D5CFF]/10 rounded-full -mr-16 -mt-16 group-hover:scale-110 transition-transform"></div>
+          <div className="absolute top-0 right-0 w-32 h-32 bg-brand-50 dark:bg-brand/10 rounded-full -mr-16 -mt-16 group-hover:scale-110 transition-transform"></div>
           <div className="relative z-10 flex flex-col items-center text-center sm:flex-row sm:text-left sm:items-start gap-5">
-            <div className="w-16 h-16 shrink-0 bg-[#7D5CFF] text-white rounded-2xl flex items-center justify-center shadow-lg shadow-[#7D5CFF]/30 dark:shadow-none">
+            <div className="w-16 h-16 shrink-0 bg-brand text-white rounded-2xl flex items-center justify-center shadow-lg shadow-brand/30 dark:shadow-none">
               <UploadCloud size={32} />
             </div>
             <div>
-              <h3 className="text-xl font-black text-slate-900 dark:text-white mb-1.5">Importer mon CV</h3>
+              <h3 className="text-xl font-black text-ink mb-1.5">Importer mon CV</h3>
               <p className="text-slate-500 font-medium text-sm">PDF ou Word — l'IA lit ton fichier et préremplit tout.</p>
-              <div className="mt-4 inline-flex items-center gap-2 text-[#7D5CFF] font-black text-xs uppercase tracking-widest">
+              <div className="mt-4 inline-flex items-center gap-2 text-brand font-black text-xs uppercase tracking-widest">
                 Choisir un fichier <ArrowRight size={14} />
               </div>
             </div>
@@ -288,11 +288,11 @@ const Onboarding: React.FC<OnboardingProps> = ({ user, onComplete, onSkip }) => 
         </button>
 
         <div className="mt-5 flex items-center justify-center gap-5 text-sm font-semibold">
-          <button type="button" onClick={() => setStep('form')} className="text-slate-500 hover:text-[#7D5CFF] transition-colors">
+          <button type="button" onClick={() => setStep('form')} className="text-slate-500 hover:text-brand transition-colors">
             Remplir à la main
           </button>
           <span className="text-slate-300">·</span>
-          <button type="button" onClick={onSkip} className="text-slate-400 hover:text-[#7D5CFF] transition-colors">
+          <button type="button" onClick={onSkip} className="text-slate-400 hover:text-brand transition-colors">
             Plus tard
           </button>
         </div>

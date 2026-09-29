@@ -27,7 +27,7 @@ interface Usage {
 // changement de compte, un cache partagé aurait affiché le plan du compte précédent.
 const MIN_INTERVAL = 30_000;
 
-const PlanBadge: React.FC = () => {
+const PlanBadge: React.FC<{ variant?: 'pill' | 'card' }> = ({ variant = 'pill' }) => {
   const [usage, setUsage] = useState<Usage | null>(null);
   const [fetchedAt, setFetchedAt] = useState(0);
   const location = useLocation();
@@ -56,49 +56,89 @@ const PlanBadge: React.FC = () => {
   // d'encombrer la barre de ceux qui n'ont aucune limite à surveiller.
   if (!usage || usage.unlimited) return null;
 
+  const days = usage.trialDaysLeft;
+  const left = usage.remainingQuota + usage.credits;
+
+  /* ── Carte de barre latérale (ordinateur) ── */
+  if (variant === 'card') {
+    if (usage.isSubscribed) {
+      return (
+        <Link to="/pricing" className="flex items-center gap-2 px-2.5 h-9 rounded-lg text-[13px] font-medium text-muted hover:bg-subtle hover:text-ink transition-colors">
+          <Crown size={15} className="text-brand" /> Abonnement Élite
+        </Link>
+      );
+    }
+    // Essai : barre de progression des 7 jours. Hors essai : le solde + l'offre.
+    const trialPct = Math.max(0, Math.min(100, ((7 - days) / 7) * 100));
+    return (
+      <Link to="/pricing" className="block rounded-xl border border-line bg-surface p-3 hover:border-line-strong transition-colors">
+        {usage.inTrial ? (
+          <>
+            <div className="flex items-baseline justify-between gap-2">
+              <p className="text-[13px] font-medium text-ink">Essai gratuit</p>
+              <p className={`text-xs tabular-nums ${days <= 2 ? 'text-rose-600 dark:text-rose-400 font-medium' : 'text-faint'}`}>
+                {days} jour{days > 1 ? 's' : ''}
+              </p>
+            </div>
+            <div className="mt-2 h-1 rounded-full bg-subtle overflow-hidden">
+              <div className="h-full rounded-full bg-brand" style={{ width: `${trialPct}%` }} />
+            </div>
+            <p className="mt-2.5 text-xs font-medium text-brand dark:text-brand-300">Passer à Élite →</p>
+          </>
+        ) : (
+          <>
+            <p className="text-[13px] font-medium text-ink">Formule gratuite</p>
+            <p className="text-xs text-faint mt-0.5">
+              {left > 0 ? `${left} candidature${left > 1 ? 's' : ''} restante${left > 1 ? 's' : ''}` : 'Quota du mois atteint'}
+            </p>
+            <span className="mt-2.5 btn btn-primary w-full !min-h-[34px] !py-1.5 text-[13px]">
+              <Crown size={14} /> Passer à Élite
+            </span>
+          </>
+        )}
+      </Link>
+    );
+  }
+
+  /* ── Pastille de la barre du haut (mobile) ── */
   const base =
-    'press inline-flex items-center gap-1.5 text-xs font-semibold rounded-full px-3 py-1.5 md:py-2 transition-colors whitespace-nowrap';
+    'inline-flex items-center gap-1.5 text-xs font-medium rounded-full h-8 px-3 transition-colors whitespace-nowrap';
 
   if (usage.isSubscribed) {
     return (
-      <Link to="/profile" className={`${base} text-[#7D5CFF] border border-[#7D5CFF]/25 bg-[#7D5CFF]/[0.06] hover:bg-[#7D5CFF]/12`}>
+      <Link to="/pricing" className={`${base} text-brand dark:text-brand-300 border border-brand/20 bg-brand/[0.06]`}>
         <Crown size={14} /> Élite
       </Link>
     );
   }
 
   if (usage.inTrial) {
-    const urgent = usage.trialDaysLeft <= 2;
+    const urgent = days <= 2;
     return (
       <Link
         to="/pricing"
-        title={`Essai gratuit : ${usage.trialDaysLeft} jour${usage.trialDaysLeft > 1 ? 's' : ''} restant${usage.trialDaysLeft > 1 ? 's' : ''}`}
-        className={`${base} ${
+        title={`Essai gratuit : ${days} jour${days > 1 ? 's' : ''} restant${days > 1 ? 's' : ''}`}
+        className={`${base} border ${
           urgent
-            ? 'text-rose-700 dark:text-rose-300 border border-rose-300/60 bg-rose-50 dark:bg-rose-900/20 hover:bg-rose-100'
-            : 'text-amber-700 dark:text-amber-300 border border-amber-300/60 bg-amber-50 dark:bg-amber-900/20 hover:bg-amber-100'
+            ? 'text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-900 bg-rose-50 dark:bg-rose-950/40'
+            : 'text-muted border-line bg-surface'
         }`}
       >
-        <Zap size={14} />
-        Essai · {usage.trialDaysLeft} j
+        <Zap size={13} />
+        Essai · {days} j
       </Link>
     );
   }
 
-  // Hors essai et sans abonnement : c'est le seul cas où on VEUT vendre — le mur est
-  // déjà là ou tout proche. Un vrai bouton plein, pas un lien discret : la place pour
-  // payer ne doit plus se chercher (retour utilisateur du 28/09 — la pastille passait
-  // inaperçue). Pendant l'essai et pour les abonnés, on reste discret : rien à vendre
-  // à quelqu'un qui a déjà tout ou qui vient de payer.
-  const left = usage.remainingQuota + usage.credits;
+  // Hors essai et sans abonnement : seul cas où l'on veut vendre, donc un vrai bouton.
   return (
     <Link
       to="/pricing"
-      title={left > 0 ? `${left} candidature IA restante${left > 1 ? 's' : ''}` : 'Plus de candidature IA disponible'}
-      className={`${base} text-white bg-gradient-to-br from-[#9B7BFF] to-[#6D28D9] shadow-[0_2px_10px_-2px_rgba(109,40,217,0.55)] hover:shadow-[0_4px_14px_-2px_rgba(109,40,217,0.65)] hover:-translate-y-px`}
+      title={left > 0 ? `${left} candidature${left > 1 ? 's' : ''} restante${left > 1 ? 's' : ''}` : 'Plus de candidature disponible ce mois-ci'}
+      className={`${base} text-white bg-brand hover:bg-brand-700`}
     >
-      <Crown size={14} />
-      {left > 0 ? `${left} restante${left > 1 ? 's' : ''} · Passer à Élite` : 'Passer à Élite'}
+      <Crown size={13} />
+      Passer à Élite
     </Link>
   );
 };

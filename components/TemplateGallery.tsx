@@ -43,7 +43,7 @@ const TemplateGallery: React.FC<Props> = ({ items, selectedId, onSelect }) => {
     <button
       onClick={() => setFilter(id)}
       className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition-colors ${
-        filter === id ? 'bg-[#7D5CFF] text-white' : 'bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-500'
+        filter === id ? 'bg-brand text-white' : 'bg-surface border border-line text-slate-500'
       }`}
     >
       {icon} {label}
@@ -56,7 +56,7 @@ const TemplateGallery: React.FC<Props> = ({ items, selectedId, onSelect }) => {
       aria-label={label}
       title={label}
       className={`press inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-bold transition-colors ${
-        view === id ? 'bg-[#7D5CFF] text-white' : 'text-slate-500 hover:text-[#7D5CFF] hover:bg-[#F5F4FB] dark:hover:bg-[#1F2937]'
+        view === id ? 'bg-brand text-white' : 'text-slate-500 hover:text-brand hover:bg-subtle'
       }`}
     >
       {icon}
@@ -66,7 +66,7 @@ const TemplateGallery: React.FC<Props> = ({ items, selectedId, onSelect }) => {
   // Pastille ATS / Créatif, réutilisée dans les deux vues.
   const AtsBadge: React.FC<{ ats: boolean }> = ({ ats }) => (
     <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider shadow ${
-      ats ? 'bg-emerald-500 text-white' : 'bg-[#7D5CFF] text-white'
+      ats ? 'bg-emerald-500 text-white' : 'bg-brand text-white'
     }`}>
       {ats ? <><ShieldCheck size={11} /> ATS</> : <><Sparkles size={11} /> Créatif</>}
     </span>
@@ -82,7 +82,7 @@ const TemplateGallery: React.FC<Props> = ({ items, selectedId, onSelect }) => {
           <FilterBtn id="ats" label="ATS" icon={<ShieldCheck size={13} />} />
           <FilterBtn id="creative" label="Créatifs" icon={<Sparkles size={13} />} />
         </div>
-        <div className="flex items-center gap-1 p-1 rounded-xl bg-white dark:bg-[#111827] border border-[#ECEAF6] dark:border-[#1F2937] shadow-xs shrink-0">
+        <div className="flex items-center gap-1 p-1 rounded-xl bg-surface border border-line shadow-xs shrink-0">
           <ViewBtn id="carousel" label="Vue carrousel" icon={<GalleryHorizontal size={16} />} />
           <ViewBtn id="grid" label="Voir tous les modèles" icon={<LayoutGrid size={16} />} />
         </div>
@@ -99,14 +99,14 @@ const TemplateGallery: React.FC<Props> = ({ items, selectedId, onSelect }) => {
                 onClick={() => onSelect(it.id)}
                 className="press group text-left"
               >
-                <div className={`relative aspect-[210/297] bg-white rounded-xl overflow-hidden ring-2 transition-all ${sel ? 'ring-[#7D5CFF] shadow-xl' : 'ring-slate-200 dark:ring-slate-700 shadow-sm group-hover:ring-[#7D5CFF]/50 group-hover:shadow-md'}`}>
+                <div className={`relative aspect-[210/297] bg-white rounded-xl overflow-hidden ring-2 transition-all ${sel ? 'ring-brand shadow-xl' : 'ring-slate-200 dark:ring-slate-700 shadow-sm group-hover:ring-brand/50 group-hover:shadow-md'}`}>
                   <div className="absolute inset-x-0 top-0">{it.node}</div>
                   <span className="absolute top-2 left-2"><AtsBadge ats={it.ats} /></span>
                   {sel && (
-                    <span className="absolute top-2 right-2 w-6 h-6 rounded-full bg-[#7D5CFF] text-white flex items-center justify-center shadow"><Check size={14} /></span>
+                    <span className="absolute top-2 right-2 w-6 h-6 rounded-full bg-brand text-white flex items-center justify-center shadow"><Check size={14} /></span>
                   )}
                 </div>
-                <div className={`mt-2 text-xs font-bold text-center truncate ${sel ? 'text-[#7D5CFF]' : 'text-[#111827] dark:text-white'}`}>{it.name}</div>
+                <div className={`mt-2 text-xs font-bold text-center truncate ${sel ? 'text-brand' : 'text-ink'}`}>{it.name}</div>
               </button>
             );
           })}
@@ -116,29 +116,29 @@ const TemplateGallery: React.FC<Props> = ({ items, selectedId, onSelect }) => {
           {/* ───── Carrousel : un modèle à la fois ───── */}
           <div className="relative flex items-center justify-center gap-2 sm:gap-4">
             <button onClick={() => go(-1)} aria-label="Modèle précédent"
-              className="shrink-0 w-10 h-10 rounded-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm flex items-center justify-center text-slate-600 dark:text-slate-300 hover:border-[#7D5CFF] hover:text-[#7D5CFF] transition-colors">
+              className="shrink-0 w-10 h-10 rounded-full bg-white dark:bg-slate-800 border border-line shadow-sm flex items-center justify-center text-muted hover:border-brand hover:text-brand transition-colors">
               <ChevronLeft size={20} />
             </button>
 
             <div className="relative w-full max-w-[300px]">
-              <div className={`rounded-xl overflow-hidden ring-2 transition-shadow ${isSelected ? 'ring-[#7D5CFF] shadow-xl' : 'ring-slate-200 dark:ring-slate-700 shadow-md'}`}>
+              <div className={`rounded-xl overflow-hidden ring-2 transition-shadow ${isSelected ? 'ring-brand shadow-xl' : 'ring-slate-200 dark:ring-slate-700 shadow-md'}`}>
                 {current.node}
               </div>
               <span className="absolute top-2 left-2"><AtsBadge ats={current.ats} /></span>
               {isSelected && (
-                <span className="absolute top-2 right-2 w-6 h-6 rounded-full bg-[#7D5CFF] text-white flex items-center justify-center shadow"><Check size={14} /></span>
+                <span className="absolute top-2 right-2 w-6 h-6 rounded-full bg-brand text-white flex items-center justify-center shadow"><Check size={14} /></span>
               )}
             </div>
 
             <button onClick={() => go(1)} aria-label="Modèle suivant"
-              className="shrink-0 w-10 h-10 rounded-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm flex items-center justify-center text-slate-600 dark:text-slate-300 hover:border-[#7D5CFF] hover:text-[#7D5CFF] transition-colors">
+              className="shrink-0 w-10 h-10 rounded-full bg-white dark:bg-slate-800 border border-line shadow-sm flex items-center justify-center text-muted hover:border-brand hover:text-brand transition-colors">
               <ChevronRight size={20} />
             </button>
           </div>
 
           {/* Nom + compteur + action */}
           <div className="flex flex-col items-center gap-2">
-            <div className="text-sm font-bold text-[#111827] dark:text-white">
+            <div className="text-sm font-bold text-ink">
               {current.name} <span className="text-slate-400 font-medium">· {safeIndex + 1}/{list.length}</span>
             </div>
             <button
@@ -154,7 +154,7 @@ const TemplateGallery: React.FC<Props> = ({ items, selectedId, onSelect }) => {
           <div className="flex flex-wrap justify-center gap-1.5">
             {list.map((it, i) => (
               <button key={it.id} onClick={() => setIndex(i)} aria-label={it.name}
-                className={`w-2 h-2 rounded-full transition-colors ${i === safeIndex ? 'bg-[#7D5CFF]' : 'bg-slate-300 dark:bg-slate-600'}`} />
+                className={`w-2 h-2 rounded-full transition-colors ${i === safeIndex ? 'bg-brand' : 'bg-slate-300 dark:bg-slate-600'}`} />
             ))}
           </div>
         </>

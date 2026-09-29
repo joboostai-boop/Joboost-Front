@@ -53,7 +53,7 @@ const uid = () => Math.random().toString(36).slice(2, 10);
 
 const Label: React.FC<{ children: React.ReactNode; required?: boolean }> = ({ children, required }) => (
   <label className="input-label">
-    {children}{required && <span className="text-[#7D5CFF] ml-0.5">*</span>}
+    {children}{required && <span className="text-brand ml-0.5">*</span>}
   </label>
 );
 
@@ -74,9 +74,9 @@ const Chips: React.FC<{
     <div className="space-y-2">
       <div className="flex flex-wrap gap-2">
         {value.map((v) => (
-          <span key={v} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#F3F0FF] text-[#7D5CFF] text-sm font-semibold">
+          <span key={v} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-brand-50 text-brand text-sm font-semibold">
             {v}
-            <button type="button" onClick={() => onChange(value.filter((x) => x !== v))} className="hover:text-[#6023C0]">
+            <button type="button" onClick={() => onChange(value.filter((x) => x !== v))} className="hover:text-brand-700">
               <X size={13} />
             </button>
           </span>
@@ -94,7 +94,7 @@ const Chips: React.FC<{
         <div className="flex flex-wrap gap-1.5">
           {remaining.slice(0, 8).map((s) => (
             <button key={s} type="button" onClick={() => add(s)}
-              className="px-2.5 py-1 rounded-full border border-slate-200 dark:border-slate-700 text-xs font-medium text-slate-500 hover:border-[#7D5CFF] hover:text-[#7D5CFF] transition-colors">
+              className="px-2.5 py-1 rounded-full border border-line text-xs font-medium text-slate-500 hover:border-brand hover:text-brand transition-colors">
               + {s}
             </button>
           ))}
@@ -112,7 +112,7 @@ const CheckGroup: React.FC<{ options: string[]; value: string[]; onChange: (v: s
         <button key={o} type="button"
           onClick={() => onChange(on ? value.filter((x) => x !== o) : [...value, o])}
           className={`inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-semibold border transition-colors ${
-            on ? 'bg-[#7D5CFF] text-white border-[#7D5CFF]' : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:border-[#7D5CFF]'
+            on ? 'bg-brand text-white border-brand' : 'bg-surface border-line text-muted hover:border-brand'
           }`}>
           {on && <Check size={14} />} {o}
         </button>
@@ -128,17 +128,17 @@ const Section: React.FC<{
   <div className="card-pro !p-0 overflow-hidden">
     <button type="button" onClick={onToggle} className="w-full flex items-center justify-between gap-3 p-5 text-left">
       <div className="flex items-center gap-3 min-w-0">
-        <span className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${done ? 'bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10' : 'bg-[#F3F0FF] text-[#7D5CFF] dark:bg-[#7D5CFF]/10'}`}>
+        <span className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${done ? 'bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10' : 'bg-brand-50 text-brand dark:bg-brand/10'}`}>
           {done ? <Check size={18} /> : icon}
         </span>
-        <span className="font-bold text-[#111827] dark:text-white truncate">{title}</span>
+        <span className="font-bold text-ink truncate">{title}</span>
         <span className={`text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full shrink-0 ${
           badge === 'Essentiel' ? 'bg-amber-50 text-amber-600 dark:bg-amber-500/10' : 'bg-slate-100 text-slate-500 dark:bg-slate-800'
         }`}>{badge}</span>
       </div>
       <ChevronDown size={20} className={`text-slate-400 shrink-0 transition-transform ${open ? 'rotate-180' : ''}`} />
     </button>
-    {open && <div className="px-5 pb-6 pt-1 space-y-5 border-t border-slate-100 dark:border-slate-800">{children}</div>}
+    {open && <div className="px-5 pb-6 pt-1 space-y-5 border-t border-line">{children}</div>}
   </div>
 );
 
@@ -426,22 +426,22 @@ const Profile: React.FC<ProfileProps> = ({ user }) => {
               style={{ background: `conic-gradient(#7D5CFF ${completion * 3.6}deg, rgba(125,92,255,0.15) ${completion * 3.6}deg)` }}
               title={`Profil complété à ${completion}%`}
             >
-              <div className="w-[68px] h-[68px] rounded-full bg-[#F3F4F6] dark:bg-[#1F2937] flex items-center justify-center text-2xl font-bold text-[#7D5CFF] overflow-hidden border-2 border-white dark:border-[#111827] shadow-sm">
+              <div className="w-[68px] h-[68px] rounded-full bg-[#F3F4F6] dark:bg-subtle flex items-center justify-center text-2xl font-bold text-brand overflow-hidden border-2 border-white dark:border-[#111827] shadow-sm">
                 {user.photoUrl ? <img src={user.photoUrl} alt={user.name} className="w-full h-full object-cover" referrerPolicy="no-referrer" /> : <span>{(f.firstName || '?').charAt(0).toUpperCase()}</span>}
               </div>
             </div>
             <div className="min-w-0">
-              <h2 className="text-xl font-bold tracking-tight text-[#111827] dark:text-white truncate">{[f.firstName, f.lastName].filter(Boolean).join(' ') || 'Mon profil'}</h2>
-              <p className="text-sm text-[#6B7280] dark:text-slate-400 truncate">{f.title || 'Plus ton profil est complet, meilleurs sont tes CV et lettres.'}</p>
+              <h2 className="text-xl font-bold tracking-tight text-ink truncate">{[f.firstName, f.lastName].filter(Boolean).join(' ') || 'Mon profil'}</h2>
+              <p className="text-sm text-muted truncate">{f.title || 'Plus ton profil est complet, meilleurs sont tes CV et lettres.'}</p>
               <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 mt-1.5 text-xs font-semibold">
-                <span className="text-[#7D5CFF] tabular-nums">Profil complété à {completion}%</span>
-                {completion < 100 && <span className="text-[#9CA3AF] font-medium">· termine-le pour de meilleurs CV &amp; lettres</span>}
+                <span className="text-brand tabular-nums">Profil complété à {completion}%</span>
+                {completion < 100 && <span className="text-faint font-medium">· termine-le pour de meilleurs CV &amp; lettres</span>}
               </div>
             </div>
           </div>
           <div className="flex items-center gap-2 shrink-0">
             <input type="file" ref={fileInputRef} accept=".pdf,.doc,.docx" className="hidden" onChange={handleImportCv} />
-            <button onClick={() => fileInputRef.current?.click()} disabled={importing} className="press btn btn-secondary text-[#7D5CFF] disabled:opacity-60 flex-1 sm:flex-none">
+            <button onClick={() => fileInputRef.current?.click()} disabled={importing} className="press btn btn-secondary text-brand disabled:opacity-60 flex-1 sm:flex-none">
               {importing ? <RefreshCw size={16} className="animate-spin" /> : <Upload size={16} />}
               <span>Importer mon CV</span>
             </button>
@@ -456,17 +456,17 @@ const Profile: React.FC<ProfileProps> = ({ user }) => {
       <section className="card-pro !p-5 md:!p-6">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex items-center gap-4 min-w-0">
-            <span className="w-12 h-12 rounded-2xl bg-[#F3F0FF] dark:bg-[#7D5CFF]/10 text-[#7D5CFF] flex items-center justify-center shrink-0">
+            <span className="w-12 h-12 rounded-2xl bg-brand-50 dark:bg-brand/10 text-brand flex items-center justify-center shrink-0">
               {usage?.isSubscribed || usage?.unlimited ? <Crown size={22} /> : <Zap size={22} />}
             </span>
             <div className="min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
-                <h3 className="text-base font-bold text-[#111827] dark:text-white">Mon abonnement</h3>
-                <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-[#7D5CFF]/10 text-[#7D5CFF]">
+                <h3 className="text-base font-bold text-ink">Mon abonnement</h3>
+                <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-brand/10 text-brand">
                   {usage ? usage.planLabel : '…'}
                 </span>
               </div>
-              <p className="text-sm text-[#6B7280] dark:text-slate-400 mt-0.5">
+              <p className="text-sm text-muted mt-0.5">
                 {!usage
                   ? 'Chargement…'
                   : usage.unlimited
@@ -491,26 +491,26 @@ const Profile: React.FC<ProfileProps> = ({ user }) => {
 
         {/* Compteurs : candidatures du mois + crédits achetés */}
         <div className="grid grid-cols-2 gap-3 mt-5">
-          <div className="rounded-2xl border border-slate-200 dark:border-slate-700 p-4">
-            <div className="flex items-center gap-2 text-[#6B7280] dark:text-slate-400 text-xs font-semibold uppercase tracking-wider">
-              <Sparkles size={14} className="text-[#7D5CFF]" /> Ce mois-ci
+          <div className="rounded-2xl border border-line p-4">
+            <div className="flex items-center gap-2 text-muted text-xs font-semibold uppercase tracking-wider">
+              <Sparkles size={14} className="text-brand" /> Ce mois-ci
             </div>
-            <p className="mt-1.5 text-2xl font-bold text-[#111827] dark:text-white tabular-nums">
+            <p className="mt-1.5 text-2xl font-bold text-ink tabular-nums">
               {!usage ? '—' : usage.unlimited ? '∞' : usage.remainingQuota}
               {usage && !usage.unlimited && (
-                <span className="text-sm font-medium text-[#9CA3AF]"> / {usage.allowance}</span>
+                <span className="text-sm font-medium text-faint"> / {usage.allowance}</span>
               )}
             </p>
-            <p className="text-xs text-[#9CA3AF]">candidatures IA restantes</p>
+            <p className="text-xs text-faint">candidatures IA restantes</p>
           </div>
-          <div className="rounded-2xl border border-slate-200 dark:border-slate-700 p-4">
-            <div className="flex items-center gap-2 text-[#6B7280] dark:text-slate-400 text-xs font-semibold uppercase tracking-wider">
-              <Coins size={14} className="text-[#7D5CFF]" /> Crédits
+          <div className="rounded-2xl border border-line p-4">
+            <div className="flex items-center gap-2 text-muted text-xs font-semibold uppercase tracking-wider">
+              <Coins size={14} className="text-brand" /> Crédits
             </div>
-            <p className="mt-1.5 text-2xl font-bold text-[#111827] dark:text-white tabular-nums">
+            <p className="mt-1.5 text-2xl font-bold text-ink tabular-nums">
               {!usage ? '—' : usage.credits}
             </p>
-            <p className="text-xs text-[#9CA3AF]">crédits achetés (sans expiration)</p>
+            <p className="text-xs text-faint">crédits achetés (sans expiration)</p>
           </div>
         </div>
       </section>
@@ -518,7 +518,7 @@ const Profile: React.FC<ProfileProps> = ({ user }) => {
       {/* Sections du profil — colonne unique : tout aligné verticalement (lisible,
           régulier), au lieu d'une mosaïque 2 colonnes aux hauteurs irrégulières. */}
       <div className="space-y-4">
-      <h2 className="text-xs font-semibold uppercase tracking-wider text-[#9CA3AF] px-1">Informations essentielles</h2>
+      <h2 className="text-xs font-semibold uppercase tracking-wider text-faint px-1">Informations essentielles</h2>
       {/* 1. Identité & contact */}
       <Section id="identity" title="Identité & contact" icon={<UserIcon size={18} />} badge="Essentiel"
         open={open === 'identity'} onToggle={() => toggle('identity')}
@@ -557,7 +557,7 @@ const Profile: React.FC<ProfileProps> = ({ user }) => {
         open={open === 'exp'} onToggle={() => toggle('exp')} done={f.experiences.length > 0}>
         <p className="text-xs text-slate-400 italic">Pas d'expérience pro ? Mets un stage, un job d'été ou du bénévolat.</p>
         {f.experiences.map((exp) => (
-          <div key={exp.id} className="rounded-2xl border border-slate-200 dark:border-slate-700 p-4 space-y-3">
+          <div key={exp.id} className="rounded-2xl border border-line p-4 space-y-3">
             <div className="flex justify-between items-center">
               <span className="text-xs font-bold uppercase tracking-wider text-slate-400">Expérience</span>
               <button onClick={() => delItem('experiences', exp.id)} className="text-slate-400 hover:text-red-500"><Trash2 size={16} /></button>
@@ -572,15 +572,15 @@ const Profile: React.FC<ProfileProps> = ({ user }) => {
               <input className="input-pro" value={exp.startDate} onChange={(e) => updItem('experiences', exp.id, { startDate: e.target.value })} placeholder="Début (MM/AAAA)" />
               <input className="input-pro" value={exp.endDate} disabled={exp.current} onChange={(e) => updItem('experiences', exp.id, { endDate: e.target.value })} placeholder="Fin (MM/AAAA)" />
             </div>
-            <label className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300">
-              <input type="checkbox" checked={exp.current} onChange={(e) => updItem('experiences', exp.id, { current: e.target.checked })} className="w-4 h-4 accent-[#7D5CFF]" />
+            <label className="flex items-center gap-2 text-sm text-muted">
+              <input type="checkbox" checked={exp.current} onChange={(e) => updItem('experiences', exp.id, { current: e.target.checked })} className="w-4 h-4 accent-brand" />
               Poste actuel
             </label>
             <div>
               <div className="flex justify-between items-center mb-1.5">
                 <span className="text-xs font-semibold text-slate-500">Missions</span>
                 <button type="button" onClick={() => handleDetailExperience(exp)} disabled={aiExpId === exp.id}
-                  className="flex items-center gap-1 text-[#7D5CFF] text-xs font-bold hover:underline disabled:opacity-50">
+                  className="flex items-center gap-1 text-brand text-xs font-bold hover:underline disabled:opacity-50">
                   {aiExpId === exp.id ? <RefreshCw className="animate-spin" size={13} /> : <Wand2 size={13} />} Détailler avec l'IA
                 </button>
               </div>
@@ -596,7 +596,7 @@ const Profile: React.FC<ProfileProps> = ({ user }) => {
       <Section id="edu" title="Formations & diplômes" icon={<GraduationCap size={18} />} badge="Essentiel"
         open={open === 'edu'} onToggle={() => toggle('edu')} done={f.education.length > 0}>
         {f.education.map((ed) => (
-          <div key={ed.id} className="rounded-2xl border border-slate-200 dark:border-slate-700 p-4 space-y-3">
+          <div key={ed.id} className="rounded-2xl border border-line p-4 space-y-3">
             <div className="flex justify-between items-center">
               <span className="text-xs font-bold uppercase tracking-wider text-slate-400">Formation</span>
               <button onClick={() => delItem('education', ed.id)} className="text-slate-400 hover:text-red-500"><Trash2 size={16} /></button>
@@ -611,8 +611,8 @@ const Profile: React.FC<ProfileProps> = ({ user }) => {
               <input className="input-pro" value={ed.city} onChange={(e) => updItem('education', ed.id, { city: e.target.value })} placeholder="Ville" />
               <input className="input-pro" value={ed.mention} onChange={(e) => updItem('education', ed.id, { mention: e.target.value })} placeholder="Mention (facultatif)" />
             </div>
-            <label className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300">
-              <input type="checkbox" checked={ed.ongoing} onChange={(e) => updItem('education', ed.id, { ongoing: e.target.checked })} className="w-4 h-4 accent-[#7D5CFF]" />
+            <label className="flex items-center gap-2 text-sm text-muted">
+              <input type="checkbox" checked={ed.ongoing} onChange={(e) => updItem('education', ed.id, { ongoing: e.target.checked })} className="w-4 h-4 accent-brand" />
               Formation en cours
             </label>
           </div>
@@ -647,7 +647,7 @@ const Profile: React.FC<ProfileProps> = ({ user }) => {
         <button onClick={() => addItem('languages', { id: uid(), language: '', level: 'Courant', certification: '' })} className="btn btn-secondary w-full"><Plus size={16} /> Ajouter une langue</button>
       </Section>
 
-      <h2 className="text-xs font-semibold uppercase tracking-wider text-[#9CA3AF] px-1 pt-3">Pour aller plus loin <span className="text-[#C4C0D6] dark:text-slate-600 normal-case tracking-normal font-medium">· facultatif</span></h2>
+      <h2 className="text-xs font-semibold uppercase tracking-wider text-faint px-1 pt-3">Pour aller plus loin <span className="text-[#C4C0D6] dark:text-slate-600 normal-case tracking-normal font-medium">· facultatif</span></h2>
       {/* Résumé pro — icône neutre (28/09) : on peut l'écrire soi-même, l'IA n'est qu'un
           raccourci optionnel via le bouton « Optimiser avec l'IA » ci-dessous, pas une
           promesse magique sur toute la section. Moins de traces d'IA décoratives, mais le
@@ -655,7 +655,7 @@ const Profile: React.FC<ProfileProps> = ({ user }) => {
       <Section id="summary" title="Résumé professionnel" icon={<FileText size={18} />} badge="Bonus"
         open={open === 'summary'} onToggle={() => toggle('summary')} done={!!f.summary}>
         <div className="flex justify-end">
-          <button onClick={handleSummaryAI} disabled={loadingAI} className="flex items-center gap-2 text-[#7D5CFF] text-xs font-bold hover:underline disabled:opacity-50">
+          <button onClick={handleSummaryAI} disabled={loadingAI} className="flex items-center gap-2 text-brand text-xs font-bold hover:underline disabled:opacity-50">
             {loadingAI ? <RefreshCw className="animate-spin" size={14} /> : <Wand2 size={14} />} Optimiser avec l'IA
           </button>
         </div>
@@ -667,8 +667,8 @@ const Profile: React.FC<ProfileProps> = ({ user }) => {
         open={open === 'prefs'} onToggle={() => toggle('prefs')} done={f.mobility.length > 0 || f.drivingLicenses.length > 0}>
         <div><Label>Mobilité</Label><CheckGroup options={MOBILITY} value={f.mobility} onChange={(v) => set({ mobility: v })} /></div>
         <div><Label>Permis</Label><CheckGroup options={LICENSES} value={f.drivingLicenses} onChange={(v) => set({ drivingLicenses: v })} /></div>
-        <label className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300">
-          <input type="checkbox" checked={f.ownVehicle} onChange={(e) => set({ ownVehicle: e.target.checked })} className="w-4 h-4 accent-[#7D5CFF]" />
+        <label className="flex items-center gap-2 text-sm text-muted">
+          <input type="checkbox" checked={f.ownVehicle} onChange={(e) => set({ ownVehicle: e.target.checked })} className="w-4 h-4 accent-brand" />
           J'ai un véhicule personnel
         </label>
         <div><Label>Horaires</Label><CheckGroup options={SCHEDULES} value={f.workSchedules} onChange={(v) => set({ workSchedules: v })} /></div>
@@ -687,7 +687,7 @@ const Profile: React.FC<ProfileProps> = ({ user }) => {
         open={open === 'projects'} onToggle={() => toggle('projects')} done={f.projects.length > 0}>
         <p className="text-xs text-slate-400 italic">Idéal si tu débutes : montre ce que tu sais faire.</p>
         {f.projects.map((p) => (
-          <div key={p.id} className="rounded-2xl border border-slate-200 dark:border-slate-700 p-4 space-y-3">
+          <div key={p.id} className="rounded-2xl border border-line p-4 space-y-3">
             <div className="flex justify-between items-center">
               <span className="text-xs font-bold uppercase tracking-wider text-slate-400">Projet</span>
               <button onClick={() => delItem('projects', p.id)} className="text-slate-400 hover:text-red-500"><Trash2 size={16} /></button>

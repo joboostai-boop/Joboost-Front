@@ -30,11 +30,11 @@ const CvPreview: React.FC<{ content: any }> = ({ content }) => {
       {(c.name || c.title) && (
         <div className="flex items-center gap-3">
           {c.photoUrl && (
-            <img src={c.photoUrl} alt="" className="w-14 h-14 rounded-full object-cover border border-slate-200 dark:border-slate-700 shrink-0" />
+            <img src={c.photoUrl} alt="" className="w-14 h-14 rounded-full object-cover border border-line shrink-0" />
           )}
           <div className="min-w-0">
-            {c.name && <p className="text-lg font-extrabold text-slate-900 dark:text-white leading-tight">{c.name}</p>}
-            {c.title && <p className="text-sm font-semibold text-[#7D5CFF] mt-0.5">{c.title}</p>}
+            {c.name && <p className="text-lg font-extrabold text-ink leading-tight">{c.name}</p>}
+            {c.title && <p className="text-sm font-semibold text-brand mt-0.5">{c.title}</p>}
             <div className="flex flex-wrap gap-x-3 gap-y-0.5 mt-1 text-[11px] text-slate-500">
               {c.email && <span>{c.email}</span>}
               {c.phone && <span>{c.phone}</span>}
@@ -47,7 +47,7 @@ const CvPreview: React.FC<{ content: any }> = ({ content }) => {
       {c.summary && (
         <div>
           <p className="text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">Profil</p>
-          <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed whitespace-pre-wrap">{c.summary}</p>
+          <p className="text-sm text-muted leading-relaxed whitespace-pre-wrap">{c.summary}</p>
         </div>
       )}
 
@@ -56,7 +56,7 @@ const CvPreview: React.FC<{ content: any }> = ({ content }) => {
           <p className="text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-2">Compétences</p>
           <div className="flex flex-wrap gap-1.5">
             {skills.map((s) => (
-              <span key={s} className="px-2.5 py-1 rounded-lg bg-[#7D5CFF]/10 text-[#7D5CFF] dark:text-[#B9A7FF] text-xs font-semibold">{s}</span>
+              <span key={s} className="px-2.5 py-1 rounded-lg bg-brand/10 text-brand dark:text-brand-300 text-xs font-semibold">{s}</span>
             ))}
           </div>
         </div>
@@ -69,13 +69,13 @@ const CvPreview: React.FC<{ content: any }> = ({ content }) => {
           </p>
           <div className="space-y-3">
             {experiences.map((e, i) => (
-              <div key={e.id || i} className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800">
-                <p className="text-sm font-bold text-slate-900 dark:text-white">
+              <div key={e.id || i} className="p-3 rounded-xl bg-subtle border border-line">
+                <p className="text-sm font-bold text-ink">
                   {e.role || e.title || 'Poste'}{e.company ? ` · ${e.company}` : ''}
                 </p>
                 {(e.period || e.dates) && <p className="text-[11px] text-slate-400 mt-0.5">{e.period || e.dates}</p>}
                 {(e.desc || e.description) && (
-                  <p className="text-xs text-slate-600 dark:text-slate-300 mt-1.5 leading-relaxed whitespace-pre-wrap">{e.desc || e.description}</p>
+                  <p className="text-xs text-muted mt-1.5 leading-relaxed whitespace-pre-wrap">{e.desc || e.description}</p>
                 )}
               </div>
             ))}
@@ -90,8 +90,8 @@ const CvPreview: React.FC<{ content: any }> = ({ content }) => {
           </p>
           <div className="space-y-2">
             {education.map((e, i) => (
-              <div key={e.id || i} className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800">
-                <p className="text-sm font-bold text-slate-900 dark:text-white">{e.degree || e.title || 'Formation'}</p>
+              <div key={e.id || i} className="p-3 rounded-xl bg-subtle border border-line">
+                <p className="text-sm font-bold text-ink">{e.degree || e.title || 'Formation'}</p>
                 <p className="text-[11px] text-slate-400 mt-0.5">
                   {[e.school, e.date || e.year || e.period, e.city].filter(Boolean).join(' · ')}
                 </p>
@@ -477,7 +477,7 @@ const BusinessJobseekers: React.FC = () => {
         {/* Mobile Actions Toggle */}
         <button 
           onClick={() => setShowMobileActions(true)}
-          className="md:hidden p-2.5 bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-500 min-h-[44px] min-w-[44px] flex items-center justify-center"
+          className="md:hidden p-2.5 bg-white dark:bg-slate-800 rounded-lg border border-line text-slate-500 min-h-[44px] min-w-[44px] flex items-center justify-center"
         >
           <MoreVertical size={20} />
         </button>
@@ -487,15 +487,15 @@ const BusinessJobseekers: React.FC = () => {
       {showMobileActions && (
         <div className="md:hidden fixed inset-0 z-50 flex items-end">
           <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setShowMobileActions(false)} />
-          <div className="relative bg-white dark:bg-[#111827] w-full rounded-t-2xl shadow-2xl p-4 border-t border-slate-200 dark:border-slate-700">
+          <div className="relative bg-surface w-full rounded-t-2xl shadow-2xl p-4 border-t border-line">
             <div className="w-10 h-1 bg-slate-200 dark:bg-slate-700 rounded-full mx-auto mb-4" />
-            <h3 className="font-bold text-slate-900 dark:text-white mb-4">Actions</h3>
+            <h3 className="font-bold text-ink mb-4">Actions</h3>
             <button
               onClick={openCreate}
               className="w-full flex items-center gap-3 p-4 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 text-left min-h-[44px]"
             >
-              <UserPlus size={20} className="text-[#7D5CFF]" />
-              <span className="font-medium text-slate-900 dark:text-white">Ajouter un candidat</span>
+              <UserPlus size={20} className="text-brand" />
+              <span className="font-medium text-ink">Ajouter un candidat</span>
             </button>
             <button
               onClick={exportCSV}
@@ -503,7 +503,7 @@ const BusinessJobseekers: React.FC = () => {
               className="w-full flex items-center gap-3 p-4 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 text-left min-h-[44px]"
             >
               <Download size={20} className="text-slate-500" />
-              <span className="font-medium text-slate-900 dark:text-white">Exporter en CSV</span>
+              <span className="font-medium text-ink">Exporter en CSV</span>
             </button>
             <button 
               onClick={() => setShowMobileActions(false)}
@@ -516,7 +516,7 @@ const BusinessJobseekers: React.FC = () => {
       )}
 
       {/* Filters - Sticky on Mobile */}
-      <div className="sticky top-0 md:relative z-20 bg-slate-50 dark:bg-[#030712] pb-4 md:pb-0 md:mb-6">
+      <div className="sticky top-0 md:relative z-20 bg-slate-50 dark:bg-canvas pb-4 md:pb-0 md:mb-6">
         <div className="card-pro">
           {/* Desktop Form */}
           <form onSubmit={handleSearchSubmit} className="hidden md:flex flex-row gap-3">
@@ -537,8 +537,8 @@ const BusinessJobseekers: React.FC = () => {
                   onClick={() => setStatusFilter(o.value)}
                   className={`shrink-0 px-3 py-2 rounded-lg text-xs font-bold transition-colors min-h-[38px] ${
                     statusFilter === o.value
-                      ? 'bg-[#7D5CFF] text-white shadow-sm'
-                      : 'bg-white dark:bg-slate-800 text-slate-500 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700'
+                      ? 'bg-brand text-white shadow-sm'
+                      : 'bg-white dark:bg-slate-800 text-slate-500 border border-line hover:bg-slate-50 dark:hover:bg-slate-700'
                   }`}
                 >
                   {o.label}
@@ -563,8 +563,8 @@ const BusinessJobseekers: React.FC = () => {
               onClick={() => setShowFiltersMobile(true)}
               className={`p-2.5 rounded-xl border flex items-center justify-center min-h-[44px] min-w-[44px] transition-colors ${
                 statusFilter 
-                  ? 'bg-[#7D5CFF]/10 border-[#7D5CFF]/20 text-[#7D5CFF]' 
-                  : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-500'
+                  ? 'bg-brand/10 border-brand/20 text-brand' 
+                  : 'bg-white dark:bg-slate-800 border-line text-slate-500'
               }`}
             >
               <Filter size={18} />
@@ -577,9 +577,9 @@ const BusinessJobseekers: React.FC = () => {
       {showFiltersMobile && (
         <div className="md:hidden fixed inset-0 z-50 flex items-end">
           <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setShowFiltersMobile(false)} />
-          <div className="relative bg-white dark:bg-[#111827] w-full rounded-t-2xl shadow-2xl p-5 border-t border-slate-200 dark:border-slate-700">
+          <div className="relative bg-surface w-full rounded-t-2xl shadow-2xl p-5 border-t border-line">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="font-bold text-slate-900 dark:text-white">Filtres</h3>
+              <h3 className="font-bold text-ink">Filtres</h3>
               <button onClick={() => setShowFiltersMobile(false)} className="p-2 min-h-[44px] min-w-[44px] flex items-center justify-center">
                 <X size={20} className="text-slate-400" />
               </button>
@@ -629,7 +629,7 @@ const BusinessJobseekers: React.FC = () => {
       ) : jobseekers.length === 0 ? (
         <div className="card-pro text-center py-16 md:py-20 px-4">
           <User className="mx-auto text-slate-300 dark:text-slate-600 mb-4" size={48} />
-          <p className="text-slate-500 dark:text-slate-400 text-sm">
+          <p className="text-muted text-sm">
             {search || statusFilter ? 'Aucun candidat ne correspond à votre recherche.' : 'Votre vivier est vide pour le moment.'}
           </p>
           {!search && !statusFilter && (
@@ -645,15 +645,15 @@ const BusinessJobseekers: React.FC = () => {
               <div
                 key={js.affiliationId}
                 onClick={() => openDetail(js.id)}
-                className="card-pro p-4 hover:shadow-md hover:border-[#7D5CFF]/30 cursor-pointer transition-all duration-200 group"
+                className="card-pro p-4 hover:shadow-md hover:border-brand/30 cursor-pointer transition-all duration-200 group"
               >
                 <div className="flex items-start gap-3">
-                  <div className="w-10 md:w-12 h-10 md:h-12 rounded-full bg-[#EFEBFF] dark:bg-[#7D5CFF]/15 text-[#5B3FD6] dark:text-[#B9A7FF] flex items-center justify-center font-bold text-sm md:text-base shrink-0">
+                  <div className="w-10 md:w-12 h-10 md:h-12 rounded-full bg-[#EFEBFF] dark:bg-brand/15 text-brand-700 dark:text-brand-300 flex items-center justify-center font-bold text-sm md:text-base shrink-0">
                     {js.name.charAt(0).toUpperCase()}
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between gap-2">
-                      <p className="font-semibold text-sm md:text-base text-slate-900 dark:text-white truncate leading-tight">{js.name}</p>
+                      <p className="font-semibold text-sm md:text-base text-ink truncate leading-tight">{js.name}</p>
                       <span className={`inline-flex px-2 py-0.5 rounded-full text-[10px] font-semibold border shrink-0 ${getStatusColor(js.affiliationStatus)}`}>
                         {statusLabel(js.affiliationStatus)}
                       </span>
@@ -674,7 +674,7 @@ const BusinessJobseekers: React.FC = () => {
                   </div>
                 )}
 
-                <div className="flex items-center justify-between mt-3 pt-3 border-t border-slate-100 dark:border-slate-800">
+                <div className="flex items-center justify-between mt-3 pt-3 border-t border-line">
                   {js.city ? (
                     <span className="text-[11px] md:text-xs text-slate-400 flex items-center gap-1"><MapPin size={10} />{js.city}</span>
                   ) : <span />}
@@ -694,7 +694,7 @@ const BusinessJobseekers: React.FC = () => {
                 <button onClick={() => fetchJobseekers(pagination.page - 1)} disabled={pagination.page <= 1} className="p-2.5 rounded-lg text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 disabled:opacity-30 transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center">
                   <ChevronLeft size={18} />
                 </button>
-                <span className="text-sm font-medium text-slate-600 dark:text-slate-300 px-4">{pagination.page} / {pagination.totalPages}</span>
+                <span className="text-sm font-medium text-muted px-4">{pagination.page} / {pagination.totalPages}</span>
                 <button onClick={() => fetchJobseekers(pagination.page + 1)} disabled={pagination.page >= pagination.totalPages} className="p-2.5 rounded-lg text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 disabled:opacity-30 transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center">
                   <ChevronRight size={18} />
                 </button>
@@ -708,34 +708,34 @@ const BusinessJobseekers: React.FC = () => {
       {drawerOpen && (
         <>
           <div className="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm" onClick={() => { setDrawerOpen(false); setSelectedDetail(null); }} />
-          <div className="fixed inset-x-0 bottom-0 md:top-0 md:right-0 md:left-auto md:w-full md:max-w-xl z-50 bg-white dark:bg-[#111827] shadow-2xl rounded-t-2xl md:rounded-none md:border-l border-[#ECEAF6] dark:border-[#1F2937] h-[92dvh] md:h-full flex flex-col">
+          <div className="fixed inset-x-0 bottom-0 md:top-0 md:right-0 md:left-auto md:w-full md:max-w-xl z-50 bg-surface shadow-2xl rounded-t-2xl md:rounded-none md:border-l border-line h-[92dvh] md:h-full flex flex-col">
 
             {/* ── En-tête : l'identité ne défile jamais. On sait toujours de qui
                  parle le tiroir, même arrivé au bas d'un long profil. ── */}
-            <div className="shrink-0 relative flex items-start gap-3 p-4 md:p-5 border-b border-[#ECEAF6] dark:border-[#1F2937] rounded-t-2xl md:rounded-none">
+            <div className="shrink-0 relative flex items-start gap-3 p-4 md:p-5 border-b border-line rounded-t-2xl md:rounded-none">
               <div aria-hidden className="absolute top-2 left-1/2 -translate-x-1/2 w-10 h-1 bg-slate-200 dark:bg-slate-700 rounded-full md:hidden" />
               {selectedDetail ? (
                 <>
-                  <div className="w-12 h-12 rounded-full bg-[#EFEBFF] dark:bg-[#7D5CFF]/15 text-[#5B3FD6] dark:text-[#B9A7FF] flex items-center justify-center font-extrabold text-lg shrink-0 mt-2 md:mt-0">
+                  <div className="w-12 h-12 rounded-full bg-[#EFEBFF] dark:bg-brand/15 text-brand-700 dark:text-brand-300 flex items-center justify-center font-extrabold text-lg shrink-0 mt-2 md:mt-0">
                     {selectedDetail.name.charAt(0).toUpperCase()}
                   </div>
                   <div className="min-w-0 flex-1 mt-2 md:mt-0">
-                    <p className="text-[10.5px] font-bold uppercase tracking-[0.14em] text-[#7D5CFF]">Profil adhérent</p>
-                    <h2 className="text-lg font-extrabold tracking-[-0.02em] text-slate-900 dark:text-white truncate leading-tight">
+                    <p className="text-[10.5px] font-bold uppercase tracking-[0.14em] text-brand">Profil adhérent</p>
+                    <h2 className="text-lg font-extrabold tracking-[-0.02em] text-ink truncate leading-tight">
                       {selectedDetail.name}
                     </h2>
                     {selectedDetail.title && (
-                      <p className="text-xs text-slate-500 dark:text-slate-400 truncate mt-0.5">{selectedDetail.title}</p>
+                      <p className="text-xs text-muted truncate mt-0.5">{selectedDetail.title}</p>
                     )}
                   </div>
                 </>
               ) : (
-                <h2 className="flex-1 text-lg font-extrabold text-slate-900 dark:text-white mt-2 md:mt-0">Profil adhérent</h2>
+                <h2 className="flex-1 text-lg font-extrabold text-ink mt-2 md:mt-0">Profil adhérent</h2>
               )}
               <button
                 onClick={() => { setDrawerOpen(false); setSelectedDetail(null); }}
                 aria-label="Fermer"
-                className="shrink-0 p-2.5 rounded-lg text-slate-400 hover:bg-[#F5F4FB] dark:hover:bg-[#1F2937] hover:text-slate-600 transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center mt-2 md:mt-0"
+                className="shrink-0 p-2.5 rounded-lg text-slate-400 hover:bg-subtle hover:text-slate-600 transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center mt-2 md:mt-0"
               >
                 <X size={20} />
               </button>
@@ -744,7 +744,7 @@ const BusinessJobseekers: React.FC = () => {
             <div className="flex-1 overflow-y-auto">
               {loadingDetail ? (
                 <div className="flex items-center justify-center py-20">
-                  <Loader2 className="animate-spin text-[#7D5CFF]" size={32} />
+                  <Loader2 className="animate-spin text-brand" size={32} />
                 </div>
               ) : selectedDetail ? (
                 <div className="p-4 md:p-5 space-y-6">
@@ -755,7 +755,7 @@ const BusinessJobseekers: React.FC = () => {
                       {hasRealEmail(selectedDetail.email) && (
                         <a
                           href={`mailto:${selectedDetail.email}`}
-                          className="inline-flex items-center gap-2 max-w-full px-3 py-1.5 rounded-full bg-[#F5F4FB] dark:bg-[#0B1120] border border-[#ECEAF6] dark:border-[#1F2937] text-xs font-semibold text-slate-600 dark:text-slate-300 hover:border-[#7D5CFF]/40 hover:text-[#7D5CFF] transition-colors"
+                          className="inline-flex items-center gap-2 max-w-full px-3 py-1.5 rounded-full bg-subtle border border-line text-xs font-semibold text-muted hover:border-brand/40 hover:text-brand transition-colors"
                         >
                           <Mail size={13} className="shrink-0" /> <span className="truncate">{selectedDetail.email}</span>
                         </a>
@@ -763,13 +763,13 @@ const BusinessJobseekers: React.FC = () => {
                       {selectedDetail.phone && (
                         <a
                           href={`tel:${selectedDetail.phone}`}
-                          className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#F5F4FB] dark:bg-[#0B1120] border border-[#ECEAF6] dark:border-[#1F2937] text-xs font-semibold text-slate-600 dark:text-slate-300 hover:border-[#7D5CFF]/40 hover:text-[#7D5CFF] transition-colors"
+                          className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-subtle border border-line text-xs font-semibold text-muted hover:border-brand/40 hover:text-brand transition-colors"
                         >
                           <Phone size={13} className="shrink-0" /> {selectedDetail.phone}
                         </a>
                       )}
                       {selectedDetail.city && (
-                        <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#F5F4FB] dark:bg-[#0B1120] border border-[#ECEAF6] dark:border-[#1F2937] text-xs font-semibold text-slate-600 dark:text-slate-300">
+                        <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-subtle border border-line text-xs font-semibold text-muted">
                           <MapPin size={13} className="shrink-0" /> {selectedDetail.city}
                         </span>
                       )}
@@ -778,7 +778,7 @@ const BusinessJobseekers: React.FC = () => {
                           href={selectedDetail.linkedin}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#F5F4FB] dark:bg-[#0B1120] border border-[#ECEAF6] dark:border-[#1F2937] text-xs font-semibold text-[#7D5CFF] hover:border-[#7D5CFF]/40 transition-colors"
+                          className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-subtle border border-line text-xs font-semibold text-brand hover:border-brand/40 transition-colors"
                         >
                           <ExternalLink size={13} className="shrink-0" /> LinkedIn
                         </a>
@@ -787,13 +787,13 @@ const BusinessJobseekers: React.FC = () => {
                   )}
 
                   {/* ── Suivi : statut + note privée ── */}
-                  <div className="rounded-2xl border border-[#ECEAF6] dark:border-[#1F2937] p-4 space-y-4">
+                  <div className="rounded-2xl border border-line p-4 space-y-4">
                     <div>
                       <label className="text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-2 flex items-center gap-1.5">
                         Statut {savingStatus && <Loader2 size={11} className="animate-spin" />}
                       </label>
                       {/* Segmented control : même langage visuel que le dock et les onglets */}
-                      <div className="flex gap-1 p-1 rounded-xl bg-[#F5F4FB] dark:bg-[#0B1120] border border-[#ECEAF6] dark:border-[#1F2937]">
+                      <div className="flex gap-1 p-1 rounded-xl bg-subtle border border-line">
                         {STATUS_FORM_OPTIONS.map((o) => {
                           const isActive = selectedDetail.affiliationStatus === o.value;
                           return (
@@ -805,7 +805,7 @@ const BusinessJobseekers: React.FC = () => {
                               className={`flex-1 min-h-[38px] px-2 rounded-lg text-xs font-bold border transition-colors disabled:cursor-default ${
                                 isActive
                                   ? getStatusColor(o.value)
-                                  : 'border-transparent text-slate-500 dark:text-slate-400 hover:bg-white dark:hover:bg-[#1F2937]'
+                                  : 'border-transparent text-muted hover:bg-white dark:hover:bg-subtle'
                               }`}
                             >
                               {o.label}
@@ -843,7 +843,7 @@ const BusinessJobseekers: React.FC = () => {
                   {selectedDetail.summary && (
                     <div>
                       <h4 className="text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-2">Résumé</h4>
-                      <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">{selectedDetail.summary}</p>
+                      <p className="text-sm text-muted leading-relaxed">{selectedDetail.summary}</p>
                     </div>
                   )}
 
@@ -853,7 +853,7 @@ const BusinessJobseekers: React.FC = () => {
                       <h4 className="text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-2">Compétences</h4>
                       <div className="flex flex-wrap gap-1.5">
                         {selectedDetail.skills.map((s: string) => (
-                          <span key={s} className="px-2.5 py-1 bg-[#F3F0FF] text-[#7D5CFF] border border-[#7D5CFF]/15 dark:bg-[#7D5CFF]/10 dark:text-[#A78BFA] dark:border-[#7D5CFF]/20 rounded-lg text-xs font-semibold">
+                          <span key={s} className="px-2.5 py-1 bg-brand-50 text-brand border border-brand/15 dark:bg-brand/10 dark:text-brand-300 dark:border-brand/20 rounded-lg text-xs font-semibold">
                             {s}
                           </span>
                         ))}
@@ -867,11 +867,11 @@ const BusinessJobseekers: React.FC = () => {
                       <h4 className="text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-2 flex items-center gap-1.5">
                         <Briefcase size={12} /> Candidatures
                       </h4>
-                      <div className="rounded-2xl border border-[#ECEAF6] dark:border-[#1F2937] divide-y divide-[#ECEAF6] dark:divide-[#1F2937] overflow-hidden">
+                      <div className="rounded-2xl border border-line divide-y divide-line dark:divide-subtle overflow-hidden">
                         {selectedDetail.applications.map((app) => (
                           <div key={app.id} className="flex items-center justify-between gap-3 p-3">
                             <div className="min-w-0">
-                              <p className="text-sm font-bold text-slate-900 dark:text-white truncate">{app.title}</p>
+                              <p className="text-sm font-bold text-ink truncate">{app.title}</p>
                               <p className="text-xs text-slate-500 truncate mt-0.5">{app.company}</p>
                             </div>
                             <span className={`text-[10.5px] font-bold px-2.5 py-1 rounded-full shrink-0 ${
@@ -892,18 +892,18 @@ const BusinessJobseekers: React.FC = () => {
                       <h4 className="text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-2 flex items-center gap-1.5">
                         <FileText size={12} /> CV enregistrés
                       </h4>
-                      <div className="rounded-2xl border border-[#ECEAF6] dark:border-[#1F2937] divide-y divide-[#ECEAF6] dark:divide-[#1F2937] overflow-hidden">
+                      <div className="rounded-2xl border border-line divide-y divide-line dark:divide-subtle overflow-hidden">
                         {selectedDetail.cvs.map((cv) => (
                           <button
                             key={cv.id}
                             onClick={() => openCv(cv.id)}
                             title="Consulter ce CV"
-                            className="w-full flex items-center gap-3 p-3 hover:bg-[#F5F4FB] dark:hover:bg-[#1F2937] transition-colors text-left group/cv"
+                            className="w-full flex items-center gap-3 p-3 hover:bg-subtle transition-colors text-left group/cv"
                           >
-                            <FileText size={14} className="text-[#7D5CFF] dark:text-[#A78BFA] shrink-0" />
-                            <span className="text-sm font-medium text-slate-700 dark:text-slate-300 flex-1 truncate">{cv.title}</span>
+                            <FileText size={14} className="text-brand dark:text-brand-300 shrink-0" />
+                            <span className="text-sm font-medium text-ink flex-1 truncate">{cv.title}</span>
                             <span className="text-xs text-slate-400 shrink-0">{new Date(cv.updatedAt).toLocaleDateString('fr-FR')}</span>
-                            <Eye size={14} className="text-slate-300 group-hover/cv:text-[#7D5CFF] transition-colors shrink-0" />
+                            <Eye size={14} className="text-slate-300 group-hover/cv:text-brand transition-colors shrink-0" />
                           </button>
                         ))}
                       </div>
@@ -915,8 +915,8 @@ const BusinessJobseekers: React.FC = () => {
                     && !(selectedDetail.skills && selectedDetail.skills.length)
                     && !(selectedDetail.cvs && selectedDetail.cvs.length)
                     && !(selectedDetail.applications && selectedDetail.applications.length) && (
-                    <div className="rounded-2xl border border-dashed border-[#ECEAF6] dark:border-[#1F2937] p-5 text-center">
-                      <p className="text-sm font-semibold text-slate-600 dark:text-slate-300">Profil encore vide</p>
+                    <div className="rounded-2xl border border-dashed border-line p-5 text-center">
+                      <p className="text-sm font-semibold text-muted">Profil encore vide</p>
                       <p className="text-xs text-slate-400 mt-1 leading-relaxed">
                         {selectedDetail.managed
                           ? 'Complétez sa fiche pour retrouver ce candidat par compétence.'
@@ -932,7 +932,7 @@ const BusinessJobseekers: React.FC = () => {
 
                   {/* ── Zone sensible : isolée en fin de tiroir, loin des actions
                        courantes, pour ne pas retirer un adhérent par méprise. ── */}
-                  <div className="pt-2 border-t border-[#ECEAF6] dark:border-[#1F2937] space-y-2">
+                  <div className="pt-2 border-t border-line space-y-2">
                     {selectedDetail.managed ? (
                       <button onClick={() => openEdit(selectedDetail)} className="btn btn-secondary min-h-[40px] text-sm w-full">
                         <Edit3 size={14} /> Modifier la fiche
@@ -944,7 +944,7 @@ const BusinessJobseekers: React.FC = () => {
                     )}
                     <button
                       onClick={() => setRemovingId(selectedDetail.id)}
-                      className="w-full min-h-[40px] text-sm inline-flex items-center justify-center gap-2 rounded-xl text-slate-500 dark:text-slate-400 font-semibold hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-600 dark:hover:text-red-400 transition-colors px-3"
+                      className="w-full min-h-[40px] text-sm inline-flex items-center justify-center gap-2 rounded-xl text-muted font-semibold hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-600 dark:hover:text-red-400 transition-colors px-3"
                     >
                       <Trash2 size={14} /> Retirer du vivier
                     </button>
@@ -957,7 +957,7 @@ const BusinessJobseekers: React.FC = () => {
                  que soit la longueur du profil. Libellés courts : « Message
                  d'approche IA » passait sur deux lignes et cassait l'alignement. ── */}
             {!loadingDetail && selectedDetail && (
-              <div className="shrink-0 border-t border-[#ECEAF6] dark:border-[#1F2937] bg-white dark:bg-[#111827] p-3 md:p-4 space-y-2 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+              <div className="shrink-0 border-t border-line bg-surface p-3 md:p-4 space-y-2 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
                 <button onClick={openPosition} className="btn btn-primary w-full min-h-[44px]">
                   <Briefcase size={15} /> Positionner sur une offre
                 </button>
@@ -965,7 +965,7 @@ const BusinessJobseekers: React.FC = () => {
                   <button
                     onClick={handleOutreach}
                     title="Générer un message d'approche avec l'IA"
-                    className="flex-1 min-h-[44px] text-sm inline-flex items-center justify-center gap-2 rounded-xl bg-[#7D5CFF]/10 text-[#7D5CFF] dark:text-[#B9A7FF] font-semibold hover:bg-[#7D5CFF]/20 transition-colors px-3 whitespace-nowrap"
+                    className="flex-1 min-h-[44px] text-sm inline-flex items-center justify-center gap-2 rounded-xl bg-brand/10 text-brand dark:text-brand-300 font-semibold hover:bg-brand/20 transition-colors px-3 whitespace-nowrap"
                   >
                     <Sparkles size={14} className="shrink-0" /> Message IA
                   </button>
@@ -989,10 +989,10 @@ const BusinessJobseekers: React.FC = () => {
       {showForm && (
         <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center">
           <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setShowForm(false)} />
-          <div className="relative bg-white dark:bg-[#111827] w-full md:rounded-xl shadow-2xl md:max-w-xl md:mx-4 max-h-[100dvh] md:max-h-[90vh] overflow-y-auto border-t md:border border-slate-200 dark:border-slate-700 rounded-t-2xl md:rounded-xl">
-            <div className="sticky top-0 bg-white dark:bg-[#111827] flex items-center justify-between p-4 md:p-5 border-b border-slate-200 dark:border-slate-700 z-10">
+          <div className="relative bg-surface w-full md:rounded-xl shadow-2xl md:max-w-xl md:mx-4 max-h-[100dvh] md:max-h-[90vh] overflow-y-auto border-t md:border border-line rounded-t-2xl md:rounded-xl">
+            <div className="sticky top-0 bg-surface flex items-center justify-between p-4 md:p-5 border-b border-line z-10">
               <div className="absolute top-2 left-1/2 -translate-x-1/2 w-10 h-1 bg-slate-200 dark:bg-slate-700 rounded-full md:hidden" />
-              <h2 className="text-lg font-bold text-slate-900 dark:text-white mt-2 md:mt-0">
+              <h2 className="text-lg font-bold text-ink mt-2 md:mt-0">
                 {editingId ? 'Modifier le candidat' : 'Ajouter un candidat'}
               </h2>
               <button onClick={() => setShowForm(false)} className="p-2.5 rounded-lg text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center">
@@ -1069,7 +1069,7 @@ const BusinessJobseekers: React.FC = () => {
                 <p className="text-[11px] text-slate-400 mt-2">Les compétences alimentent le matching avec vos offres d'emploi.</p>
               </div>
 
-              <div className="flex flex-col-reverse sm:flex-row justify-end gap-3 pt-4 border-t border-slate-200 dark:border-slate-700">
+              <div className="flex flex-col-reverse sm:flex-row justify-end gap-3 pt-4 border-t border-line">
                 <button type="button" onClick={() => setShowForm(false)} className="btn btn-secondary min-h-[44px] w-full sm:w-auto">Annuler</button>
                 <button type="submit" disabled={submitting} className="btn btn-primary min-h-[44px] w-full sm:w-auto">
                   {submitting ? <Loader2 size={16} className="animate-spin" /> : null}
@@ -1085,12 +1085,12 @@ const BusinessJobseekers: React.FC = () => {
       {outreachOpen && (
         <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center">
           <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setOutreachOpen(false)} />
-          <div className="relative bg-white dark:bg-[#111827] w-full md:max-w-lg md:mx-4 max-h-[90dvh] md:max-h-[85vh] flex flex-col border-t md:border border-slate-200 dark:border-slate-700 rounded-t-2xl md:rounded-xl shadow-2xl">
-            <div className="shrink-0 flex items-start justify-between p-4 md:p-5 border-b border-slate-200 dark:border-slate-700">
+          <div className="relative bg-surface w-full md:max-w-lg md:mx-4 max-h-[90dvh] md:max-h-[85vh] flex flex-col border-t md:border border-line rounded-t-2xl md:rounded-xl shadow-2xl">
+            <div className="shrink-0 flex items-start justify-between p-4 md:p-5 border-b border-line">
               <div className="absolute top-2 left-1/2 -translate-x-1/2 w-10 h-1 bg-slate-200 dark:bg-slate-700 rounded-full md:hidden" />
               <div className="mt-2 md:mt-0 min-w-0 pr-3">
-                <h2 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                  <Sparkles size={18} className="text-[#7D5CFF] shrink-0" /> Message d'approche
+                <h2 className="text-lg font-bold text-ink flex items-center gap-2">
+                  <Sparkles size={18} className="text-brand shrink-0" /> Message d'approche
                 </h2>
                 {selectedDetail && <p className="text-xs text-slate-500 mt-0.5 truncate">Pour {selectedDetail.name}</p>}
               </div>
@@ -1102,12 +1102,12 @@ const BusinessJobseekers: React.FC = () => {
             <div className="flex-1 overflow-y-auto p-4 md:p-5">
               {outreachLoading ? (
                 <div className="flex flex-col items-center justify-center py-14 gap-3">
-                  <Loader2 className="animate-spin text-[#7D5CFF]" size={28} />
+                  <Loader2 className="animate-spin text-brand" size={28} />
                   <p className="text-sm text-slate-500">L'IA rédige un message personnalisé…</p>
                 </div>
               ) : (
                 <>
-                  <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800">
+                  <div className="p-4 rounded-xl bg-subtle border border-line">
                     <p className="text-sm text-slate-700 dark:text-slate-200 leading-relaxed whitespace-pre-wrap">{outreachText}</p>
                   </div>
                   <p className="text-[11px] text-slate-400 mt-3 leading-snug">
@@ -1118,7 +1118,7 @@ const BusinessJobseekers: React.FC = () => {
             </div>
 
             {!outreachLoading && outreachText && (
-              <div className="shrink-0 flex flex-col-reverse sm:flex-row justify-end gap-2.5 p-4 md:p-5 border-t border-slate-200 dark:border-slate-700">
+              <div className="shrink-0 flex flex-col-reverse sm:flex-row justify-end gap-2.5 p-4 md:p-5 border-t border-line">
                 <button onClick={copyOutreach} className="btn btn-secondary min-h-[44px] w-full sm:w-auto">
                   <Copy size={15} /> Copier le message
                 </button>
@@ -1137,12 +1137,12 @@ const BusinessJobseekers: React.FC = () => {
       {cvOpen && (
         <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center">
           <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setCvOpen(false)} />
-          <div className="relative bg-white dark:bg-[#111827] w-full md:max-w-2xl md:mx-4 max-h-[95dvh] md:max-h-[88vh] flex flex-col border-t md:border border-slate-200 dark:border-slate-700 rounded-t-2xl md:rounded-xl shadow-2xl">
-            <div className="shrink-0 flex items-start justify-between p-4 md:p-5 border-b border-slate-200 dark:border-slate-700">
+          <div className="relative bg-surface w-full md:max-w-2xl md:mx-4 max-h-[95dvh] md:max-h-[88vh] flex flex-col border-t md:border border-line rounded-t-2xl md:rounded-xl shadow-2xl">
+            <div className="shrink-0 flex items-start justify-between p-4 md:p-5 border-b border-line">
               <div className="absolute top-2 left-1/2 -translate-x-1/2 w-10 h-1 bg-slate-200 dark:bg-slate-700 rounded-full md:hidden" />
               <div className="mt-2 md:mt-0 min-w-0 pr-3">
-                <h2 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                  <FileText size={18} className="text-[#7D5CFF] shrink-0" /> {cvView?.title || 'CV'}
+                <h2 className="text-lg font-bold text-ink flex items-center gap-2">
+                  <FileText size={18} className="text-brand shrink-0" /> {cvView?.title || 'CV'}
                 </h2>
                 {cvView && <p className="text-xs text-slate-500 mt-0.5">Mis à jour le {new Date(cvView.updatedAt).toLocaleDateString('fr-FR')} · aperçu simplifié (lecture seule)</p>}
               </div>
@@ -1152,7 +1152,7 @@ const BusinessJobseekers: React.FC = () => {
             </div>
             <div className="flex-1 overflow-y-auto p-4 md:p-6">
               {cvLoading ? (
-                <div className="flex items-center justify-center py-16"><Loader2 className="animate-spin text-[#7D5CFF]" size={28} /></div>
+                <div className="flex items-center justify-center py-16"><Loader2 className="animate-spin text-brand" size={28} /></div>
               ) : cvView ? (
                 <CvPreview content={cvView.content} />
               ) : null}
@@ -1165,11 +1165,11 @@ const BusinessJobseekers: React.FC = () => {
       {positionOpen && (
         <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center">
           <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setPositionOpen(false)} />
-          <div className="relative bg-white dark:bg-[#111827] w-full md:max-w-md md:mx-4 border-t md:border border-slate-200 dark:border-slate-700 rounded-t-2xl md:rounded-xl shadow-2xl p-4 md:p-5">
+          <div className="relative bg-surface w-full md:max-w-md md:mx-4 border-t md:border border-line rounded-t-2xl md:rounded-xl shadow-2xl p-4 md:p-5">
             <div className="absolute top-2 left-1/2 -translate-x-1/2 w-10 h-1 bg-slate-200 dark:bg-slate-700 rounded-full md:hidden" />
             <div className="flex items-center justify-between mb-3 mt-2 md:mt-0">
-              <h2 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                <Briefcase size={18} className="text-[#7D5CFF]" /> Positionner sur une offre
+              <h2 className="text-lg font-bold text-ink flex items-center gap-2">
+                <Briefcase size={18} className="text-brand" /> Positionner sur une offre
               </h2>
               <button onClick={() => setPositionOpen(false)} className="p-2 rounded-lg text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 min-h-[44px] min-w-[44px] flex items-center justify-center">
                 <X size={18} />
@@ -1180,7 +1180,7 @@ const BusinessJobseekers: React.FC = () => {
               elle apparaît dans son suivi et dans la section Candidatures de sa fiche.
             </p>
             {offersLoading ? (
-              <div className="flex items-center justify-center py-8"><Loader2 className="animate-spin text-[#7D5CFF]" size={24} /></div>
+              <div className="flex items-center justify-center py-8"><Loader2 className="animate-spin text-brand" size={24} /></div>
             ) : offerOptions.length === 0 ? (
               <p className="text-sm text-slate-500 text-center py-6">
                 Aucune offre publiée. Publiez d'abord une offre (icône œil) dans l'onglet Offres d'emploi.

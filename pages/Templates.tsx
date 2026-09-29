@@ -60,8 +60,8 @@ const Templates: React.FC = () => {
       onClick={() => { setKind(id); setFilter('all'); }}
       className={`press flex-1 sm:flex-none px-5 py-2 rounded-lg text-sm font-semibold transition-all ${
         kind === id
-          ? 'bg-gradient-to-b from-[#8C6DFF] to-[#7D5CFF] text-white shadow-[0_4px_14px_-3px_rgba(124,92,255,0.6)]'
-          : 'text-slate-500 dark:text-slate-400 hover:text-[#7D5CFF] hover:bg-[#F5F4FB] dark:hover:bg-[#1F2937]'
+          ? 'bg-brand text-white'
+          : 'text-muted hover:text-brand hover:bg-subtle'
       }`}
     >
       {label}
@@ -72,7 +72,7 @@ const Templates: React.FC = () => {
     <button
       onClick={() => setFilter(id)}
       className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition-colors ${
-        filter === id ? 'bg-[#7D5CFF] text-white' : 'bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-500'
+        filter === id ? 'bg-brand text-white' : 'bg-surface border border-line text-slate-500'
       }`}
     >
       {icon} {label}
@@ -83,7 +83,7 @@ const Templates: React.FC = () => {
     <div className="p-5 md:p-8 max-w-6xl mx-auto space-y-8 md:space-y-6">
       {/* Barre d'outils : type de document + filtres */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div className="flex gap-1 p-1 rounded-xl bg-white dark:bg-[#111827] border border-[#ECEAF6] dark:border-[#1F2937] shadow-xs w-full sm:w-fit">
+        <div className="flex gap-1 p-1 rounded-xl bg-surface border border-line shadow-xs w-full sm:w-fit">
           <KindBtn id="cv" label="Modèles de CV" />
           <KindBtn id="letter" label="Modèles de lettre" />
         </div>
@@ -94,7 +94,7 @@ const Templates: React.FC = () => {
         </div>
       </div>
 
-      <p className="text-sm text-[#6B7280] dark:text-slate-400">
+      <p className="text-sm text-muted">
         {items.length} modèle{items.length > 1 ? 's' : ''} · aperçu rempli avec un exemple. Choisis-en un pour ouvrir l'éditeur — tu pourras le changer à tout moment.
       </p>
 
@@ -105,27 +105,27 @@ const Templates: React.FC = () => {
           <div
             key={it.id}
             style={{ animationDelay: `${Math.min(i, 8) * 40}ms` }}
-            className="group rounded-xl border border-[#ECEAF6] dark:border-[#1F2937] bg-white dark:bg-[#111827] shadow-card p-2.5 animate-fade-in-up hover:shadow-card-hover hover:-translate-y-1 transition-all duration-200"
+            className="group rounded-xl border border-line bg-surface shadow-card p-2.5 animate-fade-in-up hover:shadow-card-hover transition-all duration-200"
           >
             <button onClick={() => use(it.id)} className="press block w-full text-left" aria-label={`Utiliser le modèle ${it.name}`}>
-              <div className="relative aspect-[210/297] bg-white rounded-lg overflow-hidden ring-1 ring-slate-200 dark:ring-slate-700 group-hover:ring-[#7D5CFF]/50 transition-all">
+              <div className="relative aspect-[210/297] bg-white rounded-lg overflow-hidden ring-1 ring-slate-200 dark:ring-slate-700 group-hover:ring-brand/50 transition-all">
                 <div className="absolute inset-x-0 top-0">{it.node}</div>
                 <span className={`absolute top-2 left-2 inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider shadow ${
-                  it.ats ? 'bg-emerald-500 text-white' : 'bg-[#7D5CFF] text-white'
+                  it.ats ? 'bg-emerald-500 text-white' : 'bg-brand text-white'
                 }`}>
                   {it.ats ? <><ShieldCheck size={11} /> ATS</> : <><Sparkles size={11} /> Créatif</>}
                 </span>
                 {/* Survol : appel à l'action */}
                 <span className="absolute inset-0 bg-[#0B0B14]/0 group-hover:bg-[#0B0B14]/40 transition-colors flex items-end justify-center pb-3 opacity-0 group-hover:opacity-100">
-                  <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white text-[#111827] text-xs font-bold shadow">
-                    <Check size={13} className="text-[#7D5CFF]" /> Utiliser ce modèle
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white text-ink text-xs font-bold shadow">
+                    <Check size={13} className="text-brand" /> Utiliser ce modèle
                   </span>
                 </span>
               </div>
             </button>
             <div className="flex items-center justify-between gap-1 mt-2 px-0.5">
-              <span className="text-xs font-bold text-[#111827] dark:text-white truncate">{it.name}</span>
-              <button onClick={() => use(it.id)} className="press text-[#7D5CFF] hover:translate-x-0.5 transition-transform shrink-0" aria-label="Utiliser ce modèle">
+              <span className="text-xs font-bold text-ink truncate">{it.name}</span>
+              <button onClick={() => use(it.id)} className="press text-brand transition-transform shrink-0" aria-label="Utiliser ce modèle">
                 <ArrowRight size={14} />
               </button>
             </div>

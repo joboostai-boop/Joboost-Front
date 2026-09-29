@@ -45,14 +45,14 @@ const ConfirmDialog: React.FC<Props> = ({
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="confirm-title">
       <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onCancel} />
-      <div className="relative bg-white dark:bg-[#111827] w-full max-w-sm rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-700 p-5">
+      <div className="relative bg-surface w-full max-w-sm rounded-2xl shadow-2xl border border-line p-5">
         <div className="flex items-start gap-3">
-          <div className={`shrink-0 w-10 h-10 rounded-xl flex items-center justify-center ${isDanger ? 'bg-red-50 text-red-600 dark:bg-red-900/20 dark:text-red-400' : 'bg-[#7D5CFF]/10 text-[#7D5CFF]'}`}>
+          <div className={`shrink-0 w-10 h-10 rounded-xl flex items-center justify-center ${isDanger ? 'bg-red-50 text-red-600 dark:bg-red-900/20 dark:text-red-400' : 'bg-brand/10 text-brand'}`}>
             <AlertTriangle size={20} />
           </div>
           <div className="flex-1 min-w-0">
-            <h3 id="confirm-title" className="text-base font-bold text-slate-900 dark:text-white">{title}</h3>
-            <p className="text-sm text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">{message}</p>
+            <h3 id="confirm-title" className="text-base font-bold text-ink">{title}</h3>
+            <p className="text-sm text-muted mt-1 leading-relaxed">{message}</p>
           </div>
         </div>
         <div className="flex flex-col-reverse sm:flex-row justify-end gap-2.5 mt-5">
@@ -70,7 +70,7 @@ const ConfirmDialog: React.FC<Props> = ({
             className={`min-h-[44px] w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl px-5 font-semibold text-white shadow-sm transition focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:opacity-60 ${
               isDanger
                 ? 'bg-red-600 hover:bg-red-700 focus-visible:ring-red-500'
-                : 'bg-[#7D5CFF] hover:bg-[#6B4AE6] focus-visible:ring-[#7D5CFF]'
+                : 'bg-brand hover:bg-[#6B4AE6] focus-visible:ring-brand'
             }`}
           >
             {loading && <Loader2 size={16} className="animate-spin" />}

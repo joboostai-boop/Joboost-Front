@@ -264,7 +264,7 @@ const BusinessOffers: React.FC = () => {
     if (offer.isPublished) {
       return <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800"><Eye size={12} /> Publiée</span>;
     }
-    return <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400 border border-slate-200 dark:border-slate-700"><EyeOff size={12} /> Brouillon</span>;
+    return <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400 border border-line"><EyeOff size={12} /> Brouillon</span>;
   };
 
   /* ──────── Action buttons (shared between mobile card & desktop row) ──────── */
@@ -272,7 +272,7 @@ const BusinessOffers: React.FC = () => {
     <div className="flex items-center gap-1">
       <button
         onClick={(e) => { e.stopPropagation(); openMatches(offer); }}
-        className="p-2.5 rounded-lg text-slate-400 hover:text-[#7D5CFF] hover:bg-[#7D5CFF]/10 transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center"
+        className="p-2.5 rounded-lg text-slate-400 hover:text-brand hover:bg-brand/10 transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center"
         title="Candidats correspondants"
       >
         <Users size={18} />
@@ -297,7 +297,7 @@ const BusinessOffers: React.FC = () => {
       </button>
       <button
         onClick={(e) => { e.stopPropagation(); openDuplicate(offer); }}
-        className="p-2.5 rounded-lg text-slate-400 hover:text-[#7D5CFF] hover:bg-[#7D5CFF]/10 transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center"
+        className="p-2.5 rounded-lg text-slate-400 hover:text-brand hover:bg-brand/10 transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center"
         title="Dupliquer"
       >
         <Copy size={18} />
@@ -346,8 +346,8 @@ const BusinessOffers: React.FC = () => {
               onClick={() => setStatusFilter(t.value)}
               className={`shrink-0 px-3 py-2 rounded-lg text-xs font-bold transition-colors min-h-[38px] ${
                 statusFilter === t.value
-                  ? 'bg-[#7D5CFF] text-white shadow-sm'
-                  : 'bg-white dark:bg-slate-800 text-slate-500 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700'
+                  ? 'bg-brand text-white shadow-sm'
+                  : 'bg-white dark:bg-slate-800 text-slate-500 border border-line hover:bg-slate-50 dark:hover:bg-slate-700'
               }`}
             >
               {t.label}
@@ -378,7 +378,7 @@ const BusinessOffers: React.FC = () => {
         ) : offers.length === 0 ? (
           <div className="text-center py-16 md:py-20 px-4">
             <Briefcase className="mx-auto text-slate-300 dark:text-slate-600 mb-4" size={48} />
-            <p className="text-slate-500 dark:text-slate-400 text-sm">
+            <p className="text-muted text-sm">
               {search || statusFilter ? 'Aucune offre ne correspond à ces critères.' : 'Aucune offre pour le moment.'}
             </p>
             {search || statusFilter ? (
@@ -400,7 +400,7 @@ const BusinessOffers: React.FC = () => {
                   {/* Title + status */}
                   <div className="flex items-start justify-between gap-2">
                     <div className="flex-1 min-w-0">
-                      <p className="font-semibold text-sm text-slate-900 dark:text-white leading-snug">{offer.title}</p>
+                      <p className="font-semibold text-sm text-ink leading-snug">{offer.title}</p>
                       {offer.salaryRange && (
                         <p className="text-xs text-slate-400 mt-0.5 flex items-center gap-1"><DollarSign size={10} />{offer.salaryRange}</p>
                       )}
@@ -431,20 +431,20 @@ const BusinessOffers: React.FC = () => {
             <div className="hidden md:block overflow-x-auto">
               <table className="w-full">
                 <thead>
-                  <tr className="border-b border-slate-200 dark:border-slate-700">
-                    <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Titre</th>
-                    <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Type</th>
-                    <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Lieu</th>
-                    <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Statut</th>
-                    <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider hidden lg:table-cell">Date</th>
-                    <th className="text-right px-4 py-3 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Actions</th>
+                  <tr className="border-b border-line">
+                    <th className="text-left px-4 py-3 text-xs font-semibold text-muted uppercase tracking-wider">Titre</th>
+                    <th className="text-left px-4 py-3 text-xs font-semibold text-muted uppercase tracking-wider">Type</th>
+                    <th className="text-left px-4 py-3 text-xs font-semibold text-muted uppercase tracking-wider">Lieu</th>
+                    <th className="text-left px-4 py-3 text-xs font-semibold text-muted uppercase tracking-wider">Statut</th>
+                    <th className="text-left px-4 py-3 text-xs font-semibold text-muted uppercase tracking-wider hidden lg:table-cell">Date</th>
+                    <th className="text-right px-4 py-3 text-xs font-semibold text-muted uppercase tracking-wider">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                   {offers.map((offer) => (
                     <tr key={offer.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
                       <td className="px-4 py-3">
-                        <p className="font-semibold text-sm text-slate-900 dark:text-white">{offer.title}</p>
+                        <p className="font-semibold text-sm text-ink">{offer.title}</p>
                         {offer.salaryRange && (
                           <p className="text-xs text-slate-400 mt-0.5 flex items-center gap-1"><DollarSign size={10} />{offer.salaryRange}</p>
                         )}
@@ -458,7 +458,7 @@ const BusinessOffers: React.FC = () => {
                       </td>
                       <td className="px-4 py-3">
                         {offer.location ? (
-                          <span className="text-sm text-slate-600 dark:text-slate-300 flex items-center gap-1"><MapPin size={12} />{offer.location}</span>
+                          <span className="text-sm text-muted flex items-center gap-1"><MapPin size={12} />{offer.location}</span>
                         ) : (
                           <span className="text-xs text-slate-400">—</span>
                         )}
@@ -480,7 +480,7 @@ const BusinessOffers: React.FC = () => {
 
             {/* Pagination */}
             {pagination.totalPages > 1 && (
-              <div className="flex items-center justify-between px-4 py-3 border-t border-slate-200 dark:border-slate-700">
+              <div className="flex items-center justify-between px-4 py-3 border-t border-line">
                 <p className="text-xs text-slate-500">{pagination.total} offre{pagination.total > 1 ? 's' : ''}</p>
                 <div className="flex items-center gap-1">
                   <button
@@ -490,7 +490,7 @@ const BusinessOffers: React.FC = () => {
                   >
                     <ChevronLeft size={16} />
                   </button>
-                  <span className="text-sm text-slate-600 dark:text-slate-300 px-2">{pagination.page} / {pagination.totalPages}</span>
+                  <span className="text-sm text-muted px-2">{pagination.page} / {pagination.totalPages}</span>
                   <button
                     onClick={() => fetchOffers(pagination.page + 1)}
                     disabled={pagination.page >= pagination.totalPages}
@@ -509,11 +509,11 @@ const BusinessOffers: React.FC = () => {
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center">
           <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setShowModal(false)} />
-          <div className="relative bg-white dark:bg-[#111827] w-full md:rounded-xl shadow-2xl md:max-w-xl md:mx-4 max-h-[100dvh] md:max-h-[90vh] overflow-y-auto border-t md:border border-slate-200 dark:border-slate-700 rounded-t-2xl md:rounded-xl">
-            <div className="sticky top-0 bg-white dark:bg-[#111827] flex items-center justify-between p-4 md:p-5 border-b border-slate-200 dark:border-slate-700 z-10">
+          <div className="relative bg-surface w-full md:rounded-xl shadow-2xl md:max-w-xl md:mx-4 max-h-[100dvh] md:max-h-[90vh] overflow-y-auto border-t md:border border-line rounded-t-2xl md:rounded-xl">
+            <div className="sticky top-0 bg-surface flex items-center justify-between p-4 md:p-5 border-b border-line z-10">
               {/* Drag indicator on mobile */}
               <div className="absolute top-2 left-1/2 -translate-x-1/2 w-10 h-1 bg-slate-200 dark:bg-slate-700 rounded-full md:hidden" />
-              <h2 className="text-lg font-bold text-slate-900 dark:text-white mt-2 md:mt-0">
+              <h2 className="text-lg font-bold text-ink mt-2 md:mt-0">
                 {editingOffer ? 'Modifier l\'offre' : 'Nouvelle offre'}
               </h2>
               <button onClick={() => setShowModal(false)} className="p-2.5 rounded-lg text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center">
@@ -540,7 +540,7 @@ const BusinessOffers: React.FC = () => {
                     type="button"
                     onClick={handleAssist}
                     disabled={assistLoading}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-[#7D5CFF]/10 text-[#7D5CFF] dark:text-[#B9A7FF] hover:bg-[#7D5CFF]/20 transition-colors disabled:opacity-60"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-brand/10 text-brand dark:text-brand-300 hover:bg-brand/20 transition-colors disabled:opacity-60"
                     title="L'IA rédige l'offre à partir de l'intitulé et de vos notes"
                   >
                     {assistLoading ? <Loader2 size={13} className="animate-spin" /> : <Wand2 size={13} />}
@@ -624,8 +624,8 @@ const BusinessOffers: React.FC = () => {
                   </div>
                 )}
                 {suggestedSkills.length > 0 && (
-                  <div className="mt-3 p-3 rounded-xl bg-[#7D5CFF]/5 dark:bg-[#7D5CFF]/10 border border-[#7D5CFF]/15">
-                    <p className="text-[11px] font-bold text-[#7D5CFF] dark:text-[#B9A7FF] flex items-center gap-1.5 mb-2">
+                  <div className="mt-3 p-3 rounded-xl bg-brand/5 dark:bg-brand/10 border border-brand/15">
+                    <p className="text-[11px] font-bold text-brand dark:text-brand-300 flex items-center gap-1.5 mb-2">
                       <Sparkles size={12} /> Suggestions de l'IA — cliquez pour ajouter
                     </p>
                     <div className="flex flex-wrap gap-1.5">
@@ -634,7 +634,7 @@ const BusinessOffers: React.FC = () => {
                           key={skill}
                           type="button"
                           onClick={() => addSuggestedSkill(skill)}
-                          className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-white dark:bg-slate-800 border border-[#7D5CFF]/30 text-[#7D5CFF] dark:text-[#B9A7FF] hover:bg-[#7D5CFF] hover:text-white transition-colors"
+                          className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-white dark:bg-slate-800 border border-brand/30 text-brand dark:text-brand-300 hover:bg-brand hover:text-white transition-colors"
                         >
                           <Plus size={11} /> {skill}
                         </button>
@@ -644,7 +644,7 @@ const BusinessOffers: React.FC = () => {
                 )}
               </div>
 
-              <div className="flex flex-col-reverse sm:flex-row justify-end gap-3 pt-4 border-t border-slate-200 dark:border-slate-700">
+              <div className="flex flex-col-reverse sm:flex-row justify-end gap-3 pt-4 border-t border-line">
                 <button type="button" onClick={() => setShowModal(false)} className="btn btn-secondary min-h-[44px] w-full sm:w-auto">Annuler</button>
                 <button type="submit" disabled={submitting} className="btn btn-primary min-h-[44px] w-full sm:w-auto">
                   {submitting ? <Loader2 size={16} className="animate-spin" /> : null}
@@ -660,12 +660,12 @@ const BusinessOffers: React.FC = () => {
       {matchesOffer && (
         <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center">
           <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setMatchesOffer(null)} />
-          <div className="relative bg-white dark:bg-[#111827] w-full md:rounded-xl shadow-2xl md:max-w-lg md:mx-4 max-h-[100dvh] md:max-h-[85vh] flex flex-col border-t md:border border-slate-200 dark:border-slate-700 rounded-t-2xl md:rounded-xl">
-            <div className="shrink-0 bg-white dark:bg-[#111827] flex items-start justify-between p-4 md:p-5 border-b border-slate-200 dark:border-slate-700 rounded-t-2xl md:rounded-xl">
+          <div className="relative bg-surface w-full md:rounded-xl shadow-2xl md:max-w-lg md:mx-4 max-h-[100dvh] md:max-h-[85vh] flex flex-col border-t md:border border-line rounded-t-2xl md:rounded-xl">
+            <div className="shrink-0 bg-surface flex items-start justify-between p-4 md:p-5 border-b border-line rounded-t-2xl md:rounded-xl">
               <div className="absolute top-2 left-1/2 -translate-x-1/2 w-10 h-1 bg-slate-200 dark:bg-slate-700 rounded-full md:hidden" />
               <div className="mt-2 md:mt-0 min-w-0 pr-3">
-                <h2 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                  <Sparkles size={18} className="text-[#7D5CFF] shrink-0" /> Candidats correspondants
+                <h2 className="text-lg font-bold text-ink flex items-center gap-2">
+                  <Sparkles size={18} className="text-brand shrink-0" /> Candidats correspondants
                 </h2>
                 <p className="text-xs text-slate-500 mt-0.5 truncate">{matchesOffer.title}</p>
               </div>
@@ -676,7 +676,7 @@ const BusinessOffers: React.FC = () => {
 
             <div className="flex-1 overflow-y-auto p-4 md:p-5">
               {matchesLoading ? (
-                <div className="flex items-center justify-center py-16"><Loader2 className="animate-spin text-[#7D5CFF]" size={28} /></div>
+                <div className="flex items-center justify-center py-16"><Loader2 className="animate-spin text-brand" size={28} /></div>
               ) : !matchesData ? null : matchesData.requiredSkills.length === 0 ? (
                 <div className="text-center py-12 px-4">
                   <Briefcase className="mx-auto text-slate-300 dark:text-slate-600 mb-3" size={40} />
@@ -692,27 +692,27 @@ const BusinessOffers: React.FC = () => {
               ) : (
                 <>
                   <p className="text-xs text-slate-500 mb-3">
-                    <span className="font-bold text-slate-900 dark:text-white">{matchesData.matches.length}</span> candidat{matchesData.matches.length > 1 ? 's' : ''} sur {matchesData.totalVivier} correspond{matchesData.matches.length > 1 ? 'ent' : ''} aux compétences requises.
+                    <span className="font-bold text-ink">{matchesData.matches.length}</span> candidat{matchesData.matches.length > 1 ? 's' : ''} sur {matchesData.totalVivier} correspond{matchesData.matches.length > 1 ? 'ent' : ''} aux compétences requises.
                   </p>
                   <ul className="space-y-2.5">
                     {matchesData.matches.map((m) => (
-                      <li key={m.id} className="flex items-center gap-3 p-3 rounded-xl border border-slate-100 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-800/40">
-                        <div className="w-10 h-10 rounded-full bg-[#EFEBFF] dark:bg-[#7D5CFF]/15 text-[#5B3FD6] dark:text-[#B9A7FF] flex items-center justify-center font-bold text-sm shrink-0">
+                      <li key={m.id} className="flex items-center gap-3 p-3 rounded-xl border border-line bg-slate-50/60 dark:bg-slate-800/40">
+                        <div className="w-10 h-10 rounded-full bg-[#EFEBFF] dark:bg-brand/15 text-brand-700 dark:text-brand-300 flex items-center justify-center font-bold text-sm shrink-0">
                           {m.name.charAt(0).toUpperCase()}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className="text-sm font-semibold text-slate-900 dark:text-white truncate">{m.name}</p>
+                          <p className="text-sm font-semibold text-ink truncate">{m.name}</p>
                           <p className="text-xs text-slate-500 truncate">{m.title || (m.city ? m.city : '—')}</p>
                           <div className="flex flex-wrap gap-1 mt-1">
                             {m.matchedSkills.slice(0, 4).map((s) => (
-                              <span key={s} className="text-[10px] px-1.5 py-0.5 rounded bg-[#7D5CFF]/10 text-[#7D5CFF] font-medium">{s}</span>
+                              <span key={s} className="text-[10px] px-1.5 py-0.5 rounded bg-brand/10 text-brand font-medium">{s}</span>
                             ))}
                             {m.matchedSkills.length > 4 && <span className="text-[10px] text-slate-400 self-center">+{m.matchedSkills.length - 4}</span>}
                           </div>
                         </div>
                         <div className="shrink-0 flex flex-col items-center gap-1.5">
                           <div className="text-center">
-                            <div className="text-base font-black text-[#7D5CFF] leading-none">{m.matchPercent}%</div>
+                            <div className="text-base font-black text-brand leading-none">{m.matchPercent}%</div>
                             <div className="text-[10px] text-slate-400 mt-0.5">{m.matchCount} compét.</div>
                           </div>
                           {positioned.has(m.id) ? (
@@ -724,7 +724,7 @@ const BusinessOffers: React.FC = () => {
                               onClick={() => positionCandidate(m.id)}
                               disabled={positioningId !== null}
                               title="Créer la candidature sur le compte du candidat"
-                              className="px-2.5 py-1 rounded-lg bg-[#7D5CFF]/10 text-[#7D5CFF] dark:text-[#B9A7FF] text-[10.5px] font-bold hover:bg-[#7D5CFF]/20 transition-colors disabled:opacity-50"
+                              className="px-2.5 py-1 rounded-lg bg-brand/10 text-brand dark:text-brand-300 text-[10.5px] font-bold hover:bg-brand/20 transition-colors disabled:opacity-50"
                             >
                               {positioningId === m.id ? <Loader2 size={11} className="animate-spin" /> : 'Positionner'}
                             </button>

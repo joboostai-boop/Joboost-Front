@@ -32,10 +32,10 @@ const PublicPricing: React.FC = () => {
       <section className="px-5 sm:px-6 py-16 sm:py-20">
         <div className="max-w-5xl mx-auto">
           <Reveal className="max-w-2xl mx-auto mb-14 text-center">
-            <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#7D5CFF]/[0.08] border border-[#7D5CFF]/20 text-[#6023C0] text-xs font-semibold">
+            <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand/[0.08] border border-brand/20 text-brand-700 text-xs font-semibold">
               Tarifs
             </span>
-            <h1 className="mt-4 text-3xl sm:text-4xl font-extrabold text-[#0B0B14] tracking-tight">Un prix clair, avant même de vous inscrire</h1>
+            <h1 className="mt-4 text-3xl sm:text-4xl font-extrabold text-ink tracking-tight">Un prix clair, avant même de vous inscrire</h1>
             <p className="mt-4 text-lg text-slate-500">Essai complet de 7 jours, sans carte bancaire. Ensuite, vous choisissez.</p>
           </Reveal>
 
@@ -46,13 +46,13 @@ const PublicPricing: React.FC = () => {
                 <span className="w-11 h-11 rounded-xl bg-slate-100 text-slate-500 flex items-center justify-center mb-5">
                   <Layers size={20} strokeWidth={2.5} />
                 </span>
-                <h2 className="text-lg font-bold text-[#0B0B14]">Gratuit</h2>
+                <h2 className="text-lg font-bold text-ink">Gratuit</h2>
                 <p className="mt-1 text-sm text-slate-500">Essai complet de 7 jours à l'inscription, puis palier gratuit permanent.</p>
-                <p className="mt-5 text-3xl font-extrabold text-[#0B0B14]">0 €</p>
+                <p className="mt-5 text-3xl font-extrabold text-ink">0 €</p>
                 <ul className="mt-5 space-y-2.5 text-sm text-slate-600 flex-1">
-                  <li className="flex items-start gap-2"><Check size={16} className="text-[#7D5CFF] shrink-0 mt-0.5" /> 7 premiers jours : accès complet</li>
-                  <li className="flex items-start gap-2"><Check size={16} className="text-[#7D5CFF] shrink-0 mt-0.5" /> Puis 1 CV et 1 lettre / mois</li>
-                  <li className="flex items-start gap-2"><Check size={16} className="text-[#7D5CFF] shrink-0 mt-0.5" /> Modèles de lettres standards</li>
+                  <li className="flex items-start gap-2"><Check size={16} className="text-brand shrink-0 mt-0.5" /> 7 premiers jours : accès complet</li>
+                  <li className="flex items-start gap-2"><Check size={16} className="text-brand shrink-0 mt-0.5" /> Puis 1 CV et 1 lettre / mois</li>
+                  <li className="flex items-start gap-2"><Check size={16} className="text-brand shrink-0 mt-0.5" /> Modèles de lettres standards</li>
                 </ul>
                 <Link to="/auth/register" className="press btn btn-secondary w-full mt-6">
                   Commencer gratuitement
@@ -62,23 +62,23 @@ const PublicPricing: React.FC = () => {
 
             {/* Élite */}
             <Reveal as="div" delay={80}>
-              <div className="surface h-full p-8 flex flex-col ring-2 ring-[#7D5CFF] relative overflow-hidden">
-                <span className="absolute top-0 right-0 px-3 py-1 rounded-bl-xl bg-[#7D5CFF] text-white text-[11px] font-bold uppercase tracking-wider">Populaire</span>
-                <span className="w-11 h-11 rounded-xl bg-[#7D5CFF]/10 text-[#7D5CFF] flex items-center justify-center mb-5">
+              <div className="surface h-full p-8 flex flex-col ring-2 ring-brand relative overflow-hidden">
+                <span className="absolute top-0 right-0 px-3 py-1 rounded-bl-xl bg-brand text-white text-[11px] font-bold uppercase tracking-wider">Populaire</span>
+                <span className="w-11 h-11 rounded-xl bg-brand/10 text-brand flex items-center justify-center mb-5">
                   <Sparkles size={20} strokeWidth={2.5} />
                 </span>
-                <h2 className="text-lg font-bold text-[#0B0B14]">Élite</h2>
+                <h2 className="text-lg font-bold text-ink">Élite</h2>
                 <p className="mt-1 text-sm text-slate-500">L'arsenal complet pour une recherche intensive et sans limite.</p>
-                <p className="mt-5 text-3xl font-extrabold text-[#0B0B14]">14,99 € <span className="text-base font-medium text-slate-400">/ mois</span></p>
+                <p className="mt-5 text-3xl font-extrabold text-ink">14,99 € <span className="text-base font-medium text-slate-400">/ mois</span></p>
                 <p className="text-xs text-slate-400">ou 119 €/an (-2 mois)</p>
                 <ul className="mt-5 space-y-2.5 text-sm text-slate-600 flex-1">
-                  <li className="flex items-start gap-2"><Check size={16} className="text-[#7D5CFF] shrink-0 mt-0.5" /> 150 candidatures / mois</li>
-                  <li className="flex items-start gap-2"><Check size={16} className="text-[#7D5CFF] shrink-0 mt-0.5" /> 50 CV et 100 lettres / mois</li>
-                  <li className="flex items-start gap-2"><Check size={16} className="text-[#7D5CFF] shrink-0 mt-0.5" /> 50 candidatures spontanées / mois</li>
-                  <li className="flex items-start gap-2"><Check size={16} className="text-[#7D5CFF] shrink-0 mt-0.5" /> Support prioritaire 24h</li>
+                  <li className="flex items-start gap-2"><Check size={16} className="text-brand shrink-0 mt-0.5" /> 150 candidatures / mois</li>
+                  <li className="flex items-start gap-2"><Check size={16} className="text-brand shrink-0 mt-0.5" /> 50 CV et 100 lettres / mois</li>
+                  <li className="flex items-start gap-2"><Check size={16} className="text-brand shrink-0 mt-0.5" /> 50 candidatures spontanées / mois</li>
+                  <li className="flex items-start gap-2"><Check size={16} className="text-brand shrink-0 mt-0.5" /> Support prioritaire 24h</li>
                 </ul>
                 <Link to="/auth/register" className="press btn btn-primary w-full mt-6 group">
-                  Essayer 7 jours gratuitement <ArrowRight size={16} className="group-hover:translate-x-0.5 transition-transform" />
+                  Essayer 7 jours gratuitement <ArrowRight size={16} className=" transition-transform" />
                 </Link>
               </div>
             </Reveal>

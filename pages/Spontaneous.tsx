@@ -204,19 +204,19 @@ const Spontaneous: React.FC = () => {
     <div className="p-4 md:p-8 pb-28 md:pb-8 max-w-6xl mx-auto space-y-5 md:space-y-6">
       <UpgradeDialog open={quotaOpen} onClose={() => setQuotaOpen(false)} reason={quotaReason} message={quotaMessage} />
       <form onSubmit={handleSearch} className="surface p-5 md:p-6">
-        <h3 className="text-sm font-semibold text-[#111827] dark:text-white mb-4">Critères de ciblage</h3>
+        <h3 className="text-sm font-semibold text-ink mb-4">Critères de ciblage</h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
             <label className="input-label">Métier ciblé</label>
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-[#9CA3AF]" size={16} />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-faint" size={16} />
               <input type="text" value={jobTitle} onChange={(e) => setJobTitle(e.target.value)} disabled={loadingInit} className="input-pro pl-10" placeholder="Ex: Développeur React" />
             </div>
           </div>
           <div>
-            <label className="input-label">Localisation <span className="font-normal text-[#9CA3AF]">· depuis ton profil</span></label>
+            <label className="input-label">Localisation <span className="font-normal text-faint">· depuis ton profil</span></label>
             <div className="relative">
-              <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 text-[#9CA3AF]" size={16} />
+              <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 text-faint" size={16} />
               <input type="text" value={location} onChange={(e) => setLocation(e.target.value)} disabled={loadingInit} className="input-pro pl-10" placeholder="Ex: Magnanville 78200" />
             </div>
           </div>
@@ -253,7 +253,7 @@ const Spontaneous: React.FC = () => {
                 key={f.id}
                 onClick={() => setFilter(f.id)}
                 className={`px-3.5 py-1.5 rounded-full text-sm font-semibold border transition-colors ${
-                  filter === f.id ? 'bg-[#7D5CFF] text-white border-[#7D5CFF]' : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300'
+                  filter === f.id ? 'bg-brand text-white border-brand' : 'bg-surface border-line text-muted'
                 }`}
               >
                 {f.label} <span className={filter === f.id ? 'text-white/80' : 'text-slate-400'}>{counts(f.id)}</span>
@@ -272,17 +272,17 @@ const Spontaneous: React.FC = () => {
               : (company.autoLevel === 'AUTO_REVIEW' && !hasEmail) ? 'Valider et envoyer' : 'Envoyer la candidature';
 
             return (
-              <div key={company.id} className={`surface p-4 md:p-5 flex flex-col md:flex-row gap-4 md:gap-6 transition-all duration-200 group animate-fade-in-up ${busy ? 'opacity-70 pointer-events-none ring-1 ring-[#7D5CFF]' : 'hover:shadow-card-hover md:hover:-translate-y-0.5'}`}>
+              <div key={company.id} className={`surface p-4 md:p-5 flex flex-col md:flex-row gap-4 md:gap-6 transition-all duration-200 group animate-fade-in-up ${busy ? 'opacity-70 pointer-events-none ring-1 ring-brand' : 'hover:shadow-card-hover md:'}`}>
                 <div className="flex-1 space-y-3 md:space-y-4 min-w-0">
                   {/* Mobile : les badges passent sous le nom (sinon ils l'écrasent). */}
                   <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2 sm:gap-3">
                     <div className="flex items-center gap-3 min-w-0">
-                      <span className="w-10 h-10 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 flex items-center justify-center font-semibold text-sm shrink-0">
+                      <span className="w-10 h-10 rounded-lg bg-subtle text-muted flex items-center justify-center font-semibold text-sm shrink-0">
                         {company.name?.charAt(0) || <Building2 size={18} />}
                       </span>
                       <div className="min-w-0">
-                        <h2 className="text-base font-semibold text-[#111827] dark:text-white leading-tight">{company.name}</h2>
-                        <p className="text-[#6B7280] text-xs flex items-center gap-1.5 mt-0.5"><MapPin size={13} /> {company.address}</p>
+                        <h2 className="text-base font-semibold text-ink leading-tight">{company.name}</h2>
+                        <p className="text-muted text-xs flex items-center gap-1.5 mt-0.5"><MapPin size={13} /> {company.address}</p>
                       </div>
                     </div>
                     <div className="flex items-center gap-2 flex-wrap shrink-0">
@@ -292,15 +292,15 @@ const Spontaneous: React.FC = () => {
                   </div>
 
                   <div className="flex flex-wrap gap-2 text-xs font-medium">
-                    <span className="px-2 py-1 bg-[#F3F4F6] dark:bg-[#1F2937] border border-[#E5E7EB] dark:border-[#374151] text-[#4B5563] dark:text-[#D1D5DB] rounded">{company.sector}</span>
-                    {company.contractType && <span className="px-2 py-1 bg-[#F3F4F6] dark:bg-[#1F2937] border border-[#E5E7EB] dark:border-[#374151] text-[#4B5563] dark:text-[#D1D5DB] rounded">{company.contractType}</span>}
+                    <span className="px-2 py-1 bg-[#F3F4F6] dark:bg-subtle border border-[#E5E7EB] dark:border-[#374151] text-muted dark:text-[#D1D5DB] rounded">{company.sector}</span>
+                    {company.contractType && <span className="px-2 py-1 bg-[#F3F4F6] dark:bg-subtle border border-[#E5E7EB] dark:border-[#374151] text-muted dark:text-[#D1D5DB] rounded">{company.contractType}</span>}
                     <span className="px-2 py-1 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded">Potentiel {company.hiringPotential}</span>
-                    <span className="px-2 py-1 bg-[#F3F0FF] dark:bg-[#7D5CFF]/10 border border-[#7D5CFF] text-[#7D5CFF] rounded flex items-center gap-1"><BookOpen size={12} /> {company.contactRole}</span>
+                    <span className="px-2 py-1 bg-brand-50 dark:bg-brand/10 border border-brand text-brand rounded flex items-center gap-1"><BookOpen size={12} /> {company.contactRole}</span>
                   </div>
 
                   {/* Email contact (éditable) */}
                   <div className="flex items-center gap-2 text-sm">
-                    <Mail size={15} className="text-[#9CA3AF] shrink-0" />
+                    <Mail size={15} className="text-faint shrink-0" />
                     {editingEmail[company.id] ? (
                       <input
                         type="email"
@@ -313,8 +313,8 @@ const Spontaneous: React.FC = () => {
                       />
                     ) : (
                       <div className="flex items-center gap-2 flex-wrap min-w-0">
-                        <button onClick={() => setEditingEmail((s) => ({ ...s, [company.id]: true }))} className="flex items-center gap-1.5 text-[#4B5563] dark:text-[#D1D5DB] hover:text-[#7D5CFF] group/email min-w-0">
-                          {emailMap[company.id] ? <span className="truncate">{emailMap[company.id]}</span> : <span className="italic text-[#9CA3AF]">Aucun e-mail — cliquez pour ajouter</span>}
+                        <button onClick={() => setEditingEmail((s) => ({ ...s, [company.id]: true }))} className="flex items-center gap-1.5 text-muted dark:text-[#D1D5DB] hover:text-brand group/email min-w-0">
+                          {emailMap[company.id] ? <span className="truncate">{emailMap[company.id]}</span> : <span className="italic text-faint">Aucun e-mail — cliquez pour ajouter</span>}
                           <Pencil size={12} className="opacity-0 group-hover/email:opacity-100 transition-opacity shrink-0" />
                         </button>
                         {!emailMap[company.id] && (
@@ -322,7 +322,7 @@ const Spontaneous: React.FC = () => {
                             href={`https://www.google.com/search?q=${encodeURIComponent(`${company.name} recrutement contact email`)}`}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="text-xs text-[#7D5CFF] hover:underline inline-flex items-center gap-1 shrink-0"
+                            className="text-xs text-brand hover:underline inline-flex items-center gap-1 shrink-0"
                             title="Chercher l'adresse de contact de l'entreprise sur le web"
                           >
                             <Search size={11} /> Trouver le contact
@@ -332,13 +332,13 @@ const Spontaneous: React.FC = () => {
                     )}
                   </div>
 
-                  <div className="p-4 bg-[#F3F4F6] dark:bg-[#1F2937] rounded border-l-4 border-[#D1D5DB] dark:border-[#4B5563]">
-                    <p className="text-sm text-[#4B5563] dark:text-[#9CA3AF]"><strong>Cible :</strong> {company.reason}</p>
+                  <div className="p-4 bg-[#F3F4F6] dark:bg-subtle rounded border-l-4 border-[#D1D5DB] dark:border-[#4B5563]">
+                    <p className="text-sm text-muted dark:text-faint"><strong>Cible :</strong> {company.reason}</p>
                     {blocked && (
                       company.acceptsEmail ? (
                         // Message ACTIONNABLE : l'entreprise accepte les emails, il ne manque
                         // que l'adresse — que le candidat peut trouver puis coller ci-dessus.
-                        <p className="text-xs text-[#7D5CFF] mt-2 flex items-start gap-1.5">
+                        <p className="text-xs text-brand mt-2 flex items-start gap-1.5">
                           <Mail size={12} className="mt-0.5 shrink-0" />
                           Cette entreprise accepte les candidatures par email — ajoutez son adresse ci-dessus pour envoyer depuis Joboost.
                         </p>
@@ -349,10 +349,10 @@ const Spontaneous: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="md:w-64 flex flex-col gap-3 justify-center shrink-0 border-t md:border-t-0 md:border-l border-[#E5E7EB] dark:border-[#1F2937] pt-4 md:pt-0 md:pl-6">
+                <div className="md:w-64 flex flex-col gap-3 justify-center shrink-0 border-t md:border-t-0 md:border-l border-[#E5E7EB] pt-4 md:pt-0 md:pl-6">
                   <div className="flex items-center gap-2 cursor-pointer group/check" onClick={() => toggleIncludeLetter(company.id)}>
-                    {wantsLetter ? <CheckSquare className="text-[#7D5CFF]" size={18} /> : <Square className="text-[#9CA3AF] group-hover/check:text-[#7D5CFF] transition-colors" size={18} />}
-                    <span className={`text-xs font-bold transition-colors ${wantsLetter ? 'text-[#7D5CFF]' : 'text-[#6B7280]'}`}>Inclure lettre de motivation (IA)</span>
+                    {wantsLetter ? <CheckSquare className="text-brand" size={18} /> : <Square className="text-faint group-hover/check:text-brand transition-colors" size={18} />}
+                    <span className={`text-xs font-bold transition-colors ${wantsLetter ? 'text-brand' : 'text-muted'}`}>Inclure lettre de motivation (IA)</span>
                   </div>
 
                   {/* Cibles tactiles ≥ 44px + retour au toucher (rendu « application »). */}

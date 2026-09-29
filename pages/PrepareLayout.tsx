@@ -5,10 +5,10 @@ import SectionNav, { SectionTab } from '../components/SectionNav';
 
 const PrepareLayout: React.FC = () => {
   const tabs: SectionTab[] = [
-    { name: 'Mon profil', path: '/prepare/profile', icon: <UserRound size={17} /> },
-    { name: 'Mon CV', path: '/prepare/cv', icon: <Contact size={17} /> },
-    { name: 'Ma lettre type', path: '/prepare/letter', icon: <PenLine size={17} /> },
-    { name: 'Modèles', path: '/prepare/templates', icon: <LayoutGrid size={17} /> },
+    { name: 'Mon profil', shortName: 'Profil', path: '/prepare/profile', icon: <UserRound size={17} />, description: 'Les informations qui servent à rédiger ton CV et tes lettres.' },
+    { name: 'Mon CV', shortName: 'CV', path: '/prepare/cv', icon: <Contact size={17} />, description: 'Rédigé à partir de ton profil, modifiable ligne par ligne.' },
+    { name: 'Lettre de motivation', shortName: 'Lettre', path: '/prepare/letter', icon: <PenLine size={17} />, description: 'Une lettre de base, à adapter ensuite à chaque offre.' },
+    { name: 'Modèles', path: '/prepare/templates', icon: <LayoutGrid size={17} />, description: 'Choisis la mise en page de ton CV.' },
   ];
 
   return (

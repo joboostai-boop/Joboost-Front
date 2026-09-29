@@ -8,7 +8,7 @@ import React, { useEffect, useId, useState } from 'react';
    « se dessine », ce qui attire l'œil sur l'info n°1 de la carte). */
 
 const LEVELS = [
-  { min: 85, from: '#8C6DFF', to: '#6D28D9', text: 'text-[#7D5CFF]', track: 'stroke-[#7D5CFF]/15' },
+  { min: 85, from: '#8C6DFF', to: '#6D28D9', text: 'text-brand', track: 'stroke-brand/15' },
   { min: 70, from: '#38BDF8', to: '#2563EB', text: 'text-blue-600 dark:text-blue-400', track: 'stroke-blue-500/15' },
   { min: 50, from: '#34D399', to: '#0D9488', text: 'text-emerald-600 dark:text-emerald-400', track: 'stroke-emerald-500/15' },
   { min: 0, from: '#FBBF24', to: '#F97316', text: 'text-amber-600 dark:text-amber-400', track: 'stroke-amber-500/15' },

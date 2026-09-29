@@ -10,8 +10,8 @@ interface LogoProps {
 }
 
 const Logo: React.FC<LogoProps> = ({ variant = 'full', className = "h-10", monochrome = false, onDark = false }) => {
-  const joClass = monochrome ? 'text-current' : onDark ? 'text-white' : 'text-slate-900 dark:text-white';
-  const boostClass = monochrome ? 'text-current' : onDark ? 'text-[#A78BFA]' : 'text-[#7D5CFF]';
+  const joClass = monochrome ? 'text-current' : onDark ? 'text-white' : 'text-ink';
+  const boostClass = monochrome ? 'text-current' : onDark ? 'text-brand-300' : 'text-brand';
   return (
     <div className={`flex items-center select-none ${className}`}>
       {/* Logo Text */}
@@ -24,7 +24,7 @@ const Logo: React.FC<LogoProps> = ({ variant = 'full', className = "h-10", monoc
 
       {/* Icon Variant (if needed) */}
       {variant === 'icon' && (
-        <div className={`flex items-center justify-center font-black text-3xl ${onDark ? 'text-[#A78BFA]' : 'text-[#7D5CFF]'}`}>
+        <div className={`flex items-center justify-center font-black text-3xl ${onDark ? 'text-brand-300' : 'text-brand'}`}>
           J
         </div>
       )}

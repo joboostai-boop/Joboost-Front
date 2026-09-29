@@ -234,7 +234,7 @@ const BusinessStatsPage: React.FC = () => {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
-        <Loader2 className="animate-spin text-[#7D5CFF]" size={32} />
+        <Loader2 className="animate-spin text-brand" size={32} />
       </div>
     );
   }
@@ -257,14 +257,14 @@ const BusinessStatsPage: React.FC = () => {
       <div className="flex items-center justify-between mb-4 gap-3 flex-wrap">
         <p className="text-xs md:text-sm text-slate-500">
           Vue d'ensemble de vos adhérents
-          {refreshing && <Loader2 className="inline ml-2 animate-spin text-[#7D5CFF]" size={12} />}
+          {refreshing && <Loader2 className="inline ml-2 animate-spin text-brand" size={12} />}
         </p>
 
         {/* Desktop actions */}
         <div className="hidden md:flex items-center gap-2 print:hidden">
           <button
             onClick={() => setShowFilters((s) => !s)}
-            className={`btn btn-secondary min-h-[44px] ${hasActiveFilters ? 'ring-2 ring-[#7D5CFF]/40' : ''}`}
+            className={`btn btn-secondary min-h-[44px] ${hasActiveFilters ? 'ring-2 ring-brand/40' : ''}`}
           >
             <Filter size={16} /> Filtres{hasActiveFilters ? ' (actifs)' : ''}
           </button>
@@ -281,7 +281,7 @@ const BusinessStatsPage: React.FC = () => {
         {/* Mobile actions toggle */}
         <button
           onClick={() => setShowMobileActions(true)}
-          className="md:hidden p-2.5 bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-500 min-h-[44px] min-w-[44px] flex items-center justify-center print:hidden"
+          className="md:hidden p-2.5 bg-white dark:bg-slate-800 rounded-lg border border-line text-slate-500 min-h-[44px] min-w-[44px] flex items-center justify-center print:hidden"
         >
           <MoreVertical size={20} />
         </button>
@@ -289,7 +289,7 @@ const BusinessStatsPage: React.FC = () => {
 
       {/* Sélecteur de période — segmented control de l'app (conteneur + pilule
           active), et non des boutons isolés : même langage que le dock et les onglets. */}
-      <div className="inline-flex gap-1 p-1 mb-3 rounded-xl bg-white dark:bg-[#111827] border border-[#ECEAF6] dark:border-[#1F2937] shadow-xs max-w-full overflow-x-auto scrollbar-none print:hidden">
+      <div className="inline-flex gap-1 p-1 mb-3 rounded-xl bg-surface border border-line shadow-xs max-w-full overflow-x-auto scrollbar-none print:hidden">
         {PERIOD_OPTIONS.map((opt) => (
           <button
             key={opt.value}
@@ -297,8 +297,8 @@ const BusinessStatsPage: React.FC = () => {
             aria-pressed={period === opt.value}
             className={`press shrink-0 px-3.5 py-2 rounded-lg text-xs font-bold whitespace-nowrap transition-all min-h-[38px] outline-none ${
               period === opt.value
-                ? 'bg-gradient-to-b from-[#8C6DFF] to-[#7D5CFF] text-white shadow-[0_4px_14px_-3px_rgba(124,92,255,0.6)]'
-                : 'text-slate-500 dark:text-slate-400 hover:text-[#7D5CFF] hover:bg-[#F5F4FB] dark:hover:bg-[#1F2937]'
+                ? 'bg-brand text-white'
+                : 'text-muted hover:text-brand hover:bg-subtle'
             }`}
           >
             {opt.label}
@@ -313,14 +313,14 @@ const BusinessStatsPage: React.FC = () => {
             type="date"
             value={customFrom}
             onChange={(e) => setCustomFrom(e.target.value)}
-            className="px-3 py-2 rounded-lg text-xs bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 min-h-[38px]"
+            className="px-3 py-2 rounded-lg text-xs bg-white dark:bg-slate-800 border border-line text-slate-700 dark:text-slate-200 min-h-[38px]"
           />
           <span className="text-slate-400 text-xs">→</span>
           <input
             type="date"
             value={customTo}
             onChange={(e) => setCustomTo(e.target.value)}
-            className="px-3 py-2 rounded-lg text-xs bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 min-h-[38px]"
+            className="px-3 py-2 rounded-lg text-xs bg-white dark:bg-slate-800 border border-line text-slate-700 dark:text-slate-200 min-h-[38px]"
           />
           {(!customFrom || !customTo) && (
             <span className="text-[11px] text-amber-500 font-medium">Choisissez une date de début et de fin</span>
@@ -336,7 +336,7 @@ const BusinessStatsPage: React.FC = () => {
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="w-full px-3 py-2 rounded-lg text-sm bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 min-h-[44px]"
+              className="w-full px-3 py-2 rounded-lg text-sm bg-white dark:bg-slate-800 border border-line text-slate-700 dark:text-slate-200 min-h-[44px]"
             >
               {STATUS_FILTER_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
             </select>
@@ -346,7 +346,7 @@ const BusinessStatsPage: React.FC = () => {
             <select
               value={skillFilter}
               onChange={(e) => setSkillFilter(e.target.value)}
-              className="w-full px-3 py-2 rounded-lg text-sm bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 min-h-[44px]"
+              className="w-full px-3 py-2 rounded-lg text-sm bg-white dark:bg-slate-800 border border-line text-slate-700 dark:text-slate-200 min-h-[44px]"
             >
               <option value="">Toutes les compétences</option>
               {stats.topSkills.map((s) => <option key={s.skill} value={s.skill}>{s.skill}</option>)}
@@ -367,24 +367,24 @@ const BusinessStatsPage: React.FC = () => {
       {showMobileActions && (
         <div className="md:hidden fixed inset-0 z-50 flex items-end">
           <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setShowMobileActions(false)} />
-          <div className="relative bg-white dark:bg-[#111827] w-full rounded-t-2xl shadow-2xl p-4 border-t border-slate-200 dark:border-slate-700">
+          <div className="relative bg-surface w-full rounded-t-2xl shadow-2xl p-4 border-t border-line">
             <div className="w-10 h-1 bg-slate-200 dark:bg-slate-700 rounded-full mx-auto mb-4" />
-            <h3 className="font-bold text-slate-900 dark:text-white mb-4">Actions</h3>
+            <h3 className="font-bold text-ink mb-4">Actions</h3>
             <button onClick={() => { setShowFilters((s) => !s); setShowMobileActions(false); }} className="w-full flex items-center gap-3 p-4 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 text-left min-h-[44px]">
               <Filter size={20} className="text-slate-500" />
-              <span className="font-medium text-slate-900 dark:text-white">Filtres</span>
+              <span className="font-medium text-ink">Filtres</span>
             </button>
             <button onClick={() => { setShowCustomize(true); setShowMobileActions(false); }} className="w-full flex items-center gap-3 p-4 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 text-left min-h-[44px]">
               <SlidersHorizontal size={20} className="text-slate-500" />
-              <span className="font-medium text-slate-900 dark:text-white">Personnaliser le tableau</span>
+              <span className="font-medium text-ink">Personnaliser le tableau</span>
             </button>
             <button onClick={handleExportCSV} className="w-full flex items-center gap-3 p-4 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 text-left min-h-[44px]">
               <FileSpreadsheet size={20} className="text-slate-500" />
-              <span className="font-medium text-slate-900 dark:text-white">Exporter en CSV</span>
+              <span className="font-medium text-ink">Exporter en CSV</span>
             </button>
             <button onClick={handleExportPDF} className="w-full flex items-center gap-3 p-4 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 text-left min-h-[44px]">
               <Download size={20} className="text-slate-500" />
-              <span className="font-medium text-slate-900 dark:text-white">Exporter en PDF</span>
+              <span className="font-medium text-ink">Exporter en PDF</span>
             </button>
             <button onClick={() => setShowMobileActions(false)} className="w-full mt-2 p-4 text-center font-bold text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-xl min-h-[44px]">
               Annuler
@@ -412,8 +412,8 @@ const BusinessStatsPage: React.FC = () => {
           return (
             <div key="growth" className="card-pro mb-6">
               <div className="flex items-center gap-2 mb-4">
-                <TrendingUp size={16} className="text-[#7D5CFF]" />
-                <h3 className="text-sm font-bold text-slate-900 dark:text-white">Évolution des affiliations</h3>
+                <TrendingUp size={16} className="text-brand" />
+                <h3 className="text-sm font-bold text-ink">Évolution des affiliations</h3>
                 <span className="text-[10px] text-slate-400 font-medium ml-auto uppercase">{stats.range.granularity === 'day' ? 'par jour' : 'par mois'}</span>
               </div>
               <div className="h-[220px] md:h-[300px]">
@@ -439,8 +439,8 @@ const BusinessStatsPage: React.FC = () => {
           return (
             <div key="status" className="card-pro mb-6">
               <div className="flex items-center gap-2 mb-4">
-                <BarChart3 size={16} className="text-[#7D5CFF]" />
-                <h3 className="text-sm font-bold text-slate-900 dark:text-white">Répartition par statut</h3>
+                <BarChart3 size={16} className="text-brand" />
+                <h3 className="text-sm font-bold text-ink">Répartition par statut</h3>
                 <span className="text-[10px] text-slate-400 ml-auto hidden md:inline">Cliquez une part pour voir les adhérents</span>
               </div>
               {donutData.length > 0 ? (
@@ -471,7 +471,7 @@ const BusinessStatsPage: React.FC = () => {
                       </PieChart>
                     </ResponsiveContainer>
                     <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                      <span className="text-[1.75rem] font-extrabold tracking-tight text-slate-900 dark:text-white leading-none tabular-nums">
+                      <span className="text-[1.75rem] font-extrabold tracking-tight text-ink leading-none tabular-nums">
                         {donutTotal}
                       </span>
                       <span className="text-[10px] uppercase font-bold tracking-wider text-slate-400 mt-1">
@@ -487,13 +487,13 @@ const BusinessStatsPage: React.FC = () => {
                         <li key={d.status}>
                           <button
                             onClick={() => setDrill({ type: 'status', value: d.status, label: d.name })}
-                            className="w-full flex items-center gap-3 px-2 py-2 rounded-lg text-left hover:bg-[#F5F4FB] dark:hover:bg-[#1F2937] transition-colors group/leg"
+                            className="w-full flex items-center gap-3 px-2 py-2 rounded-lg text-left hover:bg-subtle transition-colors group/leg"
                           >
                             <span aria-hidden className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: d.color }} />
-                            <span className="flex-1 min-w-0 truncate text-sm font-medium text-slate-600 dark:text-slate-300">{d.name}</span>
-                            <span className="text-sm font-bold text-slate-900 dark:text-white tabular-nums">{d.value}</span>
+                            <span className="flex-1 min-w-0 truncate text-sm font-medium text-muted">{d.name}</span>
+                            <span className="text-sm font-bold text-ink tabular-nums">{d.value}</span>
                             <span className="w-10 text-right text-xs text-slate-400 tabular-nums">{pct} %</span>
-                            <ChevronRight size={14} className="text-slate-300 group-hover/leg:text-[#7D5CFF] transition-colors shrink-0" />
+                            <ChevronRight size={14} className="text-slate-300 group-hover/leg:text-brand transition-colors shrink-0" />
                           </button>
                         </li>
                       );
@@ -511,14 +511,14 @@ const BusinessStatsPage: React.FC = () => {
           return (
             <div key="offers" className="card-pro mb-6">
               <div className="flex items-center gap-2 mb-4">
-                <Briefcase size={16} className="text-[#7D5CFF]" />
-                <h3 className="text-sm font-bold text-slate-900 dark:text-white">Offres d'emploi</h3>
+                <Briefcase size={16} className="text-brand" />
+                <h3 className="text-sm font-bold text-ink">Offres d'emploi</h3>
               </div>
               {/* Même échelle typographique que les KPI du haut : les chiffres
                   géants centrés juraient avec le reste de la page. */}
               <div className="grid grid-cols-2 gap-3 md:gap-4">
-                <div className="p-4 rounded-xl bg-[#7D5CFF]/5 dark:bg-[#7D5CFF]/10 border border-[#7D5CFF]/10">
-                  <p className="text-[1.75rem] font-extrabold tracking-tight leading-none text-[#7D5CFF] dark:text-[#B9A7FF] tabular-nums">{stats.totalOffers}</p>
+                <div className="p-4 rounded-xl bg-brand/5 dark:bg-brand/10 border border-brand/10">
+                  <p className="text-[1.75rem] font-extrabold tracking-tight leading-none text-brand dark:text-brand-300 tabular-nums">{stats.totalOffers}</p>
                   <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 mt-2">Total des offres</p>
                 </div>
                 <div className="p-4 rounded-xl bg-emerald-50 dark:bg-emerald-900/10 border border-emerald-500/10">
@@ -534,8 +534,8 @@ const BusinessStatsPage: React.FC = () => {
           return (
             <div key="skills" className="card-pro mb-6">
               <div className="flex items-center gap-2 mb-4 md:mb-6">
-                <Award size={16} className="text-[#7D5CFF]" />
-                <h3 className="text-sm font-bold text-slate-900 dark:text-white">Top compétences</h3>
+                <Award size={16} className="text-brand" />
+                <h3 className="text-sm font-bold text-ink">Top compétences</h3>
                 <span className="text-[10px] text-slate-400 ml-auto hidden md:inline">Cliquez pour voir les candidats</span>
               </div>
               {stats.topSkills.length > 0 ? (
@@ -550,17 +550,17 @@ const BusinessStatsPage: React.FC = () => {
                         className="w-full flex flex-col gap-1.5 text-left group/skill hover:bg-slate-50 dark:hover:bg-slate-800/40 rounded-lg p-1.5 -m-1.5 transition-colors"
                       >
                         <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2 text-sm font-medium text-slate-700 dark:text-slate-300">
+                          <div className="flex items-center gap-2 text-sm font-medium text-ink">
                             <span className="text-xs font-bold text-slate-400 w-4">{i + 1}.</span>
                             {s.skill}
                           </div>
-                          <span className="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-1">
+                          <span className="text-xs font-bold text-ink flex items-center gap-1">
                             {s.count} adh.
-                            <ChevronRight size={14} className="text-slate-300 group-hover/skill:text-[#7D5CFF] transition-colors" />
+                            <ChevronRight size={14} className="text-slate-300 group-hover/skill:text-brand transition-colors" />
                           </span>
                         </div>
-                        <div className="h-1.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
-                          <div className="h-full bg-[#7D5CFF] rounded-full transition-all duration-500" style={{ width: `${pct}%` }} />
+                        <div className="h-1.5 bg-subtle rounded-full overflow-hidden">
+                          <div className="h-full bg-brand rounded-full transition-all duration-500" style={{ width: `${pct}%` }} />
                         </div>
                       </button>
                     );
@@ -579,16 +579,16 @@ const BusinessStatsPage: React.FC = () => {
       {showCustomize && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 print:hidden">
           <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setShowCustomize(false)} />
-          <div className="relative bg-white dark:bg-[#111827] w-full max-w-md rounded-2xl shadow-2xl p-5 border border-slate-200 dark:border-slate-700">
+          <div className="relative bg-surface w-full max-w-md rounded-2xl shadow-2xl p-5 border border-line">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="font-bold text-slate-900 dark:text-white">Personnaliser le tableau</h3>
+              <h3 className="font-bold text-ink">Personnaliser le tableau</h3>
               <button onClick={() => setShowCustomize(false)} className="p-1.5 text-slate-400 hover:text-slate-600 rounded-lg"><X size={20} /></button>
             </div>
             <p className="text-xs text-slate-500 mb-4">Affichez, masquez et réordonnez les blocs. Vos préférences sont mémorisées sur cet appareil.</p>
             <div className="space-y-2">
               {layout.map((w, i) => (
-                <div key={w.id} className="flex items-center gap-2 p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/50">
-                  <button onClick={() => toggleWidget(w.id)} className={`p-1.5 rounded-lg ${w.visible ? 'text-[#7D5CFF]' : 'text-slate-300 dark:text-slate-600'}`}>
+                <div key={w.id} className="flex items-center gap-2 p-2.5 rounded-xl bg-subtle">
+                  <button onClick={() => toggleWidget(w.id)} className={`p-1.5 rounded-lg ${w.visible ? 'text-brand' : 'text-slate-300 dark:text-slate-600'}`}>
                     {w.visible ? <Eye size={18} /> : <EyeOff size={18} />}
                   </button>
                   <span className={`flex-1 text-sm font-medium ${w.visible ? 'text-slate-700 dark:text-slate-200' : 'text-slate-400 line-through'}`}>{WIDGET_LABELS[w.id]}</span>
@@ -614,7 +614,7 @@ const BusinessStatsPage: React.FC = () => {
 // --- KPI Card avec delta (style corporate coloré : liseré + pastille par indicateur) ---
 type KpiTone = 'violet' | 'emerald' | 'blue' | 'amber';
 const KPI_TONES: Record<KpiTone, { border: string; chip: string; ring: string }> = {
-  violet:  { border: 'border-l-[#7D5CFF]',  chip: 'bg-[#7D5CFF]/15 text-[#7D5CFF] dark:text-[#B9A7FF]', ring: 'dark:bg-[#7D5CFF]/[0.06]' },
+  violet:  { border: 'border-l-brand',  chip: 'bg-brand/15 text-brand dark:text-brand-300', ring: 'dark:bg-brand/[0.06]' },
   emerald: { border: 'border-l-emerald-500', chip: 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400', ring: 'dark:bg-emerald-500/[0.06]' },
   blue:    { border: 'border-l-blue-500',    chip: 'bg-blue-500/15 text-blue-600 dark:text-blue-400', ring: 'dark:bg-blue-500/[0.06]' },
   amber:   { border: 'border-l-amber-500',   chip: 'bg-amber-500/15 text-amber-600 dark:text-amber-400', ring: 'dark:bg-amber-500/[0.06]' },
@@ -623,7 +623,7 @@ const KPI_TONES: Record<KpiTone, { border: string; chip: string; ring: string }>
 const KPICard: React.FC<{ icon: React.ReactNode; label: string; value: number | string; tone: KpiTone; delta?: number | null }> = ({ icon, label, value, tone, delta }) => {
   const t = KPI_TONES[tone];
   return (
-    <div className={`bg-white dark:bg-[#111827] ${t.ring} border border-slate-200 dark:border-slate-800 border-l-[3px] ${t.border} rounded-lg p-4 md:p-5 hover:shadow-sm dark:hover:border-slate-700 transition-all`}>
+    <div className={`bg-surface ${t.ring} border border-line border-l-[3px] ${t.border} rounded-lg p-4 md:p-5 hover:shadow-sm dark:hover:border-slate-700 transition-all`}>
       <div className="flex items-center justify-between mb-3 md:mb-4">
         <div className={`w-9 h-9 rounded-lg flex items-center justify-center ${t.chip}`}>
           {icon}
@@ -635,7 +635,7 @@ const KPICard: React.FC<{ icon: React.ReactNode; label: string; value: number | 
           </span>
         )}
       </div>
-      <p className="font-extrabold text-slate-900 dark:text-white leading-none tracking-tight" style={{ fontSize: 'clamp(1.5rem, 4vw, 2.3rem)' }}>{value}</p>
+      <p className="font-extrabold text-ink leading-none tracking-tight" style={{ fontSize: 'clamp(1.5rem, 4vw, 2.3rem)' }}>{value}</p>
       <p className="text-[11px] md:text-xs font-semibold text-slate-500 mt-2 uppercase tracking-wider">{label}</p>
       {delta !== undefined && delta !== null && (
         <p className="text-[10px] text-slate-400 mt-0.5">vs période précédente</p>
@@ -672,11 +672,11 @@ const DrillDownModal: React.FC<{ drill: { type: 'skill' | 'status'; value: strin
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 print:hidden">
       <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative bg-white dark:bg-[#111827] w-full max-w-lg rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-700 max-h-[80vh] flex flex-col">
-        <div className="flex items-center justify-between p-5 border-b border-slate-100 dark:border-slate-800">
+      <div className="relative bg-surface w-full max-w-lg rounded-2xl shadow-2xl border border-line max-h-[80vh] flex flex-col">
+        <div className="flex items-center justify-between p-5 border-b border-line">
           <div>
-            <h3 className="font-bold text-slate-900 dark:text-white">
-              {drill.type === 'skill' ? 'Candidats avec' : 'Adhérents'} <span className="text-[#7D5CFF]">{drill.type === 'skill' ? drill.value : (STATUS_LABELS[drill.value] || drill.value)}</span>
+            <h3 className="font-bold text-ink">
+              {drill.type === 'skill' ? 'Candidats avec' : 'Adhérents'} <span className="text-brand">{drill.type === 'skill' ? drill.value : (STATUS_LABELS[drill.value] || drill.value)}</span>
             </h3>
             {!loading && <p className="text-xs text-slate-500 mt-0.5">{total} adhérent{total > 1 ? 's' : ''}</p>}
           </div>
@@ -684,18 +684,18 @@ const DrillDownModal: React.FC<{ drill: { type: 'skill' | 'status'; value: strin
         </div>
         <div className="overflow-y-auto p-3">
           {loading ? (
-            <div className="flex items-center justify-center py-12"><Loader2 className="animate-spin text-[#7D5CFF]" size={24} /></div>
+            <div className="flex items-center justify-center py-12"><Loader2 className="animate-spin text-brand" size={24} /></div>
           ) : list.length === 0 ? (
             <p className="text-sm text-slate-400 text-center py-12">Aucun adhérent correspondant.</p>
           ) : (
             <ul className="divide-y divide-slate-100 dark:divide-slate-800">
               {list.map((j) => (
                 <li key={j.id} className="flex items-center gap-3 p-3">
-                  <div className="w-9 h-9 rounded-full bg-[#EFEBFF] dark:bg-[#7D5CFF]/15 text-[#5B3FD6] dark:text-[#B9A7FF] flex items-center justify-center text-xs font-bold shrink-0">
+                  <div className="w-9 h-9 rounded-full bg-[#EFEBFF] dark:bg-brand/15 text-brand-700 dark:text-brand-300 flex items-center justify-center text-xs font-bold shrink-0">
                     {(j.name || '?').slice(0, 2).toUpperCase()}
                   </div>
                   <div className="min-w-0">
-                    <p className="text-sm font-bold text-slate-900 dark:text-white truncate">{j.name || 'Sans nom'}</p>
+                    <p className="text-sm font-bold text-ink truncate">{j.name || 'Sans nom'}</p>
                     <p className="text-xs text-slate-500 truncate">{j.title || j.email}</p>
                   </div>
                 </li>

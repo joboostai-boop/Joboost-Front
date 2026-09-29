@@ -22,8 +22,8 @@ const SectionCard: React.FC<SectionCardProps> = ({ title, caption, action, class
   <section className={`card-pro p-5 md:p-6 ${className}`}>
     <header className="flex items-start justify-between gap-3 mb-5">
       <div className="min-w-0">
-        <h3 className="text-[15px] font-semibold text-[#111827] dark:text-white tracking-[-0.01em]">{title}</h3>
-        {caption && <div className="mt-1 text-xs text-slate-500 dark:text-slate-400">{caption}</div>}
+        <h3 className="text-[15px] font-semibold text-ink tracking-[-0.01em]">{title}</h3>
+        {caption && <div className="mt-1 text-xs text-muted">{caption}</div>}
       </div>
       {action && <div className="shrink-0">{action}</div>}
     </header>

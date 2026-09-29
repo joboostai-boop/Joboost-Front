@@ -76,10 +76,10 @@ const ActionMenu: React.FC<ActionMenuProps> = ({ label, items, align = 'right', 
               className={`press w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium text-left transition-colors disabled:opacity-40 disabled:pointer-events-none ${
                 it.danger
                   ? 'text-red-600 hover:bg-red-50 dark:hover:bg-red-500/10'
-                  : 'text-[#374151] dark:text-slate-200 hover:bg-[#F5F4FB] dark:hover:bg-[#1F2937]'
+                  : 'text-ink dark:text-slate-200 hover:bg-subtle'
               }`}
             >
-              {it.icon && <span className="shrink-0 text-[#7D5CFF]">{it.icon}</span>}
+              {it.icon && <span className="shrink-0 text-brand">{it.icon}</span>}
               {it.label}
             </button>
           ))}

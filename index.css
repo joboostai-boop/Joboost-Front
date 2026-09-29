@@ -1,128 +1,129 @@
-/* Police Inter chargée via <link> dans index.html (preconnect + display=swap,
-   plus rapide qu'un @import bloquant). Fallback système si indisponible. */
+/* Police Geist chargée via <link> dans index.html (preconnect + display=swap). */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+/* ================== JETONS DE COULEUR ==================
+   Refonte 09/2026. Neutres en canaux RGB pour que Tailwind puisse appliquer
+   l'opacité (`bg-canvas/80`). Le mode sombre ne fait que réassigner ces
+   variables : les classes `bg-surface`, `border-line`, `text-ink`… n'ont
+   plus besoin de variante `dark:`. */
+:root {
+  --c-canvas: 248 248 250;      /* fond de page */
+  --c-surface: 255 255 255;     /* cartes, panneaux */
+  --c-subtle: 242 242 245;      /* survols, zones en retrait */
+  --c-line: 232 232 237;        /* bordures fines */
+  --c-line-strong: 214 214 222; /* bordures de champs */
+  --c-ink: 18 18 23;            /* texte principal */
+  --c-muted: 92 92 105;         /* texte secondaire */
+  --c-faint: 140 140 154;       /* légendes, placeholders */
+}
+.dark {
+  --c-canvas: 11 11 14;
+  --c-surface: 20 20 24;
+  --c-subtle: 30 30 36;
+  --c-line: 38 38 45;
+  --c-line-strong: 56 56 66;
+  --c-ink: 244 244 246;
+  --c-muted: 166 166 178;
+  --c-faint: 118 118 132;
+  color-scheme: dark;
+}
+
 @layer base {
   body {
-    font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
+    font-family: 'Geist', 'Inter', ui-sans-serif, system-ui, sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    /* Stylistic sets Inter : chiffres tabulaires nets + L/I plus lisibles. */
-    font-feature-settings: 'cv11', 'ss01';
-    font-size: clamp(0.875rem, 2vw, 1rem);
-    @apply bg-[#F5F4FB] text-[#0B0B14];
+    font-size: 15px;
+    @apply bg-canvas text-ink;
   }
 
-  /* Hiérarchie de titres : Space Grotesk (grotesque éditorial, direction pitch.com)
-     + interlettrage resserré. Moins « rond/enfantin » qu'Inter. */
-  h1 { @apply font-display text-2xl font-bold tracking-[-0.02em] text-[#0B0B14]; }
-  h2 { @apply font-display text-xl font-bold tracking-[-0.018em] text-[#0B0B14]; }
-  h3 { @apply font-display text-lg font-bold tracking-[-0.014em] text-[#0B0B14]; }
-  h4 { @apply font-display text-base font-bold tracking-[-0.01em] text-[#0B0B14]; }
-  p { @apply text-sm text-[#4B5563] leading-relaxed; }
+  h1 { @apply font-display text-2xl font-semibold tracking-[-0.025em] text-ink; }
+  h2 { @apply font-display text-xl font-semibold tracking-[-0.02em] text-ink; }
+  h3 { @apply font-display text-lg font-semibold tracking-[-0.015em] text-ink; }
+  h4 { @apply font-display text-base font-semibold tracking-[-0.01em] text-ink; }
+  p { @apply text-sm text-muted leading-relaxed; }
 
-  /* Dark mode overrides */
-  .dark body { @apply bg-[#030712] text-[#F9FAFB]; }
-  .dark h1, .dark h2, .dark h3, .dark h4 { @apply text-[#F9FAFB]; }
-  .dark p { @apply text-[#9CA3AF]; }
+  ::selection { @apply bg-brand/15 text-ink; }
 }
 
 @layer components {
-  /* ================== SURFACES / CARDS ==================
-     Direction « outil pro » : profondeur par bordure 1px + ombre douce,
-     rayons mesurés (8–16px), pas de halo. Les 3 classes partagent le
-     même langage visuel ; elles diffèrent surtout par le rayon. */
-
-  /* Carte applicative dense (dashboard, listes, formulaires).
-     Direction pitch.com : rayon généreux + ombre douce + hover qui « soulève »
-     très légèrement (micro-interaction soft, transition CSS courte). */
+  /* ================== SURFACES ==================
+     Une seule grammaire : fond blanc, bordure 1px, rayon 14px, pas d'ombre
+     portée marquée, pas de « soulèvement » au survol. La hiérarchie vient de
+     la typographie et de l'espace, pas des effets. */
   .card-pro {
-    @apply bg-white border border-[#ECEAF6] rounded-2xl shadow-card p-6 overflow-hidden
-           transition-all duration-200 ease-out hover:-translate-y-1 hover:shadow-card-hover hover:border-[#7D5CFF]/25;
+    @apply bg-surface border border-line rounded-[14px] p-6 overflow-hidden;
   }
-  .dark .card-pro {
-    @apply bg-[#111827] border-[#1F2937] shadow-none;
-  }
-
-  /* Carte « moderne » (landing, pricing, onboarding) : rayon encore plus doux. */
   .card-modern {
-    @apply bg-white border border-[#ECEAF6] rounded-3xl shadow-card
-           transition-all duration-200 ease-out hover:-translate-y-1 hover:shadow-card-hover hover:border-[#7D5CFF]/25;
+    @apply bg-surface border border-line rounded-2xl;
   }
-  .dark .card-modern {
-    @apply bg-[#111827] border-[#1F2937] shadow-none;
-  }
-
-  /* Surface neutre réutilisable (aperçus, panneaux) : transition douce, sans lift forcé. */
   .surface {
-    @apply bg-white border border-[#ECEAF6] rounded-2xl shadow-card transition-all duration-200 ease-out;
+    @apply bg-surface border border-line rounded-[14px];
   }
-  .dark .surface {
-    @apply bg-[#111827] border-[#1F2937] shadow-none;
+  /* Carte cliquable : seule la bordure réagit. */
+  .card-link {
+    @apply bg-surface border border-line rounded-[14px] transition-colors duration-150 hover:border-line-strong;
   }
-
-  /* Surface légèrement teintée marque (ligne active, encart) — accent discret. */
   .surface-accent {
-    @apply bg-[#7D5CFF]/[0.04] border border-[#7D5CFF]/15;
+    @apply bg-brand/[0.05] border border-brand/15;
   }
   .dark .surface-accent {
-    @apply bg-[#7D5CFF]/10 border-[#7D5CFF]/20;
+    @apply bg-brand/10 border-brand/25;
   }
 
-  /* ================== BUTTONS ==================
-     Boutons « premium » : profondeur fine (dégradé vertical très subtil +
-     liseré interne clair sur le primaire), focus-visible accessible,
-     enfoncement léger au clic. */
+  /* ================== BOUTONS ================== */
   .btn {
-    @apply min-h-[42px] px-4 py-2.5 inline-flex items-center justify-center gap-2 rounded-xl text-sm font-semibold transition-all duration-200 ease-out outline-none select-none
-           hover:-translate-y-px active:translate-y-0 active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-[#7D5CFF]/45 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none disabled:hover:translate-y-0;
+    @apply min-h-[40px] px-4 py-2 inline-flex items-center justify-center gap-2 rounded-[10px] text-sm font-medium
+           transition-colors duration-150 outline-none select-none
+           focus-visible:ring-2 focus-visible:ring-brand/40 focus-visible:ring-offset-2 focus-visible:ring-offset-canvas
+           disabled:opacity-50 disabled:pointer-events-none;
   }
-
   .btn-lg {
-    @apply min-h-[50px] px-6 py-3 text-[15px] rounded-2xl;
+    @apply min-h-[46px] px-5 text-[15px];
   }
-
   .btn-primary {
-    @apply text-white border border-[#5B21B6]/40 bg-gradient-to-b from-[#8C6DFF] to-[#7D5CFF]
-           shadow-[0_1px_2px_rgba(16,24,40,0.10),inset_0_1px_0_rgba(255,255,255,0.18)]
-           hover:from-[#7D5CFF] hover:to-[#6D28D9] hover:shadow-[0_2px_8px_rgba(125,92,255,0.30)];
+    @apply bg-brand text-white hover:bg-brand-700 shadow-xs;
   }
-
+  /* Action forte neutre (encre) — pour les écrans où le violet serait de trop. */
+  .btn-dark {
+    @apply bg-ink text-canvas hover:bg-ink/85;
+  }
   .btn-secondary {
-    @apply bg-white text-[#374151] border border-[#E5E7EB] shadow-xs hover:bg-[#F9FAFB] hover:border-[#D1D5DB];
+    @apply bg-surface text-ink border border-line-strong shadow-xs hover:bg-subtle;
   }
-
   .btn-ghost {
-    @apply bg-transparent text-[#6B7280] hover:bg-[#F3F4F6] hover:text-[#111827];
+    @apply bg-transparent text-muted hover:bg-subtle hover:text-ink;
   }
 
-  /* Badges & Tags */
   .badge-ai {
-    @apply inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-[#F3F0FF] text-[#7D5CFF] border border-[#E8E1FF];
+    @apply inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-brand/10 text-brand border border-brand/15;
+  }
+  .dark .badge-ai { @apply text-brand-300; }
+
+  /* Pastille neutre (statuts, compteurs, filtres). */
+  .chip {
+    @apply inline-flex items-center gap-1.5 h-7 px-2.5 rounded-full border border-line bg-surface text-xs font-medium text-muted;
   }
 
-  /* ================== INPUTS ================== */
+  /* ================== CHAMPS ================== */
   .input-label {
-    @apply block text-sm font-semibold text-[#374151] mb-1.5;
+    @apply block text-[13px] font-medium text-ink mb-1.5;
   }
-
   .input-pro {
-    @apply w-full min-h-[44px] px-4 py-2.5 bg-white border border-[#E2E0EF] rounded-xl shadow-xs text-base sm:text-sm text-[#111827] placeholder:text-[#9CA3AF] transition-all outline-none focus:border-[#7D5CFF] focus:ring-4 focus:ring-[#7D5CFF]/15;
+    @apply w-full min-h-[42px] px-3.5 py-2 bg-surface border border-line-strong rounded-[10px] text-base sm:text-sm text-ink
+           placeholder:text-faint transition-shadow outline-none focus:border-brand focus:ring-4 focus:ring-brand/[0.12];
   }
-
-  /* Textarea */
   .textarea-pro {
-    @apply w-full p-4 bg-white border border-[#E2E0EF] rounded-xl shadow-xs text-base sm:text-sm text-[#111827] placeholder:text-[#9CA3AF] transition-all outline-none focus:border-[#7D5CFF] focus:ring-4 focus:ring-[#7D5CFF]/15 resize-y min-h-[100px];
+    @apply w-full p-3.5 bg-surface border border-line-strong rounded-[10px] text-base sm:text-sm text-ink
+           placeholder:text-faint transition-shadow outline-none focus:border-brand focus:ring-4 focus:ring-brand/[0.12] resize-y min-h-[100px];
   }
 
-  /* Dark mode variants for components */
-  .dark .btn-secondary { @apply bg-[#1F2937] border-[#374151] text-[#E5E7EB] shadow-none hover:bg-[#374151] hover:border-[#4B5563]; }
-  .dark .btn-ghost { @apply text-[#9CA3AF] hover:bg-[#1F2937] hover:text-white; }
-  .dark .badge-ai { @apply bg-[#7D5CFF]/10 text-[#A78BFA] border-[#7D5CFF]/20; }
-  .dark .input-label { @apply text-[#D1D5DB]; }
-  .dark .input-pro, .dark .textarea-pro { @apply bg-[#111827] border-[#374151] text-white focus:border-[#7D5CFF] focus:ring-[#7D5CFF]; }
+  /* Libellé de section en petites capitales (« Aujourd'hui », « Documents »…). */
+  .eyebrow {
+    @apply text-[11px] font-medium uppercase tracking-[0.08em] text-faint;
+  }
 }
 
 /* Scrollbar minimale B2B */
@@ -333,7 +334,7 @@
    (le conteneur est re-monté via une `key` sur le pathname dans App.tsx).
    Donne une navigation fluide et vivante, sans dépendance JS. */
 @keyframes page-in {
-  from { opacity: 0; transform: translateY(16px); }
+  from { opacity: 0; transform: translateY(6px); }
   to   { opacity: 1; transform: none; }
 }
 /* `backwards` et NON `both` : `forwards` conserverait la derniere keyframe, or
@@ -344,7 +345,7 @@
    l'etat initial avant le demarrage ; l'etat final rejoint l'etat naturel du
    document, donc le rendu est identique. */
 .animate-page {
-  animation: page-in 0.42s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+  animation: page-in 0.28s cubic-bezier(0.16, 1, 0.3, 1) backwards;
 }
 
 /* Entrée des cartes dans l'app connectée : chaque carte apparaît en fondu + montée
@@ -352,16 +353,7 @@
    navigation via sa `key`), avec une cascade douce sur les premières d'un même groupe.
    Donne du rythme et « l'envie de naviguer » sans toucher chaque page.
    (Neutralisé automatiquement si prefers-reduced-motion — voir plus bas.) */
-.app-shell .card-pro,
-.app-shell .card-modern,
-.app-shell .surface {
-  animation: page-in 0.45s cubic-bezier(0.16, 1, 0.3, 1) backwards;
-}
-.app-shell .card-pro:nth-child(2), .app-shell .card-modern:nth-child(2), .app-shell .surface:nth-child(2) { animation-delay: 0.05s; }
-.app-shell .card-pro:nth-child(3), .app-shell .card-modern:nth-child(3), .app-shell .surface:nth-child(3) { animation-delay: 0.10s; }
-.app-shell .card-pro:nth-child(4), .app-shell .card-modern:nth-child(4), .app-shell .surface:nth-child(4) { animation-delay: 0.15s; }
-.app-shell .card-pro:nth-child(5), .app-shell .card-modern:nth-child(5), .app-shell .surface:nth-child(5) { animation-delay: 0.20s; }
-.app-shell .card-pro:nth-child(6), .app-shell .card-modern:nth-child(6), .app-shell .surface:nth-child(6) { animation-delay: 0.25s; }
+/* (Cascade d'apparition des cartes retirée à la refonte 09/2026 : trop d'agitation.) */
 
 /* ================== 3D · TILT · PARALLAXE (Phase 4) ==================
    Relief « premium » : inclinaison 3D au survol (suivi du pointeur), décor
@@ -536,3 +528,7 @@
 
   @page { margin: 12mm; }
 }
+
+/* Refonte 09/2026 : reflets animés et inclinaisons 3D désactivés dans l'app.
+   Les classes restent définies (sans effet) pour ne rien casser ailleurs. */
+.tab-shine::after, .icon-shine::after, .bar-shine::after { content: none; }

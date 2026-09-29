@@ -9,12 +9,12 @@ const TargetLayout: React.FC = () => {
   const showLetterTab = location.pathname.includes('/target/letter');
 
   const tabs: SectionTab[] = [
-    { name: 'Offres pour moi', shortName: 'Offres', path: '/target/offers', icon: <Target size={17} /> },
-    { name: 'Candidatures spontanées', shortName: 'Spontanées', path: '/target/lbb', icon: <Navigation size={17} /> },
-    { name: 'Alternance', path: '/target/alternance', icon: <GraduationCap size={17} /> },
-    { name: 'Offres sauvegardées', shortName: 'Sauvegardées', path: '/target/saved', icon: <Bookmark size={17} /> },
+    { name: 'Offres pour moi', shortName: 'Offres', path: '/target/offers', icon: <Target size={17} />, description: 'Sélectionnées selon ton métier et ta ville. Glisse à droite pour postuler.' },
+    { name: 'Candidatures spontanées', shortName: 'Spontanées', path: '/target/lbb', icon: <Navigation size={17} />, description: 'Des entreprises qui recrutent souvent dans ton métier, sans forcément publier d’offre.' },
+    { name: 'Alternance', path: '/target/alternance', icon: <GraduationCap size={17} />, description: 'Contrats d’apprentissage et de professionnalisation près de chez toi.' },
+    { name: 'Sauvegardées', path: '/target/saved', icon: <Bookmark size={17} />, description: 'Les offres que tu as mises de côté.' },
     ...(showLetterTab
-      ? [{ name: 'Lettre pour cette offre', shortName: 'Lettre', path: '/target/letter', icon: <PenLine size={17} /> }]
+      ? [{ name: 'Lettre pour cette offre', shortName: 'Lettre', path: '/target/letter', icon: <PenLine size={17} />, description: 'Ta lettre, adaptée à l’offre choisie.' }]
       : []),
   ];
 
