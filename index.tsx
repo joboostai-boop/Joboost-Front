@@ -18,15 +18,34 @@ if (!rootElement) {
   throw new Error("Could not find root element to mount to");
 }
 
-const root = ReactDOM.createRoot(rootElement);
-root.render(
-  <React.StrictMode>
-    <ErrorBoundary>
-      <BrowserRouter>
-        <AuthProvider>
-          <App />
-        </AuthProvider>
-      </BrowserRouter>
-    </ErrorBoundary>
-  </React.StrictMode>
-);
+const render = () => {
+  ReactDOM.createRoot(rootElement).render(
+    <React.StrictMode>
+      <ErrorBoundary>
+        <BrowserRouter>
+          <AuthProvider>
+            <App />
+          </AuthProvider>
+        </BrowserRouter>
+      </ErrorBoundary>
+    </React.StrictMode>
+  );
+};
+
+// Mode démo (DÉVELOPPEMENT uniquement) : `?demo` remplace l'API par des données
+// fictives pour relire les écrans connectés sans compte. `import.meta.env.DEV`
+// est faux au build : ce bloc et dev/demoApi.ts sont exclus de la production.
+if (import.meta.env.DEV) {
+  const q = new URLSearchParams(location.search).get('demo');
+  if (q === 'off') {
+    sessionStorage.removeItem('joboost-demo');
+    localStorage.removeItem('joboost-token');
+  } else if (q !== null) {
+    sessionStorage.setItem('joboost-demo', '1');
+  }
+}
+if (import.meta.env.DEV && sessionStorage.getItem('joboost-demo') === '1') {
+  import('./dev/demoApi').then((m) => { m.installDemoApi(); render(); });
+} else {
+  render();
+}

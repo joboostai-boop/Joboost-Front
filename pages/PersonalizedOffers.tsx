@@ -1,14 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
 import {
   Search, Bookmark, Clock, Edit3, ExternalLink, Briefcase, Euro, Navigation, Send, Check, X,
-  FileText, Building2, RotateCcw, MapPin, Undo2,
+  FileText, Building2, RotateCcw, MapPin, Undo2, SlidersHorizontal,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
 import { authHeaders } from '../services/authToken';
 import EmptyState from '../components/EmptyState';
 import ExpandableText from '../components/ExpandableText';
-import FilterSelect from '../components/FilterSelect';
 import ApplyInAppModal from '../components/ApplyInAppModal';
 import { formatSalary } from '../services/format';
 
@@ -57,36 +56,34 @@ const hueOf = (name: string) => {
   return h % 360;
 };
 
-/* Jauge circulaire de compatibilité. */
+/* Jauge circulaire de compatibilité, posée sur la couverture de la carte. */
 const ScoreRing: React.FC<{ score: number }> = ({ score }) => {
-  const r = 22;
+  const r = 17;
   const c = 2 * Math.PI * r;
   const tone = score >= 75 ? '#10B981' : score >= 50 ? '#6E50F5' : '#8C8C9A';
   return (
-    <div className="relative w-[58px] h-[58px] shrink-0" title={`Compatibilité avec ton profil : ${score} %`}>
-      <svg viewBox="0 0 56 56" className="w-full h-full -rotate-90">
-        <circle cx="28" cy="28" r={r} fill="rgb(var(--c-surface))" stroke="rgb(var(--c-line))" strokeWidth="5" />
-        <circle cx="28" cy="28" r={r} fill="none" stroke={tone} strokeWidth="5" strokeLinecap="round" strokeDasharray={`${(score / 100) * c} ${c}`} />
+    <div className="relative w-12 h-12 shrink-0 rounded-full bg-white/90 backdrop-blur shadow-xs" title={`Compatibilité avec ton profil : ${score} %`}>
+      <svg viewBox="0 0 44 44" className="w-full h-full -rotate-90">
+        <circle cx="22" cy="22" r={r} fill="none" stroke="rgba(18,18,23,.08)" strokeWidth="4" />
+        <circle cx="22" cy="22" r={r} fill="none" stroke={tone} strokeWidth="4" strokeLinecap="round" strokeDasharray={`${(score / 100) * c} ${c}`} />
       </svg>
-      <span className="absolute inset-0 grid place-items-center text-[13px] font-semibold tabular-nums text-ink">{score}%</span>
+      <span className="absolute inset-0 grid place-items-center text-[11.5px] font-semibold tabular-nums text-[#121217]">{score}%</span>
     </div>
   );
 };
 
-/* Skeleton pendant le chargement — même silhouette que la carte. */
+/* Squelette pendant le chargement — même silhouette que la carte. */
 const OfferSkeleton: React.FC = () => (
-  <div className="surface overflow-hidden">
+  <div className="absolute inset-x-0 top-0 bottom-5 surface overflow-hidden">
     <div className="skeleton !rounded-none h-24" />
-    <div className="p-5 space-y-4 -mt-8">
-      <div className="skeleton w-16 h-16 !rounded-2xl" />
-      <div className="skeleton h-6 w-2/3 rounded" />
+    <div className="px-5 space-y-3 -mt-9">
+      <div className="skeleton w-[72px] h-[72px] !rounded-2xl" />
+      <div className="skeleton h-6 w-3/4 rounded" />
       <div className="skeleton h-4 w-1/3 rounded" />
-      <div className="flex gap-2">
-        <div className="skeleton h-7 w-20 rounded-full" />
-        <div className="skeleton h-7 w-24 rounded-full" />
-        <div className="skeleton h-7 w-20 rounded-full" />
+      <div className="grid grid-cols-2 gap-2 pt-1">
+        <div className="skeleton h-14 rounded-xl" /><div className="skeleton h-14 rounded-xl" />
+        <div className="skeleton h-14 rounded-xl" /><div className="skeleton h-14 rounded-xl" />
       </div>
-      <div className="skeleton h-24 w-full rounded-xl" />
     </div>
   </div>
 );
@@ -103,120 +100,137 @@ interface CardProps {
 
 /* Carte d'offre : bandeau teinté à la couleur de l'entreprise, logo, jauge de
    compatibilité, infos clés en pastilles, explication et mots-clés. */
+// « MILES GROUP » → « Miles Group » : les intitulés tout en capitales crient.
+const tidyCase = (s: string) =>
+  s && s.length > 3 && s === s.toUpperCase() && /[A-Z]/.test(s)
+    ? s.toLowerCase().replace(/(^|[\s\-'/(])(\p{L})/gu, (_, p, c) => p + c.toUpperCase())
+    : s;
+
+/* Carte d'offre (refonte 09/2026, v2). Hauteur fixe : la couverture et les actions
+   restent en place, seul le contenu défile à l'intérieur de la carte. */
 const OfferCard: React.FC<CardProps> = ({ offer, isBest, isApplied, isBookmarked, onCv, onLetter, onSave }) => {
   const hue = hueOf(offer.company || offer.title);
+  const hue2 = (hue + 55) % 360;
   const score = Math.round(Number(offer.matchScore) || 0);
+  const company = tidyCase(offer.company || '');
   const facts = [
-    offer.type && { icon: <Briefcase size={13} />, text: offer.type },
-    offer.salary && { icon: <Euro size={13} />, text: formatSalary(offer.salary) },
-    offer.location && { icon: <MapPin size={13} />, text: offer.location },
-    offer.postedDate && { icon: <Clock size={13} />, text: offer.postedDate },
-  ].filter(Boolean) as { icon: React.ReactNode; text: string }[];
+    { icon: <Briefcase size={15} />, label: 'Contrat', value: offer.type || 'À préciser' },
+    { icon: <Euro size={15} />, label: 'Salaire', value: offer.salary ? formatSalary(offer.salary) : 'Non précisé' },
+    { icon: <MapPin size={15} />, label: 'Lieu', value: offer.location || 'Non précisé' },
+    { icon: <Clock size={15} />, label: 'Publiée', value: offer.postedDate || 'Récemment' },
+  ];
 
   return (
-    <>
-      {/* Bandeau */}
+    <div className="h-full flex flex-col">
+      {/* Couverture */}
       <div
-        className="relative h-24"
-        style={{ background: `linear-gradient(135deg, hsla(${hue}, 85%, 62%, .22), hsla(${(hue + 50) % 360}, 85%, 62%, .08))` }}
+        className="relative h-24 shrink-0 overflow-hidden"
+        style={{
+          background: `radial-gradient(120% 140% at 0% 0%, hsla(${hue}, 90%, 62%, .55), transparent 60%),
+                       radial-gradient(120% 140% at 100% 100%, hsla(${hue2}, 90%, 62%, .45), transparent 55%),
+                       hsl(${hue}, 60%, 96%)`,
+        }}
       >
         <span
           aria-hidden
-          className="absolute inset-0 opacity-[0.35]"
-          style={{ backgroundImage: `radial-gradient(hsla(${hue}, 60%, 45%, .35) 1px, transparent 1px)`, backgroundSize: '14px 14px', maskImage: 'linear-gradient(to left, #000, transparent 70%)', WebkitMaskImage: 'linear-gradient(to left, #000, transparent 70%)' }}
+          className="absolute inset-0 opacity-40 mix-blend-overlay"
+          style={{ backgroundImage: 'radial-gradient(rgba(255,255,255,.9) 1px, transparent 1px)', backgroundSize: '12px 12px' }}
         />
-        <div className="absolute top-3 left-4 flex flex-wrap gap-1.5">
-          {isBest && (
-            <span className="inline-flex items-center h-6 px-2 rounded-md bg-surface/90 text-ink text-[11px] font-medium shadow-xs">
-              La plus proche de ton profil
-            </span>
-          )}
-          {offer.partner && (
-            <span className="inline-flex items-center gap-1 h-6 px-2 rounded-md bg-surface/90 text-ink text-[11px] font-medium shadow-xs">
-              <Building2 size={11} /> {offer.partner.name}
-            </span>
-          )}
+        <div className="absolute top-3 left-3 right-3 flex items-start justify-between gap-2">
+          <div className="flex flex-wrap gap-1.5">
+            {isBest && (
+              <span className="inline-flex items-center h-6 px-2 rounded-full bg-white/85 text-[#121217] text-[11px] font-medium backdrop-blur">
+                Top pour toi
+              </span>
+            )}
+            {offer.partner && (
+              <span className="inline-flex items-center gap-1 h-6 px-2 rounded-full bg-white/85 text-[#121217] text-[11px] font-medium backdrop-blur">
+                <Building2 size={11} /> {offer.partner.name}
+              </span>
+            )}
+          </div>
+          {score > 0 && <ScoreRing score={score} />}
         </div>
-        {score > 0 && <div className="absolute right-4 -bottom-7"><ScoreRing score={score} /></div>}
       </div>
 
-      <div className="px-5 pb-5">
-        {/* Logo */}
-        <div className="-mt-8 mb-3">
+      {/* En-tête fixe : logo (à cheval sur la couverture), intitulé, entreprise */}
+      <div className="shrink-0 px-5">
+        <div className="-mt-9 mb-3 relative">
           {offer.partner?.logoUrl ? (
-            <span className="w-16 h-16 rounded-2xl bg-white border border-line shadow-card grid place-items-center overflow-hidden">
+            <span className="w-[72px] h-[72px] rounded-2xl bg-white border-4 border-surface shadow-card grid place-items-center overflow-hidden">
               <img src={offer.partner.logoUrl} alt="" className="w-full h-full object-contain p-1.5" draggable={false} />
             </span>
           ) : (
             <span
-              className="w-16 h-16 rounded-2xl bg-surface border border-line shadow-card grid place-items-center text-2xl font-semibold"
-              style={{ color: `hsl(${hue}, 55%, 45%)` }}
+              className="w-[72px] h-[72px] rounded-2xl border-4 border-surface shadow-card grid place-items-center text-[28px] font-semibold text-white"
+              style={{ background: `linear-gradient(135deg, hsl(${hue}, 70%, 55%), hsl(${hue2}, 70%, 45%))` }}
             >
-              {offer.company?.charAt(0)?.toUpperCase() || '?'}
+              {company.charAt(0).toUpperCase() || '?'}
             </span>
           )}
         </div>
+        <h2 className="text-[21px] leading-[1.2] tracking-[-0.02em] line-clamp-2" title={offer.title}>{offer.title}</h2>
+        <p className="text-[15px] text-muted mt-1 truncate">{company}</p>
+      </div>
 
-        <h2 className="text-[21px] leading-snug pr-2">{offer.title}</h2>
-        <p className="text-[15px] text-muted mt-0.5">{offer.company}</p>
-
-        {facts.length > 0 && (
-          <div className="flex flex-wrap gap-1.5 mt-4">
-            {facts.map((f) => (
-              <span key={f.text} className="inline-flex items-center gap-1.5 h-7 px-2.5 rounded-full bg-subtle text-[12.5px] text-ink">
-                <span className="text-faint">{f.icon}</span>{f.text}
-              </span>
-            ))}
-          </div>
-        )}
+      {/* Contenu défilant */}
+      <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain px-5 pb-4 scrollbar-none">
+        <dl className="grid grid-cols-2 gap-2 mt-3.5">
+          {facts.map((f) => (
+            <div key={f.label} className="rounded-xl bg-subtle/70 px-3 py-2.5 min-w-0">
+              <dt className="flex items-center gap-1.5 text-[11px] text-faint">
+                <span className="text-faint">{f.icon}</span>{f.label}
+              </dt>
+              <dd className="mt-0.5 text-[13px] font-medium text-ink truncate" title={f.value}>{f.value}</dd>
+            </div>
+          ))}
+        </dl>
 
         {offer.aiInsight && (
-          <div className="mt-4 rounded-xl border border-line bg-canvas/60 px-4 py-3">
-            <p className="text-xs font-medium text-ink mb-1 inline-flex items-center gap-1.5">
-              <Check size={13} className="text-emerald-500" strokeWidth={3} /> Pourquoi cette offre
-            </p>
-            <ExpandableText className="text-[13.5px] text-muted leading-relaxed" text={offer.aiInsight} clamp={3} />
+          <div className="mt-4">
+            <p className="eyebrow mb-1.5">En bref</p>
+            <ExpandableText className="text-[14px] text-muted leading-relaxed" text={offer.aiInsight} clamp={4} />
           </div>
         )}
 
         {offer.tags?.length > 0 && (
-          <div className="flex flex-wrap gap-1.5 mt-3.5">
+          <div className="flex flex-wrap gap-1.5 mt-4">
             {offer.tags.slice(0, 6).map((t) => (
               <span key={t} className="chip !h-6 !text-[11.5px]">{t}</span>
             ))}
           </div>
         )}
-
-        {/* Préparer les documents pour CETTE offre. */}
-        <div className="flex items-center gap-1 mt-4 pt-3 border-t border-line -mx-1.5">
-          {isApplied ? (
-            <span className="inline-flex items-center gap-1.5 h-9 px-2 text-[13px] font-medium text-emerald-700 dark:text-emerald-400">
-              <Check size={15} /> Dans ton suivi
-            </span>
-          ) : null}
-          <button type="button" onClick={onCv} className="btn btn-ghost !min-h-[36px] !px-2 text-[13px]">
-            <FileText size={15} /> CV adapté
-          </button>
-          <button type="button" onClick={onLetter} className="btn btn-ghost !min-h-[36px] !px-2 text-[13px]">
-            <Edit3 size={15} /> Lettre
-          </button>
-          {offer.url && (
-            <a href={offer.url} target="_blank" rel="noopener noreferrer" className="btn btn-ghost !min-h-[36px] !px-2 text-[13px]" title="Voir l'annonce sans l'ajouter au suivi">
-              <ExternalLink size={15} /> <span className="hidden sm:inline">Annonce</span>
-            </a>
-          )}
-          <button
-            type="button"
-            onClick={onSave}
-            aria-label={isBookmarked ? 'Retirer des sauvegardées' : 'Sauvegarder'}
-            title={isBookmarked ? 'Retirer des sauvegardées' : 'Sauvegarder (S)'}
-            className={`btn btn-ghost !min-h-[36px] !px-2 ml-auto ${isBookmarked ? '!text-brand dark:!text-brand-300' : ''}`}
-          >
-            <Bookmark size={17} fill={isBookmarked ? 'currentColor' : 'none'} />
-          </button>
-        </div>
       </div>
-    </>
+
+      {/* Actions : préparer les documents pour CETTE offre */}
+      <div className="shrink-0 flex items-center gap-0.5 px-3 py-2 border-t border-line bg-surface">
+        {isApplied && (
+          <span className="inline-flex items-center gap-1 h-9 px-2 text-[13px] font-medium text-emerald-700 dark:text-emerald-400">
+            <Check size={15} /> Suivie
+          </span>
+        )}
+        <button type="button" onClick={onCv} className="btn btn-ghost !min-h-[36px] !px-2.5 text-[13px]">
+          <FileText size={15} /> CV adapté
+        </button>
+        <button type="button" onClick={onLetter} className="btn btn-ghost !min-h-[36px] !px-2.5 text-[13px]">
+          <Edit3 size={15} /> Lettre
+        </button>
+        {offer.url && (
+          <a href={offer.url} target="_blank" rel="noopener noreferrer" className="btn btn-ghost !min-h-[36px] !px-2.5 text-[13px]" aria-label="Voir l'annonce" title="Voir l'annonce sans l'ajouter au suivi">
+            <ExternalLink size={15} />
+          </a>
+        )}
+        <button
+          type="button"
+          onClick={onSave}
+          aria-label={isBookmarked ? 'Retirer des sauvegardées' : 'Sauvegarder'}
+          title={isBookmarked ? 'Retirer des sauvegardées' : 'Sauvegarder (S)'}
+          className={`btn btn-ghost !min-h-[36px] !px-2.5 ml-auto ${isBookmarked ? '!text-brand dark:!text-brand-300' : ''}`}
+        >
+          <Bookmark size={17} fill={isBookmarked ? 'currentColor' : 'none'} />
+        </button>
+      </div>
+    </div>
   );
 };
 
@@ -233,6 +247,7 @@ const PersonalizedOffers: React.FC = () => {
   const [appliedKeys, setAppliedKeys] = useState<Set<string>>(new Set()); // offres ajoutées au suivi (cette session)
   const [rejectedKeys, setRejectedKeys] = useState<Set<string>>(new Set()); // offres passées (cette session)
   const [applyOffer, setApplyOffer] = useState<JobOffer | null>(null); // candidature in-app en cours
+  const [filtersOpen, setFiltersOpen] = useState(false);
 
   // ── Pile de cartes ──
   const [cursor, setCursor] = useState(0);
@@ -472,7 +487,7 @@ const PersonalizedOffers: React.FC = () => {
 
   const sourceLabel =
     source === 'demo'
-      ? 'Exemples (les offres réelles sont momentanément indisponibles)'
+      ? 'exemples (offres réelles indisponibles)'
       : source === 'mixed'
         ? 'France Travail et Adzuna'
         : source === 'adzuna'
@@ -489,217 +504,238 @@ const PersonalizedOffers: React.FC = () => {
   const stack = offers.slice(cursor, cursor + 3);
   const progress = offers.length ? Math.min(cursor, offers.length) / offers.length : 0;
   const pull = Math.min(Math.abs(dragX) / SWIPE_THRESHOLD, 1); // 0 → 1 pendant le glissement
+  const activeFilters = (contractType ? 1 : 0) + (radius !== 30 ? 1 : 0);
+
+  const CONTRACTS = [
+    { value: '', label: 'Tous' },
+    { value: 'CDI', label: 'CDI' },
+    { value: 'CDD', label: 'CDD' },
+    { value: 'MIS', label: 'Intérim' },
+    { value: 'SAI', label: 'Saisonnier' },
+    { value: 'E2', label: 'Alternance' },
+  ];
+  const RADII = [10, 20, 30, 50, 100];
+  const pill = (active: boolean) =>
+    `shrink-0 h-8 px-3 rounded-full text-[13px] font-medium transition-colors ${active ? 'bg-ink text-canvas' : 'bg-surface border border-line text-muted hover:text-ink'}`;
 
   return (
-    <div className="px-5 md:px-8 pt-4 md:pt-6 pb-10 max-w-6xl mx-auto">
-      <div className="max-w-md mx-auto space-y-5">
-        {/* Barre d'outils */}
-        <div className="space-y-3">
-          <div className="flex flex-col sm:flex-row gap-2">
+    /* Sur téléphone, l'écran tient pile entre la barre du haut (56 px), les pastilles
+       de section (53 px) et la barre d'onglets du bas (réserve de 96 px) : la carte
+       remplit l'espace restant et les boutons restent toujours visibles. */
+    <div className="px-4 md:px-8 pt-3 md:pt-6 max-w-6xl mx-auto h-[calc(100dvh-205px)] md:h-[calc(100dvh-150px)] md:min-h-[600px] md:max-h-[820px]">
+      <div className="max-w-md mx-auto h-full flex flex-col gap-3">
+        {/* Recherche + filtres */}
+        <div className="shrink-0 space-y-2.5">
+          <div className="flex gap-2">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-faint" size={16} />
               <input
                 type="search"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                placeholder="Chercher un autre métier…"
+                placeholder="Un autre métier ?"
                 className="input-pro pl-9 w-full"
                 aria-label="Chercher un métier"
               />
             </div>
-            <div className="flex gap-2">
-              <FilterSelect
-                className="flex-1 sm:flex-none"
-                ariaLabel="Type de contrat"
-                icon={<Briefcase size={16} />}
-                value={contractType}
-                onChange={(v) => setContractType(String(v))}
-                options={[
-                  { value: '', label: 'Contrats' },
-                  { value: 'CDI', label: 'CDI' },
-                  { value: 'CDD', label: 'CDD' },
-                  { value: 'MIS', label: 'Intérim' },
-                  { value: 'SAI', label: 'Saisonnier' },
-                  { value: 'E2', label: 'Alternance' },
-                ]}
-              />
-              <FilterSelect
-                className="flex-1 sm:flex-none"
-                ariaLabel="Rayon de recherche autour de ta ville"
-                icon={<Navigation size={16} />}
-                value={radius}
-                onChange={(v) => setRadius(Number(v))}
-                options={[10, 20, 30, 50, 100].map((km) => ({ value: km, label: `${km} km` }))}
-              />
-            </div>
+            <button
+              type="button"
+              onClick={() => setFiltersOpen((v) => !v)}
+              aria-expanded={filtersOpen}
+              className={`btn btn-secondary !px-3 relative ${filtersOpen ? '!bg-subtle' : ''}`}
+            >
+              <SlidersHorizontal size={16} /> <span className="hidden sm:inline">Filtres</span>
+              {activeFilters > 0 && (
+                <span className="absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] px-1 rounded-full bg-brand text-white text-[11px] font-semibold grid place-items-center">{activeFilters}</span>
+              )}
+            </button>
           </div>
-          <p className="text-[13px] text-faint flex items-center gap-2">
-            <span className={`inline-block w-1.5 h-1.5 rounded-full ${source === 'demo' ? 'bg-amber-500' : 'bg-emerald-500'}`} />
-            {loading
-              ? 'Recherche en cours…'
-              : <>{offers.length} offre{offers.length > 1 ? 's' : ''} · {sourceLabel}{matchScores.length > 0 ? ` · ${avgMatch} % en moyenne` : ''}</>}
-          </p>
-        </div>
 
-        {loading ? (
-          <OfferSkeleton />
-        ) : offers.length === 0 ? (
-          <EmptyState
-            variant="offers"
-            title={hasQuery ? 'Aucun résultat' : 'Aucune offre pour le moment'}
-            description={hasQuery ? 'Essaie un autre métier, un autre contrat ou un rayon plus large.' : 'Indique ton métier et ta ville dans ton profil pour recevoir des offres qui te correspondent.'}
-            action={!hasQuery ? <button onClick={() => navigate('/prepare/profile')} className="btn btn-secondary">Compléter mon profil</button> : undefined}
-          />
-        ) : (
-          <>
-            {/* Progression */}
+          {filtersOpen && (
+            <div className="surface p-3 space-y-3 animate-fade-in">
+              <div>
+                <p className="eyebrow mb-1.5">Contrat</p>
+                <div className="flex gap-1.5 overflow-x-auto scrollbar-none -mx-1 px-1">
+                  {CONTRACTS.map((c) => (
+                    <button key={c.value} type="button" onClick={() => setContractType(c.value)} className={pill(contractType === c.value)}>{c.label}</button>
+                  ))}
+                </div>
+              </div>
+              <div>
+                <p className="eyebrow mb-1.5">Distance autour de ta ville</p>
+                <div className="flex gap-1.5 overflow-x-auto scrollbar-none -mx-1 px-1">
+                  {RADII.map((km) => (
+                    <button key={km} type="button" onClick={() => setRadius(km)} className={pill(radius === km)}>{km} km</button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Progression + provenance */}
+          {!loading && offers.length > 0 && (
             <div className="flex items-center gap-3">
               <div className="flex-1 h-1 rounded-full bg-subtle overflow-hidden">
                 <div className="h-full rounded-full bg-brand transition-all duration-300" style={{ width: `${progress * 100}%` }} />
               </div>
-              <span className="text-xs tabular-nums text-faint shrink-0">
+              <span className="text-xs tabular-nums text-faint shrink-0" title={`Source : ${sourceLabel}${matchScores.length ? ` · compatibilité moyenne ${avgMatch} %` : ''}`}>
                 {Math.min(cursor + 1, offers.length)} / {offers.length}
               </span>
             </div>
+          )}
+        </div>
 
-            {currentOffer ? (
-              <div className="relative pb-6" style={{ minHeight: 420 }}>
-                {stack.map((offer, i) => {
-                  const index = cursor + i;
-                  const depth = i;
-                  const active = depth === 0;
-                  const style: React.CSSProperties = active
-                    ? {
-                        transform: `translateX(${dragX}px) rotate(${dragX / 20}deg)`,
-                        transition: dragging ? 'none' : 'transform 320ms cubic-bezier(.2,.8,.2,1)',
-                        touchAction: 'pan-y',
-                        cursor: dragging ? 'grabbing' : 'grab',
-                      }
-                    : {
-                        transform: `translateY(${depth * 12 - pull * 6}px) scale(${1 - depth * 0.045 + pull * 0.02})`,
-                        opacity: depth === 1 ? 1 : 0.6,
-                        transition: 'transform 320ms cubic-bezier(.2,.8,.2,1), opacity 320ms',
-                      };
-                  return (
-                    <div
-                      key={index}
-                      aria-hidden={!active}
-                      className={`surface overflow-hidden select-none origin-top ${
-                        active ? 'relative z-30 shadow-pop' : `absolute inset-x-0 top-0 bottom-6 pointer-events-none ${depth === 1 ? 'z-20 shadow-card' : 'z-10'}`
-                      }`}
-                      style={style}
-                      onPointerDown={active ? onPointerDown : undefined}
-                      onPointerMove={active ? onPointerMove : undefined}
-                      onPointerUp={active ? () => endGesture(false) : undefined}
-                      onPointerCancel={active ? () => endGesture(true) : undefined}
-                    >
-                      <OfferCard
-                        offer={offer}
-                        isBest={isBestOffer(offer)}
-                        isApplied={appliedKeys.has(offerKey(offer))}
-                        isBookmarked={!!getSavedId(offer)}
-                        {...cardHandlers(offer)}
-                      />
-                      {/* Voile de décision pendant le glissement */}
-                      {active && dragX !== 0 && (
-                        <div
-                          aria-hidden
-                          className={`absolute inset-0 pointer-events-none grid place-items-center ${dragX > 0 ? 'bg-emerald-500/15' : 'bg-rose-500/15'}`}
-                          style={{ opacity: pull }}
-                        >
-                          <span className={`inline-flex items-center gap-2 h-12 px-5 rounded-full text-white font-semibold shadow-pop ${dragX > 0 ? 'bg-emerald-500' : 'bg-rose-500'}`} style={{ transform: `scale(${0.8 + pull * 0.2})` }}>
-                            {dragX > 0 ? <><Send size={18} /> Postuler</> : <><X size={18} strokeWidth={2.5} /> Passer</>}
-                          </span>
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
-
-                {/* Carte qui s'en va */}
-                {leaving && (
+        {/* Pile de cartes. `isolate` : ses z-index restent confinés ici et la carte
+            ne passe plus jamais au-dessus des barres de navigation. */}
+        <div className="relative isolate flex-1 min-h-0">
+          {loading ? (
+            <OfferSkeleton />
+          ) : offers.length === 0 ? (
+            <div className="h-full overflow-y-auto">
+              <EmptyState
+                variant="offers"
+                title={hasQuery ? 'Aucun résultat' : 'Aucune offre pour le moment'}
+                description={hasQuery ? 'Essaie un autre métier, un autre contrat ou une distance plus grande.' : 'Indique ton métier et ta ville dans ton profil pour recevoir des offres qui te correspondent.'}
+                action={!hasQuery ? <button onClick={() => navigate('/prepare/profile')} className="btn btn-secondary">Compléter mon profil</button> : undefined}
+              />
+            </div>
+          ) : currentOffer ? (
+            <>
+              {stack.map((offer, i) => {
+                const index = cursor + i;
+                const depth = i;
+                const active = depth === 0;
+                const style: React.CSSProperties = active
+                  ? {
+                      transform: `translateX(${dragX}px) rotate(${dragX / 22}deg)`,
+                      transition: dragging ? 'none' : 'transform 320ms cubic-bezier(.2,.8,.2,1)',
+                      touchAction: 'pan-y',
+                    }
+                  : {
+                      transform: `translateY(${depth * 10 - pull * 5}px) scale(${1 - depth * 0.04 + pull * 0.02})`,
+                      opacity: depth === 1 ? 1 : 0.55,
+                      transition: 'transform 320ms cubic-bezier(.2,.8,.2,1), opacity 320ms',
+                    };
+                return (
                   <div
-                    key={`leaving-${leaving.index}`}
-                    aria-hidden
-                    className="surface overflow-hidden absolute inset-x-0 top-0 z-40 pointer-events-none shadow-pop animate-card-out"
-                    style={{
-                      ['--from' as any]: `${leaving.fromX}px`,
-                      ['--rot-from' as any]: `${leaving.fromX / 20}deg`,
-                      ['--to' as any]: leaving.dir === 'right' ? '140%' : '-140%',
-                      ['--rot-to' as any]: leaving.dir === 'right' ? '18deg' : '-18deg',
-                    }}
+                    key={index}
+                    aria-hidden={!active}
+                    className={`absolute inset-x-0 top-0 bottom-5 surface overflow-hidden select-none origin-bottom ${
+                      active ? 'z-30 shadow-pop' : `pointer-events-none ${depth === 1 ? 'z-20 shadow-card' : 'z-10'}`
+                    } ${active && dragging ? 'cursor-grabbing' : active ? 'cursor-grab' : ''}`}
+                    style={style}
+                    onPointerDown={active ? onPointerDown : undefined}
+                    onPointerMove={active ? onPointerMove : undefined}
+                    onPointerUp={active ? () => endGesture(false) : undefined}
+                    onPointerCancel={active ? () => endGesture(true) : undefined}
                   >
-                    <OfferCard offer={leaving.offer} isBest={false} isApplied={false} isBookmarked={!!getSavedId(leaving.offer)} onCv={() => {}} onLetter={() => {}} onSave={() => {}} />
-                    <div className={`absolute inset-0 grid place-items-center ${leaving.dir === 'right' ? 'bg-emerald-500/15' : 'bg-rose-500/15'}`}>
-                      <span className={`inline-flex items-center gap-2 h-12 px-5 rounded-full text-white font-semibold ${leaving.dir === 'right' ? 'bg-emerald-500' : 'bg-rose-500'}`}>
-                        {leaving.dir === 'right' ? <><Send size={18} /> Postuler</> : <><X size={18} strokeWidth={2.5} /> Passer</>}
-                      </span>
-                    </div>
+                    <OfferCard
+                      offer={offer}
+                      isBest={isBestOffer(offer)}
+                      isApplied={appliedKeys.has(offerKey(offer))}
+                      isBookmarked={!!getSavedId(offer)}
+                      {...cardHandlers(offer)}
+                    />
+                    {/* Voile de décision pendant le glissement */}
+                    {active && dragX !== 0 && (
+                      <div
+                        aria-hidden
+                        className={`absolute inset-0 pointer-events-none grid place-items-center ${dragX > 0 ? 'bg-emerald-500/15' : 'bg-rose-500/15'}`}
+                        style={{ opacity: pull }}
+                      >
+                        <span className={`inline-flex items-center gap-2 h-12 px-5 rounded-full text-white font-semibold shadow-pop ${dragX > 0 ? 'bg-emerald-500' : 'bg-rose-500'}`} style={{ transform: `scale(${0.8 + pull * 0.2}) rotate(${dragX > 0 ? -8 : 8}deg)` }}>
+                          {dragX > 0 ? <><Send size={18} /> Postuler</> : <><X size={18} strokeWidth={2.5} /> Passer</>}
+                        </span>
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
-            ) : (
+                );
+              })}
+
+              {/* Carte qui s'en va */}
+              {leaving && (
+                <div
+                  key={`leaving-${leaving.index}`}
+                  aria-hidden
+                  className="absolute inset-x-0 top-0 bottom-5 z-40 surface overflow-hidden pointer-events-none shadow-pop animate-card-out"
+                  style={{
+                    ['--from' as any]: `${leaving.fromX}px`,
+                    ['--rot-from' as any]: `${leaving.fromX / 22}deg`,
+                    ['--to' as any]: leaving.dir === 'right' ? '140%' : '-140%',
+                    ['--rot-to' as any]: leaving.dir === 'right' ? '16deg' : '-16deg',
+                  }}
+                >
+                  <OfferCard offer={leaving.offer} isBest={false} isApplied={false} isBookmarked={!!getSavedId(leaving.offer)} onCv={() => {}} onLetter={() => {}} onSave={() => {}} />
+                  <div className={`absolute inset-0 grid place-items-center ${leaving.dir === 'right' ? 'bg-emerald-500/15' : 'bg-rose-500/15'}`}>
+                    <span className={`inline-flex items-center gap-2 h-12 px-5 rounded-full text-white font-semibold ${leaving.dir === 'right' ? 'bg-emerald-500' : 'bg-rose-500'}`}>
+                      {leaving.dir === 'right' ? <><Send size={18} /> Postuler</> : <><X size={18} strokeWidth={2.5} /> Passer</>}
+                    </span>
+                  </div>
+                </div>
+              )}
+            </>
+          ) : (
+            <div className="h-full overflow-y-auto">
               <EmptyState
                 variant="offers"
                 title="Tu as vu toutes les offres"
-                description={`${appliedKeys.size} candidature${appliedKeys.size > 1 ? 's' : ''} envoyée${appliedKeys.size > 1 ? 's' : ''}, ${rejectedKeys.size} passée${rejectedKeys.size > 1 ? 's' : ''}. Élargis le rayon ou cherche un autre métier pour en voir d’autres.`}
+                description={`${appliedKeys.size} candidature${appliedKeys.size > 1 ? 's' : ''} envoyée${appliedKeys.size > 1 ? 's' : ''}, ${rejectedKeys.size} passée${rejectedKeys.size > 1 ? 's' : ''}. Augmente la distance ou cherche un autre métier pour en voir d’autres.`}
                 action={
                   <button onClick={restart} className="btn btn-secondary">
                     <RotateCcw size={15} /> Revoir depuis le début
                   </button>
                 }
               />
-            )}
+            </div>
+          )}
+        </div>
 
-            {/* Commandes : même effet que le geste, pour qui ne glisse pas. */}
-            {currentOffer && (
-              <div>
-                <div className="flex items-center justify-center gap-4">
-                  <button
-                    onClick={undo}
-                    disabled={!canUndo}
-                    aria-label="Revenir sur l'offre passée"
-                    title="Revenir (Z)"
-                    className="w-11 h-11 rounded-full grid place-items-center bg-surface border border-line text-muted shadow-xs hover:text-ink transition-colors disabled:opacity-35 disabled:pointer-events-none"
-                  >
-                    <Undo2 size={18} />
-                  </button>
-                  <button
-                    onClick={() => commit('left')}
-                    aria-label="Passer cette offre"
-                    title="Passer (←)"
-                    className="w-16 h-16 rounded-full grid place-items-center bg-surface border border-line text-rose-500 shadow-card hover:bg-rose-50 dark:hover:bg-rose-500/10 active:scale-95 transition"
-                  >
-                    <X size={28} strokeWidth={2.5} />
-                  </button>
-                  <button
-                    onClick={() => commit('right')}
-                    aria-label="Postuler à cette offre"
-                    title="Postuler (→)"
-                    className="w-16 h-16 rounded-full grid place-items-center bg-brand text-white shadow-[0_10px_24px_-8px_rgba(110,80,245,0.6)] hover:bg-brand-700 active:scale-95 transition"
-                  >
-                    <Send size={24} />
-                  </button>
-                  <button
-                    onClick={() => toggleSave(currentOffer)}
-                    aria-label={getSavedId(currentOffer) ? 'Retirer des sauvegardées' : 'Sauvegarder pour plus tard'}
-                    title="Sauvegarder (S)"
-                    className={`w-11 h-11 rounded-full grid place-items-center border shadow-xs transition-colors ${
-                      getSavedId(currentOffer)
-                        ? 'bg-brand/10 border-brand/30 text-brand dark:text-brand-300'
-                        : 'bg-surface border-line text-muted hover:text-ink'
-                    }`}
-                  >
-                    <Bookmark size={18} fill={getSavedId(currentOffer) ? 'currentColor' : 'none'} />
-                  </button>
-                </div>
-                <p className="mt-3 text-center text-xs text-faint">
-                  <span className="md:hidden">Glisse la carte : à droite pour postuler, à gauche pour passer.</span>
-                  <span className="hidden md:inline">Raccourcis : ← passer · → postuler · S sauvegarder · Z revenir</span>
-                </p>
-              </div>
-            )}
-          </>
+        {/* Commandes : même effet que le geste, pour qui ne glisse pas. */}
+        {!loading && currentOffer && (
+          <div className="shrink-0 pb-1">
+            <div className="flex items-center justify-center gap-5">
+              <button
+                onClick={undo}
+                disabled={!canUndo}
+                aria-label="Revenir sur l'offre passée"
+                title="Revenir (Z)"
+                className="w-11 h-11 rounded-full grid place-items-center bg-surface border border-line text-amber-500 shadow-xs active:scale-95 transition disabled:opacity-30 disabled:pointer-events-none"
+              >
+                <Undo2 size={18} />
+              </button>
+              <button
+                onClick={() => commit('left')}
+                aria-label="Passer cette offre"
+                title="Passer (←)"
+                className="w-[60px] h-[60px] rounded-full grid place-items-center bg-surface border border-line text-rose-500 shadow-card hover:bg-rose-50 dark:hover:bg-rose-500/10 active:scale-95 transition"
+              >
+                <X size={28} strokeWidth={2.5} />
+              </button>
+              <button
+                onClick={() => commit('right')}
+                aria-label="Postuler à cette offre"
+                title="Postuler (→)"
+                className="w-[60px] h-[60px] rounded-full grid place-items-center bg-brand text-white shadow-[0_10px_24px_-8px_rgba(110,80,245,0.7)] hover:bg-brand-700 active:scale-95 transition"
+              >
+                <Send size={24} />
+              </button>
+              <button
+                onClick={() => toggleSave(currentOffer)}
+                aria-label={getSavedId(currentOffer) ? 'Retirer des sauvegardées' : 'Sauvegarder pour plus tard'}
+                title="Sauvegarder (S)"
+                className={`w-11 h-11 rounded-full grid place-items-center border shadow-xs active:scale-95 transition ${
+                  getSavedId(currentOffer)
+                    ? 'bg-brand/10 border-brand/30 text-brand dark:text-brand-300'
+                    : 'bg-surface border-line text-sky-500'
+                }`}
+              >
+                <Bookmark size={18} fill={getSavedId(currentOffer) ? 'currentColor' : 'none'} />
+              </button>
+            </div>
+            <p className="hidden md:block mt-2.5 text-center text-xs text-faint">
+              ← passer · → postuler · S sauvegarder · Z revenir
+            </p>
+          </div>
         )}
       </div>
 
