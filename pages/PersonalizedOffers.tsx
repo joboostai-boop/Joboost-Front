@@ -76,9 +76,8 @@ const ScoreRing: React.FC<{ score: number }> = ({ score }) => {
 /* Squelette pendant le chargement — même silhouette que la carte. */
 const OfferSkeleton: React.FC = () => (
   <div className="absolute inset-x-0 top-0 bottom-5 surface overflow-hidden">
-    <div className="skeleton !rounded-none h-24" />
-    <div className="px-5 space-y-3 -mt-9">
-      <div className="skeleton w-[72px] h-[72px] !rounded-2xl" />
+    <div className="skeleton !rounded-none h-[76px]" />
+    <div className="px-5 pt-4 space-y-3">
       <div className="skeleton h-6 w-3/4 rounded" />
       <div className="skeleton h-4 w-1/3 rounded" />
       <div className="grid grid-cols-2 gap-2 pt-1">
@@ -97,6 +96,8 @@ interface CardProps {
   onCv: () => void;
   onLetter: () => void;
   onSave: () => void;
+  /** Carte vue derrière la carte active : couverture seule, sans texte. */
+  preview?: boolean;
 }
 
 /* Carte d'offre : bandeau teinté à la couleur de l'entreprise, logo, jauge de
@@ -109,7 +110,7 @@ const tidyCase = (s: string) =>
 
 /* Carte d'offre (refonte 09/2026, v2). Hauteur fixe : la couverture et les actions
    restent en place, seul le contenu défile à l'intérieur de la carte. */
-const OfferCard: React.FC<CardProps> = ({ offer, isBest, isApplied, isBookmarked, onCv, onLetter, onSave }) => {
+const OfferCard: React.FC<CardProps> = ({ offer, isBest, isApplied, isBookmarked, onCv, onLetter, onSave, preview = false }) => {
   const hue = hueOf(offer.company || offer.title);
   const hue2 = (hue + 55) % 360;
   const score = Math.round(Number(offer.matchScore) || 0);
@@ -123,60 +124,59 @@ const OfferCard: React.FC<CardProps> = ({ offer, isBest, isApplied, isBookmarked
 
   return (
     <div className="h-full flex flex-col">
-      {/* Couverture */}
+      {/* Couverture compacte : logo, repères, jauge. Hauteur fixe et réduite pour
+         laisser la place au contenu sur les petits écrans (iPhone + barres Safari). */}
       <div
-        className="relative h-24 shrink-0 overflow-hidden"
+        className="relative h-[76px] shrink-0 overflow-hidden flex items-center gap-3 px-4"
         style={{
-          background: `radial-gradient(120% 140% at 0% 0%, hsla(${hue}, 90%, 62%, .55), transparent 60%),
-                       radial-gradient(120% 140% at 100% 100%, hsla(${hue2}, 90%, 62%, .45), transparent 55%),
+          background: `radial-gradient(120% 160% at 0% 0%, hsla(${hue}, 90%, 62%, .55), transparent 60%),
+                       radial-gradient(120% 160% at 100% 100%, hsla(${hue2}, 90%, 62%, .45), transparent 55%),
                        hsl(${hue}, 60%, 96%)`,
         }}
       >
         <span
           aria-hidden
-          className="absolute inset-0 opacity-40 mix-blend-overlay"
+          className="absolute inset-0 opacity-40 mix-blend-overlay pointer-events-none"
           style={{ backgroundImage: 'radial-gradient(rgba(255,255,255,.9) 1px, transparent 1px)', backgroundSize: '12px 12px' }}
         />
-        <div className="absolute top-3 left-3 right-3 flex items-start justify-between gap-2">
-          <div className="flex flex-wrap gap-1.5">
-            {isBest && (
-              <span className="inline-flex items-center h-6 px-2 rounded-full bg-white/85 text-[#121217] text-[11px] font-medium backdrop-blur">
-                Top pour toi
-              </span>
-            )}
-            {offer.partner && (
-              <span className="inline-flex items-center gap-1 h-6 px-2 rounded-full bg-white/85 text-[#121217] text-[11px] font-medium backdrop-blur">
-                <Building2 size={11} /> {offer.partner.name}
-              </span>
-            )}
-          </div>
-          {score > 0 && <ScoreRing score={score} />}
-        </div>
-      </div>
-
-      {/* En-tête fixe : logo (à cheval sur la couverture), intitulé, entreprise */}
-      <div className="shrink-0 px-5">
-        <div className="-mt-9 mb-3 relative">
-          {offer.partner?.logoUrl ? (
-            <span className="w-[72px] h-[72px] rounded-2xl bg-white border-4 border-surface shadow-card grid place-items-center overflow-hidden">
-              <img src={offer.partner.logoUrl} alt="" className="w-full h-full object-contain p-1.5" draggable={false} />
+        {offer.partner?.logoUrl ? (
+          <span className="relative w-12 h-12 rounded-xl bg-white border-2 border-white shadow-card grid place-items-center overflow-hidden shrink-0">
+            <img src={offer.partner.logoUrl} alt="" className="w-full h-full object-contain p-1" draggable={false} />
+          </span>
+        ) : (
+          <span
+            className="relative w-12 h-12 rounded-xl border-2 border-white/80 shadow-card grid place-items-center text-xl font-semibold text-white shrink-0"
+            style={{ background: `linear-gradient(135deg, hsl(${hue}, 70%, 55%), hsl(${hue2}, 70%, 45%))` }}
+          >
+            {company.charAt(0).toUpperCase() || '?'}
+          </span>
+        )}
+        <div className="relative flex flex-wrap gap-1.5 min-w-0">
+          {isBest && (
+            <span className="inline-flex items-center h-6 px-2 rounded-full bg-white/85 text-[#121217] text-[11px] font-medium backdrop-blur">
+              Top pour toi
             </span>
-          ) : (
-            <span
-              className="w-[72px] h-[72px] rounded-2xl border-4 border-surface shadow-card grid place-items-center text-[28px] font-semibold text-white"
-              style={{ background: `linear-gradient(135deg, hsl(${hue}, 70%, 55%), hsl(${hue2}, 70%, 45%))` }}
-            >
-              {company.charAt(0).toUpperCase() || '?'}
+          )}
+          {offer.partner && (
+            <span className="inline-flex items-center gap-1 h-6 px-2 rounded-full bg-white/85 text-[#121217] text-[11px] font-medium backdrop-blur truncate max-w-[150px]">
+              <Building2 size={11} /> {offer.partner.name}
             </span>
           )}
         </div>
-        <h2 className="text-[21px] leading-[1.2] tracking-[-0.02em] line-clamp-2" title={offer.title}>{offer.title}</h2>
-        <p className="text-[15px] text-muted mt-1 truncate">{company}</p>
+        {score > 0 && <div className="relative ml-auto"><ScoreRing score={score} /></div>}
       </div>
 
-      {/* Contenu défilant */}
-      <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain px-5 pb-4 scrollbar-none">
-        <dl className="grid grid-cols-2 gap-2 mt-3.5">
+      {preview ? (
+        // Carte du dessous : aucune écriture, pour qu'aucun texte ne dépasse sous la carte active.
+        <div className="flex-1" />
+      ) : (
+      <>
+      {/* Tout le contenu défile dans la carte ; seules la couverture et les actions restent fixes. */}
+      <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain px-5 pt-4 pb-4 scrollbar-none">
+        <h2 className="text-[20px] leading-[1.22] tracking-[-0.02em]">{offer.title}</h2>
+        <p className="text-[15px] text-muted mt-1">{company}</p>
+
+        <dl className="grid grid-cols-2 gap-2 mt-4">
           {facts.map((f) => (
             <div key={f.label} className="rounded-xl bg-subtle/70 px-3 py-2.5 min-w-0">
               <dt className="flex items-center gap-1.5 text-[11px] text-faint">
@@ -231,6 +231,8 @@ const OfferCard: React.FC<CardProps> = ({ offer, isBest, isApplied, isBookmarked
           <Bookmark size={17} fill={isBookmarked ? 'currentColor' : 'none'} />
         </button>
       </div>
+      </>
+      )}
     </div>
   );
 };
@@ -710,6 +712,7 @@ const PersonalizedOffers: React.FC = () => {
                       isApplied={appliedKeys.has(offerKey(offer))}
                       isBookmarked={!!getSavedId(offer)}
                       {...cardHandlers(offer)}
+                      preview={!active}
                     />
                     {/* Voiles de décision : opacité pilotée par le geste (0 au repos). */}
                     {active && (
@@ -785,7 +788,7 @@ const PersonalizedOffers: React.FC = () => {
                 onClick={() => commit('left')}
                 aria-label="Passer cette offre"
                 title="Passer (←)"
-                className="w-[60px] h-[60px] rounded-full grid place-items-center bg-surface border border-line text-rose-500 shadow-card hover:bg-rose-50 dark:hover:bg-rose-500/10 active:scale-95 transition"
+                className="w-14 h-14 [@media(min-height:760px)]:w-[60px] [@media(min-height:760px)]:h-[60px] rounded-full grid place-items-center bg-surface border border-line text-rose-500 shadow-card hover:bg-rose-50 dark:hover:bg-rose-500/10 active:scale-95 transition"
               >
                 <X size={28} strokeWidth={2.5} />
               </button>
@@ -793,7 +796,7 @@ const PersonalizedOffers: React.FC = () => {
                 onClick={() => commit('right')}
                 aria-label="Postuler à cette offre"
                 title="Postuler (→)"
-                className="w-[60px] h-[60px] rounded-full grid place-items-center bg-brand text-white shadow-[0_10px_24px_-8px_rgba(110,80,245,0.7)] hover:bg-brand-700 active:scale-95 transition"
+                className="w-14 h-14 [@media(min-height:760px)]:w-[60px] [@media(min-height:760px)]:h-[60px] rounded-full grid place-items-center bg-brand text-white shadow-[0_10px_24px_-8px_rgba(110,80,245,0.7)] hover:bg-brand-700 active:scale-95 transition"
               >
                 <Send size={24} />
               </button>
