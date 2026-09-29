@@ -14,7 +14,13 @@ import {
   Users,
   Megaphone,
   BarChart3,
-  UserPlus
+  UserPlus,
+  Send,
+  UserRound,
+  Zap,
+  ShieldCheck,
+  GraduationCap,
+  Bell,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
@@ -249,6 +255,15 @@ const Home: React.FC<HomeProps> = ({ onStart }) => {
     { icon: <PenLine size={18} />, title: 'Lettres de motivation', desc: 'Des lettres adaptées à chaque offre, à partir de votre expérience — relues et modifiables.' },
     { icon: <Search size={18} />, title: 'Offres ciblées', desc: 'Des offres pertinentes issues de France Travail, filtrées selon votre recherche.' },
     { icon: <LineChart size={18} />, title: 'Suivi des candidatures', desc: 'Un tableau clair pour suivre chaque candidature, de l\'envoi à la réponse.' },
+    { icon: <Zap size={18} />, title: 'Alternance en un clic', desc: 'Sur les offres d\'alternance, la candidature part directement au recruteur via La Bonne Alternance.' },
+  ];
+
+  // Le parcours, repris mot pour mot de l'app (Accueil.tsx) pour que la promesse
+  // marketing et l'expérience réelle après inscription se répondent exactement.
+  const journeySteps = [
+    { icon: <UserRound size={20} />, title: 'Préparer', desc: 'Votre profil, votre CV optimisé ATS et votre lettre type, générés par l\'IA à partir de votre parcours réel.' },
+    { icon: <Send size={20} />, title: 'Postuler', desc: 'Des offres ciblées, une candidature en un clic quand c\'est possible, une lettre adaptée à chaque poste.' },
+    { icon: <LineChart size={20} />, title: 'Suivre', desc: 'Ce qui est envoyé, en attente, ou qui a répondu — sans tableur, sans post-it.' },
   ];
 
   return (
@@ -261,6 +276,9 @@ const Home: React.FC<HomeProps> = ({ onStart }) => {
           </button>
 
           <div className="flex items-center gap-1.5 sm:gap-3">
+            <Link to="/tarifs" className="hidden sm:block text-slate-500 font-medium text-sm px-3 py-2 hover:text-[#7D5CFF] transition-colors rounded-lg hover:bg-slate-50">
+              Tarifs
+            </Link>
             <Link to="/auth/login" className="hidden sm:flex items-center gap-1.5 text-slate-500 font-medium text-sm px-3 py-2 hover:text-[#7D5CFF] transition-colors rounded-lg hover:bg-slate-50">
               <Building2 size={15} />
               Espace partenaire
@@ -374,19 +392,89 @@ const Home: React.FC<HomeProps> = ({ onStart }) => {
         </div>
       </section>
 
-      {/* Bandeau capacités (statique, sobre) */}
-      <section className="px-5 sm:px-6 py-10 border-y border-slate-100 bg-slate-50/60">
-        <div className="max-w-6xl mx-auto flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-8">
-          <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider shrink-0">Tout au même endroit</p>
-          <div className="flex flex-wrap gap-2">
-            {capabilities.map((c) => (
-              <span key={c} className="inline-flex items-center gap-1.5 text-sm font-medium text-slate-600 bg-white border border-slate-200 rounded-full px-3 py-1.5">
-                <Check size={13} className="text-[#7D5CFF]" /> {c}
-              </span>
-            ))}
-          </div>
+      {/* Zone continue #1 : bandeau capacités + Comment ça marche, un seul décor
+          partagé sur toute la hauteur des deux sections — pas de bordure entre
+          elles, pas de fond gris séparé, pour qu'il n'y ait aucune coupure visible
+          avant le panneau organismes. Tailles réduites sur mobile (sm: pour le grand
+          format) pour ne pas dominer un petit écran. */}
+      <div className="relative overflow-hidden">
+        <div aria-hidden className="pointer-events-none absolute inset-0 z-0">
+          <span className="absolute -top-20 left-[8%] w-72 h-72 sm:w-[30rem] sm:h-[30rem] rounded-full bg-[#7D5CFF]/[0.26] blur-[70px] sm:blur-[85px]" />
+          <span className="absolute top-[38%] -right-24 w-64 h-64 sm:w-[26rem] sm:h-[26rem] rounded-full bg-[#7D5CFF]/[0.22] blur-[70px] sm:blur-[85px]" />
+          <span className="absolute bottom-0 left-[5%] w-60 h-60 sm:w-96 sm:h-96 rounded-full bg-emerald-400/[0.18] blur-[65px] sm:blur-[80px]" />
         </div>
-      </section>
+
+        {/* Bandeau capacités (statique, sobre) */}
+        <section className="relative z-10 px-5 sm:px-6 py-10">
+          <div className="max-w-6xl mx-auto flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-8">
+            <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider shrink-0">Tout au même endroit</p>
+            <div className="flex flex-wrap gap-2">
+              {capabilities.map((c) => (
+                <span key={c} className="inline-flex items-center gap-1.5 text-sm font-medium text-slate-600 bg-white border border-slate-200 rounded-full px-3 py-1.5">
+                  <Check size={13} className="text-[#7D5CFF]" /> {c}
+                </span>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* Comment ça marche — nouveau, contenu repris de Accueil.tsx (voir doc
+            stratégie-contenu-landing-16-08.md). Aucun style inventé : mêmes classes
+            (Reveal, surface) que la section Fonctionnalités plus bas. */}
+        <section className="relative z-10 px-5 sm:px-6 py-20 sm:py-24">
+          <div className="max-w-6xl mx-auto">
+            <Reveal className="max-w-2xl mx-auto mb-14 text-center">
+              <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#7D5CFF]/[0.08] border border-[#7D5CFF]/20 text-[#6023C0] text-xs font-semibold">
+                Le parcours
+              </span>
+              <h2 className="mt-4 text-3xl sm:text-4xl font-extrabold text-[#0B0B14] dark:text-white tracking-tight">De l'inscription au premier entretien</h2>
+              <p className="mt-4 text-lg text-slate-500">Trois étapes, au même endroit — pas cinquante onglets.</p>
+            </Reveal>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
+              {journeySteps.map((s, i) => (
+                <Reveal as="div" key={s.title} delay={i * 90}>
+                  <div className="surface h-full p-7 relative">
+                    <span className="absolute top-6 right-6 text-[11px] font-black text-slate-300">0{i + 1}</span>
+                    <span className="w-11 h-11 rounded-xl bg-[#7D5CFF]/10 text-[#7D5CFF] flex items-center justify-center mb-5">
+                      {s.icon}
+                    </span>
+                    <h3 className="text-lg font-semibold text-[#0B0B14] dark:text-white">{s.title}</h3>
+                    <p className="mt-2 text-[15px] text-slate-500 leading-relaxed">{s.desc}</p>
+                  </div>
+                </Reveal>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* Alternance — nouveau. La seule fonctionnalité où la candidature part
+            vraiment au recruteur en un clic (via La Bonne Alternance, service
+            public) ; partout ailleurs c'est l'utilisateur qui postule sur le site
+            de l'offre. Formulation prudente, alignée sur le garde-fou déjà utilisé
+            dans les posts de la campagne de juillet. */}
+        <section className="relative z-10 px-5 sm:px-6 pb-20 sm:pb-24">
+          <div className="max-w-6xl mx-auto">
+            <Reveal className="rounded-[2rem] border border-[#7D5CFF]/20 bg-white/70 backdrop-blur-sm p-8 sm:p-12 flex flex-col sm:flex-row items-center gap-8 text-center sm:text-left">
+              <span className="w-16 h-16 rounded-2xl bg-[#7D5CFF]/10 text-[#7D5CFF] flex items-center justify-center shrink-0">
+                <GraduationCap size={30} />
+              </span>
+              <div className="flex-1">
+                <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#7D5CFF]/[0.08] border border-[#7D5CFF]/20 text-[#6023C0] text-xs font-semibold mb-3">
+                  Spécial rentrée
+                </span>
+                <h3 className="text-xl sm:text-2xl font-extrabold text-[#0B0B14] dark:text-white tracking-tight">En alternance, la candidature part en un clic. Pour de vrai.</h3>
+                <p className="mt-3 text-[15px] sm:text-base text-slate-500 leading-relaxed max-w-2xl">
+                  Sur la plupart des offres, aucun outil ne peut postuler à votre place — il faut passer par le site de l'entreprise. L'alternance fait exception : Joboost s'appuie sur La Bonne Alternance, le service public, pour envoyer votre candidature directement au recruteur.
+                </p>
+              </div>
+              <a href="#features" className="press btn btn-secondary shrink-0 whitespace-nowrap">
+                Voir comment <ArrowRight size={16} />
+              </a>
+            </Reveal>
+          </div>
+        </section>
+      </div>
 
       {/* Organismes — hero de même poids visuel que le hero candidat, panneau
           sombre pour se distinguer sans sortir de la famille de marque (même
@@ -435,40 +523,68 @@ const Home: React.FC<HomeProps> = ({ onStart }) => {
         </div>
       </section>
 
-      {/* Fonctionnalités */}
-      <section id="features" className="px-5 sm:px-6 py-24 sm:py-28">
-        <div className="max-w-6xl mx-auto">
-          <Reveal className="max-w-2xl mx-auto mb-14 text-center">
-            <h2 className="text-3xl sm:text-4xl font-extrabold text-[#0B0B14] dark:text-white tracking-tight">Un outil complet, du CV à l'entretien</h2>
-            <p className="mt-4 text-lg text-slate-500">Chaque étape de votre recherche, dans une interface claire et structurée.</p>
-          </Reveal>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-            {features.map((f, i) => {
-              const tints = [
-                'bg-[#7D5CFF]/10 text-[#7D5CFF]',
-                'bg-blue-500/10 text-blue-600',
-                'bg-emerald-500/10 text-emerald-600',
-                'bg-amber-500/10 text-amber-600',
-              ];
-              return (
-                <Reveal as="div" key={f.title} delay={i * 70}>
-                  <div className="surface h-full p-7 hover:shadow-card-hover hover:-translate-y-1 transition-all duration-200">
-                    <span className={`w-11 h-11 rounded-xl flex items-center justify-center mb-5 ${tints[i % tints.length]}`}>
-                      {f.icon}
-                    </span>
-                    <h3 className="text-lg font-semibold text-[#0B0B14] dark:text-white">{f.title}</h3>
-                    <p className="mt-2 text-[15px] text-slate-500 leading-relaxed">{f.desc}</p>
-                  </div>
-                </Reveal>
-              );
-            })}
-          </div>
+      {/* Zone continue #2 : Fonctionnalités + Preuve & confiance + FAQ, même
+          principe — un seul décor filé sur toute la hauteur, aucune bordure ni
+          fond gris entre les trois. */}
+      <div className="relative overflow-hidden">
+        <div aria-hidden className="pointer-events-none absolute inset-0 z-0">
+          <span className="absolute -top-16 -left-28 w-72 h-72 sm:w-[28rem] sm:h-[28rem] rounded-full bg-[#7D5CFF]/[0.24] blur-[70px] sm:blur-[85px]" />
+          <span className="absolute top-[30%] -right-24 w-64 h-64 sm:w-96 sm:h-96 rounded-full bg-blue-400/[0.20] blur-[70px] sm:blur-[85px]" />
+          <span className="absolute top-[58%] left-[12%] w-64 h-64 sm:w-96 sm:h-96 rounded-full bg-[#7D5CFF]/[0.22] blur-[70px] sm:blur-[90px]" />
+          <span className="absolute bottom-0 -right-16 w-60 h-60 sm:w-80 sm:h-80 rounded-full bg-[#7D5CFF]/[0.20] blur-[65px] sm:blur-[85px]" />
         </div>
-      </section>
 
-      {/* FAQ */}
-      <section id="faq" className="px-5 sm:px-6 py-20 sm:py-24 bg-slate-50/60 border-y border-slate-100">
+        {/* Fonctionnalités */}
+        <section id="features" className="relative z-10 px-5 sm:px-6 py-24 sm:py-28">
+          <div className="max-w-6xl mx-auto">
+            <Reveal className="max-w-2xl mx-auto mb-14 text-center">
+              <h2 className="text-3xl sm:text-4xl font-extrabold text-[#0B0B14] dark:text-white tracking-tight">Un outil complet, du CV à l'entretien</h2>
+              <p className="mt-4 text-lg text-slate-500">Chaque étape de votre recherche, dans une interface claire et structurée.</p>
+            </Reveal>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+              {features.map((f, i) => {
+                const tints = [
+                  'bg-[#7D5CFF]/10 text-[#7D5CFF]',
+                  'bg-blue-500/10 text-blue-600',
+                  'bg-emerald-500/10 text-emerald-600',
+                  'bg-amber-500/10 text-amber-600',
+                ];
+                return (
+                  <Reveal as="div" key={f.title} delay={i * 70}>
+                    <div className="surface h-full p-7 hover:shadow-card-hover hover:-translate-y-1 transition-all duration-200">
+                      <span className={`w-11 h-11 rounded-xl flex items-center justify-center mb-5 ${tints[i % tints.length]}`}>
+                        {f.icon}
+                      </span>
+                      <h3 className="text-lg font-semibold text-[#0B0B14] dark:text-white">{f.title}</h3>
+                      <p className="mt-2 text-[15px] text-slate-500 leading-relaxed">{f.desc}</p>
+                    </div>
+                  </Reveal>
+                );
+              })}
+            </div>
+          </div>
+        </section>
+
+        {/* Preuve & confiance — nouveau. Pas de logos de marques tierces sans
+            vérifier leurs conditions d'usage au préalable ; texte factuel uniquement. */}
+        <section className="relative z-10 px-5 sm:px-6 py-16 sm:py-20">
+          <div className="max-w-3xl mx-auto text-center">
+            <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white border border-slate-200 text-slate-500 text-xs font-medium">
+              <ShieldCheck size={14} /> Sources
+            </span>
+            <h2 className="mt-4 text-2xl sm:text-3xl font-extrabold text-[#0B0B14] dark:text-white tracking-tight">Connecté aux vraies offres, pas à une base figée</h2>
+            <p className="mt-4 text-base sm:text-lg text-slate-500 leading-relaxed">
+              Les offres viennent de France Travail, La Bonne Boîte et La Bonne Alternance — les mêmes services publics que vous consulteriez seul, mais centralisés et filtrés pour vous.
+            </p>
+            <p className="mt-5 text-sm text-slate-400">
+              Vos données ne sont jamais revendues. Export ou suppression à tout moment.
+            </p>
+          </div>
+        </section>
+
+        {/* FAQ */}
+        <section id="faq" className="relative z-10 px-5 sm:px-6 py-20 sm:py-24">
         <div className="max-w-3xl mx-auto">
           <Reveal className="mb-10 text-center">
             <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white border border-slate-200 text-slate-500 text-xs font-medium">
@@ -498,9 +614,18 @@ const Home: React.FC<HomeProps> = ({ onStart }) => {
               question="D'où viennent les offres d'emploi ?"
               answer="Les offres proviennent de France Travail, filtrées selon votre recherche. Vous candidatez ensuite directement depuis votre espace."
             />
+            <FAQItem
+              question="En quoi c'est différent de ChatGPT ?"
+              answer="ChatGPT peut écrire un CV ou une lettre si vous lui donnez tous les éléments à chaque fois. Joboost part de votre profil déjà enregistré, le connecte à de vraies offres, et garde le suivi de toutes vos candidatures au même endroit — un outil connecté à votre recherche, pas seulement un texte généré."
+            />
+            <FAQItem
+              question="Puis-je recevoir les offres par email ?"
+              answer="Oui, si vous l'activez. Une fois l'option choisie dans vos réglages, vous recevez une sélection d'offres correspondant à votre profil, au rythme que vous choisissez — quotidien ou hebdomadaire. Désactivable à tout moment."
+            />
           </div>
         </div>
-      </section>
+        </section>
+      </div>
 
       {/* CTA — bande pleine couleur (signature pitch) */}
       <section className="px-5 sm:px-6 py-24 sm:py-28">
@@ -545,6 +670,7 @@ const Home: React.FC<HomeProps> = ({ onStart }) => {
             <p className="text-xs font-semibold text-slate-900 uppercase tracking-wider">Entreprise</p>
             <ul className="space-y-2.5 text-sm text-slate-500">
               <li><Link to="/legal/mentions" className="hover:text-[#7D5CFF] transition-colors">À propos</Link></li>
+              <li><Link to="/tarifs" className="hover:text-[#7D5CFF] transition-colors">Tarifs</Link></li>
               <li><a href="#faq" className="hover:text-[#7D5CFF] transition-colors">FAQ</a></li>
               <li><a href="mailto:joboost.ai@gmail.com" className="hover:text-[#7D5CFF] transition-colors">Contact</a></li>
             </ul>

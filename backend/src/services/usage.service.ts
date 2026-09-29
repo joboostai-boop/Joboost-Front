@@ -71,7 +71,7 @@ const ownerEmails = (): Set<string> =>
       .filter(Boolean)
   );
 
-const isOwnerEmail = (email: string | null | undefined): boolean =>
+export const isOwnerEmail = (email: string | null | undefined): boolean =>
   !!email && ownerEmails().has(email.toLowerCase());
 
 export type ConsumeSource = 'quota' | 'credit';

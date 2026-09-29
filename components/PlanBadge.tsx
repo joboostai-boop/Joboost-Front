@@ -85,16 +85,20 @@ const PlanBadge: React.FC = () => {
     );
   }
 
-  // Hors essai et sans abonnement : on montre ce qu'il reste plutôt qu'un slogan.
+  // Hors essai et sans abonnement : c'est le seul cas où on VEUT vendre — le mur est
+  // déjà là ou tout proche. Un vrai bouton plein, pas un lien discret : la place pour
+  // payer ne doit plus se chercher (retour utilisateur du 28/09 — la pastille passait
+  // inaperçue). Pendant l'essai et pour les abonnés, on reste discret : rien à vendre
+  // à quelqu'un qui a déjà tout ou qui vient de payer.
   const left = usage.remainingQuota + usage.credits;
   return (
     <Link
       to="/pricing"
       title={left > 0 ? `${left} candidature IA restante${left > 1 ? 's' : ''}` : 'Plus de candidature IA disponible'}
-      className={`${base} text-[#7D5CFF] border border-[#7D5CFF]/25 bg-[#7D5CFF]/[0.06] hover:bg-[#7D5CFF]/12`}
+      className={`${base} text-white bg-gradient-to-br from-[#9B7BFF] to-[#6D28D9] shadow-[0_2px_10px_-2px_rgba(109,40,217,0.55)] hover:shadow-[0_4px_14px_-2px_rgba(109,40,217,0.65)] hover:-translate-y-px`}
     >
       <Crown size={14} />
-      {left > 0 ? `${left} restante${left > 1 ? 's' : ''}` : 'Passer à Élite'}
+      {left > 0 ? `${left} restante${left > 1 ? 's' : ''} · Passer à Élite` : 'Passer à Élite'}
     </Link>
   );
 };

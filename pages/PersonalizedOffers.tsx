@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Search, MapPin, Bookmark, Clock, Edit3, ExternalLink, Briefcase, Euro, Sparkles, Navigation, Send, Check, ChevronLeft, ChevronRight, FileText, Building2 } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Search, MapPin, Bookmark, Clock, Edit3, ExternalLink, Briefcase, Euro, Sparkles, Navigation, Send, Check, X, FileText, Building2, RotateCcw } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
 import { authHeaders } from '../services/authToken';
@@ -30,57 +30,29 @@ export interface JobOffer {
   partner?: { name: string; logoUrl?: string | null };
 }
 
-/* Squelette du nouvel agencement : liste compacte à gauche + panneau à droite. */
+/* Squelette pendant le chargement — une carte, comme le nouvel agencement en pile. */
 const OfferSkeleton: React.FC = () => (
-  <div className="lg:grid lg:grid-cols-12 lg:gap-5 space-y-3 lg:space-y-0">
-    <div className="lg:col-span-5 space-y-2.5">
-      {Array.from({ length: 6 }).map((_, i) => (
-        <div key={i} className="surface p-3.5 flex items-center gap-3">
-          <div className="skeleton w-10 h-10 rounded-xl" />
-          <div className="flex-1 space-y-2">
-            <div className="skeleton h-3.5 w-3/4 rounded" />
-            <div className="skeleton h-3 w-1/2 rounded" />
-          </div>
-          <div className="skeleton h-5 w-12 rounded-full" />
-        </div>
-      ))}
-    </div>
-    <div className="hidden lg:block lg:col-span-7">
-      <div className="surface p-6 space-y-4">
-        <div className="flex gap-3">
-          <div className="skeleton w-12 h-12 rounded-xl" />
-          <div className="flex-1 space-y-2">
-            <div className="skeleton h-5 w-2/3 rounded" />
-            <div className="skeleton h-3.5 w-1/3 rounded" />
-          </div>
-        </div>
-        <div className="flex gap-2">
-          <div className="skeleton h-7 w-28 rounded-lg" />
-          <div className="skeleton h-7 w-20 rounded-lg" />
-          <div className="skeleton h-7 w-32 rounded-lg" />
-        </div>
-        <div className="skeleton h-24 w-full rounded-lg" />
-        <div className="skeleton h-10 w-full rounded-lg" />
+  <div className="max-w-xl mx-auto surface p-6 space-y-4">
+    <div className="flex gap-3">
+      <div className="skeleton w-12 h-12 rounded-xl" />
+      <div className="flex-1 space-y-2">
+        <div className="skeleton h-5 w-2/3 rounded" />
+        <div className="skeleton h-3.5 w-1/3 rounded" />
       </div>
     </div>
+    <div className="flex gap-2">
+      <div className="skeleton h-7 w-28 rounded-lg" />
+      <div className="skeleton h-7 w-20 rounded-lg" />
+      <div className="skeleton h-7 w-32 rounded-lg" />
+    </div>
+    <div className="skeleton h-24 w-full rounded-lg" />
+    <div className="skeleton h-10 w-full rounded-lg" />
   </div>
 );
 
-/**
- * Fenêtre de pagination : au-delà de 7 pages, on ne montre que la première,
- * la dernière et les voisines de la page courante (le reste devient « … »).
- */
-const pageWindow = (current: number, total: number): (number | 'gap')[] => {
-  if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);
-  const out: (number | 'gap')[] = [1];
-  const start = Math.max(2, current - 1);
-  const end = Math.min(total - 1, current + 1);
-  if (start > 2) out.push('gap');
-  for (let p = start; p <= end; p++) out.push(p);
-  if (end < total - 1) out.push('gap');
-  out.push(total);
-  return out;
-};
+// Distance de glissement (px) à partir de laquelle le geste est considéré comme
+// un vrai swipe plutôt qu'un simple tapotement.
+const SWIPE_THRESHOLD = 110;
 
 const PersonalizedOffers: React.FC = () => {
   const navigate = useNavigate();
@@ -92,12 +64,20 @@ const PersonalizedOffers: React.FC = () => {
   const [debouncedQuery, setDebouncedQuery] = useState(''); // déclenche la recherche serveur
   const [contractType, setContractType] = useState(''); // '' = tous ; sinon CDI/CDD/MIS/SAI
   const [radius, setRadius] = useState(30); // rayon de recherche en km
-  const [page, setPage] = useState(1); // pagination (affichage)
   const [appliedKeys, setAppliedKeys] = useState<Set<string>>(new Set()); // offres déjà ajoutées au suivi (cette session)
+  const [rejectedKeys, setRejectedKeys] = useState<Set<string>>(new Set()); // offres passées (swipe gauche, cette session)
   const [applyOffer, setApplyOffer] = useState<JobOffer | null>(null); // offre en cours de candidature in-app
-  const [selectedKey, setSelectedKey] = useState<string | null>(null); // offre affichée dans le panneau de détail
 
-  const PER_PAGE = 10;
+  // ── Pile de cartes (remplace liste + pagination, 29/09) ──
+  // `cursor` avance d'un cran à chaque swipe (gauche ou droite) : la carte quitte
+  // la pile pour de bon, comme sur une appli de rencontre. Pas de retour en arrière
+  // dans cette version — chercher un « annuler » aurait recompliqué ce qu'on vient
+  // de simplifier ; on peut reprendre une offre passée depuis les favoris si besoin.
+  const [cursor, setCursor] = useState(0);
+  const [dragX, setDragX] = useState(0);
+  const [dragging, setDragging] = useState(false);
+  const [exiting, setExiting] = useState<'left' | 'right' | null>(null);
+  const dragStartX = useRef(0);
 
   const offerKey = (o: JobOffer) => `${o.title}__${o.company}`;
 
@@ -106,9 +86,6 @@ const PersonalizedOffers: React.FC = () => {
     const t = setTimeout(() => setDebouncedQuery(query.trim()), 500);
     return () => clearTimeout(t);
   }, [query]);
-
-  // Toute nouvelle recherche (mot-clé, contrat, rayon) ramène à la première page.
-  useEffect(() => { setPage(1); }, [debouncedQuery, contractType, radius]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -137,6 +114,10 @@ const PersonalizedOffers: React.FC = () => {
         toast.error("Erreur de récupération des offres.");
       } finally {
         setLoading(false);
+        // Une nouvelle recherche repart d'une pile fraîche.
+        setCursor(0);
+        setDragX(0);
+        setExiting(null);
       }
     };
     fetchData();
@@ -154,7 +135,7 @@ const PersonalizedOffers: React.FC = () => {
     // Ouvrir AVANT l'await : sinon le bloqueur de pop-up coupe la nouvelle fenêtre.
     if (offer.url) window.open(offer.url, '_blank', 'noopener,noreferrer');
     const key = offerKey(offer);
-    if (appliedKeys.has(key)) { toast('Déjà dans ton suivi.'); return; }
+    if (appliedKeys.has(key)) return;
     try {
       const res = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/applications`, {
         method: 'POST',
@@ -231,39 +212,70 @@ const PersonalizedOffers: React.FC = () => {
   // directement les offres renvoyées. `hasQuery` sert juste aux libellés d'état vide.
   const hasQuery = debouncedQuery.length > 0 || contractType !== '';
   const filtered = offers;
-
-  // Pagination (côté affichage) sur les offres déjà chargées.
-  const totalPages = Math.max(1, Math.ceil(filtered.length / PER_PAGE));
-  const currentPage = Math.min(page, totalPages);
-  const pageOffers = filtered.slice((currentPage - 1) * PER_PAGE, currentPage * PER_PAGE);
-  const goToPage = (p: number) => {
-    setPage(Math.min(Math.max(1, p), totalPages));
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
-
-  // Sélection pour le panneau de détail : par défaut, la première offre de la page.
-  useEffect(() => {
-    if (!pageOffers.length) return;
-    if (!selectedKey || !pageOffers.some((o) => offerKey(o) === selectedKey)) {
-      setSelectedKey(offerKey(pageOffers[0]));
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pageOffers, selectedKey]);
-  const selectedOffer = pageOffers.find((o) => offerKey(o) === selectedKey) || pageOffers[0] || null;
+  const currentOffer = filtered[cursor] || null;
+  const nextOffer = filtered[cursor + 1] || null;
   const isBestOffer = (o: JobOffer) => filtered.length > 0 && offerKey(filtered[0]) === offerKey(o);
+  const seenCount = Math.min(cursor, filtered.length);
 
   // Synthèse du marché pour le bandeau : moyenne et meilleur score de match.
   const matchScores = offers.map((o) => Number(o.matchScore)).filter((n) => !Number.isNaN(n) && n > 0);
   const avgMatch = matchScores.length ? Math.round(matchScores.reduce((a, b) => a + b, 0) / matchScores.length) : 0;
   const bestMatch = matchScores.length ? Math.max(...matchScores) : 0;
 
-  /* Panneau de détail d'une offre : tout le contenu riche (chips, analyse IA, tags,
-     actions) vit ici — la liste de gauche reste scannable en un coup d'œil. */
-  const renderDetail = (offer: JobOffer, isBest: boolean) => {
+  // ── Geste de swipe ── Pointer Events couvre souris ET tactile en une seule API.
+  const onPointerDown = (e: React.PointerEvent) => {
+    if (exiting || !currentOffer) return;
+    setDragging(true);
+    dragStartX.current = e.clientX;
+    (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+  };
+  const onPointerMove = (e: React.PointerEvent) => {
+    if (!dragging) return;
+    setDragX(e.clientX - dragStartX.current);
+  };
+  const onPointerUpOrLeave = () => {
+    if (!dragging) return;
+    setDragging(false);
+    if (dragX > SWIPE_THRESHOLD) commitSwipe('right');
+    else if (dragX < -SWIPE_THRESHOLD) commitSwipe('left');
+    else setDragX(0);
+  };
+
+  // Passer une offre (gauche) ou postuler (droite). Utilisé par le geste ET par les
+  // boutons ✕ / ✓ — le swipe n'est jamais la SEULE façon de faire l'action (accessible
+  // au clavier/à la souris, et lisible pour qui n'a pas le réflexe de glisser).
+  const commitSwipe = (dir: 'left' | 'right') => {
+    const offer = currentOffer;
+    if (!offer || exiting) return;
+    setExiting(dir);
+    setDragX(dir === 'right' ? 700 : -700);
+    if (dir === 'right') {
+      if (offer.contactEmail) setApplyOffer(offer);
+      else handlePostuler(offer);
+    } else {
+      setRejectedKeys((prev) => new Set(prev).add(offerKey(offer)));
+    }
+    setTimeout(() => {
+      setCursor((c) => c + 1);
+      setExiting(null);
+      setDragX(0);
+    }, 220);
+  };
+
+  const restart = () => {
+    setCursor(0);
+    setRejectedKeys(new Set());
+    setDragX(0);
+    setExiting(null);
+  };
+
+  /* Contenu détaillé d'une carte (chips, analyse IA, tags) — inchangé dans le fond,
+     seul l'agencement autour (pile + swipe) a changé. */
+  const renderCardContent = (offer: JobOffer, isBest: boolean) => {
     const isApplied = appliedKeys.has(offerKey(offer));
     const isBookmarked = !!getSavedId(offer);
     return (
-      <article className={`surface relative overflow-hidden p-5 md:p-6 ${isBest ? 'ring-2 ring-[#7D5CFF]/30 shadow-[0_10px_36px_-8px_rgba(125,92,255,0.28)]' : ''}`}>
+      <>
         {isBest && (
           <span aria-hidden className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-[#8C6DFF] via-[#7D5CFF] to-[#6D28D9]" />
         )}
@@ -346,32 +358,14 @@ const PersonalizedOffers: React.FC = () => {
           </div>
         )}
 
-        {/* Actions */}
+        {/* Actions secondaires — postuler/passer se font désormais par le geste ou les
+            gros boutons ✕/✓ sous la carte ; ici ne restent que les à-côtés. */}
         <div className="flex flex-wrap items-center gap-2 mt-5 pt-4 border-t border-slate-100 dark:border-slate-800">
-          {(() => {
-            if (isApplied) {
-              return (
-                <button disabled className="press btn flex-1 sm:flex-none bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-500/10 dark:border-emerald-500/30 cursor-default">
-                  <Check size={15} /> Dans ton suivi
-                </button>
-              );
-            }
-            // Offre avec email employeur → candidature 100 % dans l'app (envoi par email).
-            // Sur le meilleur match, le bouton porte un reflet animé (tab-shine) → CTA n°1.
-            if (offer.contactEmail) {
-              return (
-                <button onClick={() => setApplyOffer(offer)} className={`press btn btn-primary flex-1 sm:flex-none ${isBest ? 'tab-shine' : ''}`} title="Envoyer ta candidature par email, sans quitter Joboost">
-                  <Send size={15} /> Postuler depuis Joboost
-                </button>
-              );
-            }
-            // Sinon → ouverture de l'offre (l'employeur reçoit via son propre système) + suivi.
-            return (
-              <button onClick={() => handlePostuler(offer)} className={`press btn btn-primary flex-1 sm:flex-none ${isBest ? 'tab-shine' : ''}`}>
-                <Send size={15} /> Postuler
-              </button>
-            );
-          })()}
+          {isApplied && (
+            <span className="press btn flex-1 sm:flex-none bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-500/10 dark:border-emerald-500/30 cursor-default">
+              <Check size={15} /> Dans ton suivi
+            </span>
+          )}
           <button onClick={() => navigate('/target/letter', { state: { jobTitle: offer.title, company: offer.company, targetContext: offer.aiInsight } })} className="press btn btn-secondary" title="Créer la lettre de motivation">
             <Edit3 size={15} /> Lettre
           </button>
@@ -396,12 +390,12 @@ const PersonalizedOffers: React.FC = () => {
             <Bookmark size={16} fill={isBookmarked ? 'currentColor' : 'none'} />
           </button>
         </div>
-      </article>
+      </>
     );
   };
 
   return (
-    <div className="p-5 md:p-8 max-w-6xl mx-auto space-y-8 md:space-y-6">
+    <div className="p-5 md:p-8 max-w-3xl mx-auto space-y-6">
       {/* Barre d'outils (le titre est porté par le hero du layout) */}
       <header className="surface !rounded-2xl p-4 md:p-5 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="min-w-0 space-y-2">
@@ -442,16 +436,8 @@ const PersonalizedOffers: React.FC = () => {
               { value: 'CDI', label: 'CDI' },
               { value: 'CDD', label: 'CDD' },
               { value: 'MIS', label: 'Intérim' },
-              { value: 'DIN', label: 'CDI intérimaire' },
               { value: 'SAI', label: 'Saisonnier' },
-              { value: 'E2', label: 'Alternance · apprentissage' },
-              { value: 'FS', label: 'Alternance · professionnalisation' },
-              { value: 'DDI', label: "CDD d'insertion" },
-              { value: 'TTI', label: "Intérim d'insertion" },
-              { value: 'CCE', label: 'Profession commerciale' },
-              { value: 'LIB', label: 'Profession libérale' },
-              { value: 'FRA', label: 'Franchise' },
-              { value: 'REP', label: "Reprise d'entreprise" },
+              { value: 'E2', label: 'Alternance' },
             ]}
           />
           <FilterSelect
@@ -485,124 +471,105 @@ const PersonalizedOffers: React.FC = () => {
           action={!hasQuery ? <button onClick={() => navigate('/prepare/profile')} className="press btn btn-secondary">Compléter mon profil</button> : undefined}
         />
       ) : (
-        <div className="lg:grid lg:grid-cols-12 lg:gap-5 lg:items-start space-y-3 lg:space-y-0">
-          {/* ── Liste compacte (gauche) : on scanne, on clique, le détail s'affiche à droite.
-                 Sur mobile, le détail se déplie sous la ligne sélectionnée. ── */}
-          <div className="lg:col-span-5 space-y-2.5">
-            {pageOffers.map((offer, index) => {
-              const key = offerKey(offer);
-              const isSelected = selectedKey === key;
-              const globalIndex = (currentPage - 1) * PER_PAGE + index;
-              const isBest = globalIndex === 0 && currentPage === 1;
-              const isApplied = appliedKeys.has(key);
-              const isBookmarked = !!getSavedId(offer);
-              return (
-                <React.Fragment key={offer.id || globalIndex}>
-                  <button
-                    onClick={() => setSelectedKey(key)}
-                    aria-pressed={isSelected}
-                    style={{ animationDelay: `${Math.min(index, 6) * 40}ms` }}
-                    className={`press w-full text-left flex items-center gap-3 p-3.5 rounded-xl border transition-all duration-200 animate-fade-in-up outline-none focus-visible:ring-2 focus-visible:ring-[#7D5CFF]/45 ${
-                      isSelected
-                        ? 'bg-white dark:bg-[#111827] border-[#7D5CFF]/45 ring-1 ring-[#7D5CFF]/30 shadow-card'
-                        : 'bg-white/70 dark:bg-[#111827]/70 border-[#ECEAF6] dark:border-[#1F2937] hover:border-[#7D5CFF]/30 hover:bg-white dark:hover:bg-[#111827]'
-                    }`}
-                  >
-                    {offer.partner?.logoUrl ? (
-                      <span className="w-10 h-10 rounded-xl bg-white dark:bg-slate-800 border border-[#ECEAF6] dark:border-slate-700 flex items-center justify-center shrink-0 overflow-hidden shadow-[0_2px_8px_rgba(16,24,40,0.10)]">
-                        <img src={offer.partner.logoUrl} alt={offer.partner.name} className="w-full h-full object-contain p-0.5" />
-                      </span>
-                    ) : (
-                      <span className={`w-10 h-10 rounded-xl bg-gradient-to-br ${companyGradient(offer.company)} text-white flex items-center justify-center font-bold text-sm shrink-0 shadow-[0_2px_8px_rgba(16,24,40,0.16)]`}>
-                        {offer.company?.charAt(0)?.toUpperCase() || '?'}
-                      </span>
-                    )}
-                    <span className="min-w-0 flex-1">
-                      <span className="flex items-center gap-1.5">
-                        {isBest && <Sparkles size={12} className="text-[#7D5CFF] shrink-0" />}
-                        <span className="block text-sm font-bold text-[#111827] dark:text-white truncate">{offer.title}</span>
-                      </span>
-                      <span className="block text-xs text-[#6B7280] dark:text-slate-400 truncate mt-0.5">
-                        {offer.partner && (
-                          <span className="inline-flex items-center gap-1 text-[#6D28D9] dark:text-[#B9A7FF] font-bold mr-1">
-                            <Building2 size={10} /> Votre organisme ·
-                          </span>
-                        )}
-                        {offer.company}{offer.location ? ` · ${offer.location}` : ''}
-                      </span>
-                    </span>
-                    <span className="flex flex-col items-end gap-1 shrink-0">
-                      <MatchBadge score={offer.matchScore} />
-                      {(isApplied || isBookmarked) && (
-                        <span className="flex items-center gap-1">
-                          {isApplied && <Check size={12} className="text-emerald-500" strokeWidth={3} />}
-                          {isBookmarked && <Bookmark size={11} className="text-amber-500" fill="currentColor" />}
-                        </span>
-                      )}
-                    </span>
-                  </button>
+        <div className="space-y-5">
+          {/* Compteur de progression dans la pile */}
+          <p className="text-center text-xs font-semibold text-[#9CA3AF] uppercase tracking-wider">
+            {Math.min(cursor + 1, filtered.length)} / {filtered.length} offres
+          </p>
 
-                  {/* Mobile : détail accordéon sous la ligne sélectionnée */}
-                  {isSelected && (
-                    <div className="lg:hidden animate-fade-in-up">
-                      {renderDetail(offer, isBestOffer(offer))}
-                    </div>
-                  )}
-                </React.Fragment>
-              );
-            })}
-
-            {totalPages > 1 && (
-              <nav className="flex items-center justify-center gap-1.5 pt-2" aria-label="Pagination des offres">
-                <button
-                  onClick={() => goToPage(currentPage - 1)}
-                  disabled={currentPage === 1}
-                  className="press btn btn-secondary !px-3 disabled:opacity-40"
-                  aria-label="Page précédente"
-                >
-                  <ChevronLeft size={16} />
-                </button>
-                {/* Mobile : compteur compact (12 numéros débordaient de l'écran). */}
-                <span className="sm:hidden px-3 text-sm font-semibold text-[#4B5563] dark:text-[#D1D5DB] tabular-nums">
-                  Page {currentPage} / {totalPages}
-                </span>
-                {/* Desktop : numéros, resserrés autour de la page courante au-delà de 7 pages. */}
-                {pageWindow(currentPage, totalPages).map((p, i) =>
-                  p === 'gap' ? (
-                    <span key={`gap-${i}`} className="hidden sm:inline px-1 text-slate-400 select-none">…</span>
-                  ) : (
-                    <button
-                      key={p}
-                      onClick={() => goToPage(p)}
-                      aria-current={p === currentPage ? 'page' : undefined}
-                      className={`press btn !px-3.5 hidden sm:inline-flex ${p === currentPage ? 'btn-primary' : 'btn-secondary'}`}
-                    >
-                      {p}
-                    </button>
-                  ),
-                )}
-                <button
-                  onClick={() => goToPage(currentPage + 1)}
-                  disabled={currentPage === totalPages}
-                  className="press btn btn-secondary !px-3 disabled:opacity-40"
-                  aria-label="Page suivante"
-                >
-                  <ChevronRight size={16} />
-                </button>
-              </nav>
-            )}
-          </div>
-
-          {/* ── Panneau de détail (droite, desktop) : collant au scroll ── */}
-          <div className="hidden lg:block lg:col-span-7">
-            {selectedOffer && (
-              <div className="sticky top-24 max-h-[calc(100vh-120px)] overflow-y-auto scrollbar-none rounded-2xl" key={offerKey(selectedOffer)}>
-                <div className="animate-fade-in">
-                  {renderDetail(selectedOffer, isBestOffer(selectedOffer))}
+          {currentOffer ? (
+            <div className="relative max-w-xl mx-auto" style={{ minHeight: 420 }}>
+              {/* Carte suivante, en aperçu derrière — donne l'effet de pile, non interactive. */}
+              {nextOffer && (
+                <div aria-hidden className="absolute inset-0 z-0 surface p-5 md:p-6 scale-[0.96] translate-y-3 opacity-60 pointer-events-none overflow-hidden">
+                  {renderCardContent(nextOffer, false)}
                 </div>
+              )}
+
+              {/* Carte active — le geste de swipe vit ici. */}
+              <div
+                onPointerDown={onPointerDown}
+                onPointerMove={onPointerMove}
+                onPointerUp={onPointerUpOrLeave}
+                onPointerLeave={onPointerUpOrLeave}
+                style={{
+                  transform: `translateX(${dragX}px) rotate(${dragX / 18}deg)`,
+                  transition: dragging ? 'none' : 'transform 220ms ease-out, opacity 220ms ease-out',
+                  opacity: exiting ? 0 : 1,
+                  touchAction: 'pan-y',
+                  cursor: dragging ? 'grabbing' : 'grab',
+                }}
+                className={`relative z-10 surface p-5 md:p-6 select-none ${isBestOffer(currentOffer) ? 'ring-2 ring-[#7D5CFF]/30 shadow-[0_10px_36px_-8px_rgba(125,92,255,0.28)]' : ''}`}
+              >
+                {/* Étiquettes qui apparaissent pendant le glissement — retour visuel immédiat. */}
+                <span
+                  aria-hidden
+                  className="absolute top-6 left-6 z-10 px-3 py-1.5 rounded-lg border-[3px] border-rose-500 text-rose-500 font-black text-sm uppercase tracking-wider -rotate-12"
+                  style={{ opacity: dragX < 0 ? Math.min(-dragX / 100, 1) : 0 }}
+                >
+                  Passer
+                </span>
+                <span
+                  aria-hidden
+                  className="absolute top-6 right-6 z-10 px-3 py-1.5 rounded-lg border-[3px] border-emerald-500 text-emerald-500 font-black text-sm uppercase tracking-wider rotate-12"
+                  style={{ opacity: dragX > 0 ? Math.min(dragX / 100, 1) : 0 }}
+                >
+                  Postuler
+                </span>
+
+                {renderCardContent(currentOffer, isBestOffer(currentOffer))}
               </div>
-            )}
-          </div>
+            </div>
+          ) : (
+            <div className="max-w-xl mx-auto">
+              <EmptyState
+                variant="offers"
+                title="Tu as vu toutes les offres"
+                description={`${appliedKeys.size} candidature${appliedKeys.size > 1 ? 's' : ''} envoyée${appliedKeys.size > 1 ? 's' : ''}, ${rejectedKeys.size} passée${rejectedKeys.size > 1 ? 's' : ''}. Élargis le rayon ou change de métier pour en voir de nouvelles.`}
+                action={
+                  <button onClick={restart} className="press btn btn-secondary">
+                    <RotateCcw size={15} /> Revoir depuis le début
+                  </button>
+                }
+              />
+            </div>
+          )}
+
+          {/* Boutons de secours — même effet que le swipe, accessibles sans glisser
+              (souris précise, clavier, lecteur d'écran, ou simplement par préférence). */}
+          {currentOffer && (
+            <div className="flex items-center justify-center gap-5">
+              <button
+                onClick={() => commitSwipe('left')}
+                aria-label="Passer cette offre"
+                title="Passer"
+                className="press w-14 h-14 rounded-full bg-white dark:bg-[#111827] border-2 border-rose-200 dark:border-rose-500/30 text-rose-500 flex items-center justify-center shadow-card hover:bg-rose-50 dark:hover:bg-rose-500/10 transition-colors"
+              >
+                <X size={24} strokeWidth={2.5} />
+              </button>
+              <button
+                onClick={() => toggleSave(currentOffer)}
+                aria-label={getSavedId(currentOffer) ? 'Retirer des favoris' : 'Enregistrer pour plus tard'}
+                title={getSavedId(currentOffer) ? 'Retirer des favoris' : 'Enregistrer pour plus tard'}
+                className={`press w-11 h-11 rounded-full border-2 flex items-center justify-center shadow-card transition-colors ${
+                  getSavedId(currentOffer)
+                    ? 'bg-amber-50 border-amber-300 text-amber-600 dark:bg-amber-500/10 dark:border-amber-500/30'
+                    : 'bg-white dark:bg-[#111827] border-slate-200 dark:border-slate-700 text-slate-400 hover:text-amber-500 hover:border-amber-300'
+                }`}
+              >
+                <Bookmark size={18} fill={getSavedId(currentOffer) ? 'currentColor' : 'none'} />
+              </button>
+              <button
+                onClick={() => commitSwipe('right')}
+                aria-label="Postuler à cette offre"
+                title="Postuler"
+                className="press w-14 h-14 rounded-full bg-gradient-to-br from-[#34D399] to-[#059669] text-white flex items-center justify-center shadow-[0_8px_20px_-6px_rgba(5,150,105,0.5)] hover:-translate-y-0.5 transition-all"
+              >
+                <Send size={22} />
+              </button>
+            </div>
+          )}
+          <p className="text-center text-xs text-[#9CA3AF]">Glisse la carte à droite pour postuler, à gauche pour passer — ou utilise les boutons.</p>
         </div>
       )}
 

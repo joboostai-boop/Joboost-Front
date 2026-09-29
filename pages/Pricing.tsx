@@ -50,7 +50,7 @@ const withRef = (url: string, user: User) =>
 type BillingPeriod = 'monthly' | 'annual';
 
 const Pricing: React.FC<PricingProps> = ({ user }) => {
-  const { isActive, error: subError } = useSubscription();
+  const { isActive, error: subError, refresh } = useSubscription();
   const [checkoutLoading, setCheckoutLoading] = useState(false);
   const [billing, setBilling] = useState<BillingPeriod>('monthly');
 
@@ -62,11 +62,17 @@ const Pricing: React.FC<PricingProps> = ({ user }) => {
   // Détecter le retour de Stripe Checkout
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
+    let timers: ReturnType<typeof setTimeout>[] = [];
     if (params.get('payment') === 'success') {
-      toast.success('Abonnement activé. Bienvenue dans Joboost Élite !');
+      toast.success('Paiement reçu, merci ! Activation de votre abonnement en cours…');
+      // Le webhook Stripe peut arriver quelques secondes APRÈS le retour du client :
+      // on relit le statut à intervalles pour que la page passe à « Élite » toute seule.
+      timers = [2000, 5000, 10000, 20000].map((ms) => setTimeout(() => { refresh(); }, ms));
     } else if (params.get('payment') === 'canceled') {
       toast('Paiement annulé. Vous pouvez réessayer à tout moment.', { icon: '↩️' });
     }
+    return () => timers.forEach(clearTimeout);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // --- Abonnements ---

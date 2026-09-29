@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
-import { Printer, FileDown, Wand2, RefreshCw, Layout, Save, Clock, Loader2, Plus, Trash2, X, Files, Target, Camera, ImageOff } from 'lucide-react';
+import { Printer, FileDown, Wand2, RefreshCw, Layout, Save, Clock, Loader2, Plus, Trash2, X, Files, Target, Camera, ImageOff, Sparkles } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { generateCVSummary, detailExperience } from '../services/gemini';
 // Import dynamique au clic (les libs PDF/Word sont lourdes — ~1,8 Mo — on ne les charge
@@ -204,6 +204,70 @@ const CVGenerator: React.FC = () => {
   const delEducation = (id: string) =>
     setFormData((p) => ({ ...p, education: p.education.filter((e) => e.id !== id) }));
 
+  const [globalGenerating, setGlobalGenerating] = useState(false);
+
+  // En dessous de ce nombre de caractères, une description est encore une note brute
+  // (« accueil, vente, caisse ») et pas un vrai paragraphe : on la détaille avec l'IA.
+  // Testé en vrai le 28/09 : un seuil à 20 laissait passer des notes de ce genre sans
+  // les détailler — remonté à 120, la longueur approximative d'une phrase rédigée.
+  const RAW_NOTE_MAX_LENGTH = 120;
+
+  // Bouton « Générer mon CV » : le moment « waouh » qui manquait. Un seul geste qui
+  // enchaîne résumé + détail de chaque expérience (celles qui ont un intitulé mais
+  // encore une note brute, pour ne jamais écraser un paragraphe déjà rédigé), puis
+  // amène l'œil sur l'aperçu. Avant ce bouton, produire un CV complet demandait de
+  // cliquer « Aider à rédiger » puis « Détailler avec l'IA » section par section —
+  // rien ne correspondait à la promesse « l'IA le rédige en une minute ».
+  const handleGenerateFullCV = async () => {
+    if (!formData.title.trim()) {
+      toast.error('Indique le poste que tu vises juste au-dessus, puis relance.');
+      return;
+    }
+    setGlobalGenerating(true);
+    let summaryOk = false;
+    let detailedCount = 0;
+    try {
+      const summary = await generateCVSummary(formData.title, formData.skills, formData.experiences, target?.context).catch(() => null);
+      if (summary) {
+        setFormData((p) => ({ ...p, summary }));
+        summaryOk = true;
+      }
+
+      const toDetail = formData.experiences.filter((e) => e.role.trim() && e.desc.trim().length < RAW_NOTE_MAX_LENGTH);
+      for (const exp of toDetail) {
+        try {
+          const txt = await detailExperience({
+            role: exp.role,
+            company: exp.company,
+            period: exp.period,
+            targetTitle: formData.title,
+            notes: exp.desc,
+            jobContext: target?.context,
+          });
+          if (txt) {
+            updExperience(exp.id, { desc: txt });
+            detailedCount++;
+          }
+        } catch {
+          // Une expérience en échec ne doit pas arrêter les suivantes.
+        }
+      }
+
+      // Un échec ponctuel de l'IA (modèle saturé, réseau) ne doit jamais se déguiser en
+      // succès : sinon la personne croit son CV prêt alors que rien n'a été généré.
+      if (!summaryOk && detailedCount === 0) {
+        toast.error("L'IA est momentanément indisponible. Réessaie dans une minute.");
+      } else {
+        toast.success('CV généré ! Relis et ajuste ce qui doit l\'être.');
+      }
+      document.getElementById('cv-preview')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    } catch {
+      toast.error('La génération a échoué. Réessaie dans un instant.');
+    } finally {
+      setGlobalGenerating(false);
+    }
+  };
+
   const handleGenerateSummary = async () => {
     setLoadingSummary(true);
     try {
@@ -329,10 +393,17 @@ const CVGenerator: React.FC = () => {
   return (
     <div className="p-5 md:p-8 max-w-6xl mx-auto flex flex-col lg:flex-row gap-8 lg:gap-10">
       <AiLoadingOverlay
-        show={loadingSummary || aiExpId !== null}
-        title={loadingSummary ? 'Rédaction de votre résumé…' : 'Rédaction de votre expérience…'}
+        show={globalGenerating || loadingSummary || aiExpId !== null}
+        title={globalGenerating ? 'Génération de votre CV…' : loadingSummary ? 'Rédaction de votre résumé…' : 'Rédaction de votre expérience…'}
         messages={
-          loadingSummary
+          globalGenerating
+            ? [
+                'Analyse de votre profil…',
+                'Rédaction du résumé…',
+                'Détail de vos expériences…',
+                'Touches finales…',
+              ]
+            : loadingSummary
             ? [
                 'Analyse de votre profil…',
                 'Sélection de vos points forts…',
@@ -347,6 +418,19 @@ const CVGenerator: React.FC = () => {
         }
       />
       <div className="flex-1 space-y-3">
+        {/* Le bouton « waouh » : un seul geste, un CV complet. Primaire et impossible à
+            manquer — tout le reste de l'écran (modèle, sections, IA au cas par cas) reste
+            disponible pour affiner ensuite, mais n'est plus le point de départ obligé. */}
+        <button
+          type="button"
+          onClick={handleGenerateFullCV}
+          disabled={globalGenerating}
+          className="press w-full flex items-center justify-center gap-2.5 rounded-2xl px-6 py-4 bg-gradient-to-br from-[#9B7BFF] via-[#7D5CFF] to-[#6D28D9] text-white font-bold text-base shadow-card hover:shadow-card-hover hover:-translate-y-0.5 transition-all disabled:opacity-70 disabled:translate-y-0"
+        >
+          {globalGenerating ? <Loader2 size={20} className="animate-spin" /> : <Sparkles size={20} />}
+          {globalGenerating ? 'Génération en cours…' : 'Générer mon CV'}
+        </button>
+
         {target && (
           <div className="surface-accent rounded-xl p-3.5 flex items-start gap-3 ring-1 ring-[#7D5CFF]/20">
             <span className="w-9 h-9 rounded-lg bg-[#7D5CFF]/10 text-[#7D5CFF] flex items-center justify-center shrink-0"><Target size={18} /></span>
@@ -455,7 +539,7 @@ const CVGenerator: React.FC = () => {
           <div>
             <div className="flex justify-between items-center mb-1.5">
               <label className="input-label mb-0">Résumé du profil</label>
-              <button onClick={handleGenerateSummary} className="text-[#7D5CFF] text-xs font-semibold flex items-center gap-1 hover:underline outline-none">
+              <button onClick={handleGenerateSummary} disabled={globalGenerating} className="text-[#7D5CFF] text-xs font-semibold flex items-center gap-1 hover:underline outline-none disabled:opacity-50">
                 {loadingSummary ? <RefreshCw className="animate-spin" size={12} /> : <Wand2 size={12} />}
                 Aider à rédiger
               </button>
@@ -484,7 +568,7 @@ const CVGenerator: React.FC = () => {
               <input className="input-pro" value={exp.period} onChange={(e) => updExperience(exp.id, { period: e.target.value })} placeholder="Période (ex : 2021 – 2024)" />
               <div className="flex justify-between items-center">
                 <span className="text-xs font-semibold text-slate-500">Missions & résultats</span>
-                <button type="button" onClick={() => handleDetailExperience(exp)} disabled={aiExpId === exp.id}
+                <button type="button" onClick={() => handleDetailExperience(exp)} disabled={aiExpId === exp.id || globalGenerating}
                   className="flex items-center gap-1 text-[#7D5CFF] text-xs font-bold hover:underline disabled:opacity-50">
                   {aiExpId === exp.id ? <RefreshCw className="animate-spin" size={13} /> : <Wand2 size={13} />} Détailler avec l'IA
                 </button>

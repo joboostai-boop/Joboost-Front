@@ -14,13 +14,13 @@ const PrepareLayout = React.lazy(() => import('./pages/PrepareLayout'));
 const TargetLayout = React.lazy(() => import('./pages/TargetLayout'));
 const TrackLayout = React.lazy(() => import('./pages/TrackLayout'));
 const Home = React.lazy(() => import('./pages/Home'));
+const PublicPricing = React.lazy(() => import('./pages/PublicPricing'));
 const Accueil = React.lazy(() => import('./pages/Accueil'));
 const Legal = React.lazy(() => import('./pages/Legal'));
 const Dashboard = React.lazy(() => import('./pages/Dashboard'));
 const CVGenerator = React.lazy(() => import('./pages/CVGenerator'));
 const LetterGenerator = React.lazy(() => import('./pages/LetterGenerator'));
 const Templates = React.lazy(() => import('./pages/Templates'));
-const InterviewSimulator = React.lazy(() => import('./pages/InterviewSimulator'));
 const Applications = React.lazy(() => import('./pages/Applications'));
 const PersonalizedOffers = React.lazy(() => import('./pages/PersonalizedOffers'));
 const SavedOffers = React.lazy(() => import('./pages/SavedOffers'));
@@ -172,6 +172,7 @@ const App: React.FC = () => {
         <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#7D5CFF]"></div></div>}>
           <Routes>
             <Route path="/" element={<Home onStart={() => navigate('/auth/register')} />} />
+            <Route path="/tarifs" element={<PublicPricing />} />
             <Route path="/legal/:page" element={<Legal />} />
             {/* Déconnecté sur une page interne (ex. /home, /track…) → on renvoie vers la
                 connexion plutôt que d'afficher un 404 déroutant. Seule la racine "/" garde
@@ -220,7 +221,6 @@ const App: React.FC = () => {
                <Route path="profile" element={<Profile user={user} />} />
                <Route path="cv" element={<CVGenerator />} />
                <Route path="letter" element={<LetterGenerator />} />
-               <Route path="interview" element={<InterviewSimulator user={user} />} />
                <Route path="templates" element={<Templates />} />
             </Route>
 

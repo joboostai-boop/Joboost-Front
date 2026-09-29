@@ -41,12 +41,15 @@ app.use(helmet({
 }));
 
 // Origines autorisées (CORS). On accepte une LISTE plutôt qu'une seule adresse :
-// l'ancienne (netlify.app), la nouvelle (joboost.app + www), le dev local, et tout
-// ce qui est passé dans FRONTEND_URL / EXTRA_ORIGINS. Ainsi la bascule de domaine
-// ne casse jamais la connexion (les deux adresses marchent en parallèle).
+// joboost.app + www, le dev local, et tout ce qui est passé dans FRONTEND_URL / EXTRA_ORIGINS.
+//
+// ⚠️ `joboost.netlify.app` a été RETIRÉ (25/09/2026) : ce sous-domaine Netlify a été
+// introuvable (donc réclamable par n'importe qui) le 05/09. Comme les cookies de session
+// sont SameSite=None avec CORS `credentials`, une origine que l'on ne contrôle plus permettrait
+// de lire/modifier les données d'un utilisateur connecté. Si l'ancien site doit rester
+// utilisable un temps, l'ajouter via EXTRA_ORIGINS (variable Render) plutôt qu'ici.
 const allowedOrigins = [
   'http://localhost:3000',
-  'https://joboost.netlify.app',
   'https://joboost.app',
   'https://www.joboost.app',
   process.env.FRONTEND_URL,

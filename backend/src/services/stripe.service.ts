@@ -76,7 +76,9 @@ export const stripeService = {
           quantity: 1,
         },
       ],
-      success_url: `${FRONTEND_URL}/dashboard?payment=success`,
+      // /pricing lit ?payment=success (toast + rafraîchissement du statut). L'ancienne cible
+      // /dashboard n'existe pas dans le routeur du front.
+      success_url: `${FRONTEND_URL}/pricing?payment=success`,
       cancel_url: `${FRONTEND_URL}/pricing?payment=canceled`,
       metadata: { userId },
     });

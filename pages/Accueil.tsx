@@ -9,8 +9,8 @@ import CountUp from '../components/CountUp';
 import StatCard, { StatTone } from '../components/StatCard';
 import {
   UserRound, Send, LineChart, Plus, ArrowRight,
-  FileText, Search, Bell, Loader2, Clock, CalendarCheck, Award, PenLine, Sparkles, Mic, Bookmark,
-  Building2, MapPin, Briefcase
+  FileText, Search, Bell, Loader2, Clock, CalendarCheck, Award, PenLine, Sparkles, Bookmark,
+  Building2, MapPin, Briefcase, Rocket, Crown
 } from 'lucide-react';
 
 interface AccueilProps {
@@ -58,13 +58,6 @@ const spaces = [
     iconCls: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/15' },
 ];
 
-const quickActions = [
-  { to: '/prepare/cv', icon: <FileText size={16} />, label: 'Générer un CV' },
-  { to: '/prepare/letter', icon: <PenLine size={16} />, label: 'Rédiger une lettre' },
-  { to: '/prepare/interview', icon: <Mic size={16} />, label: 'Simuler un entretien' },
-  { to: '/target/offers', icon: <Search size={16} />, label: 'Trouver des offres' },
-];
-
 // Détermine LA prochaine action la plus pertinente selon l'état du compte.
 const getNextAction = (stats: DashboardStats | null) => {
   const fallback = {
@@ -108,6 +101,26 @@ const Accueil: React.FC<AccueilProps> = ({ user }) => {
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [partnerOffers, setPartnerOffers] = useState<PartnerOffer[]>([]);
+  // Abonnement (pour le bandeau de paiement mis en avant — voir plus bas). Chargé à
+  // part de /dashboard/stats, qui ne connaît pas le plan.
+  const [usage, setUsage] = useState<{ isSubscribed: boolean; unlimited: boolean; inTrial: boolean; trialDaysLeft: number } | null>(null);
+
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      try {
+        const res = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/users/usage`, {
+          credentials: 'include',
+          headers: { ...authHeaders() },
+        });
+        const data = await res.json();
+        if (alive && data.success) setUsage(data.usage);
+      } catch {
+        /* silencieux : pas de bandeau plutôt qu'une erreur visible */
+      }
+    })();
+    return () => { alive = false; };
+  }, []);
 
   useEffect(() => {
     let alive = true;
@@ -176,6 +189,56 @@ const Accueil: React.FC<AccueilProps> = ({ user }) => {
     { label: 'Offres', value: stats?.applications.offer ?? 0, icon: <Award size={20} strokeWidth={2.4} />, tone: 'emerald',
       hint: (stats?.applications.offer ?? 0) > 0 ? 'Reçues 🎉' : 'Continue, ça arrive' },
   ];
+
+  // Écran « premiers pas » — tant qu'aucun CV n'a été généré, l'Accueil habituel
+  // (8 blocs : arsenal, carte étape, anneau profil, KPIs, parcours, actions rapides,
+  // astuce) noie la seule chose qui compte sous une richesse que personne n'a encore
+  // gagnée. Revue produit du 28/09 : sur 54 inscrits, ~1 CV généré — la dispersion de
+  // cet écran y est pour beaucoup. Ici, une seule carte, une seule action ; le reste
+  // (KPIs, astuces, actions rapides) réapparaît naturellement dès le premier CV, sans
+  // rien avoir été supprimé pour les comptes actifs.
+  if (!loading && stats && stats.cvCount === 0) {
+    const stepIndex = next.to === '/prepare/profile' ? 0 : 1; // « Complète ton profil » ou « Génère ton CV »
+    return (
+      <div className="min-h-[calc(100vh-64px)] flex items-center justify-center p-5 md:p-8">
+        <div className="max-w-lg w-full animate-fade-in-up">
+          <div className="relative overflow-hidden rounded-[2rem] p-8 sm:p-11 text-center bg-gradient-to-br from-[#9B7BFF] via-[#7D5CFF] to-[#6D28D9] text-white shadow-card">
+            <span aria-hidden className="pointer-events-none absolute -right-10 -bottom-14 w-52 h-52 rounded-full bg-white/10" />
+            <span aria-hidden className="pointer-events-none absolute -left-12 -top-16 w-40 h-40 rounded-full bg-white/[0.07]" />
+            <span
+              aria-hidden
+              className="pointer-events-none absolute inset-0 opacity-[0.12]"
+              style={{ backgroundImage: 'radial-gradient(rgba(255,255,255,0.9) 1px, transparent 1px)', backgroundSize: '20px 20px' }}
+            />
+            <div className="relative">
+              <span className="icon-shine inline-flex w-16 h-16 rounded-2xl bg-white/15 items-center justify-center shadow-lg">
+                <Rocket size={28} />
+              </span>
+              <h1 className="mt-6 text-2xl sm:text-[1.75rem] font-black tracking-tight !text-white">
+                {greeting} {firstName} 👋
+              </h1>
+              <p className="mt-3 text-white/85 leading-relaxed max-w-sm mx-auto">{next.desc}</p>
+              <Link
+                to={next.to}
+                className="press mt-8 inline-flex items-center gap-2 bg-white text-[#6D28D9] font-bold text-sm rounded-xl px-6 py-3.5 shadow-[0_8px_20px_-6px_rgba(0,0,0,0.3)] hover:-translate-y-0.5 hover:shadow-[0_10px_24px_-6px_rgba(0,0,0,0.35)] transition-all"
+              >
+                {next.title} <ArrowRight size={16} />
+              </Link>
+            </div>
+          </div>
+
+          {/* Repère du parcours — minimal, orientation seulement, pas de nouvelles cartes. */}
+          <div className="mt-7 flex items-center justify-center gap-2.5 text-xs font-semibold text-[#9CA3AF]">
+            <span className={stepIndex === 0 ? 'text-[#7D5CFF]' : ''}>1 · Préparer</span>
+            <ArrowRight size={12} />
+            <span>2 · Postuler</span>
+            <ArrowRight size={12} />
+            <span>3 · Suivre</span>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <>
@@ -278,6 +341,37 @@ const Accueil: React.FC<AccueilProps> = ({ user }) => {
           </Tilt>
         </div>
 
+        {/* Bandeau paiement — mis en avant (demande explicite du 28/09 : la pastille de
+            nav ne suffisait pas). Visible pour tout compte non abonné, essai compris :
+            c'est justement pendant l'essai, quand la personne voit la valeur complète,
+            que « passer à Élite » convertit le mieux — plus facile à décider qu'après,
+            quand l'accès s'est déjà refermé. Pas de bandeau pour les comptes abonnés
+            (rien à vendre) ni les comptes illimités (internes). */}
+        {!loading && usage && !usage.isSubscribed && !usage.unlimited && (
+          <Link
+            to="/pricing"
+            className="press group relative overflow-hidden flex flex-col sm:flex-row sm:items-center gap-4 rounded-2xl p-5 bg-gradient-to-r from-[#8C6DFF] to-[#6D28D9] text-white shadow-card hover:shadow-card-hover hover:-translate-y-0.5 transition-all animate-fade-in-up"
+          >
+            <span aria-hidden className="pointer-events-none absolute -right-10 -top-10 w-40 h-40 rounded-full bg-white/10" />
+            <span className="relative w-11 h-11 rounded-xl bg-white/15 flex items-center justify-center shrink-0">
+              <Crown size={22} />
+            </span>
+            <div className="relative min-w-0 flex-1">
+              <p className="font-bold !text-white leading-tight">
+                {usage.inTrial ? `Essai Élite · ${usage.trialDaysLeft} jour${usage.trialDaysLeft > 1 ? 's' : ''} restant${usage.trialDaysLeft > 1 ? 's' : ''}` : 'Passe à Élite'}
+              </p>
+              <p className="text-sm text-white/80 mt-0.5">
+                {usage.inTrial
+                  ? "Garde l'accès complet après l'essai : candidatures spontanées, CV et lettres sans limite."
+                  : '150 candidatures IA par mois, CV et lettres illimités, candidatures spontanées débloquées.'}
+              </p>
+            </div>
+            <span className="relative shrink-0 inline-flex items-center gap-2 bg-white text-[#6D28D9] font-semibold text-sm rounded-xl px-4 py-2.5 group-hover:gap-3 transition-all">
+              Voir les tarifs <ArrowRight size={16} />
+            </span>
+          </Link>
+        )}
+
         {/* Offres de l'organisme du candidat (adhérent) — mises en avant sur l'Accueil.
             Bandeau violet clair pour bien les distinguer des offres externes. */}
         {partnerOffers.length > 0 && (
@@ -362,62 +456,35 @@ const Accueil: React.FC<AccueilProps> = ({ user }) => {
           </section>
         )}
 
-        {/* Bento bas : parcours (large) + colonne actions rapides / astuce */}
-        <div className="grid lg:grid-cols-3 gap-4 items-start">
-          <section className="lg:col-span-2 card-pro !p-5">
-            <h2 className="text-xs font-semibold uppercase tracking-wider text-[#9CA3AF] mb-3">Mon parcours</h2>
-            <div className="space-y-1.5">
-              {spaces.map((s, i) => (
-                <Link
-                  key={s.to}
-                  to={s.to}
-                  className="press group relative flex items-center gap-3 rounded-xl p-2.5 hover:bg-[#F5F4FB] dark:hover:bg-[#1F2937] transition-colors"
-                >
-                  {/* Fil vertical reliant les étapes (sauf la dernière) */}
-                  {i < spaces.length - 1 && (
-                    <span aria-hidden className="absolute left-[30px] top-[52px] h-[calc(100%-40px)] w-px bg-[#ECEAF6] dark:bg-[#1F2937]" />
-                  )}
-                  <span className={`relative w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${s.iconCls}`}>
-                    {s.icon}
-                    <span className="absolute -top-1.5 -right-1.5 w-4.5 h-4.5 min-w-[18px] min-h-[18px] rounded-full bg-white dark:bg-[#111827] border border-[#ECEAF6] dark:border-[#1F2937] text-[9px] font-black text-[#9CA3AF] grid place-items-center">
-                      {i + 1}
-                    </span>
+        {/* Mon parcours — plein largeur. Avant, ce bloc partageait l'écran avec
+            « Actions rapides » (redondant : ses 4 liens mènent dans ces 3 mêmes
+            étapes) et une « Astuce du jour » figée. Les deux retirés (28/09) —
+            rien de perdu : chaque action reste à un clic, dans l'étape qui la
+            contient déjà, sans une troisième carte permanente pour y accéder. */}
+        <section className="card-pro !p-5">
+          <h2 className="text-xs font-semibold uppercase tracking-wider text-[#9CA3AF] mb-3">Mon parcours</h2>
+          <div className="grid sm:grid-cols-3 gap-1.5">
+            {spaces.map((s, i) => (
+              <Link
+                key={s.to}
+                to={s.to}
+                className="press group relative flex items-center gap-3 rounded-xl p-2.5 hover:bg-[#F5F4FB] dark:hover:bg-[#1F2937] transition-colors"
+              >
+                <span className={`relative w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${s.iconCls}`}>
+                  {s.icon}
+                  <span className="absolute -top-1.5 -right-1.5 w-4.5 h-4.5 min-w-[18px] min-h-[18px] rounded-full bg-white dark:bg-[#111827] border border-[#ECEAF6] dark:border-[#1F2937] text-[9px] font-black text-[#9CA3AF] grid place-items-center">
+                    {i + 1}
                   </span>
-                  <div className="min-w-0 flex-1">
-                    <p className="text-sm font-semibold text-[#111827] dark:text-white">{s.title}</p>
-                    <p className="text-xs text-[#9CA3AF] truncate">{s.desc}</p>
-                  </div>
-                  <ArrowRight size={16} className="shrink-0 text-[#C4C4CC] group-hover:text-[#7D5CFF] group-hover:translate-x-0.5 transition-all" />
-                </Link>
-              ))}
-            </div>
-          </section>
-
-          <div className="space-y-4">
-            <div className="card-pro !p-5">
-              <h2 className="text-xs font-semibold uppercase tracking-wider text-[#9CA3AF] mb-3">Actions rapides</h2>
-              <div className="space-y-1">
-                {quickActions.map((a) => (
-                  <Link key={a.to} to={a.to} className="press group flex items-center gap-3 rounded-lg px-2.5 py-2 hover:bg-[#F5F4FB] dark:hover:bg-[#1F2937] transition-colors">
-                    <span className="w-8 h-8 rounded-lg surface-accent text-[#7D5CFF] flex items-center justify-center shrink-0">{a.icon}</span>
-                    <span className="text-sm font-medium text-[#374151] dark:text-slate-200 flex-1">{a.label}</span>
-                    <ArrowRight size={15} className="text-[#9CA3AF] group-hover:text-[#7D5CFF] group-hover:translate-x-0.5 transition-all" />
-                  </Link>
-                ))}
-              </div>
-            </div>
-
-            <div className="relative overflow-hidden rounded-2xl p-5 surface-accent transition-all duration-200 ease-out hover:-translate-y-1">
-              <span aria-hidden className="pointer-events-none absolute -right-6 -top-8 w-24 h-24 rounded-full bg-[#7D5CFF]/10 blur-xl" />
-              <div className="relative flex items-center gap-2 mb-2">
-                <span className="w-7 h-7 rounded-lg bg-[#7D5CFF] text-white flex items-center justify-center shrink-0 shadow-[0_2px_8px_rgba(125,92,255,0.35)]"><Sparkles size={14} /></span>
-                <h2 className="text-xs font-bold uppercase tracking-wider text-[#7D5CFF]">Astuce du jour</h2>
-              </div>
-              <p className="relative text-sm text-[#374151] dark:text-slate-300 leading-relaxed">Une lettre adaptée à chaque offre fait vraiment la différence. Joboost la rédige à partir de l'offre — tu n'as plus qu'à relire.</p>
-              <Link to="/prepare/letter" className="press relative inline-flex items-center gap-1.5 text-sm font-semibold text-[#7D5CFF] mt-3 hover:gap-2.5 transition-all">Rédiger une lettre <ArrowRight size={15} /></Link>
-            </div>
+                </span>
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-semibold text-[#111827] dark:text-white">{s.title}</p>
+                  <p className="text-xs text-[#9CA3AF] truncate">{s.desc}</p>
+                </div>
+                <ArrowRight size={16} className="shrink-0 text-[#C4C4CC] group-hover:text-[#7D5CFF] group-hover:translate-x-0.5 transition-all" />
+              </Link>
+            ))}
           </div>
-        </div>
+        </section>
       </div>
     </>
   );

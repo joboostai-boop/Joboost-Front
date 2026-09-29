@@ -144,7 +144,7 @@ export interface SendJobAlertParams {
   frequency: 'daily' | 'weekly';
 }
 
-const APP_URL = process.env.FRONTEND_URL || 'https://joboost.netlify.app';
+const APP_URL = process.env.FRONTEND_URL || 'https://joboost.app';
 
 // Échappe les valeurs dynamiques injectées dans le HTML d'un email (titres/entreprises
 // d'offres venant d'API tierces) pour éviter qu'un caractère < > " casse la mise en page.

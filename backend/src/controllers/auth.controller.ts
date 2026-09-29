@@ -7,17 +7,9 @@ import { JWT_SECRET, FRONTEND_URL } from '../config';
 import { emailService } from '../services/email.service';
 import { isValidEmail, normalizeEmail, findUserByEmail } from '../services/userEmail.util';
 import { touchLastLogin } from '../services/loginActivity.util';
+import { COOKIE_OPTIONS, CLEAR_COOKIE_OPTIONS, MIN_PASSWORD_LENGTH, sanitizeUser } from '../services/auth.util';
 
 const hashToken = (raw: string) => crypto.createHash('sha256').update(raw).digest('hex');
-
-
-const isProd = process.env.NODE_ENV === 'production';
-const COOKIE_OPTIONS = {
-  httpOnly: true,
-  secure: isProd,
-  sameSite: (isProd ? 'none' : 'lax') as 'none' | 'lax',
-  maxAge: 7 * 24 * 60 * 60 * 1000 // 7 jours
-};
 
 export const authController = {
   register: async (req: Request, res: Response) => {
@@ -26,6 +18,10 @@ export const authController = {
 
       if (!rawEmail || !password || !name) {
         return res.status(400).json({ success: false, error: "Email, mot de passe et nom sont requis." });
+      }
+
+      if (String(password).length < MIN_PASSWORD_LENGTH) {
+        return res.status(400).json({ success: false, error: `Le mot de passe doit contenir au moins ${MIN_PASSWORD_LENGTH} caractères.` });
       }
 
       if (!isValidEmail(rawEmail)) {
@@ -69,7 +65,7 @@ export const authController = {
 
       res.cookie('token', token, COOKIE_OPTIONS);
 
-      const { password: _, ...userWithoutPassword } = user;
+      const userWithoutPassword = sanitizeUser(user);
       // token renvoyé aussi dans le body : fallback header Bearer pour les mobiles
       // où le cookie tiers (SameSite=None) est bloqué.
       res.status(201).json({ success: true, user: userWithoutPassword, token });
@@ -108,7 +104,7 @@ export const authController = {
 
       res.cookie('token', token, COOKIE_OPTIONS);
 
-      const { password: _, ...userWithoutPassword } = user;
+      const userWithoutPassword = sanitizeUser(user);
       // token renvoyé aussi dans le body : fallback header Bearer pour les mobiles
       // où le cookie tiers (SameSite=None) est bloqué.
       res.json({ success: true, user: userWithoutPassword, token });
@@ -238,7 +234,7 @@ export const authController = {
       );
       res.cookie('token', token, COOKIE_OPTIONS);
 
-      const { password: _pw, ...userWithoutPassword } = user;
+      const userWithoutPassword = sanitizeUser(user);
       res.status(201).json({ success: true, user: userWithoutPassword, token });
     } catch (error: any) {
       console.error(error);
@@ -290,7 +286,7 @@ export const authController = {
 
       res.cookie('token', token, COOKIE_OPTIONS);
 
-      const { password: _, ...userWithoutPassword } = user;
+      const userWithoutPassword = sanitizeUser(user);
       // token renvoyé aussi dans le body : fallback header Bearer pour les mobiles
       // où le cookie tiers (SameSite=None) est bloqué.
       res.json({ success: true, user: userWithoutPassword, token });
@@ -305,8 +301,7 @@ export const authController = {
     // en prod le cookie est SameSite=None/Secure (cross-site front↔back) et le
     // navigateur rejette une suppression qui n'a pas ces attributs — la session
     // survivrait à la déconnexion et reconnecterait l'utilisateur au prochain accès.
-    const { maxAge: _ignored, ...clearOptions } = COOKIE_OPTIONS;
-    res.clearCookie('token', clearOptions);
+    res.clearCookie('token', CLEAR_COOKIE_OPTIONS);
     res.json({ success: true, message: "Déconnecté" });
   },
 
@@ -317,7 +312,7 @@ export const authController = {
         return res.status(404).json({ success: false, error: "Utilisateur non trouvé." });
       }
       
-      const { password: _, ...userWithoutPassword } = user;
+      const userWithoutPassword = sanitizeUser(user);
       res.json({ success: true, user: userWithoutPassword });
     } catch (error: any) {
       res.status(500).json({ success: false, error: "Erreur serveur." });

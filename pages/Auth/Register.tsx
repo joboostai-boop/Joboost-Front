@@ -158,8 +158,10 @@ const Register = () => {
                 name="password"
                 type="password"
                 required
+                minLength={6}
+                autoComplete="new-password"
                 className="input-pro"
-                placeholder="••••••••"
+                placeholder="6 caractères minimum"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
               />

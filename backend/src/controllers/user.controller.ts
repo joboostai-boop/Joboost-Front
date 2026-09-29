@@ -1,7 +1,9 @@
 import { Request, Response } from 'express';
 import bcrypt from 'bcryptjs';
 import { prisma } from '../db';
-import { usageService } from '../services/usage.service';
+import { usageService, isOwnerEmail } from '../services/usage.service';
+import { isValidEmail, normalizeEmail, findUserByEmail } from '../services/userEmail.util';
+import { sanitizeUser, CLEAR_COOKIE_OPTIONS } from '../services/auth.util';
 
 export const userController = {
   // Solde de crédits + quota mensuel + abonnement courant (pour l'affichage du profil).
@@ -25,7 +27,7 @@ export const userController = {
       if (!user) {
         return res.status(404).json({ success: false, error: "Aucun utilisateur en base. Lancez le script de seed." });
       }
-      res.json({ success: true, user: (() => { const { password: _, ...safeUser } = user as any; return safeUser; })() });
+      res.json({ success: true, user: sanitizeUser(user) });
     } catch (error: any) {
       console.error(error);
       res.status(500).json({ success: false, error: "Erreur lors de la récupération de l'utilisateur." });
@@ -34,12 +36,38 @@ export const userController = {
 
   updateCurrentUser: async (req: Request, res: Response) => {
     try {
-      let user = await prisma.user.findUnique({ where: { id: req.userId! } });
-      
+      const user = await prisma.user.findUnique({ where: { id: req.userId! } });
+      // Jeton encore valide mais compte supprimé : on ne recrée SURTOUT pas de compte fantôme.
+      if (!user) {
+        return res.status(404).json({ success: false, error: "Utilisateur non trouvé." });
+      }
+
       // Adaptation des données frontend vers le format du schéma Prisma
       const mappedData: any = {};
       if (req.body.name !== undefined) mappedData.name = req.body.name;
-      if (req.body.email !== undefined) mappedData.email = req.body.email;
+
+      // Changement d'email : validé, normalisé (minuscules), unique, et jamais vers une
+      // adresse « propriétaire » (OWNER_EMAILS = accès illimité, non vérifié à ce jour).
+      // Le front renvoie l'email à chaque sauvegarde du profil : on ne contrôle que s'il change
+      // réellement (un compte historique à l'email atypique ne doit pas être bloqué).
+      if (req.body.email !== undefined) {
+        const rawEmail = req.body.email;
+        const unchanged = typeof rawEmail === 'string' && normalizeEmail(rawEmail) === user.email.toLowerCase();
+        if (!unchanged) {
+          if (!isValidEmail(rawEmail)) {
+            return res.status(400).json({ success: false, error: "Cette adresse email n'est pas valide. Vérifiez le domaine (ex. nom@gmail.com)." });
+          }
+          const nextEmail = normalizeEmail(rawEmail);
+          if (isOwnerEmail(nextEmail)) {
+            return res.status(403).json({ success: false, error: "Cette adresse email n'est pas disponible." });
+          }
+          const clash = await findUserByEmail(nextEmail);
+          if (clash && clash.id !== user.id) {
+            return res.status(409).json({ success: false, error: "Cet email est déjà utilisé." });
+          }
+          mappedData.email = nextEmail;
+        }
+      }
       if (req.body.phone !== undefined) mappedData.phone = req.body.phone;
       if (req.body.title !== undefined) mappedData.title = req.body.title;
       if (req.body.summary !== undefined) mappedData.summary = req.body.summary;
@@ -109,27 +137,15 @@ export const userController = {
       if (req.body.languagesDetailed !== undefined) mappedData.languagesDetailed = req.body.languagesDetailed;
       if (req.body.projects !== undefined) mappedData.projects = req.body.projects;
 
-      if (!user) {
-         // Create the user if it doesn't exist
-         user = await prisma.user.create({
-            data: {
-              email: mappedData.email || 'new@joboost.ai',
-              name: mappedData.name || 'Nouveau',
-              ...mappedData
-            }
-         });
-         return res.json({ success: true, user });
-      }
-
-      // Update existing user
       const updatedUser = await prisma.user.update({
         where: { id: user.id },
         data: mappedData
       });
-      res.json({ success: true, user: updatedUser });
+      res.json({ success: true, user: sanitizeUser(updatedUser) });
     } catch (error: any) {
-      console.error(error);
-      res.status(500).json({ success: false, error: "Erreur lors de la mise à jour : " + error.message });
+      // Le détail reste dans les logs serveur : il peut contenir des noms de champs / de tables.
+      console.error('updateCurrentUser error:', error);
+      res.status(500).json({ success: false, error: "Erreur lors de la mise à jour du profil." });
     }
   },
 
@@ -185,7 +201,7 @@ export const userController = {
       // sont supprimées en cascade (onDelete: Cascade dans le schéma Prisma).
       await prisma.user.delete({ where: { id: req.userId! } });
 
-      res.clearCookie('token');
+      res.clearCookie('token', CLEAR_COOKIE_OPTIONS);
       res.json({ success: true, message: "Votre compte et vos données ont été supprimés définitivement." });
     } catch (error: any) {
       console.error('deleteAccount error:', error);

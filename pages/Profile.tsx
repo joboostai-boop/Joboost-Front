@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   User as UserIcon, Briefcase, GraduationCap, Sparkles, Languages as LanguagesIcon,
   Settings2, Link2, FolderGit2, Heart, Target, Plus, X, Trash2, ChevronDown,
-  Linkedin, Wand2, RefreshCw, Check, Save, Upload, Crown, Zap, Coins, ArrowRight
+  Linkedin, Wand2, RefreshCw, Check, Save, Upload, Crown, Zap, Coins, ArrowRight, Tag, FileText
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { User as UserType } from '../types';
@@ -621,7 +621,9 @@ const Profile: React.FC<ProfileProps> = ({ user }) => {
       </Section>
 
       {/* 5. Compétences */}
-      <Section id="skills" title="Compétences" icon={<Sparkles size={18} />} badge="Essentiel"
+      {/* Icône neutre (28/09) : remplir ses compétences est une saisie manuelle, sans IA
+          dans cette section — l'ancienne icône (Sparkles) laissait croire le contraire. */}
+      <Section id="skills" title="Compétences" icon={<Tag size={18} />} badge="Essentiel"
         open={open === 'skills'} onToggle={() => toggle('skills')} done={f.skills.length >= 3}>
         <div><Label required>Compétences techniques</Label><Chips value={f.skills} onChange={(v) => set({ skills: v })} suggestions={skillSuggestions} placeholder="Ajoute une compétence (Entrée pour valider)" /></div>
         <div><Label>Compétences comportementales (soft skills)</Label><Chips value={f.softSkills} onChange={(v) => set({ softSkills: v })} suggestions={SOFT_SKILLS} placeholder="Ex : Travail en équipe" /></div>
@@ -646,8 +648,11 @@ const Profile: React.FC<ProfileProps> = ({ user }) => {
       </Section>
 
       <h2 className="text-xs font-semibold uppercase tracking-wider text-[#9CA3AF] px-1 pt-3">Pour aller plus loin <span className="text-[#C4C0D6] dark:text-slate-600 normal-case tracking-normal font-medium">· facultatif</span></h2>
-      {/* Résumé pro (bonus, avec IA) */}
-      <Section id="summary" title="Résumé professionnel" icon={<Wand2 size={18} />} badge="Bonus"
+      {/* Résumé pro — icône neutre (28/09) : on peut l'écrire soi-même, l'IA n'est qu'un
+          raccourci optionnel via le bouton « Optimiser avec l'IA » ci-dessous, pas une
+          promesse magique sur toute la section. Moins de traces d'IA décoratives, mais le
+          bouton lui-même reste clairement étiqueté quand l'IA agit vraiment. */}
+      <Section id="summary" title="Résumé professionnel" icon={<FileText size={18} />} badge="Bonus"
         open={open === 'summary'} onToggle={() => toggle('summary')} done={!!f.summary}>
         <div className="flex justify-end">
           <button onClick={handleSummaryAI} disabled={loadingAI} className="flex items-center gap-2 text-[#7D5CFF] text-xs font-bold hover:underline disabled:opacity-50">
