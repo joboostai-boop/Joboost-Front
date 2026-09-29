@@ -532,3 +532,10 @@
 /* Refonte 09/2026 : reflets animés et inclinaisons 3D désactivés dans l'app.
    Les classes restent définies (sans effet) pour ne rien casser ailleurs. */
 .tab-shine::after, .icon-shine::after, .bar-shine::after { content: none; }
+
+/* Carte d'offre qui quitte la pile (Offres pour moi). Départ = position du doigt. */
+@keyframes card-out {
+  from { transform: translateX(var(--from, 0px)) rotate(var(--rot-from, 0deg)); opacity: 1; }
+  to   { transform: translateX(var(--to, 140%)) rotate(var(--rot-to, 18deg)); opacity: 0; }
+}
+.animate-card-out { animation: card-out 0.34s cubic-bezier(0.4, 0, 0.6, 1) forwards; }
