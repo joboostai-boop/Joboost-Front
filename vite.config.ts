@@ -37,7 +37,10 @@ export default defineConfig(({ mode }) => {
             manualChunks: {
               'docx': ['docx'],
               'charts': ['recharts'],
-              'react-vendor': ['react', 'react-dom', 'react-router-dom'],
+              // Renommé le 06/10/2026 (ex-« react-vendor ») : le cache Cloudflare de joboost.app
+              // gardait une redirection HTML à la place de ce fichier → page blanche. Un nouveau nom
+              // force des adresses neuves. Si ça se reproduit après un déploiement : renommer à nouveau.
+              'vendor-react': ['react', 'react-dom', 'react-router-dom'],
             },
           },
         },
