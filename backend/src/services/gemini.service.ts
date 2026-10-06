@@ -139,21 +139,43 @@ const TRANSIENT_ERROR = new RegExp(
 );
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
-// Appelle l'API Gemini avec réessais automatiques (backoff exponentiel) sur
-// erreur transitoire. Les autres erreurs (clé invalide, requête malformée…)
+// Modèles de secours, essayés dans l'ordre quand le modèle demandé est saturé.
+// Constat du 06/10/2026 : `gemini-3-flash-preview` (modèle d'essai) renvoyait 503
+// « high demand » en continu — import de CV, CV et lettres tombaient ensemble.
+// La disponibilité varie d'un modèle à l'autre d'une minute à l'autre : plutôt que
+// d'attendre sur le même modèle, on passe tout de suite au suivant.
+// (gemini-2.5-* : fermés aux nouveaux comptes, renvoient 404 — volontairement absents.)
+const FALLBACK_MODELS = [
+  'gemini-3.6-flash',
+  'gemini-flash-latest',
+  'gemini-3.5-flash',
+  'gemini-3.7-flash',
+  'gemini-3.1-flash-lite',
+];
+// Modèle indisponible pour cette clé (retiré, renommé) : on passe au suivant.
+const MODEL_UNAVAILABLE = /\b404\b|NOT_FOUND|no longer available|is not found|not supported for generateContent/i;
+
+// Appelle l'API Gemini : modèle demandé, puis modèles de secours sur erreur
+// transitoire (surcharge, quota, réseau). Deux tours au maximum, avec une courte
+// pause entre les deux. Les autres erreurs (clé invalide, requête malformée…)
 // sont relancées immédiatement : les réessayer ne servirait à rien.
-const genWithRetry = async (ai: any, params: any, attempts = 4): Promise<any> => {
+const genWithRetry = async (ai: any, params: any, rounds = 2): Promise<any> => {
+  const chain = [params.model, ...FALLBACK_MODELS.filter((m) => m !== params.model)];
   let lastErr: any;
-  for (let i = 0; i < attempts; i++) {
-    try {
-      return await ai.models.generateContent(params);
-    } catch (e: any) {
-      lastErr = e;
-      const msg = `${e?.message || e}`;
-      if (i === attempts - 1 || !TRANSIENT_ERROR.test(msg)) throw e;
-      console.warn(`Gemini : erreur transitoire (tentative ${i + 1}/${attempts}) — ${msg.slice(0, 120)}`);
-      await sleep(800 * Math.pow(2, i)); // 800 ms, 1,6 s, 3,2 s
+  for (let r = 0; r < rounds; r++) {
+    for (const model of chain) {
+      try {
+        const res = await ai.models.generateContent({ ...params, model });
+        if (model !== params.model) console.warn(`Gemini : réponse obtenue via le modèle de secours ${model}`);
+        return res;
+      } catch (e: any) {
+        lastErr = e;
+        const msg = `${e?.message || e}`;
+        if (!TRANSIENT_ERROR.test(msg) && !MODEL_UNAVAILABLE.test(msg)) throw e;
+        console.warn(`Gemini : ${model} indisponible (tour ${r + 1}/${rounds}) — ${msg.slice(0, 100)}`);
+      }
     }
+    if (r < rounds - 1) await sleep(1500);
   }
   throw lastErr;
 };
