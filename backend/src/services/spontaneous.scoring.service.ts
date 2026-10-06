@@ -11,7 +11,8 @@ import dns from 'dns/promises';
 // ====================================================================
 
 export type AutoLevel = 'AUTO_SAFE' | 'AUTO_REVIEW' | 'NO_SEND';
-export type ContactSource = 'ft_contact' | 'estimated' | 'manual' | 'hunter' | 'none';
+// 'verified' : adresse trouvée sur le site de l'entreprise, identité prouvée par son SIREN.
+export type ContactSource = 'ft_contact' | 'estimated' | 'verified' | 'manual' | 'hunter' | 'none';
 
 // Quotas mensuels d'envoi AUTOMATIQUE (MVP volontairement conservateur)
 export const AUTO_SEND_QUOTA = {
@@ -163,7 +164,7 @@ export const scoreSpontaneous = async (
 
   // Qualité de l'adresse
   const lp = localPart(contactEmail);
-  if (contactSource === 'ft_contact' || contactSource === 'hunter') score += 15;
+  if (contactSource === 'ft_contact' || contactSource === 'hunter' || contactSource === 'verified') score += 15;
   else if (contactSource === 'manual') score += 10;
   if (ACCEPTED_GENERIC.includes(lp)) score += 5; // générique pro accepté mais sans bonus nominatif
 

@@ -63,7 +63,7 @@ export const spontaneousController = {
    * Sert à alimenter l'envoi via le relais DKIM contact@joboost.app, sans tiers.
    */
   detectContact: async (req: Request, res: Response) => {
-    const { companyName, city, domain } = req.body || {};
+    const { companyName, city, domain, siren } = req.body || {};
     if (!companyName && !domain) {
       return res.status(400).json({ success: false, error: "Fournissez 'companyName' ou 'domain'." });
     }
@@ -71,6 +71,7 @@ export const spontaneousController = {
       companyName: companyName || domain,
       city,
       knownDomain: domain,
+      siren,
     });
     return res.json({ success: true, data: result });
   },
@@ -88,8 +89,10 @@ export const spontaneousController = {
       companyName, companyAddress, companySector, companySize, domain,
       contactEmail, contactName, contactRole, contactSource,
       jobTitle, ftOfferId, ftOfferUrl, ftSource, reason, hiringPotential,
-      includeLetter,
+      includeLetter, siren,
     } = req.body || {};
+    // Présentation de l'entreprise tirée de son site : la lettre parle d'elle (comme Jobea).
+    let siteSummary: string | undefined;
 
     if (!companyName || !jobTitle) {
       return res.status(400).json({ success: false, error: "Les champs 'companyName' et 'jobTitle' sont obligatoires." });
@@ -120,11 +123,14 @@ export const spontaneousController = {
     }
     // La recherche web (retrouver le site via un moteur) est lente et souvent bloquée depuis
     // le serveur → réservée à l'endpoint /detect-contact à la demande, pas dans ce flux synchrone.
-    if (!resolvedContactEmail && domain) {
-      const detected = await contactDetector.detect({ companyName, city: companyAddress, knownDomain: domain }, 6000);
+    if (!resolvedContactEmail) {
+      // Domaine connu, sinon deviné depuis le nom et vérifié par le SIREN du site.
+      const detected = await contactDetector.detect({ companyName, city: companyAddress, knownDomain: domain, siren }, 9000);
+      siteSummary = detected?.siteSummary;
       if (detected && detected.confidence === 'high') {
         resolvedContactEmail = detected.email;
-        resolvedContactSource = 'estimated'; // email détecté → scoring le force en "À valider" (jamais d'envoi auto)
+        // Identité prouvée par le SIREN affiché sur le site → adresse sûre ; sinon « à vérifier ».
+        resolvedContactSource = detected.sirenVerified ? 'verified' : 'estimated';
         await companyContactService.save(companyName, detected.email, {
           location: companyAddress, domain: detected.domain, source: 'detector', verifiedMx: detected.mxVerified,
         });
@@ -157,7 +163,14 @@ export const spontaneousController = {
       try {
         coverLetterText = await geminiService.generateCoverLetter(
           jobTitle, companyName, 'Professionnel et direct', user,
-          `Raison de la candidature spontanée : ${reason || 'Entreprise en recrutement actif.'}`,
+          [
+            `Candidature SPONTANÉE (l'entreprise n'a pas publié d'offre). Raison : ${reason || 'entreprise en recrutement actif.'}`,
+            companySector ? `Secteur : ${companySector}.` : '',
+            companySize ? `Taille : ${companySize}.` : '',
+            companyAddress ? `Lieu : ${companyAddress}.` : '',
+            siteSummary ? `Présentation de l'entreprise (tirée de son site) : ${siteSummary}` : '',
+            "Écris une lettre qui parle de CETTE entreprise (son activité, sa taille, sa ville) et explique en quoi le candidat lui serait utile. Pas de formule passe-partout.",
+          ].filter(Boolean).join('\n'),
         );
         const saved = await prisma.coverLetter.create({
           data: { title: `Lettre — ${companyName}`, company: companyName, jobTitle, content: coverLetterText, userId },

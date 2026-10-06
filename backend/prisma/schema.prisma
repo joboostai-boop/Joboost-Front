@@ -423,3 +423,40 @@ model OfferSearch {
 
   @@index([lastUsedAt])
 }
+
+// ==================== ENVOI DEPUIS LA BOÎTE DU CANDIDAT ====================
+// Comme Jobea : les candidatures spontanées partent de la boîte mail du candidat
+// (Gmail via « mot de passe d'application », accès en ENVOI uniquement). Le secret
+// est stocké chiffré (AES-256-GCM, clé MAILBOX_ENC_KEY côté serveur) et n'est
+// jamais renvoyé au navigateur. Voir services/mailbox.service.ts.
+model MailboxConnection {
+  id          String    @id @default(uuid())
+  userId      String    @unique
+  provider    String    @default("gmail")   // gmail (SMTP + mot de passe d'application)
+  email       String                        // adresse d'envoi (celle du candidat)
+  secretEnc   String                        // iv.tag.chiffré, en base64 — jamais en clair
+  status      String    @default("ACTIVE")  // ACTIVE | ERROR (identifiants refusés)
+  lastError   String?
+  dailyLimit  Int       @default(12)        // plafond d'envois par jour (anti-spam)
+  verifiedAt  DateTime?
+  lastSentAt  DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+// File d'envoi : chaque candidature validée par le candidat attend ici son créneau
+// (envois espacés, plafond quotidien, heures ouvrées). Traitée par jobs/outbox.job.ts.
+model OutboxItem {
+  id            String    @id @default(uuid())
+  userId        String
+  spontaneousId String    @unique
+  scheduledAt   DateTime                     // pas avant cette date
+  status        String    @default("QUEUED") // QUEUED | SENT | FAILED | CANCELLED
+  attempts      Int       @default(0)
+  lastError     String?
+  sentAt        DateTime?
+  createdAt     DateTime  @default(now())
+
+  @@index([status, scheduledAt])
+  @@index([userId, status])
+}

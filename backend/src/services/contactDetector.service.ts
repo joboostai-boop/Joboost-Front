@@ -23,6 +23,7 @@ export interface DetectInput {
   companyName: string;
   city?: string;
   knownDomain?: string; // domaine déjà connu (offre / LBB) → chemin fiable
+  siren?: string;       // 9 chiffres : s'il figure sur le site, c'est la bonne entreprise
 }
 
 export interface DetectResult {
@@ -30,7 +31,11 @@ export interface DetectResult {
   domain: string;
   mxVerified: boolean;
   confidence: 'high' | 'medium' | 'low';
-  source: 'known-domain' | 'web-search';
+  source: 'known-domain' | 'web-search' | 'guessed-domain';
+  /** Le SIREN de l'entreprise a été trouvé sur le site (preuve d'identité). */
+  sirenVerified?: boolean;
+  /** Présentation de l'entreprise tirée de son site (sert à personnaliser la lettre). */
+  siteSummary?: string;
 }
 
 // ----- Filtrage des placeholders (exemples de champs de formulaire) -----
@@ -49,6 +54,60 @@ export const isPlaceholderEmail = (email: string): boolean => {
   if (PLACEHOLDER_DOMAINS.has(domain)) return true;
   if (PLACEHOLDER_LOCAL_RE.test(local)) return true;
   return false;
+};
+
+// ----- Choix de la meilleure adresse parmi celles du site -----
+// Adresses qui ne liront jamais une candidature (protection des données, boutique,
+// marketing, facturation, robots…) : écartées.
+const REJECT_LOCAL = /(dpo|rgpd|gdpr|privacy|datenschutz|donnees|cnil|no-?reply|ne-?pas-?repondre|newsletter|marketing|press|presse|media|compta|factur|invoice|billing|paiement|e-?shop|boutique|shop|commande|order|sav|retour|feedback|abuse|webmaster|postmaster|admin|support|hotline|investor|actionnaire|fournisseur|achat|purchas|legal|juridique|china|export)/i;
+// Adresses à privilégier, dans cet ordre.
+const PREFER_LOCAL: RegExp[] = [
+  /(recrut|recruit|rh|drh|hr|job|emploi|carriere|career|talent|candidat)/i,
+  /^(contact|info|infos|bonjour|hello|accueil|direction|secretariat|agence|commercial)\b/i,
+];
+const EMAIL_RE = /[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}/gi;
+
+export const pickBestEmail = (emails: string[], domain: string): string | null => {
+  const sameDomain = Array.from(new Set(emails.map((e) => e.toLowerCase())))
+    .filter((e) => e.split('@')[1] === domain || e.split('@')[1]?.endsWith('.' + domain))
+    .filter((e) => !isPlaceholderEmail(e) && !REJECT_LOCAL.test(e.split('@')[0]) && !/\.(png|jpe?g|gif|webp|svg)$/.test(e));
+  for (const re of PREFER_LOCAL) {
+    const hit = sameDomain.find((e) => re.test(e.split('@')[0]));
+    if (hit) return hit;
+  }
+  return sameDomain[0] || null;
+};
+
+// Présentation courte de l'entreprise : description du site, sinon premiers paragraphes.
+const siteSummaryOf = (html: string): string | undefined => {
+  const meta = html.match(/<meta[^>]+(?:name|property)=["'](?:og:)?description["'][^>]+content=["']([^"']{40,})["']/i)
+    || html.match(/<meta[^>]+content=["']([^"']{40,})["'][^>]+(?:name|property)=["'](?:og:)?description["']/i);
+  const clean = (t: string) => t.replace(/<[^>]+>/g, ' ').replace(/&nbsp;|&#160;/g, ' ').replace(/&amp;/g, '&').replace(/&#0?39;|&rsquo;|&apos;/g, "'").replace(/&quot;/g, '"').replace(/\s+/g, ' ').trim();
+  if (meta) return clean(meta[1]).slice(0, 400);
+  const paras = Array.from(html.matchAll(/<p[^>]*>([\s\S]{60,600}?)<\/p>/gi)).map((m) => clean(m[1])).filter((t) => t.length > 60);
+  return paras.length ? paras.slice(0, 2).join(' ').slice(0, 400) : undefined;
+};
+
+const sirenOnPage = (html: string, siren?: string): boolean => {
+  if (!siren || !/^\d{9}$/.test(siren)) return false;
+  const digits = html.replace(/[\s\u00a0.]/g, '');
+  return digits.includes(siren);
+};
+
+// Domaines plausibles à partir du nom (sans moteur de recherche) : « ESKER SA » → esker.fr, esker.com…
+const LEGAL_WORDS = /\b(sa|sas|sasu|sarl|eurl|sci|snc|selarl|soc|ste|societe|groupe|group|holding|france|et|de|la|le|les|des|du|l|d)\b/g;
+export const guessDomains = (name: string): string[] => {
+  const base = normalize(name).replace(LEGAL_WORDS, ' ');
+  const words = base.split(/\s+/).filter(Boolean);
+  if (!words.length) return [];
+  const stems = [words.join(''), words.join('-'), words[0]].filter((w) => w.length >= 3);
+  const out: string[] = [];
+  for (const st of Array.from(new Set(stems))) for (const tld of ['fr', 'com']) out.push(`${st}.${tld}`);
+  return out.slice(0, 6);
+};
+
+const domainResolves = async (d: string): Promise<boolean> => {
+  try { await dns.resolve(d); return true; } catch { return false; }
 };
 
 // ----- Correspondance site ↔ entreprise (écarte franchises / agrégateurs) -----
@@ -105,33 +164,36 @@ const CONTACT_PATHS = ['', '/contact', '/nous-contacter', '/mentions-legales', '
 const cleanDomain = (d: string): string =>
   d.replace(/^https?:\/\//, '').replace(/^www\./, '').replace(/\/.*$/, '').trim().toLowerCase();
 
-const scrapeDomain = async (domain: string, companyName: string, city: string | undefined, deadline: number): Promise<DetectResult | null> => {
+const scrapeDomain = async (domain: string, input: DetectInput, deadline: number): Promise<DetectResult | null> => {
   let matched = false;
-  let candidate: string | null = null;
+  let sirenVerified = false;
+  let summary: string | undefined;
+  const emails: string[] = [];
   outer: for (const base of [`https://${domain}`, `https://www.${domain}`]) {
     for (const p of CONTACT_PATHS) {
       if (Date.now() > deadline) break outer; // budget de temps dépassé
       const html = await fetchPage(base + p);
       if (!html) continue;
-      if (!matched && siteMatchesCompany(html, companyName, city)) matched = true;
-      if (!candidate) {
-        const decoded = html.replace(/%40/gi, '@').replace(/&#64;/g, '@');
-        const email = extractContactEmail(decoded);
-        // On n'accepte que les emails DU domaine du site, non-placeholder.
-        if (email && !isPlaceholderEmail(email) && email.split('@')[1] === domain) candidate = email;
-      }
-      if (matched && candidate) break outer;
+      if (!summary && p === '') summary = siteSummaryOf(html);
+      if (!matched && siteMatchesCompany(html, input.companyName, input.city)) matched = true;
+      if (!sirenVerified && sirenOnPage(html, input.siren)) sirenVerified = true;
+      const decoded = html.replace(/%40/gi, '@').replace(/&#64;/g, '@').replace(/\s?\[at\]\s?|\s?\(at\)\s?/gi, '@');
+      for (const m of decoded.match(EMAIL_RE) || []) emails.push(m);
+      if (sirenVerified && pickBestEmail(emails, domain)) break outer;
     }
+    if (emails.length) break; // le site a répondu sur la première base : inutile de tester www.
   }
-  if (!candidate) return null;
-  const mxVerified = await mxOk(candidate);
-  return {
-    email: candidate,
-    domain,
-    mxVerified,
-    confidence: matched && mxVerified ? 'high' : matched ? 'medium' : 'low',
-    source: 'known-domain',
-  };
+  const best = pickBestEmail(emails, domain);
+  if (!best) return null;
+  const mxVerified = await mxOk(best);
+  // Sûr = SIREN trouvé sur le site (preuve d'identité) et domaine qui reçoit des e-mails.
+  // Sans SIREN : jamais « sûr » si le domaine a été deviné (homonymes : opera.com…).
+  const confidence: DetectResult['confidence'] =
+    sirenVerified && mxVerified ? 'high'
+      : matched && mxVerified && input.knownDomain ? 'high'
+      : matched && mxVerified ? 'medium'
+      : 'low';
+  return { email: best, domain, mxVerified, confidence, source: 'known-domain', sirenVerified, siteSummary: summary };
 };
 
 // Recherche du domaine via DuckDuckGo (best-effort ; peut être bloqué côté serveur).
@@ -155,6 +217,8 @@ const resolveDomainViaSearch = async (companyName: string, city: string | undefi
   return null;
 };
 
+const rank = (r: DetectResult) => (r.sirenVerified ? 4 : 0) + ({ high: 3, medium: 2, low: 1 } as const)[r.confidence];
+
 // Cache mémoire 24 h (clé = domaine connu, sinon nom|ville) pour ne pas re-scraper.
 const cache = new Map<string, { at: number; result: DetectResult | null }>();
 const TTL_MS = 24 * 3600 * 1000;
@@ -168,22 +232,32 @@ export const contactDetector = {
    * `budgetMs` borne le temps total (utile quand appelé dans un flux synchrone comme /prepare).
    */
   detect: async (input: DetectInput, budgetMs = 9000): Promise<DetectResult | null> => {
-    const key = (input.knownDomain ? cleanDomain(input.knownDomain) : `${input.companyName}|${input.city || ''}`).toLowerCase();
+    const key = (input.knownDomain ? cleanDomain(input.knownDomain) : `${input.companyName}|${input.city || ''}|${input.siren || ''}`).toLowerCase();
     const hit = cache.get(key);
     if (hit && Date.now() - hit.at < TTL_MS) return hit.result;
 
     const deadline = Date.now() + budgetMs;
     let result: DetectResult | null = null;
     try {
-      let domain = input.knownDomain ? cleanDomain(input.knownDomain) : null;
-      let viaSearch = false;
-      if (!domain) {
-        domain = await resolveDomainViaSearch(input.companyName, input.city, deadline);
-        viaSearch = true;
-      }
-      if (domain) {
-        result = await scrapeDomain(domain, input.companyName, input.city, deadline);
-        if (result && viaSearch) result.source = 'web-search';
+      if (input.knownDomain) {
+        result = await scrapeDomain(cleanDomain(input.knownDomain), input, deadline);
+      } else {
+        // 1. Domaines devinés depuis le nom (rapide, sans moteur de recherche).
+        for (const d of guessDomains(input.companyName)) {
+          if (Date.now() > deadline) break;
+          if (!(await domainResolves(d))) continue;
+          const r = await scrapeDomain(d, input, deadline);
+          if (r) { r.source = 'guessed-domain'; if (!result || rank(r) > rank(result)) result = r; }
+          if (result?.sirenVerified) break;
+        }
+        // 2. Repli : recherche web (souvent bloquée depuis un serveur).
+        if (!result || result.confidence === 'low') {
+          const domain = await resolveDomainViaSearch(input.companyName, input.city, deadline);
+          if (domain) {
+            const r = await scrapeDomain(domain, input, deadline);
+            if (r && (!result || rank(r) > rank(result))) { r.source = 'web-search'; result = r; }
+          }
+        }
       }
     } catch {
       result = null;

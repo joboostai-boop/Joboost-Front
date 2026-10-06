@@ -43,7 +43,16 @@ const applications = [
   { id: 'a5', company: 'Kiosk Studio', title: 'Office manager', source: 'Adzuna', status: 'PENDING', appliedAt: iso(30), notes: null },
 ];
 
-const routes: [RegExp, (method: string, body: any) => any][] = [
+const companies = [
+  { id: 'lbb_33151849800047', name: 'ESKER', address: '69100 Villeurbanne', sector: 'Édition de logiciels applicatifs', size: '250 à 499 salariés', hiringPotential: 'Élevé', reason: 'Identifiée par La Bonne Boîte comme susceptible de recruter dans les 6 prochains mois.', contactEmail: null, acceptsEmail: true },
+  { id: 'lbb_40000000000011', name: 'THIRIET DISTRIBUTION', address: '69800 Saint-Priest', sector: 'Commerce de gros de produits surgelés', size: '20 à 49 salariés', hiringPotential: 'Très élevé', reason: 'Recrute régulièrement des commerciaux sur ce bassin.', contactEmail: null, acceptsEmail: true },
+  { id: 'lbb_50000000000022', name: 'PASSMAN', address: '69003 Lyon', sector: 'Télécommunications', size: '20 à 49 salariés', hiringPotential: 'Élevé', reason: 'Entreprise en croissance, identifiée par La Bonne Boîte.', contactEmail: 'info@passman.fr', acceptsEmail: true },
+];
+const spontaneous: any[] = [];
+const queuedIds = new Set<string>();
+const mailbox: any = { connected: false };
+
+const routes: [RegExp, (method: string, body: any, path: string) => any][] = [
   [/\/api\/auth\/me$/, () => ({ success: true, user })],
   [/\/api\/users\/me$/, (m, b) => {
     if (m === 'PUT' && b) Object.assign(user, b);
@@ -58,7 +67,31 @@ const routes: [RegExp, (method: string, body: any) => any][] = [
   [/\/api\/cvs/, () => ({ success: true, cvs: [] })],
   [/\/api\/letters/, () => ({ success: true, letters: [] })],
   [/\/api\/coverletters/, (m) => (m === 'POST' ? { success: true, letter: { id: 'l' + Date.now() } } : { success: true, letters: [] })],
-  [/\/api\/spontaneous/, () => ({ success: true, data: [] })],
+  // ── Campagne de candidatures spontanées (état simulé en mémoire) ──
+  [/\/api\/lbb\/search/, () => ({ success: true, source: 'labonneboite', results: companies })],
+  [/\/api\/spontaneous\/prepare$/, (_m, b) => {
+    const sp = { id: 'sp' + (spontaneous.length + 1), companyName: b.companyName, companyAddress: b.companyAddress, companySector: b.companySector, companySize: b.companySize,
+      contactEmail: b.companyName.startsWith('T') ? null : `contact@${b.companyName.toLowerCase().replace(/[^a-z]/g, '')}.fr`, contactSource: b.companyName.startsWith('E') ? 'verified' : 'estimated',
+      coverLetterText: `Madame, Monsieur,
+
+Votre entreprise ${b.companyName}, installée à ${b.companyAddress}, développe ses activités dans le secteur « ${b.companySector} ». C'est ce qui m'amène à vous écrire : je cherche un poste de commerciale dans une structure comme la vôtre.
+
+Pendant deux ans à la Fnac, de 2022 à 2024, j'ai conseillé des clients et atteint mes objectifs de vente.
+
+Je serais ravie d'en parler avec vous.
+
+Bien cordialement,
+Camille Martin`,
+      status: 'PENDING_REVIEW', createdAt: new Date().toISOString() };
+    spontaneous.unshift(sp);
+    return { success: true, data: sp, coverLetter: sp.coverLetterText };
+  }],
+  [/\/api\/spontaneous\/[^/]+\/queue$/, (m, _b, path) => { const id = path.split('/')[3]; if (m === 'DELETE') queuedIds.delete(id); else queuedIds.add(id); return { success: true }; }],
+  [/\/api\/spontaneous\/[^/]+\/blacklist$/, (_m, _b, path) => { const id = path.split('/')[3]; const i = spontaneous.findIndex((x) => x.id === id); if (i >= 0) spontaneous.splice(i, 1); return { success: true }; }],
+  [/\/api\/spontaneous\/[^/]+$/, (m, b, path) => { const sp = spontaneous.find((x) => x.id === path.split('/')[3]); if (sp && m === 'PATCH') Object.assign(sp, b, b.contactEmail ? { contactSource: 'manual' } : {}); return { success: true, data: sp }; }],
+  [/\/api\/spontaneous$/, () => ({ success: true, data: spontaneous })],
+  [/\/api\/mailbox\/campaign$/, () => ({ success: true, data: { mailbox: mailbox.connected ? { connected: true, email: mailbox.email, status: 'ACTIVE', dailyLimit: 12 } : { connected: false }, sentToday: 3, dailyLimit: 12, queuedIds: Array.from(queuedIds), spacingMinutes: 25, inSendingWindow: true, estimatedDays: 0 } })],
+  [/\/api\/mailbox$/, (m, b) => { if (m === 'POST') { if (String(b?.appPassword || '').replace(/\s/g, '').length !== 16) return { success: false, error: "Un mot de passe d'application Gmail fait 16 lettres." }; mailbox.connected = true; mailbox.email = b.email; } if (m === 'DELETE') mailbox.connected = false; return { success: true, available: true, data: mailbox }; }],
 ];
 
 export const installDemoApi = () => {
@@ -73,7 +106,7 @@ export const installDemoApi = () => {
         let body: any = null;
         try { body = init?.body ? JSON.parse(String(init.body)) : null; } catch { /* corps non JSON */ }
         await new Promise((r) => setTimeout(r, 250));
-        return new Response(JSON.stringify(handler(method, body)), { status: 200, headers: { 'Content-Type': 'application/json' } });
+        return new Response(JSON.stringify(handler(method, body, path)), { status: 200, headers: { 'Content-Type': 'application/json' } });
       }
     }
     if (path.startsWith('/api/')) {

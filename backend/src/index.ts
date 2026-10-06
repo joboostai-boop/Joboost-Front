@@ -23,6 +23,8 @@ import { resendWebhookController } from './controllers/webhook.resend.controller
 import stripeRoutes from './routes/stripe.routes';
 import businessRoutes from './routes/business.routes';
 import { refreshActiveUsersOffers, scheduleOfferRefresh } from './services/offerRefresh';
+import mailboxRoutes from './routes/mailbox.routes';
+import { campaignService } from './services/campaign.service';
 
 dotenv.config();
 
@@ -99,6 +101,7 @@ app.use('/api/lbb', requireAuth, lbbRoutes);
 // Candidatures spontanées (préparation / envoi / suivi)
 app.use('/api/spontaneous', requireAuth, spontaneousRoutes);
 app.use('/api/alternance', requireAuth, alternanceRoutes);
+app.use('/api/mailbox', requireAuth, mailboxRoutes);
 // Webhook Resend (tracking envois) — route publique
 app.post('/api/webhooks/resend', resendWebhookController.handle);
 // Initialize Stripe Billing
@@ -147,6 +150,16 @@ app.listen(PORT, async () => {
     // Base d'offres : rafraîchissement 2 min après le démarrage puis toutes les 24 h
     // (désactivable avec OFFER_REFRESH=off).
     scheduleOfferRefresh();
+
+    // File d'envoi des campagnes (boîte du candidat) : un passage toutes les 5 min
+    // (désactivable avec OUTBOX_WORKER=off).
+    if (process.env.OUTBOX_WORKER !== 'off') {
+      setInterval(() => {
+        campaignService.tick()
+          .then((r) => { if (r.sent || r.failed) console.log('[campagne] passage :', r); })
+          .catch((e) => console.error('[campagne] passage interrompu :', e?.message || e));
+      }, 5 * 60_000);
+    }
 
     // Relances des candidatures spontanées : scheduler in-process optionnel.
     // Activer avec ENABLE_FOLLOWUP_CRON=true (sinon utiliser un cron externe : `npm run job:followup`).
