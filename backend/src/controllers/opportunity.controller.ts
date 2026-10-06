@@ -3,6 +3,11 @@ import { prisma } from '../db';
 import { franceTravailService, isFranceTravailConfigured, FtOffer } from '../services/francetravail.service';
 import { adzunaService, isAdzunaConfigured } from '../services/adzuna.service';
 import { scoreOffer, dedupeKey, keywords } from '../services/offerScoring';
+import { TtlCache } from '../services/ttlCache';
+
+// Résultats bruts des sources externes, gardés 15 min : rouvrir la page Offres ou
+// refaire la même recherche ne réinterroge plus France Travail / Adzuna (~1,3 s).
+const offerSearchCache = new TtlCache<FtOffer[]>(15 * 60_000, 800);
 
 // Déduplique des offres venant de plusieurs sources. La clé ignore accents, casse,
 // écriture inclusive, mentions (H/F) et formes juridiques (SAS, SARL…) : la même
@@ -149,13 +154,15 @@ export const opportunityController = {
         const list: Promise<FtOffer[]>[] = [];
         if (isFranceTravailConfigured()) {
           list.push(
-            franceTravailService.searchOffers(what, location, 100, km, contractType)
+            offerSearchCache.get(`ft|${what}|${location}|${km}|${contractType || ''}`.toLowerCase(), () =>
+              franceTravailService.searchOffers(what, location, 100, km, contractType))
               .catch((e: any) => { console.error('France Travail indisponible (offres) :', e?.message || e); return [] as FtOffer[]; })
           );
         }
         if (isAdzunaConfigured()) {
           list.push(
-            adzunaService.searchOffers(what, location, 50, km, contractType)
+            offerSearchCache.get(`adz|${what}|${location}|${km}|${contractType || ''}`.toLowerCase(), () =>
+              adzunaService.searchOffers(what, location, 50, km, contractType))
               .catch((e: any) => { console.error('Adzuna indisponible (offres) :', e?.message || e); return [] as FtOffer[]; })
           );
         }

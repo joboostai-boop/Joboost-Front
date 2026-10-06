@@ -1,4 +1,5 @@
 import dotenv from 'dotenv';
+import { TtlCache } from './ttlCache';
 dotenv.config();
 import { extractContactEmail } from './contactEmail.util';
 
@@ -127,7 +128,12 @@ const GEO_API = 'https://geo.api.gouv.fr/communes';
 
 interface ResolvedLocation { commune?: string; departement?: string }
 
-const resolveLocation = async (location: string): Promise<ResolvedLocation> => {
+// Une ville ne bouge pas : sa résolution est gardée 24 h (évite ~300 ms par recherche).
+const geoCache = new TtlCache<ResolvedLocation>(24 * 3600_000, 2000);
+const resolveLocation = (location: string): Promise<ResolvedLocation> =>
+  geoCache.get((location || '').trim().toLowerCase(), () => resolveLocationUncached(location));
+
+const resolveLocationUncached = async (location: string): Promise<ResolvedLocation> => {
   const loc = (location || '').trim();
   if (!loc) return {};
   const depFallback = extractDepartement(loc);

@@ -31,6 +31,7 @@ const SYSTEM_PROMPT = [
   "",
   "STYLE :",
   "N'invente JAMAIS de chiffres, de pourcentages, de noms d'entreprises, de dates ou de résultats qui ne t'ont pas été fournis.",
+  "Les dates et nombres QUI T'ONT ÉTÉ FOURNIS s'écrivent normalement en chiffres (ex. « de 2022 à 2024 »), jamais en toutes lettres.",
   "N'emploie aucun jargon ni superlatif creux ('haute performance', 'disruptif', 'synergie', 'score de matching',",
   "'convergence de profil', 'optimisation de trajectoire', 'irrésistible').",
   "Emploie les mots que le candidat utiliserait lui-même. Reste toujours vérifiable par un recruteur.",
@@ -139,43 +140,64 @@ const TRANSIENT_ERROR = new RegExp(
 );
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
-// Modèles de secours, essayés dans l'ordre quand le modèle demandé est saturé.
-// Constat du 06/10/2026 : `gemini-3-flash-preview` (modèle d'essai) renvoyait 503
-// « high demand » en continu — import de CV, CV et lettres tombaient ensemble.
-// La disponibilité varie d'un modèle à l'autre d'une minute à l'autre : plutôt que
-// d'attendre sur le même modèle, on passe tout de suite au suivant.
-// (gemini-2.5-* : fermés aux nouveaux comptes, renvoient 404 — volontairement absents.)
-const FALLBACK_MODELS = [
+// Modèles essayés dans l'ordre (mesures du 06/10/2026, réponse JSON courte) :
+//   gemini-3.6-flash (réflexion « low ») ~1 s · gemini-flash-lite-latest ~0,6 s ·
+//   gemini-3.1-flash-lite ~5 s. Les autres (3-flash-preview, flash-latest, 3.5, 3.7)
+//   renvoyaient 503 « high demand » et pouvaient BLOQUER jusqu'à 60 s avant d'échouer.
+// gemini-2.5-* : fermés aux nouveaux comptes (404), volontairement absents.
+const MODEL_CHAIN = [
   'gemini-3.6-flash',
+  'gemini-flash-lite-latest',
+  'gemini-3.1-flash-lite',
+  'gemini-3-flash-preview',
   'gemini-flash-latest',
   'gemini-3.5-flash',
   'gemini-3.7-flash',
-  'gemini-3.1-flash-lite',
 ];
 // Modèle indisponible pour cette clé (retiré, renommé) : on passe au suivant.
 const MODEL_UNAVAILABLE = /\b404\b|NOT_FOUND|no longer available|is not found|not supported for generateContent/i;
+// Un appel qui ne répond pas dans ce délai est abandonné au profit du modèle suivant.
+const CALL_TIMEOUT_MS = 12_000;
 
-// Appelle l'API Gemini : modèle demandé, puis modèles de secours sur erreur
-// transitoire (surcharge, quota, réseau). Deux tours au maximum, avec une courte
-// pause entre les deux. Les autres erreurs (clé invalide, requête malformée…)
-// sont relancées immédiatement : les réessayer ne servirait à rien.
+// Dernier modèle qui a répondu : essayé en premier pendant 10 min (évite de
+// repayer à chaque requête le détour par des modèles saturés).
+let lastGood: { model: string; until: number } | null = null;
+
+const withTimeout = <T>(p: Promise<T>, ms: number): Promise<T> =>
+  new Promise((resolve, reject) => {
+    const t = setTimeout(() => reject(new Error(`timeout après ${ms} ms (DEADLINE_EXCEEDED)`)), ms);
+    p.then((v) => { clearTimeout(t); resolve(v); }, (e) => { clearTimeout(t); reject(e); });
+  });
+
+// Réflexion réduite sur la famille 3.x : ~2,5× plus rapide, qualité suffisante pour
+// nos tâches (extraction, rédaction courte). Respecte un réglage explicite de l'appelant.
+const tuneFor = (model: string, params: any) => {
+  if (!/^gemini-3/.test(model) || params?.config?.thinkingConfig) return params;
+  return { ...params, config: { ...(params.config || {}), thinkingConfig: { thinkingLevel: 'low' } } };
+};
+
+// Appelle l'API Gemini en parcourant la chaîne de modèles sur erreur transitoire
+// (surcharge, quota, réseau, délai dépassé). Deux tours au maximum. Les autres
+// erreurs (clé invalide, requête malformée…) sont relancées immédiatement.
 const genWithRetry = async (ai: any, params: any, rounds = 2): Promise<any> => {
-  const chain = [params.model, ...FALLBACK_MODELS.filter((m) => m !== params.model)];
+  const preferred = lastGood && lastGood.until > Date.now() ? [lastGood.model] : [];
+  const chain = Array.from(new Set([...preferred, ...MODEL_CHAIN]));
   let lastErr: any;
   for (let r = 0; r < rounds; r++) {
     for (const model of chain) {
       try {
-        const res = await ai.models.generateContent({ ...params, model });
-        if (model !== params.model) console.warn(`Gemini : réponse obtenue via le modèle de secours ${model}`);
+        const res = await withTimeout(ai.models.generateContent({ ...tuneFor(model, params), model }), CALL_TIMEOUT_MS);
+        lastGood = { model, until: Date.now() + 10 * 60_000 };
         return res;
       } catch (e: any) {
         lastErr = e;
         const msg = `${e?.message || e}`;
         if (!TRANSIENT_ERROR.test(msg) && !MODEL_UNAVAILABLE.test(msg)) throw e;
+        if (lastGood?.model === model) lastGood = null;
         console.warn(`Gemini : ${model} indisponible (tour ${r + 1}/${rounds}) — ${msg.slice(0, 100)}`);
       }
     }
-    if (r < rounds - 1) await sleep(1500);
+    if (r < rounds - 1) await sleep(1000);
   }
   throw lastErr;
 };
