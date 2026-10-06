@@ -1,1 +1,7 @@
+# Lu uniquement par Netlify (Render l'ignore).
+# L'ancienne adresse joboost.netlify.app renvoie vers le vrai site : le serveur
+# n'accepte plus cette origine (sécurité), elle ne peut donc plus fonctionner.
+https://joboost.netlify.app/*  https://joboost.app/:splat  301!
+
+# Repli SPA pour les autres adresses Netlify éventuelles.
 /*    /index.html   200
