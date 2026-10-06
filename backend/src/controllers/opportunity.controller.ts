@@ -152,14 +152,14 @@ export const opportunityController = {
           list.push(
             // Mémoire → notre base → France Travail en direct (voir services/offerStore.ts).
             offerStore.get({ source: 'ft', query: what, location, radius: km, contract: contractType }, () =>
-              franceTravailService.searchOffers(what, location, 100, km, contractType))
+              franceTravailService.searchOffers(what, location, 300, km, contractType))
               .catch((e: any) => { console.error('France Travail indisponible (offres) :', e?.message || e); return [] as FtOffer[]; })
           );
         }
         if (isAdzunaConfigured()) {
           list.push(
             offerStore.get({ source: 'adz', query: what, location, radius: km, contract: contractType }, () =>
-              adzunaService.searchOffers(what, location, 50, km, contractType))
+              adzunaService.searchOffers(what, location, 100, km, contractType))
               .catch((e: any) => { console.error('Adzuna indisponible (offres) :', e?.message || e); return [] as FtOffer[]; })
           );
         }

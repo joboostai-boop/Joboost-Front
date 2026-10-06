@@ -265,20 +265,29 @@ export const franceTravailService = {
     // FS (professionnalisation) sont des `natureContrat` dans l'API.
     if (contractType === 'E2' || contractType === 'FS') params.set('natureContrat', contractType);
     else if (contractType) params.set('typeContrat', contractType);
-    params.set('range',`0-${Math.max(0, max - 1)}`);
-
-    const res = await fetch(`${SEARCH_URL}?${params.toString()}`, {
-      headers: { Authorization: `Bearer ${token}`, Accept: 'application/json' },
-    });
-
-    if (res.status === 204) return [];
-    if (!res.ok) {
-      const txt = await res.text().catch(() => '');
-      throw new Error(`France Travail search error ${res.status}: ${txt.slice(0, 200)}`);
-    }
-
-    const json: any = await res.json();
-    const offers: any[] = Array.isArray(json?.resultats) ? json.resultats : [];
+    // L'API renvoie au plus 150 offres par appel : au-delà, on demande plusieurs
+    // pages EN PARALLÈLE (0-149, 150-299…). Seule la 1re page est indispensable ;
+    // une page suivante en échec ou vide est simplement ignorée.
+    const PAGE = 150;
+    const ranges: [number, number][] = [];
+    for (let start = 0; start < max; start += PAGE) ranges.push([start, Math.min(max, start + PAGE) - 1]);
+    const fetchRange = async ([from, to]: [number, number], first: boolean): Promise<any[]> => {
+      const p = new URLSearchParams(params);
+      p.set('range', `${from}-${to}`);
+      const res = await fetch(`${SEARCH_URL}?${p.toString()}`, {
+        headers: { Authorization: `Bearer ${token}`, Accept: 'application/json' },
+      });
+      if (res.status === 204) return [];
+      if (!res.ok) {
+        const txt = await res.text().catch(() => '');
+        if (first) throw new Error(`France Travail search error ${res.status}: ${txt.slice(0, 200)}`);
+        return []; // page suivante au-delà du total (416) ou en échec : on garde le reste
+      }
+      const json: any = await res.json();
+      return Array.isArray(json?.resultats) ? json.resultats : [];
+    };
+    const pages = await Promise.all(ranges.map((r, i) => fetchRange(r, i === 0)));
+    const offers: any[] = pages.flat();
 
     return offers.map((o, index): FtOffer => {
       // Tags : compétences listées par FT, sinon le libellé ROME.

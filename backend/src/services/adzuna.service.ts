@@ -82,15 +82,22 @@ export const adzunaService = {
     if (where) { params.set('where', where); params.set('distance', String(distanceKm)); }
     for (const [k, v] of Object.entries(adzunaContractParam(contractType))) params.set(k, v);
 
-    const url = `${ADZUNA_BASE}/${ADZUNA_COUNTRY}/search/1?${params.toString()}`;
-    const res = await fetch(url, { headers: { Accept: 'application/json' } });
-    if (!res.ok) {
-      const txt = await res.text().catch(() => '');
-      throw new Error(`Adzuna search error ${res.status}: ${txt.slice(0, 200)}`);
-    }
-
-    const json: any = await res.json();
-    const results: any[] = Array.isArray(json?.results) ? json.results : [];
+    // 50 résultats au plus par page : pages suivantes demandées en parallèle.
+    // Seule la 1re page est indispensable ; une page suivante en échec est ignorée.
+    const pageCount = Math.max(1, Math.ceil(max / 50));
+    const fetchPage = async (page: number): Promise<any[]> => {
+      const url = `${ADZUNA_BASE}/${ADZUNA_COUNTRY}/search/${page}?${params.toString()}`;
+      const res = await fetch(url, { headers: { Accept: 'application/json' } });
+      if (!res.ok) {
+        const txt = await res.text().catch(() => '');
+        if (page === 1) throw new Error(`Adzuna search error ${res.status}: ${txt.slice(0, 200)}`);
+        return [];
+      }
+      const json: any = await res.json();
+      return Array.isArray(json?.results) ? json.results : [];
+    };
+    const pages = await Promise.all(Array.from({ length: pageCount }, (_, i) => fetchPage(i + 1)));
+    const results: any[] = pages.flat();
 
     return results.map((o, index): FtOffer => {
       const rawDesc: string = (o?.description || '').replace(/\s+/g, ' ').trim();

@@ -35,8 +35,8 @@ export const refreshActiveUsersOffers = async (): Promise<{ users: number; refre
 
     for (const { title, location } of searches.values()) {
       const jobs: [OfferSearchSpec, () => Promise<any>][] = [];
-      if (isFranceTravailConfigured()) jobs.push([{ source: 'ft', query: title, location, radius: 30 }, () => franceTravailService.searchOffers(title, location, 100, 30)]);
-      if (isAdzunaConfigured()) jobs.push([{ source: 'adz', query: title, location, radius: 30 }, () => adzunaService.searchOffers(title, location, 50, 30)]);
+      if (isFranceTravailConfigured()) jobs.push([{ source: 'ft', query: title, location, radius: 30 }, () => franceTravailService.searchOffers(title, location, 300, 30)]);
+      if (isAdzunaConfigured()) jobs.push([{ source: 'adz', query: title, location, radius: 30 }, () => adzunaService.searchOffers(title, location, 100, 30)]);
       for (const [spec, fetcher] of jobs) {
         const last = await offerStore.lastFetched(spec);
         if (last && Date.now() - last.getTime() < 20 * 3600_000) { stats.skipped++; continue; }

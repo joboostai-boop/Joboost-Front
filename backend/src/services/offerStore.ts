@@ -79,7 +79,9 @@ const persist = async (spec: OfferSearchSpec, offers: FtOffer[], keepIfEmpty = f
           location: o.location,
           departement: departementOf(o.location),
           postedAt: toDate(o.postedAt),
-          payload: o as any,
+          // Texte limité à 1 500 caractères : divise la place prise par ~2 ; le lien
+          // vers l'annonce complète reste dans l'offre.
+          payload: { ...o, aiInsight: (o.aiInsight || '').slice(0, 1500) } as any,
         })),
       });
       // … puis on marque celles-ci comme revues aujourd'hui (sert à la purge).
