@@ -3,11 +3,7 @@ import { prisma } from '../db';
 import { franceTravailService, isFranceTravailConfigured, FtOffer } from '../services/francetravail.service';
 import { adzunaService, isAdzunaConfigured } from '../services/adzuna.service';
 import { scoreOffer, dedupeKey, keywords } from '../services/offerScoring';
-import { TtlCache } from '../services/ttlCache';
-
-// Résultats bruts des sources externes, gardés 15 min : rouvrir la page Offres ou
-// refaire la même recherche ne réinterroge plus France Travail / Adzuna (~1,3 s).
-const offerSearchCache = new TtlCache<FtOffer[]>(15 * 60_000, 800);
+import { offerStore } from '../services/offerStore';
 
 // Déduplique des offres venant de plusieurs sources. La clé ignore accents, casse,
 // écriture inclusive, mentions (H/F) et formes juridiques (SAS, SARL…) : la même
@@ -154,14 +150,15 @@ export const opportunityController = {
         const list: Promise<FtOffer[]>[] = [];
         if (isFranceTravailConfigured()) {
           list.push(
-            offerSearchCache.get(`ft|${what}|${location}|${km}|${contractType || ''}`.toLowerCase(), () =>
+            // Mémoire → notre base → France Travail en direct (voir services/offerStore.ts).
+            offerStore.get({ source: 'ft', query: what, location, radius: km, contract: contractType }, () =>
               franceTravailService.searchOffers(what, location, 100, km, contractType))
               .catch((e: any) => { console.error('France Travail indisponible (offres) :', e?.message || e); return [] as FtOffer[]; })
           );
         }
         if (isAdzunaConfigured()) {
           list.push(
-            offerSearchCache.get(`adz|${what}|${location}|${km}|${contractType || ''}`.toLowerCase(), () =>
+            offerStore.get({ source: 'adz', query: what, location, radius: km, contract: contractType }, () =>
               adzunaService.searchOffers(what, location, 50, km, contractType))
               .catch((e: any) => { console.error('Adzuna indisponible (offres) :', e?.message || e); return [] as FtOffer[]; })
           );

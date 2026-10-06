@@ -110,6 +110,7 @@ export const adzunaService = {
         // Score décroissant et étalé (94 → ~60), légèrement sous France Travail (source nationale prioritaire).
         matchScore: Math.round(Math.max(60, 94 - index * 1.2)),
         postedDate: relativeDate(o?.created),
+        postedAt: o?.created || undefined,
         source: 'Adzuna',
         url: o?.redirect_url || '',
         tags,

@@ -79,6 +79,8 @@ export interface FtOffer {
   type: string;
   matchScore: number;
   postedDate: string;
+  /** Date de publication ISO (sert à recalculer « Il y a 3 jours » quand l'offre vient de notre base). */
+  postedAt?: string;
   source: string;
   url: string;
   tags: string[];
@@ -301,6 +303,7 @@ export const franceTravailService = {
         // (96 → ~62) pour rester lisible même avec beaucoup d'offres.
         matchScore: Math.round(Math.max(62, 96 - index * 1.1)),
         postedDate: relativeDate(o?.dateCreation),
+        postedAt: o?.dateCreation || undefined,
         source: 'France Travail',
         url: o?.origineOffre?.urlOrigine || '',
         tags,

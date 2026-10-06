@@ -22,6 +22,7 @@ import alternanceRoutes from './routes/alternance.routes';
 import { resendWebhookController } from './controllers/webhook.resend.controller';
 import stripeRoutes from './routes/stripe.routes';
 import businessRoutes from './routes/business.routes';
+import { refreshActiveUsersOffers, scheduleOfferRefresh } from './services/offerRefresh';
 
 dotenv.config();
 
@@ -110,6 +111,18 @@ app.get('/api/health', (req, res) => {
     res.json({ status: 'ok', message: 'JobBoost Backend is running 😎' });
 });
 
+// Rafraîchissement de la base d'offres déclenché de l'extérieur (planificateur qui
+// réveille le serveur Render endormi chaque nuit). Protégé par CRON_SECRET ; sans
+// ce secret configuré, la route n'existe pas.
+app.post('/api/internal/refresh-offers', (req, res) => {
+  const secret = process.env.CRON_SECRET;
+  if (!secret || req.get('x-cron-secret') !== secret) {
+    return res.status(404).json({ success: false, error: 'Ressource introuvable.' });
+  }
+  res.status(202).json({ success: true, started: true });
+  refreshActiveUsersOffers().catch(() => {});
+});
+
 // 404 JSON pour toute route /api inconnue (au lieu du HTML par défaut d'Express).
 app.use('/api', (req, res) => {
   res.status(404).json({ success: false, error: 'Ressource introuvable.' });
@@ -130,6 +143,10 @@ app.use((err: any, req: express.Request, res: express.Response, next: express.Ne
 app.listen(PORT, async () => {
     console.log(`🚀 Serveur démarré sur http://localhost:${PORT}`);
     await checkDbConnection();
+
+    // Base d'offres : rafraîchissement 2 min après le démarrage puis toutes les 24 h
+    // (désactivable avec OFFER_REFRESH=off).
+    scheduleOfferRefresh();
 
     // Relances des candidatures spontanées : scheduler in-process optionnel.
     // Activer avec ENABLE_FOLLOWUP_CRON=true (sinon utiliser un cron externe : `npm run job:followup`).
