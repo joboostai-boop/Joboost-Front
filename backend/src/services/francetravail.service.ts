@@ -361,4 +361,30 @@ export const franceTravailService = {
     }
     return best;
   },
+
+  /**
+   * Codes ROME d'un métier, du plus au moins fréquent parmi les offres locales.
+   * Un métier en couvre souvent plusieurs (« commercial » : D1410, D1403, D1407…) :
+   * n'en garder qu'un faisait passer à côté de la majorité des entreprises.
+   * Ne garde que les codes vraiment représentés (≥ 10 % des offres, au moins 3).
+   */
+  resolveRomeCodes: async (jobTitle: string, location: string, max = 3, distanceKm = 30): Promise<string[]> => {
+    const token = await getFtToken();
+    const params = new URLSearchParams();
+    if (jobTitle) params.set('motsCles', jobTitle);
+    await applyGeoParams(params, location, distanceKm);
+    params.set('range', '0-149');
+    const res = await fetch(`${SEARCH_URL}?${params.toString()}`, {
+      headers: { Authorization: `Bearer ${token}`, Accept: 'application/json' },
+    });
+    if (res.status === 204 || !res.ok) return [];
+    const json: any = await res.json();
+    const offers: any[] = Array.isArray(json?.resultats) ? json.resultats : [];
+    const tally = new Map<string, number>();
+    for (const o of offers) if (o?.romeCode) tally.set(o.romeCode, (tally.get(o.romeCode) || 0) + 1);
+    const threshold = Math.max(3, Math.round(offers.length * 0.1));
+    const ranked = [...tally.entries()].sort((a, b) => b[1] - a[1]);
+    const kept = ranked.filter(([, n]) => n >= threshold).map(([c]) => c);
+    return (kept.length ? kept : ranked.slice(0, 1).map(([c]) => c)).slice(0, max);
+  },
 };

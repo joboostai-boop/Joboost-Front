@@ -89,9 +89,16 @@ export const laBonneBoiteService = {
       page_size: String(Math.min(100, Math.max(1, max))),
     });
 
-    const res = await fetch(`${LBB_BASE}/recherche?${params.toString()}`, {
+    // L'API limite le rythme d'appel (429) : on attend un peu et on réessaie, 2 fois au plus.
+    let res = await fetch(`${LBB_BASE}/recherche?${params.toString()}`, {
       headers: { Authorization: `Bearer ${token}`, Accept: 'application/json' },
     });
+    for (let attempt = 1; res.status === 429 && attempt <= 2; attempt++) {
+      await new Promise((r) => setTimeout(r, 1200 * attempt));
+      res = await fetch(`${LBB_BASE}/recherche?${params.toString()}`, {
+        headers: { Authorization: `Bearer ${token}`, Accept: 'application/json' },
+      });
+    }
 
     if (res.status === 204) return [];
     if (!res.ok) {

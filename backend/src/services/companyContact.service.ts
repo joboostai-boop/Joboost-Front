@@ -37,6 +37,21 @@ export const companyContactService = {
     }
   },
 
+  /** Version groupée de `lookup` : une seule requête pour toute une liste d'entreprises.
+   *  Renvoie une Map clé → contact (clé = keyFor(nom, lieu)). */
+  lookupMany: async (items: { name: string; location?: string }[]): Promise<Map<string, KnownContact>> => {
+    const out = new Map<string, KnownContact>();
+    const keys = Array.from(new Set(items.filter((i) => i.name).map((i) => keyFor(i.name, i.location))));
+    if (!keys.length) return out;
+    try {
+      const rows = await prisma.companyContact.findMany({ where: { companyKey: { in: keys } } });
+      for (const r of rows) out.set(r.companyKey, { email: r.email, domain: r.domain, verifiedMx: r.verifiedMx });
+    } catch {
+      /* best-effort */
+    }
+    return out;
+  },
+
   /** Enregistre/met à jour un email d'entreprise dans la base partagée. Best-effort. */
   save: async (
     name: string,

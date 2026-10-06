@@ -4,6 +4,35 @@ import { laBonneBoiteService, geocodeLocation } from '../services/labonneboite.s
 import { loadUserGuards, scoreCompanyForUser } from '../services/spontaneous.guards';
 import { AUTO_LEVEL_LABEL } from '../services/spontaneous.scoring.service';
 import { companyContactService } from '../services/companyContact.service';
+import { TtlCache } from '../services/ttlCache';
+
+// Données La Bonne Boîte mises à jour une fois par mois : 12 h de cache suffisent
+// largement, et évitent de buter sur la limite de rythme de l'API.
+const lbbCache = new TtlCache<FtCompany[]>(12 * 3600_000, 500);
+
+// Entreprises qui recrutent pour TOUS les codes ROME du métier (100 par code),
+// appels espacés (limite de rythme), dédoublonnées par établissement, les plus
+// fort potentiel d'embauche en premier.
+const searchAllRomes = async (title: string, location: string, distanceKm: number): Promise<FtCompany[]> => {
+  const [romes, geo] = await Promise.all([
+    franceTravailService.resolveRomeCodes(title, location, 3),
+    geocodeLocation(location),
+  ]);
+  if (!romes.length || !geo) return [];
+  const byId = new Map<string, FtCompany>();
+  for (const [i, rome] of romes.entries()) {
+    if (i > 0) await new Promise((r) => setTimeout(r, 400));
+    try {
+      const list = await laBonneBoiteService.searchHiringCompanies(rome, geo, title, distanceKm, 100);
+      for (const c of list) if (!byId.has(c.id)) byId.set(c.id, c);
+    } catch (e: any) {
+      if (i === 0) throw e; // le code principal est indispensable ; les suivants sont un bonus
+      console.warn('[lbb] code ROME secondaire ignoré', rome, '—', e?.message || e);
+    }
+  }
+  const rank: Record<string, number> = { 'Très Élevé': 4, 'Élevé': 3, 'Modéré': 2, 'Moyen': 1 };
+  return [...byId.values()].sort((a, b) => (rank[b.hiringPotential] || 0) - (rank[a.hiringPotential] || 0));
+};
 
 // Données de démonstration utilisées en repli si France Travail n'est pas configuré
 // ou momentanément indisponible (l'API renvoie parfois des 500 le temps de l'activation).
@@ -55,12 +84,17 @@ const enrichWithScoring = async (
   companies: FtCompany[],
   ftSource: 'francetravail' | 'demo',
 ) => {
-  const guards = await loadUserGuards(userId);
+  // Règles du candidat + e-mails déjà connus : deux requêtes au total, quel que
+  // soit le nombre d'entreprises (avant : une requête par entreprise).
+  const [guards, knownMap] = await Promise.all([
+    loadUserGuards(userId),
+    companyContactService.lookupMany(companies.map((c) => ({ name: c.name, location: c.address }))),
+  ]);
   return Promise.all(
     companies.map(async (c) => {
       // Base partagée : si un email a déjà été trouvé pour cette entreprise
       // (par un autre candidat, une offre ou le détecteur), on le réutilise.
-      const known = await companyContactService.lookup(c.name, c.address);
+      const known = knownMap.get(companyContactService.keyFor(c.name, c.address)) || null;
       const scoring = await scoreCompanyForUser(
         {
           companyName: c.name,
@@ -101,16 +135,11 @@ export const lbbController = {
         // 1. La Bonne Boîte : la VRAIE source des candidatures spontanées (entreprises notées).
         //    Nécessite un code ROME + une géolocalisation, qu'on résout au préalable.
         try {
-          const [romeCode, geo] = await Promise.all([
-            franceTravailService.resolveRomeCode(targetTitle, targetLocation),
-            geocodeLocation(targetLocation),
-          ]);
-          if (romeCode && geo) {
-            const lbb = await laBonneBoiteService.searchHiringCompanies(romeCode, geo, targetTitle, distanceKm);
-            if (lbb.length > 0) {
-              const results = await enrichWithScoring(req.userId!, lbb, 'francetravail');
-              return res.json({ success: true, source: 'labonneboite', results });
-            }
+          const lbb = await lbbCache.get(`${targetTitle}|${targetLocation}|${distanceKm}`.toLowerCase(), () =>
+            searchAllRomes(targetTitle, targetLocation, distanceKm));
+          if (lbb.length > 0) {
+            const results = await enrichWithScoring(req.userId!, lbb, 'francetravail');
+            return res.json({ success: true, source: 'labonneboite', results });
           }
         } catch (e: any) {
           // Scope LBB non autorisé / API indisponible → repli sur les offres regroupées.
