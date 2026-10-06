@@ -14,7 +14,6 @@ import {
   Users,
   BarChart3,
   Send,
-  LineChart,
   LayoutDashboard,
   Search,
   GraduationCap,
@@ -69,13 +68,7 @@ export const CANDIDATE_NAV_GROUPS: { label?: string; items: { name: string; path
       { name: 'Modèles', path: '/prepare/templates', icon: <LayoutGrid size={17} /> },
     ],
   },
-  {
-    label: 'Suivi',
-    items: [
-      { name: 'Candidatures', path: '/track/applications', icon: <SquareKanban size={17} /> },
-      { name: 'Statistiques', path: '/track/dashboard', icon: <LineChart size={17} /> },
-    ],
-  },
+  { items: [{ name: 'Suivi', path: '/track', icon: <SquareKanban size={17} /> }] },
 ];
 
 // Navigation candidat — entrées SYSTÈME (séparées du parcours, en bas de sidebar / dans le compte).

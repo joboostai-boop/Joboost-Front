@@ -57,6 +57,7 @@ const routes: [RegExp, (method: string, body: any) => any][] = [
   [/\/api\/applications/, (m) => (m === 'POST' ? { success: true } : { success: true, data: applications })],
   [/\/api\/cvs/, () => ({ success: true, cvs: [] })],
   [/\/api\/letters/, () => ({ success: true, letters: [] })],
+  [/\/api\/coverletters/, (m) => (m === 'POST' ? { success: true, letter: { id: 'l' + Date.now() } } : { success: true, letters: [] })],
   [/\/api\/spontaneous/, () => ({ success: true, data: [] })],
 ];
 

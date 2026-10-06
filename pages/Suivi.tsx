@@ -6,6 +6,7 @@ import { useNavigate } from 'react-router-dom';
 import { authHeaders } from '../services/authToken';
 import { generateFollowUpMessage } from '../services/gemini';
 import EmptyState from '../components/EmptyState';
+import CountUp from '../components/CountUp';
 
 interface Application {
   id: string;
@@ -136,7 +137,7 @@ const FollowUpModal: React.FC<{ app: Application; onClose: () => void }> = ({ ap
   );
 };
 
-const Applications: React.FC = () => {
+const Suivi: React.FC = () => {
   const [applications, setApplications] = useState<Application[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -149,7 +150,9 @@ const Applications: React.FC = () => {
   const fetchApplications = async () => {
     setLoading(true);
     try {
-      const res = await fetch(`${API}/api/applications?limit=100`, { credentials: 'include', headers: { ...authHeaders() } });
+      // Limite large : les 4 chiffres clés en haut de page doivent refléter la totalité,
+      // pas seulement la première page affichée dans la liste.
+      const res = await fetch(`${API}/api/applications?limit=1000`, { credentials: 'include', headers: { ...authHeaders() } });
       const data = await res.json();
       if (data.success) {
         setApplications(data.data);
@@ -205,6 +208,22 @@ const Applications: React.FC = () => {
   );
   const byStatus = (s: StatusId) => filtered.filter((a) => a.status === s);
   const total = applications.length;
+
+  // Chiffres clés — dérivés directement de la même liste que celle affichée en dessous
+  // (une seule source de vérité, plus de deuxième appel /api/dashboard/stats).
+  const sentCount = applications.filter((a) => a.status === 'SENT').length;
+  const interviewCount = applications.filter((a) => a.status === 'INTERVIEW').length;
+  const offerCount = applications.filter((a) => a.status === 'OFFER').length;
+  const rejectedCount = applications.filter((a) => a.status === 'REJECTED').length;
+  const activeSent = sentCount + interviewCount + offerCount + rejectedCount;
+  const interviewRate = activeSent ? Math.round(((interviewCount + offerCount) / activeSent) * 100) : 0;
+
+  const kpis: { label: string; value: number; suffix?: string; accent?: 'violet' | 'emerald' }[] = [
+    { label: 'Candidatures totales', value: total },
+    { label: "Taux d'entretien", value: interviewRate, suffix: '%', accent: 'violet' },
+    { label: 'Entretiens décrochés', value: interviewCount },
+    { label: 'Offres reçues', value: offerCount, accent: 'emerald' },
+  ];
 
   // Liste visible : filtre par statut puis tri par date décroissante (plus récent en premier).
   const visible = [...filtered]
@@ -464,8 +483,31 @@ const Applications: React.FC = () => {
 
   return (
     <div className="px-5 md:px-8 pt-4 md:pt-6 pb-10 max-w-6xl mx-auto space-y-5">
+      <h1 className="text-[22px] leading-tight">Suivi</h1>
+
       {(loading || total > 0) && (
         <>
+          {/* Chiffres clés — une seule couleur d'accent (violet), l'émeraude réservée aux offres reçues */}
+          <section className="surface">
+            <dl className="grid grid-cols-2 sm:grid-cols-4">
+              {kpis.map((k, i) => (
+                <div
+                  key={k.label}
+                  className={`px-5 py-4 border-line ${i % 2 === 1 ? 'border-l' : ''} ${i === 2 ? 'sm:border-l' : ''} ${i > 1 ? 'border-t sm:border-t-0' : ''}`}
+                >
+                  <dt className="text-[13px] text-muted">{k.label}</dt>
+                  <dd className={`mt-1 text-[28px] font-semibold tracking-tight tabular-nums ${
+                    k.accent === 'emerald' ? 'text-emerald-600 dark:text-emerald-400'
+                      : k.accent === 'violet' ? 'text-brand'
+                      : 'text-ink'
+                  }`}>
+                    {loading ? '–' : <><CountUp value={k.value} />{k.suffix}</>}
+                  </dd>
+                </div>
+              ))}
+            </dl>
+          </section>
+
           {/* Barre d'outils : filtres par statut + recherche */}
           <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
             <div className="flex gap-1 overflow-x-auto scrollbar-none -mx-1 px-1">
@@ -524,4 +566,4 @@ const Applications: React.FC = () => {
   );
 };
 
-export default Applications;
+export default Suivi;

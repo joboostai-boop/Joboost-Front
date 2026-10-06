@@ -245,7 +245,7 @@ const Alternance: React.FC = () => {
                     <div className="flex flex-col items-center gap-2 text-emerald-600 dark:text-emerald-400">
                       <CheckCircle2 size={22} />
                       <span className="text-sm font-semibold">Candidature envoyée</span>
-                      <button onClick={() => navigate('/track/applications')} className="text-xs text-brand hover:underline">Voir mon suivi</button>
+                      <button onClick={() => navigate('/track')} className="text-xs text-brand hover:underline">Voir mon suivi</button>
                     </div>
                   ) : (
                     <>

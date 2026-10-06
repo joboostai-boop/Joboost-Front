@@ -62,7 +62,7 @@ const LetterGenerator: React.FC = () => {
         }
 
         if (lettersData.success) {
-           setLetters(lettersData.letters);
+           setLetters(Array.isArray(lettersData.letters) ? lettersData.letters : []);
         }
       } catch(e) {
          console.error(e);
@@ -138,7 +138,7 @@ const LetterGenerator: React.FC = () => {
            setCurrentLetterId(data.letter.id);
            const lettersRes = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/coverletters`, { credentials: 'include', headers: { ...authHeaders() } });
            const lettersData = await lettersRes.json();
-           if(lettersData.success) setLetters(lettersData.letters);
+           if(lettersData.success) setLetters(Array.isArray(lettersData.letters) ? lettersData.letters : []);
         }
      } catch(e) { toast.error("Erreur de sauvegarde"); }
   };

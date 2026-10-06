@@ -179,10 +179,10 @@ const Spontaneous: React.FC = () => {
       if (sent.success && sent.manual) {
         toast.success(sent.message || 'Candidature préparée — à finaliser manuellement.', { id: toastId, duration: 5000 });
         if (sent.applyUrl) window.open(sent.applyUrl, '_blank', 'noopener');
-        navigate('/track/applications');
+        navigate('/track');
       } else if (sent.success) {
         toast.success('Candidature envoyée et ajoutée à votre suivi !', { id: toastId });
-        navigate('/track/applications');
+        navigate('/track');
       } else {
         toast.error(sent.error || "Échec de l'envoi.", { id: toastId });
       }

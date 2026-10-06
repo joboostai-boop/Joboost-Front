@@ -92,8 +92,8 @@ const Sidebar: React.FC<SidebarProps> = ({ user, isDarkMode, toggleDarkMode, onO
       </div>
 
       <nav className="flex-1 overflow-y-auto scrollbar-none px-3 pb-4 space-y-5" aria-label="Navigation principale">
-        {CANDIDATE_NAV_GROUPS.map((group) => (
-          <div key={group.label ?? 'root'}>
+        {CANDIDATE_NAV_GROUPS.map((group, gi) => (
+          <div key={group.label ?? `groupe-${gi}`}>
             {group.label && <p className="eyebrow px-2.5 mb-1.5">{group.label}</p>}
             <ul className="space-y-0.5">
               {group.items.map((item) => (

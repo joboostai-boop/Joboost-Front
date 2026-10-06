@@ -74,7 +74,7 @@ const getNextAction = (stats: DashboardStats | null) => {
   }
   if (stats.applications.pending > 0) {
     const n = stats.applications.pending;
-    return { to: '/track/applications', icon: <Bell size={20} />, title: `Relance ${n} candidature${n > 1 ? 's' : ''}`, desc: 'Sans nouvelles après une semaine, une relance polie augmente nettement les chances de réponse.' };
+    return { to: '/track', icon: <Bell size={20} />, title: `Relance ${n} candidature${n > 1 ? 's' : ''}`, desc: 'Sans nouvelles après une semaine, une relance polie augmente nettement les chances de réponse.' };
   }
   return { to: '/target/offers', icon: <Plus size={20} />, title: 'Trouve de nouvelles offres', desc: 'De nouvelles annonces arrivent chaque jour.' };
 };
@@ -357,7 +357,7 @@ const Accueil: React.FC<AccueilProps> = ({ user }) => {
           <section className="surface">
             <div className="flex items-center justify-between px-5 pt-4">
               <h2 className="text-[15px]">Tes candidatures</h2>
-              <Link to="/track/applications" className="text-[13px] font-medium text-muted hover:text-ink inline-flex items-center gap-0.5">
+              <Link to="/track" className="text-[13px] font-medium text-muted hover:text-ink inline-flex items-center gap-0.5">
                 Tout voir <ChevronRight size={15} />
               </Link>
             </div>
@@ -430,7 +430,7 @@ const Accueil: React.FC<AccueilProps> = ({ user }) => {
                   <BellRing size={16} className="text-amber-500" />
                   <h2 className="text-[15px]">À relancer</h2>
                 </div>
-                <Link to="/track/applications" className="text-[13px] font-medium text-muted hover:text-ink inline-flex items-center gap-0.5">
+                <Link to="/track" className="text-[13px] font-medium text-muted hover:text-ink inline-flex items-center gap-0.5">
                   Suivi <ChevronRight size={15} />
                 </Link>
               </div>
@@ -439,7 +439,7 @@ const Accueil: React.FC<AccueilProps> = ({ user }) => {
                   const days = Math.floor((Date.now() - new Date(a.appliedAt).getTime()) / DAY);
                   return (
                     <li key={a.id}>
-                      <Link to="/track/applications" className="flex items-center gap-3.5 px-5 py-3 hover:bg-subtle/60 transition-colors">
+                      <Link to="/track" className="flex items-center gap-3.5 px-5 py-3 hover:bg-subtle/60 transition-colors">
                         <span className="w-9 h-9 rounded-lg bg-subtle text-muted grid place-items-center text-sm font-semibold shrink-0">
                           {a.company?.charAt(0)?.toUpperCase() || '?'}
                         </span>

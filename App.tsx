@@ -14,16 +14,14 @@ import { Plan, User } from './types';
 // Lazy-loaded pages for code splitting
 const PrepareLayout = React.lazy(() => import('./pages/PrepareLayout'));
 const TargetLayout = React.lazy(() => import('./pages/TargetLayout'));
-const TrackLayout = React.lazy(() => import('./pages/TrackLayout'));
 const Home = React.lazy(() => import('./pages/Home'));
 const PublicPricing = React.lazy(() => import('./pages/PublicPricing'));
 const Accueil = React.lazy(() => import('./pages/Accueil'));
 const Legal = React.lazy(() => import('./pages/Legal'));
-const Dashboard = React.lazy(() => import('./pages/Dashboard'));
+const Suivi = React.lazy(() => import('./pages/Suivi'));
 const CVGenerator = React.lazy(() => import('./pages/CVGenerator'));
 const LetterGenerator = React.lazy(() => import('./pages/LetterGenerator'));
 const Templates = React.lazy(() => import('./pages/Templates'));
-const Applications = React.lazy(() => import('./pages/Applications'));
 const PersonalizedOffers = React.lazy(() => import('./pages/PersonalizedOffers'));
 const SavedOffers = React.lazy(() => import('./pages/SavedOffers'));
 const Pricing = React.lazy(() => import('./pages/Pricing'));
@@ -269,11 +267,9 @@ const App: React.FC = () => {
             </Route>
 
             {/* 3. Suivre mes candidatures */}
-            <Route path="/track" element={<TrackLayout />}>
-               <Route index element={<Navigate to="applications" replace />} />
-               <Route path="dashboard" element={<Dashboard />} />
-               <Route path="applications" element={<Applications />} />
-            </Route>
+            <Route path="/track" element={<Suivi />} />
+            {/* Anciens liens (favoris, e-mails) : Candidatures et Statistiques sont fusionnées dans Suivi. */}
+            <Route path="/track/*" element={<Navigate to="/track" replace />} />
             
             {/* 4. Espace Business Partner */}
             <Route path="/business" element={<BusinessLayout />}>
