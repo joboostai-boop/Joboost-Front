@@ -65,7 +65,7 @@ export const linkedinAuthController = {
       const { code } = req.query;
 
       if (!code || typeof code !== 'string') {
-        return res.redirect(`${FRONTEND_URL}/auth/login?error=linkedin_missing_code`);
+        return res.redirect(`${FRONTEND_URL}/auth/login/?error=linkedin_missing_code`);
       }
 
       // 1. Échange du code contre un access_token
@@ -84,7 +84,7 @@ export const linkedinAuthController = {
       if (!tokenRes.ok) {
         const txt = await tokenRes.text().catch(() => '');
         console.error('LinkedIn token error:', tokenRes.status, txt.slice(0, 300));
-        return res.redirect(`${FRONTEND_URL}/auth/login?error=linkedin_token_failed`);
+        return res.redirect(`${FRONTEND_URL}/auth/login/?error=linkedin_token_failed`);
       }
       const tokenJson: any = await tokenRes.json();
       const accessToken = tokenJson.access_token;
@@ -96,7 +96,7 @@ export const linkedinAuthController = {
       if (!infoRes.ok) {
         const txt = await infoRes.text().catch(() => '');
         console.error('LinkedIn userinfo error:', infoRes.status, txt.slice(0, 300));
-        return res.redirect(`${FRONTEND_URL}/auth/login?error=linkedin_profile_failed`);
+        return res.redirect(`${FRONTEND_URL}/auth/login/?error=linkedin_profile_failed`);
       }
       const info: any = await infoRes.json();
       const email: string | undefined = info.email ? normalizeEmail(info.email) : undefined;
@@ -104,7 +104,7 @@ export const linkedinAuthController = {
       const picture: string | undefined = info.picture;
 
       if (!email) {
-        return res.redirect(`${FRONTEND_URL}/auth/login?error=linkedin_no_email`);
+        return res.redirect(`${FRONTEND_URL}/auth/login/?error=linkedin_no_email`);
       }
 
       // 3. Trouver ou créer l'utilisateur, et synchroniser nom + photo (recherche
@@ -144,10 +144,10 @@ export const linkedinAuthController = {
       // (les vraies sont /track/dashboard et /business/dashboard). Corrigé pour Google
       // en juillet, mais LinkedIn et Apple étaient restés sur l'URL fantôme, qui fait
       // tomber l'utilisateur sur la page d'authentification au lieu d'entrer dans l'app.
-      res.redirect(`${FRONTEND_URL}/home?oauth=linkedin#token=${jwtToken}`);
+      res.redirect(`${FRONTEND_URL}/home/?oauth=linkedin#token=${jwtToken}`);
     } catch (error: unknown) {
       console.error('LinkedIn OAuth callback error:', error);
-      res.redirect(`${FRONTEND_URL}/auth/login?error=linkedin_oauth_failed`);
+      res.redirect(`${FRONTEND_URL}/auth/login/?error=linkedin_oauth_failed`);
     }
   },
 };

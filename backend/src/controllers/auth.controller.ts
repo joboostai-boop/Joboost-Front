@@ -134,7 +134,7 @@ export const authController = {
 
       // On repart de l'email STOCKÉ (et non de la saisie) : le lien de réinitialisation
       // désigne ainsi toujours le compte retrouvé, quelle que soit la casse tapée.
-      const resetUrl = `${FRONTEND_URL}/auth/reset?token=${rawToken}&email=${encodeURIComponent(user.email)}`;
+      const resetUrl = `${FRONTEND_URL}/auth/reset/?token=${rawToken}&email=${encodeURIComponent(user.email)}`;
       const result = await emailService.sendPasswordReset({ to: user.email, name: user.name, resetUrl });
       if (!result.sent) {
         // Envoi impossible (aucun transport configuré) : on ne laisse pas un token pendouiller.

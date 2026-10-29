@@ -98,7 +98,7 @@ export const appleAuthController = {
     try {
       const code = req.body?.code;
       if (!code || typeof code !== 'string') {
-        return res.redirect(`${FRONTEND_URL}/auth/login?error=apple_missing_code`);
+        return res.redirect(`${FRONTEND_URL}/auth/login/?error=apple_missing_code`);
       }
 
       // 1. Échange du code contre les tokens (client_secret = JWT signé ES256).
@@ -117,28 +117,28 @@ export const appleAuthController = {
       if (!tokenRes.ok) {
         const txt = await tokenRes.text().catch(() => '');
         console.error('Apple token error:', tokenRes.status, txt.slice(0, 300));
-        return res.redirect(`${FRONTEND_URL}/auth/login?error=apple_token_failed`);
+        return res.redirect(`${FRONTEND_URL}/auth/login/?error=apple_token_failed`);
       }
 
       const tokenJson: any = await tokenRes.json();
       const idToken: string | undefined = tokenJson.id_token;
       if (!idToken) {
-        return res.redirect(`${FRONTEND_URL}/auth/login?error=apple_no_id_token`);
+        return res.redirect(`${FRONTEND_URL}/auth/login/?error=apple_no_id_token`);
       }
 
       // 2. Décodage de l'id_token. Il provient directement de l'endpoint token d'Apple
       //    via une connexion TLS authentifiée → on décode et on valide iss/aud/exp.
       const payload: any = jwt.decode(idToken);
       if (!payload || payload.iss !== APPLE_ISS || payload.aud !== APPLE_CLIENT_ID) {
-        return res.redirect(`${FRONTEND_URL}/auth/login?error=apple_invalid_token`);
+        return res.redirect(`${FRONTEND_URL}/auth/login/?error=apple_invalid_token`);
       }
       if (payload.exp && payload.exp * 1000 < Date.now()) {
-        return res.redirect(`${FRONTEND_URL}/auth/login?error=apple_expired_token`);
+        return res.redirect(`${FRONTEND_URL}/auth/login/?error=apple_expired_token`);
       }
 
       const email: string | undefined = payload.email ? normalizeEmail(payload.email) : undefined;
       if (!email) {
-        return res.redirect(`${FRONTEND_URL}/auth/login?error=apple_no_email`);
+        return res.redirect(`${FRONTEND_URL}/auth/login/?error=apple_no_email`);
       }
       // Le nom n'est transmis qu'à la 1re connexion (champ POST `user`).
       const appleName = parseAppleUserName(req.body?.user);
@@ -170,10 +170,10 @@ export const appleAuthController = {
       res.cookie('token', jwtToken, COOKIE_OPTIONS);
       // ⚠️ /home et non /dashboard : route inexistante côté front (cf. le même correctif
       // appliqué à Google) — elle renvoyait l'utilisateur sur l'écran d'authentification.
-      res.redirect(`${FRONTEND_URL}/home?oauth=apple#token=${jwtToken}`);
+      res.redirect(`${FRONTEND_URL}/home/?oauth=apple#token=${jwtToken}`);
     } catch (error: unknown) {
       console.error('Apple OAuth callback error:', error);
-      res.redirect(`${FRONTEND_URL}/auth/login?error=apple_oauth_failed`);
+      res.redirect(`${FRONTEND_URL}/auth/login/?error=apple_oauth_failed`);
     }
   },
 };

@@ -78,8 +78,8 @@ export const stripeService = {
       ],
       // /pricing lit ?payment=success (toast + rafraîchissement du statut). L'ancienne cible
       // /dashboard n'existe pas dans le routeur du front.
-      success_url: `${FRONTEND_URL}/pricing?payment=success`,
-      cancel_url: `${FRONTEND_URL}/pricing?payment=canceled`,
+      success_url: `${FRONTEND_URL}/pricing/?payment=success`,
+      cancel_url: `${FRONTEND_URL}/pricing/?payment=canceled`,
       metadata: { userId },
     });
 
@@ -118,8 +118,8 @@ export const stripeService = {
           },
         },
       ],
-      success_url: `${FRONTEND_URL}/business/billing?payment=success`,
-      cancel_url: `${FRONTEND_URL}/business/billing?payment=canceled`,
+      success_url: `${FRONTEND_URL}/business/billing/?payment=success`,
+      cancel_url: `${FRONTEND_URL}/business/billing/?payment=canceled`,
       metadata: { userId, businessPlan: planKey },
     });
 
@@ -138,7 +138,7 @@ export const stripeService = {
     }
     const portal = await stripe.billingPortal.sessions.create({
       customer: user.stripeCustomerId,
-      return_url: `${FRONTEND_URL}/business/billing`,
+      return_url: `${FRONTEND_URL}/business/billing/`,
     });
     return { url: portal.url };
   },

@@ -59,7 +59,7 @@ export const googleAuthController = {
     try {
       const { code } = req.query;
       if (!code || typeof code !== 'string') {
-        return res.redirect(`${FRONTEND_URL}/auth/login?error=missing_code`);
+        return res.redirect(`${FRONTEND_URL}/auth/login/?error=missing_code`);
       }
 
       // Échanger le code contre des tokens
@@ -68,7 +68,7 @@ export const googleAuthController = {
 
       // Vérifier et décoder l'id_token
       if (!tokens.id_token) {
-        return res.redirect(`${FRONTEND_URL}/auth/login?error=no_id_token`);
+        return res.redirect(`${FRONTEND_URL}/auth/login/?error=no_id_token`);
       }
 
       // Vérification de signature avec repli : l'id_token vient d'être obtenu
@@ -97,7 +97,7 @@ export const googleAuthController = {
       }
 
       if (!payload || !payload.email) {
-        return res.redirect(`${FRONTEND_URL}/auth/login?error=invalid_token`);
+        return res.redirect(`${FRONTEND_URL}/auth/login/?error=invalid_token`);
       }
 
       const { email: rawEmail, name, picture, sub: googleId } = payload;
@@ -147,11 +147,11 @@ export const googleAuthController = {
       // front (les vraies sont /track/dashboard et /business/dashboard). Rediriger
       // vers une URL inconnue faisait tomber l'utilisateur sur la règle de repli du
       // routeur, donc sur la page d'authentification au lieu d'entrer dans l'app.
-      res.redirect(`${FRONTEND_URL}/home?oauth=success#token=${jwtToken}`);
+      res.redirect(`${FRONTEND_URL}/home/?oauth=success#token=${jwtToken}`);
     } catch (error: unknown) {
       console.error('Google OAuth callback error:', error);
       const message = error instanceof Error ? error.message : 'Unknown error';
-      res.redirect(`${FRONTEND_URL}/auth/login?error=oauth_failed&message=${encodeURIComponent(message)}`);
+      res.redirect(`${FRONTEND_URL}/auth/login/?error=oauth_failed&message=${encodeURIComponent(message)}`);
     }
   },
 };
