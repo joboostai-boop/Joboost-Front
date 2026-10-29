@@ -303,7 +303,7 @@ const Home: React.FC<HomeProps> = ({ onStart }) => {
             le problème de poids qu'on vient de corriger sur /home. */}
         <div aria-hidden className="pointer-events-none absolute inset-0 z-0 overflow-hidden">
           <div
-            className="absolute -top-32 -right-32 -left-[6%] -bottom-20 sm:left-[22%] motion-safe:animate-aurora-drift"
+            className="absolute -top-32 -right-32 left-[35%] -bottom-20 sm:left-[22%] opacity-60 sm:opacity-100 motion-safe:animate-aurora-drift"
             style={{
               backgroundImage: 'url(/images/hero-aurora.webp)',
               backgroundSize: 'cover',
@@ -331,12 +331,11 @@ const Home: React.FC<HomeProps> = ({ onStart }) => {
             <h1 className="font-display font-extrabold text-ink tracking-[-0.035em] leading-[1.0] text-[2.85rem] sm:text-[3.75rem] lg:text-[4.5rem] animate-fade-in-up" style={{ animationDelay: '60ms' }}>
               Décrochez{' '}
               <span className="relative inline-block text-brand">
-                plus d'entretiens
+                plus d'entretiens<span className="text-slate-300">.</span>
                 <svg aria-hidden viewBox="0 0 300 16" className="absolute left-0 -bottom-1 w-full h-3 text-brand/40" preserveAspectRatio="none">
                   <path d="M3 11 C 90 3, 210 3, 297 9" fill="none" stroke="currentColor" strokeWidth="5" strokeLinecap="round" />
                 </svg>
               </span>
-              <span className="text-slate-300">.</span>
             </h1>
 
             <p className="mt-7 text-lg sm:text-xl text-slate-500 max-w-xl mx-auto lg:mx-0 leading-relaxed animate-fade-in-up" style={{ animationDelay: '120ms' }}>
@@ -461,7 +460,7 @@ const Home: React.FC<HomeProps> = ({ onStart }) => {
               </span>
               <div className="flex-1">
                 <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand/[0.08] border border-brand/20 text-brand-700 text-xs font-semibold mb-3">
-                  Spécial rentrée
+                  Alternance
                 </span>
                 <h3 className="text-xl sm:text-2xl font-extrabold text-ink tracking-tight">En alternance, la candidature part en un clic. Pour de vrai.</h3>
                 <p className="mt-3 text-[15px] sm:text-base text-slate-500 leading-relaxed max-w-2xl">

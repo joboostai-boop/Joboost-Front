@@ -1,0 +1,11 @@
+User-agent: *
+Allow: /
+Disallow: /home
+Disallow: /prepare/
+Disallow: /target/
+Disallow: /track
+Disallow: /business/
+Disallow: /settings
+Disallow: /pricing
+
+Sitemap: https://joboost.app/sitemap.xml

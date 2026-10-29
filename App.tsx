@@ -201,6 +201,9 @@ const App: React.FC = () => {
             <Route path="/" element={<Home onStart={() => navigate('/auth/register')} />} />
             <Route path="/tarifs" element={<PublicPricing />} />
             <Route path="/legal/:page" element={<Legal />} />
+            {/* La règle SPA de Render (Redirect) renvoie les adresses inconnues sur
+                /index.html : un visiteur doit alors voir la vitrine, pas la connexion. */}
+            <Route path="/index.html" element={<Navigate to="/" replace />} />
             {/* Déconnecté sur une page interne (ex. /home, /track…) → on renvoie vers la
                 connexion plutôt que d'afficher un 404 déroutant. Seule la racine "/" garde
                 la vitrine ; les vraies pages inexistantes tombent aussi sur la connexion. */}
